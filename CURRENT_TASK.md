@@ -1,218 +1,194 @@
 # CURRENT TASK
 
-## Task ID
+## Work Package
 
-`PHASE-0 / TASK-002`
-
-## Title
-
-Baseline Compatibility Suite
+`WP-0A — Foundation Guardrails`
 
 ## Recommended model
 
 **Luna Medium**
 
-Sol is not required unless a genuine architectural ambiguity or difficult upstream regression is discovered.
+## Branch
+
+```text
+feature/wp-0a-foundation-guardrails
+```
+
+The agent is allowed to manage this work-package branch, create checkpoint commits, and push it.
+
+Do not merge into `develop` until the merge gate is satisfied.
 
 ---
 
-## Mandatory first reads
-
-Read these files completely before changing code:
+## Mandatory reads
 
 1. `AGENTS.md`
 2. `CURRENT_TASK.md`
-3. `docs/19_REPOSITORY_MAP.md`
-4. `docs/05_TESTING_ROLLBACK_RELEASE.md`
-5. `docs/15_DEFINITION_OF_DONE.md`
-6. `skills/test-release-guardian/SKILL.md`
+3. `TASK_QUEUE.md`
+4. `docs/19_REPOSITORY_MAP.md`
+5. `docs/05_TESTING_ROLLBACK_RELEASE.md`
+6. `docs/15_DEFINITION_OF_DONE.md`
+7. `skills/test-release-guardian/SKILL.md`
+8. `skills/feature-implementer/SKILL.md`
 
-Read additional source files only as required by the task.
-
-Do not read every project Markdown file.
-
----
-
-## Goal
-
-Create a baseline compatibility suite that captures the current upstream-compatible behavior of CatX-UI before any fork hooks or product features are added.
-
-The purpose is to create a regression safety net for later Phase 0 work.
-
-No intentional runtime behavior change is allowed.
+Do not read every Markdown file.
 
 ---
 
-## Baseline
+## Important current state
 
-Current fork baseline:
+The previous TASK-002 attempt created `docs/20_BASELINE_COMPATIBILITY.md`, but local verification was blocked because the environment reported:
 
 ```text
-Upstream base: v3.8.5
-Fork state: upstream v3.8.5 + documentation only
-Fork product features: none
+required Go: 1.27.1
+installed Go: 1.23.3
+make: unavailable
 ```
 
-Use the actual checked-out repository state as authoritative.
+Therefore baseline verification is NOT considered complete yet.
+
+Do not claim green verification until the required checks actually execute in an approved environment.
 
 ---
 
-## Required analysis before writing tests
+# WP-0A Scope
 
-Inspect the existing test infrastructure and determine which behaviors are already sufficiently covered.
+## CP-0A.1 — Baseline Compatibility
 
-Do not duplicate upstream tests unnecessarily.
+First:
 
-Create new compatibility fixtures/tests only where needed to establish the fork baseline.
+1. inspect the existing `docs/20_BASELINE_COMPATIBILITY.md`;
+2. inspect existing upstream tests;
+3. preserve/reuse existing coverage;
+4. add only missing baseline tests/fixtures;
+5. determine the best available verification environment.
 
-At minimum evaluate coverage for:
-
-- Xray config generation;
-- standard subscription output;
-- JSON subscription output;
-- Clash/Happ output where supported by existing tests;
-- client CRUD;
-- client groups;
-- client-to-inbound attachment behavior;
-- routing behavior;
-- startup smoke;
-- SQLite;
-- PostgreSQL.
-
----
-
-## Required compatibility guarantees
-
-The baseline suite must make it practical to prove later that:
+Allowed verification environments, in preference order:
 
 ```text
-CatX-UI with fork hooks/features disabled
-=
-current upstream-compatible behavior
+existing working local toolchain
+WSL toolchain
+existing repository-supported container/CI workflow
+GitHub CI
 ```
 
-Especially for:
+Do not silently install arbitrary system software.
 
-### Xray configuration
+If no verification environment is available, stop with one concise blocker report instead of pretending the checkpoint is complete.
 
-Preserve semantic ordering where order matters.
+## CP-0A.2 — Fixed No-op Fork Hooks
 
-Do not normalize/sort routing or outbound arrays if that could change semantics.
+After baseline coverage is established:
 
-### Subscriptions
+- implement only the smallest fixed first-party hook contracts identified in `docs/19_REPOSITORY_MAP.md`;
+- no generic plugin framework;
+- no product behavior;
+- exact no-op defaults;
+- preserve baseline behavior.
 
-Capture relevant current behavior without introducing a second subscription engine.
+Create a focused checkpoint commit.
 
-### Client / group behavior
+## CP-0A.3 — `make verify-fork` + CI
 
-Reuse normalized upstream clients/groups as the source of truth.
+Add an additive fork verification target.
 
-### Database
+Do not alter the semantics of upstream `make verify`.
 
-Do not introduce fork schema in this task.
+Add CI invocation using existing repository patterns.
 
-Use existing SQLite/PostgreSQL test infrastructure.
+Create a focused checkpoint commit.
 
-### Startup
+## CP-0A.4 — Fork Settings / Feature Flags
 
-Use existing smoke/install/startup mechanisms where practical.
-
-Do not invent an unrelated test harness if upstream already has one.
-
----
-
-## Required deliverables
-
-### 1. Baseline tests / fixtures
-
-Add only the tests or fixtures required to close important compatibility gaps.
-
-### 2. Documentation
-
-Create:
-
-`docs/20_BASELINE_COMPATIBILITY.md`
-
-It must document:
+Add a fork-owned settings facade with these initial flags:
 
 ```text
-# Baseline Compatibility Suite
-
-## Baseline commit / upstream version
-## Existing upstream coverage reused
-## New compatibility coverage added
-## Xray config guarantees
-## Subscription guarantees
-## Client / group guarantees
-## Routing guarantees
-## SQLite coverage
-## PostgreSQL coverage
-## Startup / smoke coverage
-## Known gaps
-## Commands to run
-## Merge gate
+analytics.enabled
+dns_intelligence.enabled
+policies.enabled
+traffic_control.enabled
+security_anomaly.enabled
 ```
 
-### 3. Test commands
-
-Run the smallest relevant test set during implementation, then run the required final verification available at this stage.
-
-`make verify-fork` does not exist yet, so do not invent success output for it.
-
-Run `make verify` if the current environment supports it.
-
-If an environment dependency prevents part of the suite from running, document the exact blocker and do not claim that test passed.
-
----
-
-## Forbidden in this task
-
-Do not:
-
-- add fork hooks;
-- add `forkext`;
-- add feature flags;
-- change updater behavior;
-- add fork DB tables;
-- change Xray runtime behavior;
-- add Policy Engine;
-- add Analytics;
-- add DNS Observer;
-- add QoS;
-- refactor unrelated upstream code;
-- change product behavior just to make tests easier.
-
----
-
-## Git scope
-
-Expected changes should be limited to:
+Defaults:
 
 ```text
-tests / existing test fixtures where appropriate
-docs/20_BASELINE_COMPATIBILITY.md
-minimal test-helper changes only if strictly necessary
+OFF
 ```
 
-If production source code appears to require modification, stop and explain why before changing it.
+Requirements:
+
+- SQLite + PostgreSQL compatible;
+- no unrelated upstream setting-field sprawl;
+- all OFF preserves baseline behavior.
+
+Create a focused checkpoint commit.
+
+## CP-0A.5 — Empty API / OpenAPI / Frontend Registries
+
+Add minimal no-op registries/descriptors for future fork features.
+
+Verified integration areas are documented in `docs/19_REPOSITORY_MAP.md`.
+
+Do not add product feature pages.
+
+Create a focused checkpoint commit.
 
 ---
 
-## Completion criteria
+# Git Automation Rules
 
-TASK-002 is complete only when:
+At the beginning:
 
-- existing upstream test coverage has been mapped and reused;
-- important baseline gaps have compatibility coverage;
-- `docs/20_BASELINE_COMPATIBILITY.md` exists;
-- no intentional runtime behavior changed;
-- relevant tests pass;
-- any unrun test is explicitly documented with its environment blocker;
-- the working diff contains no unrelated refactor;
-- the task result is ready to become the baseline used by TASK-003.
+1. inspect current branch and working tree;
+2. if currently on the old `feature/task-002-baseline-compatibility` branch, preserve its uncommitted/committed baseline-document work;
+3. create or switch to:
 
-After completion:
+```text
+feature/wp-0a-foundation-guardrails
+```
 
-**STOP.**
+from the current `develop` baseline;
+4. carry forward only legitimate WP-0A work.
 
-Do not start TASK-003 automatically.
+During the package:
+
+- create one focused commit per checkpoint;
+- push after each checkpoint;
+- do not rewrite upstream history;
+- do not merge into `develop`.
+
+---
+
+# Merge Gate
+
+WP-0A is complete only if:
+
+- baseline compatibility coverage exists;
+- no-op hooks preserve baseline behavior;
+- `make verify-fork` exists;
+- CI gate exists;
+- feature flags default OFF;
+- empty registries exist;
+- required relevant tests have actually passed in an approved environment;
+- no production behavior change occurs with all fork features OFF;
+- no unrelated refactor exists.
+
+If verification is blocked:
+
+**STOP. DO NOT MERGE.**
+
+Report the exact blocker.
+
+---
+
+# Completion Behavior
+
+When all WP-0A checkpoints and verification pass:
+
+1. ensure working tree is clean;
+2. ensure checkpoint commits are pushed;
+3. provide a concise summary of commits/tests;
+4. stop.
+
+Do not start WP-0B automatically.

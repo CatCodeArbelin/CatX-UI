@@ -1,214 +1,62 @@
-# TASK QUEUE
+# TASK QUEUE — WORK PACKAGE MODE
 
-The coding agent must execute only the task named in `CURRENT_TASK.md`.
+The agent executes one **work package** at a time, not one tiny task per branch.
 
-Never automatically advance to the next task.
+A work package may contain several checkpoints/commits, but all work must stay inside the package scope.
 
-This queue supersedes the original planning queue and reflects the verified repository map in `docs/19_REPOSITORY_MAP.md`.
+The agent must stop before entering the next work package.
 
 ---
 
 # PHASE 0 — Fork Safety Foundation
 
-The goal of Phase 0 is to make CatX-UI safe to extend before adding product features.
-
-## TASK-001 — Repository Mapping & Integration Audit
-
-Recommended model: `Sol High`  
-Status: `DONE`  
-Output: `docs/19_REPOSITORY_MAP.md`  
-Production code changes: `NONE`
-
-Result:
-
-- verified actual 3x-ui architecture;
-- identified permanent upstream-touch hotspots;
-- confirmed existing upstream features that must be reused;
-- identified updater overwrite and rollback gaps;
-- established the corrected Phase 0 sequence.
-
----
-
-## TASK-002 — Baseline Compatibility Suite
-
-Recommended model: `Luna Medium`  
-Status: `NEXT`
-
-Goal:
-
-Create a baseline test/fixture suite that proves current CatX-UI behavior matches upstream `v3.8.5` before fork hooks are added.
-
-The suite must establish reference behavior for:
-
-- Xray config generation;
-- standard subscription output;
-- JSON subscription output;
-- Clash/Happ output where existing tests support it;
-- client CRUD;
-- client-group behavior;
-- inbound/client attachment behavior;
-- routing behavior;
-- local startup smoke;
-- SQLite baseline;
-- PostgreSQL baseline where supported by existing test infrastructure.
-
-Important:
-
-- Do not add fork hooks yet.
-- Do not add feature flags yet.
-- Do not change product behavior.
-- Reuse existing upstream test infrastructure and golden fixtures where possible.
-- Avoid duplicating tests that already prove the same behavior.
-- The output of this task becomes the regression baseline for every later Phase 0 task.
-
-Expected deliverables:
-
-- baseline compatibility tests/fixtures;
-- a short `docs/20_BASELINE_COMPATIBILITY.md` describing what is covered;
-- no intentional runtime behavior change.
-
----
-
-## TASK-003 — Fixed Fork Hook Contracts & Bootstrap
-
-Recommended model: `Luna Medium`  
-Review model for architecture concerns: `Sol Medium` only if needed.
-
-Goal:
-
-Add the smallest fixed first-party extension boundary based on `docs/19_REPOSITORY_MAP.md`.
-
-Initial hook capabilities should exist only where required by verified integration points.
-
-Candidate hook areas:
-
-```text
-bootstrap/install
-database models/migrations
-protected routes
-jobs
-event subscribers
-long-running services
-Xray config decoration
-frontend/OpenAPI registration
-```
-
-Rules:
-
-- Do not build a generic plugin framework.
-- Hook defaults must be exact no-ops.
-- Feature behavior must remain unchanged.
-- Baseline compatibility suite must remain green.
-
----
-
-## TASK-004 — `make verify-fork` + CI Gate
+## WP-0A — Foundation Guardrails
 
 Recommended model: `Luna Medium`
 
-Goal:
-
-Create a fork verification target without modifying upstream verification semantics.
-
-`make verify-fork` should compose:
-
-- `make verify`;
-- fork compatibility tests;
-- fork migration tests;
-- race tests for fork concurrent packages;
-- parser fuzz tests when those packages exist;
-- fork-specific smoke checks.
-
-Add CI execution for the fork target.
-
-Rules:
-
-- Do not replace upstream CI targets.
-- Keep upstream verification reusable and intact.
-
----
-
-## TASK-005 — CatX-UI Identity & Updater Isolation
-
-Recommended model: `Sol High`
-
-Goal:
-
-Ensure CatX-UI can never be unintentionally replaced by an official `MHSanaei/3x-ui` release.
-
-Verified upstream-sensitive paths include:
+Branch:
 
 ```text
-internal/web/service/panel/panel.go
-update.sh
-x-ui.sh
-install.sh
-.github/workflows/release.yml
+feature/wp-0a-foundation-guardrails
 ```
 
-Deliver:
-
-- CatX-UI release identity;
-- separate fork version / upstream base / Xray version;
-- fork-owned release repository;
-- stable/dev channels;
-- consistent asset naming;
-- checksum/integrity verification;
-- tests that reject official-upstream assets.
-
-This task isolates release identity.
-
-Do not yet implement the full transactional updater rollback flow.
-
----
-
-## TASK-006 — Transactional Updater Staging & Automatic Rollback
-
-Recommended model: `Sol High`
-
-Goal:
-
-Harden the updater so a failed update restores the previous known-good CatX-UI installation.
-
-Required flow:
+Includes the former tasks:
 
 ```text
-download
-→ verify
-→ stage
-→ backup
-→ install candidate
-→ migrate
-→ start
-→ healthcheck
-→ commit
+TASK-002 Baseline Compatibility Suite
+TASK-003 Fixed Fork Hook Contracts & Bootstrap
+TASK-004 make verify-fork + CI Gate
+TASK-007 Fork Settings Facade & Feature Flags
+TASK-010 Empty API / OpenAPI / Frontend Registries
 ```
 
-Failure flow:
+### Goal
 
-```text
-restore previous binary/config/state
-→ start
-→ healthcheck
-→ audit/report
-```
+Build the low-risk structural foundation required before product features.
 
-Required:
+### Checkpoints
 
-- no destructive replacement before the candidate is staged;
-- explicit DB migration recovery strategy;
-- release/update smoke tests;
-- rollback tests.
+#### CP-0A.1 — Baseline Compatibility
 
----
+- map/reuse existing upstream tests;
+- add only missing compatibility tests/fixtures;
+- document coverage in `docs/20_BASELINE_COMPATIBILITY.md`;
+- no product behavior changes.
 
-## TASK-007 — Fork Settings Facade & Feature Flags
+#### CP-0A.2 — Fixed No-op Fork Hooks
 
-Recommended model: `Luna Medium`
+- add the smallest verified first-party hook boundaries;
+- no generic plugin framework;
+- all hooks default to exact no-ops;
+- baseline behavior must remain unchanged.
 
-Goal:
+#### CP-0A.3 — verify-fork + CI
 
-Add a fork-owned settings layer without spreading every fork flag through upstream `AllSetting` and default maps.
+- add `make verify-fork`;
+- keep upstream `make verify` unchanged;
+- add fork-specific CI gate.
+
+#### CP-0A.4 — Fork Settings / Feature Flags
 
 Initial flags:
 
@@ -220,613 +68,345 @@ traffic_control.enabled
 security_anomaly.enabled
 ```
 
-Rules:
+All default OFF.
 
-- all major fork features default OFF;
-- all OFF must preserve baseline behavior;
-- SQLite and PostgreSQL persistence must be tested;
-- do not overload unrelated upstream settings fields.
+#### CP-0A.5 — Empty API / OpenAPI / Frontend Registries
 
----
-
-## TASK-008 — Xray Candidate Validation & Known-Good Rollback
-
-Recommended model: `Sol High`
-
-Goal:
-
-Wrap the existing Xray apply/restart path with safety while preserving upstream hot-diff/runtime behavior.
-
-Required flow:
-
-```text
-snapshot known-good state
-→ build candidate through existing GetXrayConfig()
-→ validate candidate with installed Xray
-→ apply through existing hot/restart path
-→ healthcheck
-→ commit known-good state
-```
-
-Failure:
-
-```text
-restore snapshot
-→ restart/reload
-→ healthcheck
-→ audit/report
-```
-
-Rules:
-
-- do not replace `GetXrayConfig()`;
-- do not replace existing Xray process/runtime management;
-- disabled fork features must remain exact no-ops.
-
----
-
-## TASK-009 — DB Import / Xray Start Recovery Gap
-
-Recommended model: `Sol Medium`
-
-Goal:
-
-Close the verified recovery gap where a database import can activate successfully but the resulting Xray configuration fails to start.
-
-Required:
-
-- SQLite recovery path;
-- PostgreSQL recovery path where applicable;
-- restore previous DB/config combination;
-- healthcheck;
-- failure-path tests.
-
----
-
-## TASK-010 — Empty Fork API / OpenAPI / Frontend Registries
-
-Recommended model: `Luna Medium`
-
-Goal:
-
-Add minimal empty/no-op registration points for fork UI/API surfaces.
-
-Verified integration areas:
-
-```text
-internal/web/controller/api.go
-tools/openapigen/main.go
-frontend/src/pages/api-docs/endpoints.ts
-frontend/src/routes.tsx
-frontend/src/layouts/AppSidebar.tsx
-frontend/src/components/CommandPalette.tsx
-```
-
-Deliver:
-
-- protected fork API subtree registration;
-- fork OpenAPI type/endpoint descriptors;
-- fork route descriptor;
-- shared fork navigation descriptor.
+Add only minimal registries/descriptors for future fork features.
 
 No product feature pages yet.
 
-Baseline compatibility must remain green.
+### Merge gate
+
+WP-0A may merge only when the available test environment can verify the package.
+
+If local Windows cannot run required tests, use an approved alternative such as WSL/CI/container-based verification. Do not claim green tests when they were not executed.
 
 ---
 
-# PHASE 1 — Analytics Foundation
-
-Phase 1 must reuse upstream client/group/node/traffic models instead of creating parallel sources of truth.
-
-## TASK-101 — Analytics Persistence Schema
-
-Recommended model: `Luna Medium`
-
-Goal:
-
-Add fork-owned analytics persistence only for data that upstream does not already store.
-
-Examples:
-
-- destination events;
-- DNS observations;
-- correlated sessions;
-- service/category aggregates.
-
-Rules:
-
-- reference existing client/group/node IDs;
-- do not duplicate upstream traffic counters;
-- SQLite + PostgreSQL migration coverage;
-- explicit retention design.
-
----
-
-## TASK-102 — Incremental `access.log` Collector
+## WP-0B — Release Identity & Updater Safety
 
 Recommended model: `Sol High`
 
-Must support:
-
-- persistent offset/checkpoint;
-- file identity/inode handling where applicable;
-- append;
-- rename/rotation;
-- copy-truncate;
-- deletion/recreation;
-- partial lines;
-- malformed input;
-- batching;
-- bounded backpressure;
-- graceful shutdown;
-- coexistence with upstream log cleanup;
-- fuzz tests;
-- race tests.
-
-Must not become the real-time online-state source.
-
----
-
-## TASK-103 — Destination Event Normalizer
-
-Recommended model: `Luna Medium`
-
-Goal:
-
-Normalize allowed metadata from:
+Branch:
 
 ```text
-access.log
-Xray destination metadata
-future DNS observer
-future SNI/TLS metadata
+feature/wp-0b-release-safety
 ```
 
-Store source/provenance and confidence.
-
-No decrypted HTTPS content.
-
----
-
-## TASK-104 — Xray Online/Traffic Adapter
-
-Recommended model: `Luna Medium`
-
-Goal:
-
-Reuse existing upstream online-user and traffic APIs as inputs to fork analytics.
-
-Rules:
-
-- do not build a second online-state system;
-- do not build a second traffic-counter system;
-- degrade safely when optional Xray APIs are unavailable.
-
----
-
-## TASK-105 — Session Correlator
-
-Recommended model: `Sol Medium`
-
-Goal:
-
-Correlate multiple observations into logical network sessions.
-
-Inputs may include:
+Includes:
 
 ```text
-client
-domain/destination
-port
-network
-time window
-source evidence
+TASK-005 CatX-UI Identity & Updater Isolation
+TASK-006 Transactional Updater Staging & Automatic Rollback
 ```
 
-Do not present estimated network activity as exact screen time.
+### Goal
+
+Ensure CatX-UI cannot be overwritten by official upstream releases and failed updates restore a known-good installation.
+
+### Checkpoints
+
+1. CatX-UI release identity.
+2. Fork/upstream/Xray version separation.
+3. Retarget all updater/install paths.
+4. Integrity validation.
+5. Staged update.
+6. Healthcheck.
+7. Automatic rollback.
+8. Update/rollback tests.
 
 ---
 
-## TASK-106 — Historical Analytics Aggregator
+## WP-0C — Xray / Database Recovery Safety
 
-Recommended model: `Luna Medium`
+Recommended model: `Sol High`
 
-Goal:
+Branch:
 
-Build historical analytics by combining:
+```text
+feature/wp-0c-runtime-recovery
+```
 
-- existing upstream traffic dimensions;
-- fork destination/session data;
-- daily/hourly aggregates.
+Includes:
 
-Do not duplicate existing per-client/per-inbound/per-node counters.
+```text
+TASK-008 Xray Candidate Validation & Known-Good Rollback
+TASK-009 DB Import / Xray Start Recovery Gap
+```
+
+### Goal
+
+Make runtime-affecting changes recoverable before Policy Engine or traffic-control features exist.
 
 ---
 
-## TASK-107 — Basic Client Activity API/UI
+# PHASE 1 — Analytics
+
+## WP-1A — Analytics Data Foundation
 
 Recommended model: `Luna Medium`
 
-Show:
+Includes:
 
-- recent service/destination activity;
-- session count;
-- traffic;
-- first/last seen;
-- allow/block action when policy exists later;
-- confidence/source where relevant.
+- analytics persistence schema;
+- destination event model;
+- Xray online/traffic adapter;
+- historical aggregation skeleton;
+- retention foundation.
+
+Reuse upstream clients/groups/nodes/traffic counters.
+
+Do not create parallel upstream models.
+
+---
+
+## WP-1B — access.log & Session Pipeline
+
+Recommended model: `Sol High`
+
+Includes:
+
+- incremental access.log collector;
+- rotation/truncate/restart handling;
+- bounded batching;
+- parser fuzz/race tests;
+- session correlation.
+
+---
+
+## WP-1C — Activity API/UI
+
+Recommended model: `Luna Medium`
+
+Includes:
+
+- client activity API;
+- client activity UI;
+- basic historical views;
+- source/confidence display.
 
 ---
 
 # PHASE 2 — DNS / Destination Intelligence
 
-## TASK-201 — DNS Observer
-
-Recommended model: `Sol Medium`
-
-Goal:
-
-Collect attributable DNS metadata without blocking core Xray operation.
-
----
-
-## TASK-202 — Destination Evidence Fusion
+## WP-2A — DNS & Evidence Fusion
 
 Recommended model: `Sol High`
 
-Fuse evidence from:
+Includes:
 
-```text
-DNS
-Xray requested destination
-SNI where visible
-destination IP
-access.log
-TLS/QUIC metadata
-```
+- DNS observer;
+- destination evidence fusion;
+- SNI/TLS/QUIC metadata where observable;
+- source/confidence semantics.
 
-Maintain source and confidence.
+No TLS MITM.
 
 ---
 
-## TASK-203 — ASN / GeoIP Enrichment
+## WP-2B — Enrichment & Classification
 
 Recommended model: `Luna Medium`
 
-Enrichment failure must not block traffic.
+Includes:
+
+- ASN/GeoIP;
+- service recognition;
+- category classifier;
+- first-seen/new-domain intelligence;
+- relationship graph.
 
 ---
 
-## TASK-204 — Service / Category Classifier
+## WP-2C — DNS Intelligence UI / Privacy / Retention
 
 Recommended model: `Luna Medium`
 
-Architecture:
+Includes:
 
-```text
-evidence
-→ provider
-→ logical service
-→ logical category
-→ confidence
-```
-
-Do not permanently bind policy semantics to one provider/geosite format.
-
----
-
-## TASK-205 — DNS Intelligence Dashboard
-
-Recommended model: `Luna Medium`
-
-Show:
-
-- queries;
-- blocked queries;
-- unique domains;
-- new domains;
-- NXDOMAIN;
-- clients;
-- services/categories.
-
----
-
-## TASK-206 — Service Relationship Graph & First-Seen Intelligence
-
-Recommended model: `Luna Medium`
-
-Group infrastructure domains under logical services and expose first/last-seen metadata.
-
----
-
-## TASK-207 — Analytics Retention & Privacy Controls
-
-Recommended model: `Luna Medium`
-
-Deliver:
-
-- configurable retention;
-- delete-history action;
+- DNS dashboard;
 - privacy dashboard;
-- explicit statement that HTTPS bodies/cookies/passwords/tokens are not collected.
+- retention controls;
+- delete-history controls.
 
 ---
 
 # PHASE 3 — Policy Engine v1
 
-Policy must reuse existing normalized clients, client groups, inbounds, nodes, and Xray routing.
-
-## TASK-301 — Policy Schema / Repository
+## WP-3A — Policy Data/API
 
 Recommended model: `Luna Medium`
 
-Reference existing stable client/group/inbound/node IDs.
+Includes:
 
-Do not create parallel client/group models.
+- policy schema/repository;
+- CRUD API;
+- group assignment;
+- client override.
 
----
-
-## TASK-302 — Policy CRUD API
-
-Recommended model: `Luna Medium`
-
-Use the protected fork API registry.
+Reuse upstream `ClientGroup` and normalized clients.
 
 ---
 
-## TASK-303 — Group Assignment / Client Override
-
-Recommended model: `Luna Medium`
-
-Support:
-
-```text
-inherited
-override
-return to policy
-```
-
-Reuse existing `ClientGroup`.
-
----
-
-## TASK-304 — Policy Precedence Engine
+## WP-3B — Policy Decision Engine & Xray Compiler
 
 Recommended model: `Sol High`
 
-Define and test exact precedence for:
+Includes:
 
-- system/emergency;
-- temporary allow;
-- client allow/block;
-- group allow/block;
-- category policy;
-- upstream/global routing;
-- default outbound.
-
----
-
-## TASK-305 — Xray Policy Decorator / Compiler
-
-Recommended model: `Sol High`
-
-Goal:
-
-Decorate the final upstream-generated Xray config.
-
-Rules:
-
-- one deterministic hook near the end of `GetXrayConfig()`;
-- preserve API routing;
-- preserve semantic rule/outbound order;
-- no second config generator;
-- exact no-op when policies are disabled;
-- candidate validation and rollback must already exist.
+- precedence engine;
+- deterministic final-config decorator;
+- route/order preservation;
+- policy fixtures;
+- Xray validation;
+- rollback integration.
 
 ---
 
-## TASK-306 — Policy Simulator
+## WP-3C — Simulator / Explain / UI
 
 Recommended model: `Luna Medium`
 
-Must reuse real decision/compiler logic.
+Includes:
 
----
+- Policy Simulator;
+- Explain Decision;
+- Explain Route;
+- policy UI.
 
-## TASK-307 — Explain Route / Decision
-
-Recommended model: `Luna Medium`
-
-Reuse existing backend route-test capabilities where possible, including user/client context.
-
-Do not implement a second route-testing engine.
-
----
-
-## TASK-308 — Policy UI
-
-Recommended model: `Luna Medium`
-
-Integrate into existing client/group UX rather than cloning those pages.
+Reuse upstream route-test capabilities where possible.
 
 ---
 
 # PHASE 4 — Policy Engine v2
 
-## TASK-401 — Category Policies
-
-Recommended model: `Luna Medium`
-
-## TASK-402 — Schedules
+## WP-4A — Categories / Schedules / Temporary Overrides
 
 Recommended model: `Sol Medium`
 
-Timezone and DST tests are mandatory.
+Includes:
 
-## TASK-403 — Temporary Overrides
-
-Recommended model: `Luna Medium`
-
-Expiration must survive restart.
-
-## TASK-404 — Quarantine Policy
-
-Recommended model: `Sol Medium`
-
-Preserve explicitly required management/subscription paths.
-
-## TASK-405 — Managed DNS Policy
-
-Recommended model: `Sol High`
-
-Do not claim perfect DoH prevention.
-
-## TASK-406 — SafeSearch
-
-Recommended model: `Luna Medium`
-
-Only through provider-supported DNS/routing mechanisms.
+- categories;
+- schedules;
+- timezone/DST tests;
+- temporary overrides.
 
 ---
 
-# PHASE 5 — Historical Traffic & Quotas
+## WP-4B — Quarantine / Managed DNS / SafeSearch
 
-This phase extends existing upstream accounting instead of rebuilding per-inbound/per-node counters.
+Recommended model: `Sol High`
 
-## TASK-501 — Custom Date-Range Traffic History
+Includes:
+
+- quarantine;
+- managed DNS policy;
+- SafeSearch where supported;
+- documented DoH limitations.
+
+---
+
+# PHASE 5 — Traffic History & Quotas
+
+## WP-5A — Historical Traffic
 
 Recommended model: `Luna Medium`
 
-Provide Today / 7 days / 30 days / custom range.
+Includes:
 
-## TASK-502 — Service / Category Traffic Breakdown
+- custom date ranges;
+- service/category breakdown;
+- reuse upstream per-client/per-inbound/per-node accounting.
 
-Recommended model: `Luna Medium`
+---
 
-Use correlated/classified analytics data.
-
-## TASK-503 — Shared Group Quota
+## WP-5B — Shared Group Quota / Accounting Extensions
 
 Recommended model: `Sol Medium`
 
-Reuse existing `ClientGroup`.
+Includes:
 
-Shared accounting updates must be atomic.
-
-## TASK-504 — Optional Traffic Multiplier
-
-Recommended model: `Luna Medium`
-
-Use integer/fixed-point accounting.
+- shared group quota;
+- atomic accounting;
+- optional fixed-point traffic multiplier.
 
 ---
 
 # PHASE 6 — QoS / Traffic Control
 
-## TASK-601 — Shaping Architecture & Capability Detection
+## WP-6A — Shaping Core
 
 Recommended model: `Sol High`
 
-## TASK-602 — Linux Shaping Adapter
+Includes:
 
-Recommended model: `Sol High`
-
-## TASK-603 — Per-client Speed Limit
-
-Recommended model: `Sol High`
-
-## TASK-604 — Rolling/Window Quota
-
-Recommended model: `Sol Medium`
-
-## TASK-605 — Post-quota / Post-expiry Soft Throttle
-
-Recommended model: `Sol Medium`
-
-## TASK-606 — Optional Per-category Cap
-
-Recommended model: `Sol Medium`
-
-Only when category attribution confidence is sufficiently reliable.
+- capability detection;
+- shaping adapter;
+- Linux implementation;
+- reconciliation.
 
 ---
 
-# PHASE 7 — Security / Anomaly Intelligence
+## WP-6B — Speed / Rolling Quota / Soft Throttle
 
-## TASK-701 — Extended IP / Session History
+Recommended model: `Sol High`
 
-Recommended model: `Luna Medium`
+Includes:
 
-Reuse upstream IP/node observations where available.
+- per-client upload/download speed;
+- rolling/window quota;
+- post-quota/post-expiry throttle;
+- optional category cap when classification is reliable.
 
-## TASK-702 — Account-sharing Risk Engine
+---
+
+# PHASE 7 — Security / Anomaly
+
+## WP-7A — Risk Intelligence
 
 Recommended model: `Sol Medium`
+
+Includes:
+
+- extended IP/session history;
+- sharing-risk engine;
+- ASN/country alerts;
+- DNS anomaly heuristics.
 
 No automatic ban by default.
 
-## TASK-703 — ASN / Country Alerts
+---
+
+# PHASE 8 — Operations / Product Polish
+
+## WP-8A — Audit / Webhooks / Metrics
 
 Recommended model: `Luna Medium`
 
-## TASK-704 — DNS Anomaly Heuristics
+Includes:
 
-Recommended model: `Sol Medium`
+- durable fork audit UI;
+- webhooks;
+- Prometheus export.
 
-Always label results as heuristic.
+Reuse upstream event bus for notifications, not as durable audit storage.
 
 ---
 
-# PHASE 8 — Operations & Product Polish
+## WP-8B — Self-service / Host Visibility / Fleet UI
 
-## TASK-801 — Fork Audit Log UI
+Recommended model: `Luna Medium`, with security review for self-service.
 
-Recommended model: `Luna Medium`
+Includes:
 
-Durable audit records must use DB persistence.
+- self-service HWID/device portal;
+- host visibility per group/client if upstream still lacks it;
+- fleet dashboard extensions.
 
-## TASK-802 — Webhooks
+---
 
-Recommended model: `Luna Medium`
-
-Extend existing low-volume event patterns.
-
-Do not create a second event bus.
-
-## TASK-803 — Prometheus Export
-
-Recommended model: `Luna Medium`
-
-## TASK-804 — Self-service HWID / Device Portal
-
-Recommended model: `Sol Medium`
-
-Security review required.
-
-Reuse existing `ClientHwid`.
-
-## TASK-805 — Host Visibility per Group / Client
-
-Recommended model: `Luna Medium`
-
-Implement only if current upstream still lacks equivalent functionality.
-
-## TASK-806 — Fleet Dashboard Extensions
-
-Recommended model: `Luna Medium`
-
-Extend existing node/runtime management.
-
-Do not create a parallel node model.
-
-## TASK-807 — Backup/Restore Validation UI & Tests
-
-Recommended model: `Sol Medium`
-
-Build on the recovery work from Phase 0.
-
-## TASK-808 — Multi-node Update Orchestration
+## WP-8C — Multi-node Update Orchestration
 
 Recommended model: `Sol High`
 
@@ -834,58 +414,60 @@ Only after single-node updater/rollback is proven.
 
 ---
 
-# PHASE 9 — Community Backlog
+# Operating Rules
 
-Before accepting any new community item:
+## Branching
 
-1. verify current upstream state;
-2. verify the request is still relevant;
-3. check whether upstream already implemented it;
-4. estimate sync/divergence cost;
-5. require tests and rollback where relevant.
+One branch per work package, not per checkpoint.
 
-Do not automatically add new transport/protocol stacks that belong in Xray/upstream.
-
----
-
-# Before Every Task
-
-1. Merge the previous completed task into `develop`.
-2. Ensure `develop` is clean and current.
-3. Update `CURRENT_TASK.md`.
-4. Create a new feature branch from `develop`.
-5. Read only the files listed in `CURRENT_TASK.md`.
-6. Implement only the current task.
-7. Run all required tests.
-8. Commit and push the task branch.
-9. Review the result.
-10. Merge into `develop` only when the task passes its merge gate.
-11. Do not automatically begin the next queue item.
-
----
-
-# High-risk Tasks That Deserve Sol
-
-Prioritize Sol budget for:
+Example:
 
 ```text
-TASK-005
-TASK-006
-TASK-008
-TASK-102
-TASK-202
-TASK-304
-TASK-305
-TASK-405
-TASK-601
-TASK-602
-TASK-603
-TASK-808
-upstream release synchronization
-security-sensitive regressions
-complex migration/recovery failures
+feature/wp-0a-foundation-guardrails
 ```
 
-TASK-002, TASK-003, TASK-004, and most regular implementation work should start on `Luna Medium`.
+Inside that branch the agent may create multiple focused commits:
 
-Use local Qwen for repository reading, mechanical edits, boilerplate, documentation, and low-risk test expansion when useful.
+```text
+test: establish upstream compatibility baseline
+feat: add no-op fork hook contracts
+ci: add verify-fork gate
+feat: add fork feature flags
+feat: add empty fork registries
+```
+
+## Git automation
+
+The agent may:
+
+- create/switch the work-package branch;
+- commit checkpoints;
+- push the branch.
+
+The agent must NOT merge into `develop` unless the package merge gate is satisfied.
+
+A merge is forbidden if required tests were not executed successfully.
+
+## Human interaction
+
+Normal workflow should require human review only at work-package boundaries, not after every microtask.
+
+## Expensive model usage
+
+Prioritize Sol for:
+
+```text
+WP-0B
+WP-0C
+WP-1B
+WP-2A
+WP-3B
+WP-4B
+WP-6A
+WP-6B
+WP-8C
+upstream synchronization
+security/recovery blockers
+```
+
+Use Luna Medium for the majority of implementation work.
