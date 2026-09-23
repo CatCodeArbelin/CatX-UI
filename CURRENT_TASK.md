@@ -2,221 +2,166 @@
 
 ## Task ID
 
-`PHASE-0 / TASK-001`
+`PHASE-0 / TASK-002`
 
 ## Title
 
-Repository Mapping & Fork Integration Audit
+Baseline Compatibility Suite
 
 ## Recommended model
 
-**Sol High** preferred.
+**Luna Medium**
 
-Fallback: **Luna Medium**.
-
-Reason: this task defines the permanent integration boundaries of the fork.
+Sol is not required unless a genuine architectural ambiguity or difficult upstream regression is discovered.
 
 ---
 
 ## Mandatory first reads
 
-Read these files completely before doing anything else:
+Read these files completely before changing code:
 
 1. `AGENTS.md`
-2. `FINAL_TZ.md`
-3. `docs/00_MASTER_SPEC.md`
-4. `docs/01_ARCHITECTURE.md`
-5. `docs/03_ROADMAP.md`
-6. `docs/04_UPSTREAM_SYNC.md`
-7. `docs/05_TESTING_ROLLBACK_RELEASE.md`
-8. `skills/repository-cartographer/SKILL.md`
+2. `CURRENT_TASK.md`
+3. `docs/19_REPOSITORY_MAP.md`
+4. `docs/05_TESTING_ROLLBACK_RELEASE.md`
+5. `docs/15_DEFINITION_OF_DONE.md`
+6. `skills/test-release-guardian/SKILL.md`
 
-Do **not** read every Markdown file in the repository unless the task requires it.
+Read additional source files only as required by the task.
+
+Do not read every project Markdown file.
 
 ---
 
 ## Goal
 
-Map the real current 3x-ui repository and identify the **minimum permanent integration points** required for this maintained fork.
+Create a baseline compatibility suite that captures the current upstream-compatible behavior of CatX-UI before any fork hooks or product features are added.
 
-This task is analysis-only.
+The purpose is to create a regression safety net for later Phase 0 work.
 
-Do not modify production code.
-
----
-
-## Required repository mapping
-
-Inspect and document actual code paths for:
-
-- application startup/lifecycle;
-- database initialization;
-- migrations;
-- Client model/service;
-- Group model/service;
-- Inbound model/service;
-- Node model/service;
-- Xray config generation;
-- Xray runtime/process management;
-- Xray API integration;
-- routing;
-- client-specific routing support;
-- traffic/statistics;
-- online-client/IP state;
-- `access.log` handling;
-- scheduled jobs;
-- event bus/events;
-- backend controllers/routes;
-- OpenAPI generation;
-- frontend route registration;
-- frontend navigation/menu;
-- client/group UI;
-- updater;
-- backup/restore;
-- settings/feature storage;
-- tests and CI.
+No intentional runtime behavior change is allowed.
 
 ---
 
-## Critical questions
+## Baseline
 
-### 1. Fork registration boundary
-
-Find the smallest practical place to introduce a fork extension entry point.
-
-Conceptually:
-
-```go
-forkext.RegisterRoutes(...)
-forkext.RegisterJobs(...)
-forkext.RegisterMigrations(...)
-forkext.RegisterEventSubscribers(...)
-```
-
-Do not force these exact names if the real repository suggests a better boundary.
-
-### 2. Database integration
-
-Determine:
-
-- where upstream migrations live;
-- how SQLite/PostgreSQL compatibility is handled;
-- where fork migrations can hook in with minimal divergence;
-- which upstream file(s) become permanent migration integration hotspots.
-
-### 3. Xray integration
-
-Determine:
-
-- where upstream builds Xray config;
-- where routing rules are constructed;
-- where per-user/client routing is represented;
-- where a fork policy compiler could safely decorate/augment config;
-- how candidate config can be validated before reload/restart.
-
-### 4. Analytics integration
-
-Determine:
-
-- how current online state is obtained;
-- current `access.log` behavior;
-- where an incremental collector can run independently;
-- what existing stats/events can be reused.
-
-### 5. Jobs and events
-
-Determine:
-
-- where jobs are scheduled;
-- where event subscribers can be registered;
-- whether the existing event bus is sufficient.
-
-### 6. Frontend integration
-
-Determine:
-
-- safest place for fork routes/features;
-- how API types/OpenAPI are generated;
-- how to avoid hand-editing generated files;
-- how fork pages can be added without replacing upstream navigation.
-
-### 7. Updater
-
-Determine:
-
-- exact official upstream update source;
-- exact files/functions that must change so the fork can never overwrite itself with official upstream binaries.
-
-### 8. Compatibility
-
-Identify how to prove:
+Current fork baseline:
 
 ```text
-all fork feature flags OFF
-=
-upstream behavior
+Upstream base: v3.8.5
+Fork state: upstream v3.8.5 + documentation only
+Fork product features: none
 ```
 
-for:
-
-- Xray config;
-- subscriptions;
-- client management;
-- routing;
-- startup.
+Use the actual checked-out repository state as authoritative.
 
 ---
 
-## Required output
+## Required analysis before writing tests
+
+Inspect the existing test infrastructure and determine which behaviors are already sufficiently covered.
+
+Do not duplicate upstream tests unnecessarily.
+
+Create new compatibility fixtures/tests only where needed to establish the fork baseline.
+
+At minimum evaluate coverage for:
+
+- Xray config generation;
+- standard subscription output;
+- JSON subscription output;
+- Clash/Happ output where supported by existing tests;
+- client CRUD;
+- client groups;
+- client-to-inbound attachment behavior;
+- routing behavior;
+- startup smoke;
+- SQLite;
+- PostgreSQL.
+
+---
+
+## Required compatibility guarantees
+
+The baseline suite must make it practical to prove later that:
+
+```text
+CatX-UI with fork hooks/features disabled
+=
+current upstream-compatible behavior
+```
+
+Especially for:
+
+### Xray configuration
+
+Preserve semantic ordering where order matters.
+
+Do not normalize/sort routing or outbound arrays if that could change semantics.
+
+### Subscriptions
+
+Capture relevant current behavior without introducing a second subscription engine.
+
+### Client / group behavior
+
+Reuse normalized upstream clients/groups as the source of truth.
+
+### Database
+
+Do not introduce fork schema in this task.
+
+Use existing SQLite/PostgreSQL test infrastructure.
+
+### Startup
+
+Use existing smoke/install/startup mechanisms where practical.
+
+Do not invent an unrelated test harness if upstream already has one.
+
+---
+
+## Required deliverables
+
+### 1. Baseline tests / fixtures
+
+Add only the tests or fixtures required to close important compatibility gaps.
+
+### 2. Documentation
 
 Create:
 
-`docs/19_REPOSITORY_MAP.md`
+`docs/20_BASELINE_COMPATIBILITY.md`
 
-Use this structure:
-
-```text
-# Repository Map
-
-## Current upstream architecture
-## Application lifecycle
-## Database and migrations
-## Clients / Groups / Inbounds / Nodes
-## Xray config generation
-## Xray runtime/API
-## Routing
-## Traffic / statistics
-## Online state / IP tracking
-## access.log
-## Jobs / schedulers
-## Event system
-## Backend routes / API
-## OpenAPI / generated code
-## Frontend routes / navigation
-## Updater
-## Backup / restore
-## Test infrastructure
-## Proposed fork integration points
-## Permanent upstream-touch hotspots
-## Spec assumptions that were correct
-## Spec assumptions that need correction
-## Features already present upstream
-## Duplicate functionality we should NOT implement
-## Recommended Phase 0 implementation sequence
-## Risks / blockers
-```
-
-For each proposed integration point include:
+It must document:
 
 ```text
-File:
-Function/type:
-Purpose:
-Fork hook:
-Why this is minimal:
-Expected upstream-sync conflict risk:
-LOW / MEDIUM / HIGH
+# Baseline Compatibility Suite
+
+## Baseline commit / upstream version
+## Existing upstream coverage reused
+## New compatibility coverage added
+## Xray config guarantees
+## Subscription guarantees
+## Client / group guarantees
+## Routing guarantees
+## SQLite coverage
+## PostgreSQL coverage
+## Startup / smoke coverage
+## Known gaps
+## Commands to run
+## Merge gate
 ```
+
+### 3. Test commands
+
+Run the smallest relevant test set during implementation, then run the required final verification available at this stage.
+
+`make verify-fork` does not exist yet, so do not invent success output for it.
+
+Run `make verify` if the current environment supports it.
+
+If an environment dependency prevents part of the suite from running, document the exact blocker and do not claim that test passed.
 
 ---
 
@@ -224,31 +169,50 @@ LOW / MEDIUM / HIGH
 
 Do not:
 
-- implement `forkext`;
-- change database schema;
-- change updater;
-- create Policy Engine;
-- create Analytics;
-- create DNS Observer;
-- create QoS;
-- change frontend;
-- refactor upstream code;
-- rename/move upstream files.
+- add fork hooks;
+- add `forkext`;
+- add feature flags;
+- change updater behavior;
+- add fork DB tables;
+- change Xray runtime behavior;
+- add Policy Engine;
+- add Analytics;
+- add DNS Observer;
+- add QoS;
+- refactor unrelated upstream code;
+- change product behavior just to make tests easier.
+
+---
+
+## Git scope
+
+Expected changes should be limited to:
+
+```text
+tests / existing test fixtures where appropriate
+docs/20_BASELINE_COMPATIBILITY.md
+minimal test-helper changes only if strictly necessary
+```
+
+If production source code appears to require modification, stop and explain why before changing it.
 
 ---
 
 ## Completion criteria
 
-Task is complete when:
+TASK-002 is complete only when:
 
-- `docs/19_REPOSITORY_MAP.md` exists;
-- all important paths are backed by actual repository inspection;
-- permanent fork integration hotspots are identified;
-- duplicate/upstream-existing features are identified;
-- no production source files were modified.
+- existing upstream test coverage has been mapped and reused;
+- important baseline gaps have compatibility coverage;
+- `docs/20_BASELINE_COMPATIBILITY.md` exists;
+- no intentional runtime behavior changed;
+- relevant tests pass;
+- any unrun test is explicitly documented with its environment blocker;
+- the working diff contains no unrelated refactor;
+- the task result is ready to become the baseline used by TASK-003.
 
-After creating the document:
+After completion:
 
 **STOP.**
 
-Do not begin TASK-002 automatically.
+Do not start TASK-003 automatically.
