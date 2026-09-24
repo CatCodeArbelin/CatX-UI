@@ -298,6 +298,7 @@ func (t *Tailer) persist(ctx context.Context, q <-chan lineRecord, path string) 
 			return true
 		}
 		events, sessions := make([]MetadataEvent, 0, len(batch)), make(map[string]NetworkSession)
+		evidence := NewEvidenceService(t.cfg.Repo, EvidenceEnabled())
 		for _, record := range batch {
 			e, ok := normalize(record)
 			if !ok {
@@ -305,6 +306,9 @@ func (t *Tailer) persist(ctx context.Context, q <-chan lineRecord, path string) 
 				continue
 			}
 			events = append(events, e)
+			if _, err := evidence.Correlate(ctx, DestinationInput{ObservedAt: time.UnixMilli(e.ObservedAt), ClientEmail: e.ClientEmail, NodeID: e.NodeID, InboundID: e.InboundID, DestinationIP: e.DestinationIP, DirectDomain: e.Domain, SessionKey: e.SessionKey, Source: e.Source, EventKey: e.EventKey}); err != nil {
+				t.cfg.Logger.Printf("analytics access.log evidence deferred: %v", err)
+			}
 			s := sessionFor(e)
 			if old, exists := sessions[s.SessionKey]; !exists || s.LastSeen > old.LastSeen {
 				if exists && old.FirstSeen < s.FirstSeen {
@@ -405,8 +409,9 @@ func sessionFor(e MetadataEvent) NetworkSession {
 
 var configured struct {
 	sync.RWMutex
-	repo    Repository
-	enabled bool
+	repo            Repository
+	enabled         bool
+	evidenceEnabled bool
 }
 
 // Configure installs the analytics repository after migrations. A disabled or
@@ -417,7 +422,21 @@ func Configure(repo Repository, enabled bool) {
 	if repo == nil {
 		repo = NoopRepository{}
 	}
-	configured.repo, configured.enabled = repo, enabled
+	configured.repo, configured.enabled, configured.evidenceEnabled = repo, enabled, false
+}
+
+// SetEvidenceEnabled applies the independent DNS intelligence flag after the
+// analytics repository has been configured. It never enables analytics itself.
+func SetEvidenceEnabled(enabled bool) {
+	configured.Lock()
+	defer configured.Unlock()
+	configured.evidenceEnabled = configured.enabled && enabled
+}
+
+func EvidenceEnabled() bool {
+	configured.RLock()
+	defer configured.RUnlock()
+	return configured.enabled && configured.evidenceEnabled
 }
 
 // Start starts the collector only when analytics was explicitly enabled.

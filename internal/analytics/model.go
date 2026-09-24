@@ -58,6 +58,8 @@ type DNSObservation struct {
 	Source      string  `json:"source" gorm:"not null"`
 	Provenance  string  `json:"provenance" gorm:"not null"`
 	Confidence  float64 `json:"confidence" gorm:"not null"`
+	ExpiresAt   int64   `json:"expiresAt,omitempty" gorm:"index:idx_analytics_dns_expiry"`
+	EventKey    string  `json:"-" gorm:"index:idx_analytics_dns_event_key,unique,where:event_key <> ''"`
 }
 
 func (DNSObservation) TableName() string { return "analytics_dns_observations" }
@@ -151,3 +153,30 @@ type AccessLogCursor struct {
 }
 
 func (AccessLogCursor) TableName() string { return "analytics_access_log_cursors" }
+
+// EvidenceObservation is the durable, metadata-only result of DNS/destination
+// correlation. Each row retains its source and confidence so ambiguous or
+// conflicting candidates are never collapsed into an unjustified assertion.
+type EvidenceObservation struct {
+	ID            uint    `json:"id" gorm:"primaryKey"`
+	ObservedAt    int64   `json:"observedAt" gorm:"not null;index:idx_analytics_evidence_time"`
+	ExpiresAt     int64   `json:"expiresAt,omitempty" gorm:"index:idx_analytics_evidence_expiry"`
+	ClientEmail   string  `json:"clientEmail,omitempty" gorm:"index:idx_analytics_evidence_client_time,priority:1"`
+	NodeID        int     `json:"nodeId,omitempty" gorm:"index:idx_analytics_evidence_node_time,priority:1"`
+	InboundID     int     `json:"inboundId,omitempty"`
+	SessionKey    string  `json:"sessionKey,omitempty" gorm:"index:idx_analytics_evidence_session"`
+	Domain        string  `json:"domain,omitempty" gorm:"index:idx_analytics_evidence_domain_time,priority:1"`
+	DestinationIP string  `json:"destinationIp,omitempty" gorm:"index:idx_analytics_evidence_ip_time,priority:1"`
+	SNI           string  `json:"sni,omitempty"`
+	Kind          string  `json:"kind" gorm:"not null"`
+	Source        string  `json:"source" gorm:"not null"`
+	Provenance    string  `json:"provenance" gorm:"not null"`
+	Confidence    float64 `json:"confidence" gorm:"not null"`
+	Level         string  `json:"confidenceLevel" gorm:"not null"`
+	Selected      bool    `json:"selected"`
+	Ambiguous     bool    `json:"ambiguous"`
+	Conflicting   bool    `json:"conflicting"`
+	EventKey      string  `json:"-" gorm:"index:idx_analytics_evidence_event_key,unique,where:event_key <> ''"`
+}
+
+func (EvidenceObservation) TableName() string { return "analytics_evidence_observations" }

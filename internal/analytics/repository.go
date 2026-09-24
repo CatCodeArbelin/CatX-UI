@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -26,6 +27,8 @@ func DefaultRetentionPolicy() RetentionPolicy {
 type Repository interface {
 	RecordDestination(ctx context.Context, event MetadataEvent) error
 	RecordDNS(ctx context.Context, observation DNSObservation) error
+	RecordEvidence(ctx context.Context, evidence EvidenceObservation) error
+	ActiveDNSForDestination(ctx context.Context, clientEmail string, nodeID, inboundID int, destinationIP string, observedAt int64) ([]DNSObservation, error)
 	UpsertSession(ctx context.Context, session NetworkSession) error
 	UpsertAggregate(ctx context.Context, aggregate ServiceCategoryAggregate) error
 	ListDestinations(ctx context.Context, clientEmail string, from, to int64, limit int) ([]DestinationObservation, error)
@@ -54,7 +57,7 @@ type SessionPage struct {
 	Total int64
 }
 
-type PruneResult struct{ RawEvents, DNSObservations, Sessions, Aggregates int64 }
+type PruneResult struct{ RawEvents, DNSObservations, Evidence, Sessions, Aggregates int64 }
 
 type GormRepository struct{ db *gorm.DB }
 
@@ -116,7 +119,27 @@ func (r *GormRepository) RecordDNS(ctx context.Context, observation DNSObservati
 	if observation.ObservedAt <= 0 || observation.Domain == "" || observation.Source == "" || observation.Provenance == "" || observation.Confidence < 0 || observation.Confidence > 1 {
 		return errors.New("invalid analytics DNS observation")
 	}
-	return r.db.WithContext(ctx).Create(&observation).Error
+	if observation.EventKey == "" {
+		observation.EventKey = digest(strings.Join([]string{observation.ClientEmail, observation.Domain, observation.ResolvedIP, observation.RecordType, strconv.FormatInt(observation.ObservedAt, 10), strconv.FormatInt(observation.ExpiresAt, 10)}, "|"))
+	}
+	return r.db.WithContext(ctx).Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "event_key"}}, DoNothing: true}).Create(&observation).Error
+}
+
+func (r *GormRepository) RecordEvidence(ctx context.Context, evidence EvidenceObservation) error {
+	if evidence.ObservedAt <= 0 || evidence.Domain == "" && evidence.DestinationIP == "" || evidence.Kind == "" || evidence.Source == "" || evidence.Provenance == "" || evidence.Level == "" || evidence.Confidence < 0 || evidence.Confidence > 1 {
+		return errors.New("invalid analytics evidence observation")
+	}
+	if evidence.EventKey == "" {
+		evidence.EventKey = digest(strings.Join([]string{evidence.ClientEmail, evidence.DestinationIP, evidence.Domain, evidence.Kind, strconv.FormatInt(evidence.ObservedAt, 10), evidence.SessionKey}, "|"))
+	}
+	return r.db.WithContext(ctx).Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "event_key"}}, DoNothing: true}).Create(&evidence).Error
+}
+
+func (r *GormRepository) ActiveDNSForDestination(ctx context.Context, clientEmail string, nodeID, inboundID int, destinationIP string, observedAt int64) ([]DNSObservation, error) {
+	q := r.db.WithContext(ctx).Where("client_email = ? AND node_id = ? AND inbound_id = ? AND resolved_ip = ? AND observed_at <= ? AND (expires_at = 0 OR expires_at > ?)", clientEmail, nodeID, inboundID, destinationIP, observedAt, observedAt)
+	var rows []DNSObservation
+	err := q.Order("observed_at DESC, id DESC").Find(&rows).Error
+	return rows, err
 }
 
 func (r *GormRepository) UpsertSession(ctx context.Context, session NetworkSession) error {
@@ -233,6 +256,7 @@ func (r *GormRepository) Prune(ctx context.Context, now time.Time, policy Retent
 		}{
 			{&DestinationObservation{}, "observed_at", now.Add(-policy.RawEvents).UnixMilli(), &out.RawEvents},
 			{&DNSObservation{}, "observed_at", now.Add(-policy.RawEvents).UnixMilli(), &out.DNSObservations},
+			{&EvidenceObservation{}, "observed_at", now.Add(-policy.RawEvents).UnixMilli(), &out.Evidence},
 			{&NetworkSession{}, "last_seen", now.Add(-policy.Sessions).UnixMilli(), &out.Sessions},
 			{&ServiceCategoryAggregate{}, "bucket_start", now.Add(-policy.Aggregates).UnixMilli(), &out.Aggregates},
 		} {
@@ -255,6 +279,12 @@ func (NoopRepository) RecordDestination(context.Context, MetadataEvent) error {
 
 func (NoopRepository) RecordDNS(context.Context, DNSObservation) error {
 	return nil
+}
+
+func (NoopRepository) RecordEvidence(context.Context, EvidenceObservation) error { return nil }
+
+func (NoopRepository) ActiveDNSForDestination(context.Context, string, int, int, string, int64) ([]DNSObservation, error) {
+	return nil, nil
 }
 
 func (NoopRepository) UpsertSession(context.Context, NetworkSession) error {
