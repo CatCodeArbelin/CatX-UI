@@ -2,18 +2,19 @@ package controller
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
-	"runtime"
 	"testing"
 	"time"
 
 	"github.com/mhsanaei/3x-ui/v3/internal/database"
 	"github.com/mhsanaei/3x-ui/v3/internal/web/global"
+	webservice "github.com/mhsanaei/3x-ui/v3/internal/web/service"
 	"github.com/mhsanaei/3x-ui/v3/internal/xray"
 
 	"github.com/gin-gonic/gin"
@@ -22,9 +23,6 @@ import (
 // A successful import must schedule the panel restart itself: the browser's
 // restartPanel follow-up can 401 once the imported users table lands (#6446).
 func TestImportDBSchedulesPanelRestart(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		t.Skip("the stub xray binary is a shell script")
-	}
 	uploadPath := filepath.Join(t.TempDir(), "x-ui.db")
 	if err := database.InitDB(uploadPath); err != nil {
 		t.Fatalf("InitDB(upload): %v", err)
@@ -41,9 +39,15 @@ func TestImportDBSchedulesPanelRestart(t *testing.T) {
 	binDir := t.TempDir()
 	t.Setenv("XUI_BIN_FOLDER", binDir)
 	t.Setenv("XUI_LOG_FOLDER", t.TempDir())
-	if err := os.WriteFile(filepath.Join(binDir, xray.GetBinaryName()), []byte("#!/bin/sh\nexit 0\n"), 0o755); err != nil {
-		t.Fatalf("write stub xray: %v", err)
-	}
+	restoreRecovery := webservice.SetXrayRecoveryHooksForTest(
+		func(context.Context, *xray.Config) error { return nil },
+		func(context.Context, *xray.Process) error { return nil },
+	)
+	restoreStart := webservice.SetXrayStartHookForTest(func(*xray.Process) error { return nil })
+	restoreProcess := webservice.SetXrayProcessForTest(nil)
+	t.Cleanup(restoreRecovery)
+	t.Cleanup(restoreStart)
+	t.Cleanup(restoreProcess)
 
 	restarts := make(chan struct{}, 1)
 	global.SetRestartHook(func() {

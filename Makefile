@@ -89,7 +89,8 @@ verify: gen-check lint format-check typecheck msw-worker-check test build build-
 
 .PHONY: test-fork-go
 test-fork-go: dist-stub ## Fork-owned foundation tests
-	go test -race -shuffle=on -count=1 ./internal/forkext/... ./internal/forkrelease/... ./internal/web/service/panel/...
+	go test -race -shuffle=on -count=1 ./internal/forkext/... ./internal/forkrecovery/... ./internal/forkrelease/... ./internal/web/service/panel/...
+	go test -race -shuffle=on -count=1 ./internal/web/service -run 'Test(RestartXray|SQLiteImport|PostgresImportInvalidXrayCandidate)'
 
 .PHONY: test-fork-release
 test-fork-release: ## Fork release identity, integrity, and rollback tests

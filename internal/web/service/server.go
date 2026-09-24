@@ -37,6 +37,7 @@ import (
 	"github.com/mhsanaei/3x-ui/v3/internal/config"
 	"github.com/mhsanaei/3x-ui/v3/internal/database"
 	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
+	"github.com/mhsanaei/3x-ui/v3/internal/forkrecovery"
 	"github.com/mhsanaei/3x-ui/v3/internal/logger"
 	"github.com/mhsanaei/3x-ui/v3/internal/util/common"
 	"github.com/mhsanaei/3x-ui/v3/internal/util/sys"
@@ -1742,14 +1743,6 @@ func (s *ServerService) ImportDB(file multipart.File, keepHostSettings bool) err
 		return common.NewErrorf("This file cannot be imported: %v", err)
 	}
 
-	xrayStopped := true
-	defer func() {
-		if xrayStopped {
-			if errR := s.RestartXrayService(); errR != nil {
-				logger.Warningf("Failed to restart Xray after DB import error: %v", errR)
-			}
-		}
-	}()
 	if errStop := s.StopXrayService(); errStop != nil {
 		logger.Warningf("Failed to stop Xray before DB import: %v", errStop)
 	}
@@ -1763,64 +1756,42 @@ func (s *ServerService) ImportDB(file multipart.File, keepHostSettings bool) err
 		logger.Warningf("Failed to close existing DB before replacement: %v", errClose)
 	}
 
-	// Registered after the xray-restart defer so it runs first (LIFO): every
-	// error return below leaves a database file at the configured path, and the
-	// restart needs an open pool to build the xray config from it.
-	dbReopened := false
-	defer func() {
-		if dbReopened {
-			return
-		}
-		if errReopen := database.InitDB(config.GetDBPath()); errReopen != nil {
-			logger.Warningf("Failed to reopen the database after import error: %v", errReopen)
-		}
-	}()
-
-	// Backup the current database for fallback
-	fallbackPath := fmt.Sprintf("%s.backup", config.GetDBPath())
-
-	// Remove the existing fallback file (if any)
-	if _, err := os.Stat(fallbackPath); err == nil {
-		if errRemove := os.Remove(fallbackPath); errRemove != nil {
-			return common.NewErrorf("Error removing existing fallback db file: %v", errRemove)
-		}
-	}
+	// Keep the previous database beside the live file so the replacement and
+	// recovery renames stay on one filesystem. A unique path also preserves a
+	// prior interrupted import instead of deleting its only recovery copy.
+	fallbackPath := fmt.Sprintf("%s.recovery-%d", config.GetDBPath(), time.Now().UnixNano())
 
 	// Move the current database to the fallback location
 	if err = os.Rename(config.GetDBPath(), fallbackPath); err != nil {
+		if errReopen := database.InitDB(config.GetDBPath()); errReopen != nil {
+			logger.Warningf("Failed to reopen database after snapshot error: %v", errReopen)
+		}
+		if errR := s.RestartXrayService(); errR != nil {
+			logger.Warningf("Failed to restart Xray after snapshot error: %v", errR)
+		}
 		return common.NewErrorf("Error backing up current db file: %v", err)
 	}
 
 	// Move temp to DB path
 	if err = os.Rename(tempPath, config.GetDBPath()); err != nil {
-		// Restore from fallback
-		if errRename := os.Rename(fallbackPath, config.GetDBPath()); errRename != nil {
-			return common.NewErrorf("Error moving db file and restoring fallback: %v", errRename)
-		}
-		return common.NewErrorf("Error moving db file: %v", err)
+		rollbackErr := s.restoreSQLiteImport(fallbackPath)
+		return forkrecovery.NewFailure("SQLite database activation", common.NewErrorf("move imported database into place: %v", err), rollbackErr)
 	}
 
 	// Open & migrate new DB
 	if err = database.InitDB(config.GetDBPath()); err != nil {
-		// A failed InitDB still holds the imported file open; close before the
-		// rename or Windows refuses to replace it.
-		if errClose := database.CloseDB(); errClose != nil {
-			logger.Warningf("Failed to close the imported DB before restoring fallback: %v", errClose)
-		}
-		if errRename := os.Rename(fallbackPath, config.GetDBPath()); errRename != nil {
-			return common.NewErrorf("Error migrating db and restoring fallback: %v", errRename)
-		}
-		return common.NewErrorf("Error migrating db: %v", err)
+		rollbackErr := s.restoreSQLiteImport(fallbackPath)
+		return forkrecovery.NewFailure("SQLite database migration", err, rollbackErr)
 	}
-	dbReopened = true
 
 	restoreHostBoundSettings(keptSettings)
 
 	s.inboundService.MigrateDB()
 
-	xrayStopped = false
 	if err = s.RestartXrayService(); err != nil {
-		return common.NewErrorf("Imported DB but failed to start Xray: %v; the previous database was kept at %s", err, fallbackPath)
+		rollbackErr := s.restoreSQLiteImport(fallbackPath)
+		logger.Errorf("Imported SQLite database produced an unhealthy Xray candidate; rollback error=%v: %v", rollbackErr, err)
+		return forkrecovery.NewFailure("SQLite database import Xray activation", err, rollbackErr)
 	}
 
 	if _, err := os.Stat(fallbackPath); err == nil {
@@ -1828,6 +1799,46 @@ func (s *ServerService) ImportDB(file multipart.File, keepHostSettings bool) err
 			logger.Warningf("Warning: failed to remove fallback file: %v", rerr)
 		}
 	}
+	return nil
+}
+
+// restoreSQLiteImport reinstates the pre-import file, reopens/migrates it, and
+// restarts Xray through the normal lifecycle. The failed candidate is retained
+// until the known-good database and runtime pass their checks.
+func (s *ServerService) restoreSQLiteImport(fallbackPath string) error {
+	dbPath := config.GetDBPath()
+	if err := database.CloseDB(); err != nil {
+		logger.Warningf("SQLite rollback: close candidate database: %v", err)
+	}
+	failedPath := fmt.Sprintf("%s.failed-%d", dbPath, time.Now().UnixNano())
+	candidateMoved := false
+	if _, err := os.Stat(dbPath); err == nil {
+		if err := os.Rename(dbPath, failedPath); err != nil {
+			return fmt.Errorf("move failed SQLite candidate aside: %w", err)
+		}
+		candidateMoved = true
+	} else if !errors.Is(err, os.ErrNotExist) {
+		return fmt.Errorf("inspect failed SQLite candidate: %w", err)
+	}
+	if err := os.Rename(fallbackPath, dbPath); err != nil {
+		if candidateMoved {
+			_ = os.Rename(failedPath, dbPath)
+		}
+		return fmt.Errorf("restore known-good SQLite database: %w", err)
+	}
+	if err := database.InitDB(dbPath); err != nil {
+		return fmt.Errorf("reopen known-good SQLite database: %w", err)
+	}
+	s.inboundService.MigrateDB()
+	if err := s.RestartXrayService(); err != nil {
+		return fmt.Errorf("restart Xray from known-good SQLite database: %w", err)
+	}
+	if candidateMoved {
+		if err := os.Remove(failedPath); err != nil && !errors.Is(err, os.ErrNotExist) {
+			logger.Warningf("SQLite rollback succeeded but failed candidate cleanup failed: %v", err)
+		}
+	}
+	logger.Warning("SQLite database import rolled back to the previous known-good database and Xray runtime")
 	return nil
 }
 
@@ -1867,23 +1878,111 @@ func pgConnEnv(dsn string) (env []string, dbname string, err error) {
 }
 
 func (s *ServerService) exportPostgresDB() ([]byte, error) {
+	var out bytes.Buffer
+	if err := writePostgresDump(&out); err != nil {
+		return nil, err
+	}
+	return out.Bytes(), nil
+}
+
+func writePostgresDump(destination io.Writer) error {
 	bin, err := exec.LookPath("pg_dump")
 	if err != nil {
-		return nil, common.NewError("pg_dump not found on the server; install the postgresql-client package to back up a PostgreSQL database")
+		return common.NewError("pg_dump not found on the server; install the postgresql-client package to back up a PostgreSQL database")
 	}
 	env, dbname, err := pgConnEnv(config.GetDBDSN())
 	if err != nil {
-		return nil, common.NewErrorf("invalid PostgreSQL DSN: %v", err)
+		return common.NewErrorf("invalid PostgreSQL DSN: %v", err)
 	}
 	cmd := exec.CommandContext(context.Background(), bin, "--format=custom", "--no-owner", "--no-privileges", "--dbname", dbname)
 	cmd.Env = env
-	var out, stderr bytes.Buffer
-	cmd.Stdout = &out
+	var stderr bytes.Buffer
+	cmd.Stdout = destination
 	cmd.Stderr = &stderr
 	if err := cmd.Run(); err != nil {
-		return nil, common.NewErrorf("pg_dump failed: %v: %s", err, strings.TrimSpace(stderr.String()))
+		return common.NewErrorf("pg_dump failed: %v: %s", err, strings.TrimSpace(stderr.String()))
 	}
-	return out.Bytes(), nil
+	return nil
+}
+
+func (s *ServerService) snapshotPostgresForRecovery() (string, func(), error) {
+	dir, err := os.MkdirTemp("", "x-ui-pg-recovery-*")
+	if err != nil {
+		return "", nil, err
+	}
+	cleanup := func() { _ = os.RemoveAll(dir) }
+	path := filepath.Join(dir, "known-good.dump")
+	file, err := os.OpenFile(path, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o600)
+	if err != nil {
+		cleanup()
+		return "", nil, err
+	}
+	if err := writePostgresDump(file); err != nil {
+		_ = file.Close()
+		cleanup()
+		return "", nil, err
+	}
+	if err := file.Sync(); err != nil {
+		_ = file.Close()
+		cleanup()
+		return "", nil, err
+	}
+	if err := file.Close(); err != nil {
+		cleanup()
+		return "", nil, err
+	}
+	return path, cleanup, nil
+}
+
+func runPostgresRestore(bin string, env []string, dbname, dumpPath string) error {
+	cmd := exec.CommandContext(context.Background(), bin,
+		"--clean", "--if-exists", "--no-owner", "--no-privileges",
+		"--single-transaction", "--dbname", dbname, dumpPath,
+	)
+	cmd.Env = env
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	if err := cmd.Run(); err != nil {
+		return common.NewErrorf("pg_restore failed: %v: %s", err, strings.TrimSpace(stderr.String()))
+	}
+	return nil
+}
+
+// restorePostgresImport reuses the same custom-format/single-transaction
+// contract as the transactional updater: restore the snapshot, reopen and
+// migrate it, then require a healthy Xray restart.
+func (s *ServerService) restorePostgresImport(snapshotPath string) error {
+	bin, err := exec.LookPath("pg_restore")
+	if err != nil {
+		return fmt.Errorf("pg_restore not found during PostgreSQL rollback: %w", err)
+	}
+	env, dbname, err := pgConnEnv(config.GetDBDSN())
+	if err != nil {
+		return fmt.Errorf("invalid PostgreSQL DSN during rollback: %w", err)
+	}
+	if err := database.CloseDB(); err != nil {
+		logger.Warningf("PostgreSQL rollback: close candidate database: %v", err)
+	}
+	if err := runPostgresRestore(bin, env, dbname, snapshotPath); err != nil {
+		return fmt.Errorf("restore known-good PostgreSQL snapshot: %w", err)
+	}
+	if err := database.InitDB(config.GetDBPath()); err != nil {
+		return fmt.Errorf("reopen known-good PostgreSQL database: %w", err)
+	}
+	s.inboundService.MigrateDB()
+	if err := s.RestartXrayService(); err != nil {
+		return fmt.Errorf("restart Xray from known-good PostgreSQL database: %w", err)
+	}
+	logger.Warning("PostgreSQL database import rolled back to the previous known-good database and Xray runtime")
+	return nil
+}
+
+func retainPostgresRecoveryError(snapshotPath string, rollbackErr error) error {
+	if rollbackErr == nil {
+		return nil
+	}
+	logger.Errorf("PostgreSQL automatic rollback failed; known-good snapshot retained at %s: %v", snapshotPath, rollbackErr)
+	return fmt.Errorf("%w; known-good PostgreSQL snapshot retained at %s", rollbackErr, snapshotPath)
 }
 
 var (
@@ -2015,14 +2114,17 @@ func (s *ServerService) restorePostgresDump(file multipart.File, keepHostSetting
 		return err
 	}
 
-	xrayStopped := true
+	knownGoodPath, cleanupKnownGood, err := s.snapshotPostgresForRecovery()
+	if err != nil {
+		return common.NewErrorf("Refusing PostgreSQL restore without a recovery snapshot: %v", err)
+	}
+	cleanupRecovery := false
 	defer func() {
-		if xrayStopped {
-			if errR := s.RestartXrayService(); errR != nil {
-				logger.Warningf("Failed to restart Xray after DB restore error: %v", errR)
-			}
+		if cleanupRecovery {
+			cleanupKnownGood()
 		}
 	}()
+
 	if errStop := s.StopXrayService(); errStop != nil {
 		logger.Warningf("Failed to stop Xray before DB restore: %v", errStop)
 	}
@@ -2036,30 +2138,34 @@ func (s *ServerService) restorePostgresDump(file multipart.File, keepHostSetting
 		logger.Warningf("Failed to close existing DB before restore: %v", errClose)
 	}
 
-	cmd := exec.CommandContext(context.Background(), bin,
-		"--clean", "--if-exists", "--no-owner", "--no-privileges",
-		"--single-transaction", "--dbname", dbname, tempPath,
-	)
-	cmd.Env = env
-	var stderr bytes.Buffer
-	cmd.Stderr = &stderr
-	runErr := cmd.Run()
+	runErr := runPostgresRestore(bin, env, dbname, tempPath)
 
 	if errInit := database.InitDB(config.GetDBPath()); errInit != nil {
-		return common.NewErrorf("Restore finished but reopening the database failed: %v", errInit)
+		rollbackErr := s.restorePostgresImport(knownGoodPath)
+		cleanupRecovery = rollbackErr == nil
+		rollbackErr = retainPostgresRecoveryError(knownGoodPath, rollbackErr)
+		return forkrecovery.NewFailure("PostgreSQL database restore", common.NewErrorf("reopen restored database: %v", errInit), rollbackErr)
 	}
-	restoreHostBoundSettings(keptSettings)
-
-	s.inboundService.MigrateDB()
 
 	if runErr != nil {
-		return common.NewErrorf("pg_restore failed (database left unchanged): %v: %s", runErr, strings.TrimSpace(stderr.String()))
+		restartErr := s.RestartXrayService()
+		if restartErr != nil {
+			return forkrecovery.NewFailure("PostgreSQL database restore", runErr, retainPostgresRecoveryError(knownGoodPath, restartErr))
+		}
+		cleanupRecovery = true
+		return common.NewErrorf("pg_restore failed (database left unchanged): %v", runErr)
 	}
+	restoreHostBoundSettings(keptSettings)
+	s.inboundService.MigrateDB()
 
-	xrayStopped = false
 	if err := s.RestartXrayService(); err != nil {
-		return common.NewErrorf("Restored DB but failed to start Xray: %v", err)
+		rollbackErr := s.restorePostgresImport(knownGoodPath)
+		cleanupRecovery = rollbackErr == nil
+		rollbackErr = retainPostgresRecoveryError(knownGoodPath, rollbackErr)
+		logger.Errorf("Restored PostgreSQL database produced an unhealthy Xray candidate; rollback error=%v: %v", rollbackErr, err)
+		return forkrecovery.NewFailure("PostgreSQL database import Xray activation", err, rollbackErr)
 	}
+	cleanupRecovery = true
 	return nil
 }
 
@@ -2092,14 +2198,17 @@ func (s *ServerService) migrateSQLiteIntoPostgres(file multipart.File, isSQLDump
 		return common.NewErrorf("This file cannot be imported: %v", err)
 	}
 
-	xrayStopped := true
+	knownGoodPath, cleanupKnownGood, err := s.snapshotPostgresForRecovery()
+	if err != nil {
+		return common.NewErrorf("Refusing PostgreSQL migration without a recovery snapshot: %v", err)
+	}
+	cleanupRecovery := false
 	defer func() {
-		if xrayStopped {
-			if errR := s.RestartXrayService(); errR != nil {
-				logger.Warningf("Failed to restart Xray after DB restore error: %v", errR)
-			}
+		if cleanupRecovery {
+			cleanupKnownGood()
 		}
 	}()
+
 	if errStop := s.StopXrayService(); errStop != nil {
 		logger.Warningf("Failed to stop Xray before DB restore: %v", errStop)
 	}
@@ -2111,18 +2220,29 @@ func (s *ServerService) migrateSQLiteIntoPostgres(file multipart.File, isSQLDump
 	migrateErr := database.MigrateData(dbPath, config.GetDBDSN())
 
 	if errInit := database.InitDB(config.GetDBPath()); errInit != nil {
-		return common.NewErrorf("Restore finished but reopening the database failed: %v", errInit)
+		rollbackErr := s.restorePostgresImport(knownGoodPath)
+		cleanupRecovery = rollbackErr == nil
+		rollbackErr = retainPostgresRecoveryError(knownGoodPath, rollbackErr)
+		return forkrecovery.NewFailure("SQLite to PostgreSQL migration", common.NewErrorf("reopen migrated database: %v", errInit), rollbackErr)
 	}
 	s.inboundService.MigrateDB()
 
 	if migrateErr != nil {
+		if restartErr := s.RestartXrayService(); restartErr != nil {
+			return forkrecovery.NewFailure("SQLite to PostgreSQL migration", migrateErr, retainPostgresRecoveryError(knownGoodPath, restartErr))
+		}
+		cleanupRecovery = true
 		return common.NewErrorf("Importing the SQLite data into PostgreSQL failed: %v; the import runs in a single transaction, so the database was left unchanged", migrateErr)
 	}
 
-	xrayStopped = false
 	if err := s.RestartXrayService(); err != nil {
-		return common.NewErrorf("Restored DB but failed to start Xray: %v", err)
+		rollbackErr := s.restorePostgresImport(knownGoodPath)
+		cleanupRecovery = rollbackErr == nil
+		rollbackErr = retainPostgresRecoveryError(knownGoodPath, rollbackErr)
+		logger.Errorf("SQLite-to-PostgreSQL import produced an unhealthy Xray candidate; rollback error=%v: %v", rollbackErr, err)
+		return forkrecovery.NewFailure("SQLite to PostgreSQL import Xray activation", err, rollbackErr)
 	}
+	cleanupRecovery = true
 	return nil
 }
 
