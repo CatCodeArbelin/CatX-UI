@@ -51,4 +51,18 @@ jobs:
           version: latest
           install-only: true
       - name: Run upstream and fork verification
-        run: make verify-fork
+        shell: bash
+        run: |
+          set +e
+          make verify-fork 2>&1 | tee "$RUNNER_TEMP/verify-fork.log"
+          status=${PIPESTATUS[0]}
+          set -e
+          if [ "$status" -ne 0 ]; then
+            echo "::error file=Makefile,title=verify-fork failure::make verify-fork exited with status $status"
+            tail -n 30 "$RUNNER_TEMP/verify-fork.log" | while IFS= read -r line; do
+              line=${line//$'\r'/}
+              line=${line//$'\n'/ }
+              echo "::error file=Makefile::$line"
+            done
+            exit "$status"
+          fi
