@@ -2,71 +2,35 @@
 
 ## Work Package
 
-`WP-2B — Enrichment & Classification`
-
-Recommended model: `GPT-5.6 Luna Medium`
+`WP-2C — DNS UI, Privacy & Retention`
 
 ## Goal
 
-Turn normalized destination evidence from WP-2A into useful service/category metadata while preserving provenance and confidence.
+Expose the existing metadata-only DNS/evidence and analytics controls through
+a safe, privacy-preserving UI while keeping retention behavior explicit,
+bounded, and compatible with the upstream panel.
 
 ## Required
 
-- domain/service enrichment pipeline;
-- IP → ASN/country metadata;
-- service identification;
-- category identification;
-- confidence/provenance for every classification;
-- first-party vs inferred classification distinction;
-- caching;
-- bounded refresh/update behavior;
-- safe fallback to `unknown`;
-- persistence using existing analytics storage;
-- no duplicate traffic/client/node models.
-
-Initial useful categories should support examples such as:
-
-- social;
-- video/streaming;
-- messaging;
-- gaming;
-- cloud/CDN;
-- search;
-- software/update;
-- advertising;
-- adult;
-- gambling;
-- unknown.
+- DNS intelligence and enrichment visibility in the fork analytics UI;
+- privacy disclosures and safe defaults;
+- retention configuration and enforcement using the existing analytics layer;
+- feature-disabled compatibility and no-op behavior;
+- SQLite/PostgreSQL compatibility where persistence changes are required;
+- focused tests and `make verify-fork` before merge.
 
 ## Hard constraints
 
-- no TLS MITM;
-- no payload/content inspection;
-- classification must never be presented as certain when evidence is weak;
-- conflicting providers/evidence must remain explainable;
-- no Policy Engine yet;
-- no blocking yet;
-- no DNS UI yet;
+- no TLS MITM, decrypted HTTPS, payload inspection, cookies, credentials, Authorization headers, or request bodies;
+- no Policy Engine, blocking, or traffic enforcement;
+- do not duplicate upstream client/group/node/session/traffic models;
+- analytics/DNS intelligence OFF must remain a no-op;
 - enrichment failure must never affect Xray or panel core;
-- analytics OFF = exact no-op;
 - minimal upstream-touch points;
-- `make verify-fork` must remain green.
-
-## Required tests
-
-- exact domain classification;
-- subdomain inheritance where appropriate;
-- conflicting classification;
-- ASN/GeoIP enrichment;
-- cache expiry;
-- unknown fallback;
-- confidence/provenance;
-- SQLite/PostgreSQL where applicable;
-- concurrency/race where relevant.
+- do not modify `main`.
 
 ## Restrictions
 
-- do not modify `main`;
-- do not start WP-2C;
-- do not start the Policy Engine;
-- do not merge WP-2B into `develop` until its merge gate is satisfied.
+- do not start a later work package;
+- do not merge into `main`;
+- preserve the low-divergence downstream fork architecture.
