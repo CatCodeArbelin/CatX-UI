@@ -149,19 +149,34 @@ func (r *GormRepository) Prune(ctx context.Context, now time.Time, policy Retent
 
 type NoopRepository struct{}
 
-func (NoopRepository) RecordDestination(context.Context, MetadataEvent) error          { return nil }
-func (NoopRepository) RecordDNS(context.Context, DNSObservation) error                 { return nil }
-func (NoopRepository) UpsertSession(context.Context, NetworkSession) error             { return nil }
-func (NoopRepository) UpsertAggregate(context.Context, ServiceCategoryAggregate) error { return nil }
+func (NoopRepository) RecordDestination(context.Context, MetadataEvent) error {
+	return nil
+}
+
+func (NoopRepository) RecordDNS(context.Context, DNSObservation) error {
+	return nil
+}
+
+func (NoopRepository) UpsertSession(context.Context, NetworkSession) error {
+	return nil
+}
+
+func (NoopRepository) UpsertAggregate(context.Context, ServiceCategoryAggregate) error {
+	return nil
+}
+
 func (NoopRepository) ListDestinations(context.Context, string, int64, int64, int) ([]DestinationObservation, error) {
 	return nil, nil
 }
+
 func (NoopRepository) ListAggregates(context.Context, string, string, int64, int64) ([]ServiceCategoryAggregate, error) {
 	return nil, nil
 }
+
 func (NoopRepository) SummarizeSessions(context.Context, string, int64, int64) (SessionSummary, error) {
 	return SessionSummary{}, nil
 }
+
 func (NoopRepository) Prune(context.Context, time.Time, RetentionPolicy) (PruneResult, error) {
 	return PruneResult{}, nil
 }

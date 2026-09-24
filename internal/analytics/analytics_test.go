@@ -9,6 +9,7 @@ import (
 
 	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
 	"github.com/mhsanaei/3x-ui/v3/internal/xray"
+
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -106,6 +107,7 @@ type fakeRuntime struct{}
 func (fakeRuntime) GetOnlineUsers() ([]xray.OnlineUser, error) {
 	return []xray.OnlineUser{{Email: "alice"}}, nil
 }
+
 func (fakeRuntime) GetTraffic() ([]*xray.Traffic, []*xray.ClientTraffic, error) {
 	return []*xray.Traffic{{Tag: "inbound-1"}}, []*xray.ClientTraffic{{Email: "alice", Up: 10}}, nil
 }
