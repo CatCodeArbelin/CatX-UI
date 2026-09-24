@@ -84,7 +84,7 @@ If local Windows cannot run required tests, use an approved alternative such as 
 
 ---
 
-## WP-0B — Release Identity & Updater Safety — CURRENT
+## WP-0B — Release Identity & Updater Safety — DONE
 
 Recommended model: `Sol High`
 
@@ -118,7 +118,7 @@ Ensure CatX-UI cannot be overwritten by official upstream releases and failed up
 
 ---
 
-## WP-0C — Xray / Database Recovery Safety
+## WP-0C — Xray / Database Recovery Safety — CURRENT
 
 Recommended model: `Sol High`
 

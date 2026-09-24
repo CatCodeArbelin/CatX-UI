@@ -2,93 +2,98 @@
 
 ## Work Package
 
-`WP-0B — Release Identity & Updater Safety`
+`WP-0C — Xray / Database Recovery Safety`
 
 ## Recommended model
 
 **GPT-5.6 Sol High**
 
-## Mandatory reads
+## Goal
 
-- `AGENTS.md`
-- `CURRENT_TASK.md`
-- `TASK_QUEUE.md`
-- `docs/19_REPOSITORY_MAP.md`
-- `docs/12_UPDATER_IDENTITY.md`
-- `docs/05_TESTING_ROLLBACK_RELEASE.md`
-- `docs/15_DEFINITION_OF_DONE.md`
-- `docs/04_UPSTREAM_SYNC.md`
-- `adr/0004-own-updater.md`
-- `skills/test-release-guardian/SKILL.md`
-- `skills/security-privacy-review/SKILL.md`
-- `skills/feature-implementer/SKILL.md`
+Harden runtime configuration application and database restore/import paths so a bad candidate configuration or restored database cannot leave CatX-UI/Xray unusable.
 
-## Scope
+### CP-0C.1 — Xray known-good snapshot
 
-### CP-0B.1 — CatX-UI identity and version model
+Preserve the minimum state required to restore the currently working Xray runtime/configuration before applying a candidate.
 
-- fork version;
-- upstream base version;
-- Xray version remains separate;
-- stable/dev release channels;
-- no fake or hardcoded version ambiguity.
+Reuse existing Xray lifecycle/config-generation mechanisms.
 
-### CP-0B.2 — Updater isolation
+Do not introduce a second Xray config generator.
 
-- audit and retarget all official-upstream update/install paths;
-- verified hotspots include:
-  - `internal/web/service/panel/panel.go`
-  - `update.sh`
-  - `x-ui.sh`
-  - `install.sh`
-  - `.github/workflows/release.yml`
-- CatX-UI must never accidentally install an official `MHSanaei/3x-ui` binary.
-
-### CP-0B.3 — Release integrity
-
-- CatX-UI-owned release source;
-- consistent artifact naming;
-- checksum/integrity verification;
-- tests that reject wrong repository/assets;
-- no arbitrary unverified update payload.
-
-### CP-0B.4 — Transactional updater
+### CP-0C.2 — Candidate validation
 
 Required flow:
 
-```text
-download → verify → stage → backup → install candidate → migrate → start → healthcheck → commit
-```
+`build candidate through existing GetXrayConfig()`
 
-Failure flow:
+`→ validate using installed Xray`
 
-```text
-restore previous binary/config/state → recover DB as required → start → healthcheck → audit/report
-```
+`→ only then allow activation`
 
-### CP-0B.5 — Verification
+Invalid candidates must not replace the known-good runtime.
 
-- unit tests for version/release selection;
-- fake release provider/server where appropriate;
-- updater failure-path tests;
-- rollback tests;
-- GitHub Actions verification;
-- preserve existing `make verify-fork`;
-- no weakening of WP-0A gates.
+### CP-0C.3 — Safe activation
 
-## Critical rules
+Preserve existing hot-diff/hot-apply behavior where supported.
 
-- Preserve upstream 3x-ui architecture.
-- Do not rewrite the panel updater into a separate control plane.
+Required conceptual flow:
+
+`snapshot`
+
+`→ generate candidate`
+
+`→ validate`
+
+`→ apply through existing Xray lifecycle`
+
+`→ healthcheck`
+
+`→ commit known-good state`
+
+### CP-0C.4 — Automatic rollback
+
+On failed apply/start/healthcheck:
+
+`restore previous known-good state`
+
+`→ restart/reload`
+
+`→ healthcheck`
+
+`→ report/audit failure`
+
+Rollback failure must be distinguishable from candidate failure.
+
+### CP-0C.5 — Database import/recovery gap
+
+Harden the path where a DB import/restore succeeds structurally but produces an Xray configuration that cannot start.
+
+Cover:
+
+- SQLite;
+- PostgreSQL where applicable;
+- previous DB/config restoration;
+- Xray validation;
+- healthcheck;
+- failure-path tests.
+
+### Critical constraints
+
+- Preserve upstream `GetXrayConfig()` as the authoritative config builder.
+- Preserve existing Xray runtime/process management.
+- Preserve existing hot-apply behavior.
 - Minimize permanent upstream-touch points.
-- Do not touch Policy Engine, Analytics, DNS Intelligence, or QoS.
-- Do not fork xray-core.
-- Do not change `main`.
-- Do not begin WP-0C.
-- Do not merge into `develop` during implementation.
-- Every dangerous updater action must have recovery.
-- Tests must actually run; green claims without execution are forbidden.
+- Reuse the WP-0B recovery primitives where appropriate instead of creating another unrelated rollback system.
+- Do not implement Policy Engine.
+- Do not implement Analytics.
+- Do not implement DNS Intelligence.
+- Do not implement QoS.
+- Do not modify `main`.
+- Do not start the next work package.
+- `make verify-fork` must remain green.
+
+Required verification must include candidate-validation failures, failed Xray startup, failed healthcheck, successful rollback, failed rollback reporting, and DB-import recovery paths.
 
 ## Administrative boundary
 
-This task activates WP-0B only. Do not begin implementation until the work-package branch is prepared and reviewed.
+This task activates WP-0C only. Do not begin implementation until the work-package branch is prepared and reviewed.
