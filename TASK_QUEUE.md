@@ -118,7 +118,7 @@ Ensure CatX-UI cannot be overwritten by official upstream releases and failed up
 
 ---
 
-## WP-0C — Xray / Database Recovery Safety — CURRENT
+## WP-0C — Xray / Database Recovery Safety — DONE
 
 Recommended model: `Sol High`
 
@@ -143,7 +143,7 @@ Make runtime-affecting changes recoverable before Policy Engine or traffic-contr
 
 # PHASE 1 — Analytics
 
-## WP-1A — Analytics Data Foundation
+## WP-1A — Analytics Data Foundation — CURRENT
 
 Recommended model: `Luna Medium`
 

@@ -2,98 +2,109 @@
 
 ## Work Package
 
-`WP-0C — Xray / Database Recovery Safety`
+`WP-1A — Analytics Data Foundation`
 
 ## Recommended model
 
-**GPT-5.6 Sol High**
+**GPT-5.6 Luna Medium**
 
 ## Goal
 
-Harden runtime configuration application and database restore/import paths so a bad candidate configuration or restored database cannot leave CatX-UI/Xray unusable.
+Establish the fork-owned analytics data layer without duplicating existing upstream clients, client groups, nodes, online-state tracking, or traffic counters.
 
-### CP-0C.1 — Xray known-good snapshot
+### CP-1A.1 — Analytics domain model
 
-Preserve the minimum state required to restore the currently working Xray runtime/configuration before applying a candidate.
+Introduce the minimum models needed for future metadata analytics:
 
-Reuse existing Xray lifecycle/config-generation mechanisms.
+- destination observations/events;
+- DNS observations where future ingestion requires persistence;
+- correlated network sessions;
+- service/category aggregates;
+- source/provenance;
+- confidence.
 
-Do not introduce a second Xray config generator.
+Do not store decrypted HTTPS content, cookies, passwords, authorization tokens, request bodies, or message contents.
 
-### CP-0C.2 — Candidate validation
+### CP-1A.2 — Persistence schema
 
-Required flow:
+Add fork-owned analytics persistence for SQLite and PostgreSQL.
 
-`build candidate through existing GetXrayConfig()`
+Requirements:
 
-`→ validate using installed Xray`
+- reference existing upstream stable client/group/node identifiers where appropriate;
+- do not create duplicate client/group/node models;
+- do not duplicate upstream traffic counters;
+- migrations must be additive and reversible/recoverable according to existing fork safety rules;
+- indexes must support client/time/domain/session lookups without premature over-indexing.
 
-`→ only then allow activation`
+### CP-1A.3 — Destination event abstraction
 
-Invalid candidates must not replace the known-good runtime.
+Establish a normalized metadata event suitable for later inputs from:
 
-### CP-0C.3 — Safe activation
+- `access.log`;
+- Xray destination metadata;
+- DNS observer;
+- SNI/TLS metadata where visible;
+- destination IP/port/protocol.
 
-Preserve existing hot-diff/hot-apply behavior where supported.
+Every inferred value must preserve source/provenance and confidence.
 
-Required conceptual flow:
+### CP-1A.4 — Xray online/traffic adapter
 
-`snapshot`
+Reuse existing upstream Xray API/runtime data as read-only analytics inputs.
 
-`→ generate candidate`
+Do not build:
 
-`→ validate`
+- another online-user subsystem;
+- another per-client traffic counter;
+- another per-inbound traffic counter;
+- another per-node traffic counter.
 
-`→ apply through existing Xray lifecycle`
+Optional analytics failure must never break Xray or the panel.
 
-`→ healthcheck`
+### CP-1A.5 — Historical aggregation skeleton
 
-`→ commit known-good state`
+Add the minimal aggregation/repository interfaces required for later:
 
-### CP-0C.4 — Automatic rollback
+- hourly/daily activity;
+- per-client service/category statistics;
+- session counts;
+- first/last seen.
 
-On failed apply/start/healthcheck:
+Do not implement the full UI in WP-1A.
 
-`restore previous known-good state`
+### CP-1A.6 — Retention foundation
 
-`→ restart/reload`
+Support configurable retention semantics suitable for:
 
-`→ healthcheck`
+- raw metadata events: short retention;
+- sessions: medium retention;
+- daily aggregates: long retention.
 
-`→ report/audit failure`
-
-Rollback failure must be distinguishable from candidate failure.
-
-### CP-0C.5 — Database import/recovery gap
-
-Harden the path where a DB import/restore succeeds structurally but produces an Xray configuration that cannot start.
-
-Cover:
-
-- SQLite;
-- PostgreSQL where applicable;
-- previous DB/config restoration;
-- Xray validation;
-- healthcheck;
-- failure-path tests.
+Do not hard-delete unrelated upstream traffic history.
 
 ### Critical constraints
 
-- Preserve upstream `GetXrayConfig()` as the authoritative config builder.
-- Preserve existing Xray runtime/process management.
-- Preserve existing hot-apply behavior.
-- Minimize permanent upstream-touch points.
-- Reuse the WP-0B recovery primitives where appropriate instead of creating another unrelated rollback system.
+- Preserve the privacy boundary: metadata only, no TLS MITM.
+- Analytics is optional and must default OFF through the existing fork feature flag.
+- With analytics OFF, behavior must be an exact no-op.
+- Analytics errors must not interrupt core panel/Xray operation.
+- Reuse WP-0A settings/hooks.
+- Reuse upstream normalized clients/groups/nodes/counters.
 - Do not implement Policy Engine.
-- Do not implement Analytics.
-- Do not implement DNS Intelligence.
-- Do not implement QoS.
-- Do not modify `main`.
-- Do not start the next work package.
+- Do not implement DNS collection yet beyond schema/interfaces required for future ingestion.
+- Do not implement the access.log tailer yet; that belongs to WP-1B.
+- Do not implement the Client Activity UI yet; that belongs to WP-1C.
+- Keep permanent upstream-touch points minimal.
 - `make verify-fork` must remain green.
 
-Required verification must include candidate-validation failures, failed Xray startup, failed healthcheck, successful rollback, failed rollback reporting, and DB-import recovery paths.
+Required verification:
 
-## Administrative boundary
-
-This task activates WP-0C only. Do not begin implementation until the work-package branch is prepared and reviewed.
+- SQLite migrations;
+- PostgreSQL migrations;
+- persistence CRUD/query tests;
+- retention behavior;
+- analytics-disabled no-op behavior;
+- concurrency/race tests where relevant;
+- `make verify-fork`;
+- existing release/build gates.
