@@ -11,12 +11,14 @@ import (
 	"slices"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/mhsanaei/3x-ui/v3/internal/amneziawg"
 	"github.com/mhsanaei/3x-ui/v3/internal/amneziawgnet"
 	"github.com/mhsanaei/3x-ui/v3/internal/config"
 	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
 	"github.com/mhsanaei/3x-ui/v3/internal/forkext"
+	"github.com/mhsanaei/3x-ui/v3/internal/forkrecovery"
 	"github.com/mhsanaei/3x-ui/v3/internal/logger"
 	"github.com/mhsanaei/3x-ui/v3/internal/util/json_util"
 	"github.com/mhsanaei/3x-ui/v3/internal/xray"
@@ -29,6 +31,15 @@ var (
 	isNeedXrayRestart atomic.Bool // Indicates that restart was requested for Xray
 	isManuallyStopped atomic.Bool // Indicates that Xray was stopped manually from the panel
 	xrayState         xrayLifecycle
+
+	validateXrayCandidate = forkrecovery.ValidateXrayCandidate
+	healthcheckXray       = forkrecovery.HealthcheckXray
+	startXrayProcess      = func(process *xray.Process) error { return process.Start() }
+)
+
+const (
+	xrayCandidateValidationTimeout = 30 * time.Second
+	xrayHealthcheckTimeout         = 8 * time.Second
 )
 
 type xrayLifecycle struct {
@@ -56,6 +67,12 @@ func (s *xrayLifecycle) replace(process *xray.Process) {
 func (s *xrayLifecycle) holdBack(reason string) {
 	s.mu.Lock()
 	s.heldBack = reason
+	s.mu.Unlock()
+}
+
+func (s *xrayLifecycle) clearHoldBack() {
+	s.mu.Lock()
+	s.heldBack = ""
 	s.mu.Unlock()
 }
 
@@ -1390,8 +1407,9 @@ func (s *XrayService) RestartXray(isForce bool) error {
 	}
 
 	process := currentXrayProcess()
+	var configUnchanged bool
 	if process != nil && process.IsRunning() {
-		configUnchanged := process.GetConfig().Equals(xrayConfig)
+		configUnchanged = process.GetConfig().Equals(xrayConfig)
 		if !isForce && configUnchanged && !isNeedXrayRestart.Load() {
 			logger.Debug("It does not need to restart Xray")
 			return nil
@@ -1408,25 +1426,120 @@ func (s *XrayService) RestartXray(isForce bool) error {
 			xrayState.holdBack(refused)
 			return fmt.Errorf("xray %s", refused)
 		}
-		if !isForce && !configUnchanged && s.tryHotApply(process, xrayConfig) {
-			logger.Info("Xray config changes applied through the core API, no restart needed")
-			return nil
-		}
-		_ = process.Stop()
 	} else if conflicts := bindConflicts(xrayConfig, nil); len(conflicts) > 0 {
 		// Nothing is running to protect and the core is the authority on what it
 		// can bind: start it and let its own error name the port it lost.
 		logger.Warning("xray config may not start:", conflicts[0].String())
 	}
 
-	process = xray.NewProcess(xrayConfig)
-	xrayState.replace(process)
-	s.xrayAPI.StatsLastValues = nil
-	err = process.Start()
+	snapshot, err := forkrecovery.CaptureXraySnapshot(process)
 	if err != nil {
-		return err
+		return fmt.Errorf("refusing Xray activation without a recoverable snapshot: %w", err)
+	}
+	validationCtx, validationCancel := context.WithTimeout(context.Background(), xrayCandidateValidationTimeout)
+	err = validateXrayCandidate(validationCtx, xrayConfig)
+	validationCancel()
+	if err != nil {
+		reason := fmt.Sprintf("candidate validation failed: %v", err)
+		xrayState.holdBack(reason)
+		logger.Errorf("Xray candidate rejected; known-good runtime unchanged: %v", err)
+		return fmt.Errorf("xray %s", reason)
 	}
 
+	if process != nil && process.IsRunning() && !isForce && !configUnchanged && s.tryHotApply(process, xrayConfig) {
+		if healthErr := runXrayHealthcheck(process); healthErr == nil {
+			xrayState.clearHoldBack()
+			logger.Info("Xray config changes applied through the core API, no restart needed")
+			return nil
+		} else {
+			_ = process.Stop()
+			rollbackErr := s.restoreKnownGoodXray(snapshot, nil)
+			xrayState.holdBack(fmt.Sprintf("hot-applied candidate failed healthcheck: %v", healthErr))
+			logger.Errorf("Xray hot-apply failed healthcheck; rollback error=%v: %v", rollbackErr, healthErr)
+			return forkrecovery.NewFailure("Xray hot-apply healthcheck", healthErr, rollbackErr)
+		}
+	}
+
+	if process != nil && process.IsRunning() {
+		if stopErr := process.Stop(); stopErr != nil {
+			rollbackErr := s.restoreKnownGoodXray(snapshot, process)
+			xrayState.holdBack(fmt.Sprintf("candidate activation could not stop current Xray: %v", stopErr))
+			logger.Errorf("Xray candidate activation could not stop current runtime; rollback error=%v: %v", rollbackErr, stopErr)
+			return forkrecovery.NewFailure("Xray candidate activation", stopErr, rollbackErr)
+		}
+	}
+
+	candidate := xray.NewProcess(xrayConfig)
+	if startErr := startXrayProcess(candidate); startErr != nil {
+		rollbackErr := s.restoreKnownGoodXray(snapshot, candidate)
+		xrayState.holdBack(fmt.Sprintf("candidate failed to start: %v", startErr))
+		logger.Errorf("Xray candidate failed to start; rollback error=%v: %v", rollbackErr, startErr)
+		return forkrecovery.NewFailure("Xray candidate startup", startErr, rollbackErr)
+	}
+	if healthErr := runXrayHealthcheck(candidate); healthErr != nil {
+		_ = candidate.Stop()
+		rollbackErr := s.restoreKnownGoodXray(snapshot, nil)
+		xrayState.holdBack(fmt.Sprintf("candidate failed healthcheck: %v", healthErr))
+		logger.Errorf("Xray candidate failed healthcheck; rollback error=%v: %v", rollbackErr, healthErr)
+		return forkrecovery.NewFailure("Xray candidate healthcheck", healthErr, rollbackErr)
+	}
+
+	xrayState.replace(candidate)
+	s.xrayAPI.StatsLastValues = nil
+	return nil
+}
+
+func runXrayHealthcheck(process *xray.Process) error {
+	ctx, cancel := context.WithTimeout(context.Background(), xrayHealthcheckTimeout)
+	defer cancel()
+	return healthcheckXray(ctx, process)
+}
+
+// restoreKnownGoodXray is the single Xray rollback path. It always starts the
+// captured config through the existing Process lifecycle, healthchecks it, and
+// only then publishes it as the current runtime.
+func (s *XrayService) restoreKnownGoodXray(snapshot *forkrecovery.XraySnapshot, active *xray.Process) error {
+	if active != nil && active.IsRunning() {
+		if err := active.Stop(); err != nil && active.IsRunning() {
+			return fmt.Errorf("stop failed candidate before rollback: %w", err)
+		}
+	}
+	if snapshot == nil || snapshot.Config == nil {
+		if snapshot != nil {
+			if err := snapshot.RestoreConfigFile(); err != nil {
+				return fmt.Errorf("restore known-good config file: %w", err)
+			}
+		}
+		return errors.New("no known-good Xray runtime configuration is available")
+	}
+
+	knownGood, err := forkrecovery.CloneXrayConfig(snapshot.Config)
+	if err != nil {
+		return fmt.Errorf("copy known-good Xray config: %w", err)
+	}
+	restored := xray.NewProcess(knownGood)
+	if err := startXrayProcess(restored); err != nil {
+		xrayState.replace(restored)
+		startErr := fmt.Errorf("restart known-good Xray: %w", err)
+		if fileErr := snapshot.RestoreConfigFile(); fileErr != nil {
+			return errors.Join(startErr, fmt.Errorf("restore exact known-good config file: %w", fileErr))
+		}
+		return startErr
+	}
+	if err := runXrayHealthcheck(restored); err != nil {
+		_ = restored.Stop()
+		xrayState.replace(restored)
+		healthErr := fmt.Errorf("known-good Xray healthcheck: %w", err)
+		if fileErr := snapshot.RestoreConfigFile(); fileErr != nil {
+			return errors.Join(healthErr, fmt.Errorf("restore exact known-good config file: %w", fileErr))
+		}
+		return healthErr
+	}
+	xrayState.replace(restored)
+	s.xrayAPI.StatsLastValues = nil
+	if err := snapshot.RestoreConfigFile(); err != nil {
+		return fmt.Errorf("restore exact known-good config file: %w", err)
+	}
 	return nil
 }
 
