@@ -70,16 +70,32 @@ type domainRule struct{ Domain, Service, Category string }
 // Rules are intentionally small and explicit. A match is valid only for the
 // exact domain or a dot-delimited child, never for an arbitrary string suffix.
 var domainRules = []domainRule{
-	{"facebook.com", "Facebook", CategorySocial}, {"instagram.com", "Instagram", CategorySocial}, {"twitter.com", "X", CategorySocial}, {"x.com", "X", CategorySocial},
-	{"youtube.com", "YouTube", CategoryVideo}, {"netflix.com", "Netflix", CategoryVideo}, {"twitch.tv", "Twitch", CategoryVideo},
-	{"telegram.org", "Telegram", CategoryMessaging}, {"whatsapp.com", "WhatsApp", CategoryMessaging}, {"signal.org", "Signal", CategoryMessaging},
-	{"steampowered.com", "Steam", CategoryGaming}, {"epicgames.com", "Epic Games", CategoryGaming},
-	{"google.com", "Google", CategorySearch}, {"bing.com", "Bing", CategorySearch},
-	{"microsoft.com", "Microsoft", CategorySoftware}, {"windowsupdate.com", "Windows Update", CategorySoftware}, {"apple.com", "Apple", CategorySoftware},
-	{"cloudflare.com", "Cloudflare", CategoryCloudCDN}, {"cloudfront.net", "Amazon CloudFront", CategoryCloudCDN}, {"fastly.net", "Fastly", CategoryCloudCDN},
-	{"doubleclick.net", "Google Ads", CategoryAdvertising}, {"googlesyndication.com", "Google Ads", CategoryAdvertising},
-	{"pornhub.com", "Pornhub", CategoryAdult}, {"xvideos.com", "XVideos", CategoryAdult},
-	{"bet365.com", "Bet365", CategoryGambling}, {"paddypower.com", "Paddy Power", CategoryGambling},
+	{"facebook.com", "Facebook", CategorySocial},
+	{"instagram.com", "Instagram", CategorySocial},
+	{"twitter.com", "X", CategorySocial},
+	{"x.com", "X", CategorySocial},
+	{"youtube.com", "YouTube", CategoryVideo},
+	{"netflix.com", "Netflix", CategoryVideo},
+	{"twitch.tv", "Twitch", CategoryVideo},
+	{"telegram.org", "Telegram", CategoryMessaging},
+	{"whatsapp.com", "WhatsApp", CategoryMessaging},
+	{"signal.org", "Signal", CategoryMessaging},
+	{"steampowered.com", "Steam", CategoryGaming},
+	{"epicgames.com", "Epic Games", CategoryGaming},
+	{"google.com", "Google", CategorySearch},
+	{"bing.com", "Bing", CategorySearch},
+	{"microsoft.com", "Microsoft", CategorySoftware},
+	{"windowsupdate.com", "Windows Update", CategorySoftware},
+	{"apple.com", "Apple", CategorySoftware},
+	{"cloudflare.com", "Cloudflare", CategoryCloudCDN},
+	{"cloudfront.net", "Amazon CloudFront", CategoryCloudCDN},
+	{"fastly.net", "Fastly", CategoryCloudCDN},
+	{"doubleclick.net", "Google Ads", CategoryAdvertising},
+	{"googlesyndication.com", "Google Ads", CategoryAdvertising},
+	{"pornhub.com", "Pornhub", CategoryAdult},
+	{"xvideos.com", "XVideos", CategoryAdult},
+	{"bet365.com", "Bet365", CategoryGambling},
+	{"paddypower.com", "Paddy Power", CategoryGambling},
 }
 
 type cacheEntry struct {
@@ -173,9 +189,8 @@ func classifyDomain(domain string, evidence []EvidenceObservation) []Classificat
 		}
 		exact := domain == rule.Domain
 		score := 0.78
-		level := ConfidenceMedium
 		if exact {
-			score, level = .95, ConfidenceHigh
+			score = .95
 		}
 		prov := ProvenanceDerived
 		first := false
@@ -189,13 +204,7 @@ func classifyDomain(domain string, evidence []EvidenceObservation) []Classificat
 				score = item.Confidence
 			}
 		}
-		if score >= .9 {
-			level = ConfidenceHigh
-		} else if score >= .6 {
-			level = ConfidenceMedium
-		} else {
-			level = ConfidenceLow
-		}
+		level := confidenceLevel(score)
 		out = append(out, ClassificationCandidate{Service: rule.Service, Category: rule.Category, Source: SourceDomainCatalog, Provenance: prov, Confidence: score, Level: level, FirstParty: first, Reason: reasonForDomain(exact, direct)})
 	}
 	return out
@@ -301,6 +310,7 @@ func (e *Enricher) applyIP(ctx context.Context, result EnrichmentResult, raw str
 func unknownEnrichment() EnrichmentResult {
 	return EnrichmentResult{Category: CategoryUnknown, Source: SourceClassificationConflict, Provenance: ProvenanceUnknown, Confidence: 0, Level: ConfidenceLow, Reason: "unknown"}
 }
+
 func min(a, b float64) float64 {
 	if a < b {
 		return a
