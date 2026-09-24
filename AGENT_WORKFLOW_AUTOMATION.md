@@ -26,6 +26,22 @@ The coding agent may manage:
 
 The agent must not merge a work package when required tests are blocked or failing.
 
+## Verification fallback autonomy
+
+Local Windows tooling is not a prerequisite for progressing a work package.
+If the required Go version, `make`, WSL, or Docker is unavailable locally, the
+agent must use the existing GitHub Actions workflows or add a focused Ubuntu
+branch-verification workflow, using the Go version required by `go.mod` and
+the repository's existing installation and verification commands. The agent
+may push checkpoint commits, trigger verification through branch pushes, and
+inspect/fix/re-run CI results autonomously.
+
+The agent must stop only for a genuine external blocker that cannot be
+resolved in-repository: GitHub Actions being inaccessible or disabled,
+missing repository permissions, a required secret/credential being
+unavailable, or an architectural decision that materially changes the
+approved specification. Missing local tooling alone is not a blocker.
+
 ## Optional PowerShell helper
 
 Use:
