@@ -63,10 +63,12 @@ var newPanelReleaseProvider = func(timeout time.Duration) forkrelease.Provider {
 // Number.MAX_SAFE_INTEGER), which would let two different runs round to the
 // same value on the wire and defeat the whole point of this field.
 type PanelUpdateStatus struct {
-	RunID      string `json:"runId" example:"1735689600123456789"`
-	State      string `json:"state" example:"success"`
-	ExitCode   int    `json:"exitCode" example:"0"`
-	FinishedAt int64  `json:"finishedAt" example:"1735689612"`
+	RunID           string `json:"runId" example:"1735689600123456789"`
+	State           string `json:"state" example:"success"`
+	ExitCode        int    `json:"exitCode" example:"0"`
+	FinishedAt      int64  `json:"finishedAt" example:"1735689612"`
+	RolledBack      bool   `json:"rolledBack"`
+	RollbackHealthy bool   `json:"rollbackHealthy"`
 }
 
 var releaseCommitRegex = regexp.MustCompile(`(?i)commit=([0-9a-f]{7,40})`)
@@ -186,7 +188,7 @@ func getDevUpdateInfo() (*PanelUpdateInfo, error) {
 	}, nil
 }
 
-// StartUpdate starts the official updater using this panel's own channel
+// StartUpdate starts the verified CatX-UI updater using this panel's own channel
 // setting. Returns the run ID to pass to GetUpdateStatus so the caller can
 // tell this run's result apart from a stale one.
 func (s *PanelService) StartUpdate() (int64, error) {

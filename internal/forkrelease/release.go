@@ -91,6 +91,9 @@ func (p Provider) Fetch(ctx context.Context, channel Channel) (*Release, error) 
 		return nil, err
 	}
 	defer resp.Body.Close()
+	if resp.Request == nil || !strings.HasPrefix(resp.Request.URL.String(), strings.TrimRight(p.APIBaseURL, "/")+"/releases/") {
+		return nil, fmt.Errorf("release provider redirected outside trusted repository")
+	}
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("release provider returned HTTP %d", resp.StatusCode)
 	}
@@ -146,9 +149,14 @@ func (p Provider) FindAsset(release *Release, name string) (Asset, error) {
 	if release == nil {
 		return Asset{}, fmt.Errorf("release metadata is nil")
 	}
-	for _, asset := range release.Assets {
+	var found *Asset
+	for idx := range release.Assets {
+		asset := release.Assets[idx]
 		if asset.Name != name {
 			continue
+		}
+		if found != nil {
+			return Asset{}, fmt.Errorf("release %q contains duplicate asset %q", release.TagName, name)
 		}
 		want := strings.TrimRight(p.AssetBaseURL, "/") + "/releases/download/" +
 			url.PathEscape(release.TagName) + "/" + url.PathEscape(name)
@@ -158,7 +166,11 @@ func (p Provider) FindAsset(release *Release, name string) (Asset, error) {
 		if asset.Size <= 0 {
 			return Asset{}, fmt.Errorf("asset %q has invalid size %d", name, asset.Size)
 		}
-		return asset, nil
+		copy := asset
+		found = &copy
+	}
+	if found != nil {
+		return *found, nil
 	}
 	return Asset{}, fmt.Errorf("release %q does not contain required asset %q", release.TagName, name)
 }

@@ -6,6 +6,16 @@ blue='\033[0;34m'
 yellow='\033[0;33m'
 plain='\033[0m'
 
+# Mirrored from internal/forkrelease/identity.env. The release verification
+# gate rejects drift, so every install/update path stays pinned to CatX-UI.
+readonly CATX_RELEASE_OWNER="CatCodeArbelin"
+readonly CATX_RELEASE_REPOSITORY="CatX-UI"
+readonly CATX_RELEASE_SLUG="${CATX_RELEASE_OWNER}/${CATX_RELEASE_REPOSITORY}"
+readonly CATX_ASSET_PREFIX="catx-ui"
+readonly CATX_DEV_RELEASE_TAG="dev-latest"
+readonly CATX_RELEASE_WEB="https://github.com/${CATX_RELEASE_SLUG}"
+readonly CATX_RELEASE_API="https://api.github.com/repos/${CATX_RELEASE_SLUG}"
+
 #Add some basic function here
 function LOGD() {
     echo -e "${yellow}[DEG] $* ${plain}"
@@ -128,8 +138,79 @@ before_show_menu() {
     show_menu
 }
 
+catx_validate_release_tag() {
+    [[ "$1" == "${CATX_DEV_RELEASE_TAG}" || "$1" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+}
+
+catx_resolve_latest_tag() {
+    local url tag
+    url=$(curl -fsSLI -o /dev/null -w '%{url_effective}' --retry 5 --retry-all-errors --retry-delay 3 \
+        "${CATX_RELEASE_WEB}/releases/latest" 2> /dev/null || true)
+    tag=${url##*/tag/}
+    if [[ "$tag" != "$url" ]] && catx_validate_release_tag "$tag" && [[ "$tag" != "${CATX_DEV_RELEASE_TAG}" ]]; then
+        printf '%s\n' "$tag"
+        return 0
+    fi
+    tag=$(curl -fsSL --retry 5 --retry-all-errors --retry-delay 3 \
+        "${CATX_RELEASE_API}/releases/latest" 2> /dev/null | grep '"tag_name":' | head -n1 | sed -E 's/.*"([^"]+)".*/\1/')
+    catx_validate_release_tag "$tag" && [[ "$tag" != "${CATX_DEV_RELEASE_TAG}" ]] || return 1
+    printf '%s\n' "$tag"
+}
+
+catx_download_verified_asset() {
+    local tag="$1" name="$2" dest="$3"
+    local url="${CATX_RELEASE_WEB}/releases/download/${tag}/${name}"
+    local sum_file="${dest}.sha256" expected actual recorded_name
+
+    catx_validate_release_tag "$tag" || {
+        LOGE "Refusing invalid CatX-UI release tag: $tag"
+        return 1
+    }
+    rm -f "$dest" "$sum_file"
+    curl -fL --retry 5 --retry-all-errors --retry-delay 3 -o "$dest" "$url" || return 1
+    curl -fL --retry 5 --retry-all-errors --retry-delay 3 -o "$sum_file" "${url}.sha256" || {
+        rm -f "$dest" "$sum_file"
+        return 1
+    }
+    if [[ $(grep -cve '^[[:space:]]*$' "$sum_file") -ne 1 ]]; then
+        rm -f "$dest" "$sum_file"
+        LOGE "Invalid checksum record for CatX-UI asset $name"
+        return 1
+    fi
+    expected=$(awk 'NR == 1 {print $1}' "$sum_file")
+    recorded_name=$(awk 'NR == 1 {print $2}' "$sum_file")
+    actual=$(sha256sum "$dest" | awk '{print $1}')
+    rm -f "$sum_file"
+    if [[ ! "$expected" =~ ^[0-9a-f]{64}$ || "$recorded_name" != "$name" || "$expected" != "$actual" ]]; then
+        rm -f "$dest"
+        LOGE "Integrity verification failed for CatX-UI asset $name"
+        return 1
+    fi
+}
+
+catx_run_release_script() {
+    local tag="$1" asset="$2"
+    shift 2
+    local temp
+    temp=$(mktemp "/tmp/${asset}.XXXXXX") || return 1
+    if ! catx_download_verified_asset "$tag" "$asset" "$temp"; then
+        rm -f "$temp"
+        return 1
+    fi
+    chmod 700 "$temp"
+    bash "$temp" "$@"
+    local rc=$?
+    rm -f "$temp"
+    return "$rc"
+}
+
 install() {
-    bash <(curl -Ls https://raw.githubusercontent.com/MHSanaei/3x-ui/main/install.sh)
+    local tag
+    tag=$(catx_resolve_latest_tag) || {
+        LOGE "Could not resolve the latest CatX-UI release"
+        return 1
+    }
+    catx_run_release_script "$tag" "${CATX_ASSET_PREFIX}-install.sh" "$tag"
     if [[ $? == 0 ]]; then
         if [[ $# == 0 ]]; then
             start
@@ -148,7 +229,12 @@ update() {
         fi
         return 0
     fi
-    bash <(curl -Ls https://raw.githubusercontent.com/MHSanaei/3x-ui/main/update.sh)
+    local tag
+    tag=$(catx_resolve_latest_tag) || {
+        LOGE "Could not resolve the latest CatX-UI release"
+        return 1
+    }
+    XUI_UPDATE_TAG="$tag" catx_run_release_script "$tag" "${CATX_ASSET_PREFIX}-update.sh"
     if [[ $? == 0 ]]; then
         LOGI "Update is complete, Panel has automatically restarted "
         before_show_menu
@@ -166,7 +252,7 @@ update_dev() {
     fi
     # XUI_UPDATE_TAG tells update.sh to install the dev-latest pre-release
     # instead of the latest stable tag.
-    XUI_UPDATE_TAG="dev-latest" bash <(curl -Ls https://raw.githubusercontent.com/MHSanaei/3x-ui/main/update.sh)
+    XUI_UPDATE_TAG="${CATX_DEV_RELEASE_TAG}" catx_run_release_script "${CATX_DEV_RELEASE_TAG}" "${CATX_ASSET_PREFIX}-update.sh"
     if [[ $? == 0 ]]; then
         LOGI "Dev update is complete, Panel has automatically restarted "
         before_show_menu
@@ -174,26 +260,17 @@ update_dev() {
 }
 
 replace_xui_script() {
-    local url="$1"
-    local use_if_modified_since="$2"
+    local tag="$1"
     local temp_file="/usr/bin/x-ui-temp.$$"
 
     rm -f "$temp_file"
-    if [[ "$use_if_modified_since" == "true" ]]; then
-        curl -fLRo "$temp_file" -z /usr/bin/x-ui "$url"
-    else
-        curl -fLRo "$temp_file" "$url"
-    fi
-    if [[ $? != 0 ]]; then
+    if ! catx_download_verified_asset "$tag" "${CATX_ASSET_PREFIX}.sh" "$temp_file"; then
         rm -f "$temp_file"
         return 1
     fi
 
     if [[ ! -s "$temp_file" ]]; then
         rm -f "$temp_file"
-        # -z above means "not modified since /usr/bin/x-ui" rather than a
-        # real failure, so an empty download here is success, not an error.
-        [[ "$use_if_modified_since" == "true" ]] && return 0
         return 1
     fi
 
@@ -208,16 +285,17 @@ replace_xui_script() {
     return 0
 }
 
-# The menu must match the installed panel, so update it from that release's
-# tag; fall back to main only when no script is published for the version.
-installed_script_url() {
+# The menu must match the installed CatX-UI binary. Stable versions map to a
+# stable release tag; dev builds map only to the fixed verified dev release.
+installed_release_tag() {
     local ver
     ver=$("${xui_folder}/x-ui" -v 2> /dev/null | tr -d '[:space:]')
-    if [[ "$ver" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] && curl -fsIL -o /dev/null "https://raw.githubusercontent.com/MHSanaei/3x-ui/v${ver}/x-ui.sh"; then
-        echo "https://raw.githubusercontent.com/MHSanaei/3x-ui/v${ver}/x-ui.sh"
+    if [[ "$ver" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        echo "v${ver}"
+    elif [[ "$ver" =~ ^dev\+[0-9a-f]{7,40}$ ]]; then
+        echo "${CATX_DEV_RELEASE_TAG}"
     else
-        echo -e "${yellow}No x-ui.sh published for the installed version (${ver:-unknown}), using main${plain}" >&2
-        echo "https://raw.githubusercontent.com/MHSanaei/3x-ui/main/x-ui.sh"
+        return 1
     fi
 }
 
@@ -232,7 +310,12 @@ update_menu() {
         return 0
     fi
 
-    if replace_xui_script "$(installed_script_url)" "false"; then
+    local tag
+    tag=$(installed_release_tag) || {
+        LOGE "Installed binary does not report a valid CatX-UI release version"
+        return 1
+    }
+    if replace_xui_script "$tag"; then
         chmod +x ${xui_folder}/x-ui.sh
         echo -e "${green}Update successful. The panel has automatically restarted.${plain}"
         exit 0
@@ -250,11 +333,13 @@ legacy_version() {
         echo "Panel version cannot be empty. Exiting."
         exit 1
     fi
-    # Use the entered panel version in the download link
-    install_command="bash <(curl -Ls "https://raw.githubusercontent.com/mhsanaei/3x-ui/v$tag_version/install.sh") v$tag_version"
-
-    echo "Downloading and installing panel version $tag_version..."
-    eval $install_command
+    tag_version="v${tag_version#v}"
+    if ! catx_validate_release_tag "$tag_version" || [[ "$tag_version" == "${CATX_DEV_RELEASE_TAG}" ]]; then
+        LOGE "Version must be a CatX-UI stable tag such as v0.1.0"
+        return 1
+    fi
+    echo "Downloading and installing CatX-UI version $tag_version..."
+    XUI_UPDATE_TAG="$tag_version" catx_run_release_script "$tag_version" "${CATX_ASSET_PREFIX}-update.sh"
 }
 
 # Function to handle the deletion of the script file
@@ -316,7 +401,7 @@ uninstall() {
     echo ""
     echo -e "Uninstalled Successfully.\n"
     echo "If you need to install this panel again, you can use below command:"
-    echo -e "${green}bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh)${plain}"
+    echo -e "${green}bash <(curl -Ls https://raw.githubusercontent.com/${CATX_RELEASE_SLUG}/main/install.sh)${plain}"
     echo ""
     # Trap the SIGTERM signal
     trap delete_script SIGTERM

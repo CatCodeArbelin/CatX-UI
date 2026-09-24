@@ -347,6 +347,15 @@ func TestGetUpdateStatus(t *testing.T) {
 		t.Fatalf("State = %q, want %q", got.State, updateStateSuccess)
 	}
 
+	rollbackBody := `{"runId":"2","state":"failed","exitCode":2,"finishedAt":1735689612,"rolledBack":true,"rollbackHealthy":true}`
+	if err := os.WriteFile(path, []byte(rollbackBody), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	got = svc.GetUpdateStatus()
+	if !got.RolledBack || !got.RollbackHealthy {
+		t.Fatalf("rollback status = %+v, want successful automatic rollback", got)
+	}
+
 	if err := os.WriteFile(path, []byte("not json"), 0o644); err != nil {
 		t.Fatal(err)
 	}

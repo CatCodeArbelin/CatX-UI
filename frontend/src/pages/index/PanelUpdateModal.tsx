@@ -14,6 +14,9 @@ export interface PanelUpdateInfo {
   channel?: string;
   currentVersion: string;
   latestVersion: string;
+  upstreamBaseVersion?: string;
+  bundledXrayVersion?: string;
+  releaseRepository?: string;
   currentCommit?: string;
   latestCommit?: string;
   updateAvailable: boolean;

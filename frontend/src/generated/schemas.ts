@@ -3686,6 +3686,12 @@ export const SCHEMAS: Record<string, unknown> = {
         "format": "int64",
         "type": "integer"
       },
+      "rollbackHealthy": {
+        "type": "boolean"
+      },
+      "rolledBack": {
+        "type": "boolean"
+      },
       "runId": {
         "example": "1735689600123456789",
         "type": "string"
@@ -3698,6 +3704,8 @@ export const SCHEMAS: Record<string, unknown> = {
     "required": [
       "exitCode",
       "finishedAt",
+      "rollbackHealthy",
+      "rolledBack",
       "runId",
       "state"
     ],

@@ -6,6 +6,16 @@ blue='\033[0;34m'
 yellow='\033[0;33m'
 plain='\033[0m'
 
+# Mirrored from internal/forkrelease/identity.env and enforced by
+# scripts/test-release-identity.sh.
+readonly CATX_RELEASE_OWNER="CatCodeArbelin"
+readonly CATX_RELEASE_REPOSITORY="CatX-UI"
+readonly CATX_RELEASE_SLUG="${CATX_RELEASE_OWNER}/${CATX_RELEASE_REPOSITORY}"
+readonly CATX_ASSET_PREFIX="catx-ui"
+readonly CATX_DEV_RELEASE_TAG="dev-latest"
+readonly CATX_RELEASE_WEB="https://github.com/${CATX_RELEASE_SLUG}"
+readonly CATX_RELEASE_API="https://api.github.com/repos/${CATX_RELEASE_SLUG}"
+
 xui_folder="${XUI_MAIN_FOLDER:=/usr/local/x-ui}"
 xui_service="${XUI_SERVICE:=/etc/systemd/system}"
 
@@ -1450,36 +1460,37 @@ _install_xui_service_unit() {
 # fails with "Failed to fetch x-ui version"), and falls back to the API.
 resolve_latest_tag() {
     local url tag
-    url=$(curl -sSLI -o /dev/null -w '%{url_effective}' --retry 5 --retry-delay 3 --connect-timeout 15 --max-time 60 "https://github.com/MHSanaei/3x-ui/releases/latest" 2>/dev/null)
+    url=$(curl -sSLI -o /dev/null -w '%{url_effective}' --retry 5 --retry-delay 3 --connect-timeout 15 --max-time 60 "${CATX_RELEASE_WEB}/releases/latest" 2>/dev/null)
     tag=${url##*/tag/}
-    if [[ "$tag" != "$url" && -n "$tag" && "$tag" != "latest" ]]; then
+    if [[ "$tag" != "$url" && "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
         echo "$tag"
         return 0
     fi
-    curl -Ls --retry 5 --retry-delay 3 --connect-timeout 15 --max-time 60 "https://api.github.com/repos/MHSanaei/3x-ui/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/'
+    tag=$(curl -Ls --retry 5 --retry-delay 3 --connect-timeout 15 --max-time 60 "${CATX_RELEASE_API}/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+    [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || return 1
+    echo "$tag"
 }
 
-# Releases publish <asset>.sha256 next to each archive. A mismatch or a failed
-# sidecar download aborts the install; only a 404 (releases predating the
-# sidecar) is tolerated with a warning.
+# Every CatX-UI release payload requires a same-release checksum sidecar.
 verify_release_checksum() {
-    local url="$1" file="$2" sums="$2.sha256" code expected actual
+    local url="$1" file="$2" sums="$2.sha256" code expected actual recorded_name
     rm -f "${sums}"
     code=$(curl -sL --retry 3 --retry-delay 3 --connect-timeout 15 --max-time 60 -o "${sums}" -w '%{http_code}' "${url}.sha256")
-    if [[ "${code}" == "404" ]]; then
-        rm -f "${sums}"
-        echo -e "${yellow}No checksum published for this release, skipping verification${plain}"
-        return 0
-    fi
     if [[ "${code}" != "200" ]]; then
         rm -f "${sums}" "${file}"
         echo -e "${red}Failed to download the checksum for $(basename "${file}") (HTTP ${code})${plain}"
         exit 1
     fi
+    if [[ $(grep -cve '^[[:space:]]*$' "${sums}") -ne 1 ]]; then
+        rm -f "${sums}" "${file}"
+        echo -e "${red}Invalid checksum record for ${url##*/}${plain}"
+        exit 1
+    fi
     expected=$(awk 'NR == 1 {print $1}' "${sums}")
+    recorded_name=$(awk 'NR == 1 {print $2}' "${sums}")
     actual=$(sha256sum "${file}" | awk '{print $1}')
     rm -f "${sums}"
-    if [[ ! "${expected}" =~ ^[0-9a-f]{64}$ || "${expected}" != "${actual}" ]]; then
+    if [[ ! "${expected}" =~ ^[0-9a-f]{64}$ || "${recorded_name}" != "${url##*/}" || "${expected}" != "${actual}" ]]; then
         rm -f "${file}"
         echo -e "${red}Checksum mismatch for $(basename "${file}"): expected ${expected:-<none>}, got ${actual}${plain}"
         exit 1
@@ -1487,101 +1498,75 @@ verify_release_checksum() {
     echo -e "${green}Checksum verified: ${actual}${plain}"
 }
 
-# Older tags predate some of these files (x-ui.rc arrived in v2.8.4). Serving
-# main's copy against an old binary is the mismatch this pinning exists to
-# prevent, so probe before anything is stopped or removed and refuse the tag.
-require_repo_files() {
-    local ref="$1" name status
-    shift
-    [[ "${ref}" == "main" ]] && return 0
-    for name in "$@"; do
-        status=$(curl -sIL --retry 3 --connect-timeout 15 -o /dev/null -w '%{http_code}' "https://raw.githubusercontent.com/MHSanaei/3x-ui/${ref}/${name}")
-        if [[ "${status}" != "200" ]]; then
-            echo -e "${red}${name} is not available for ${ref} (HTTP ${status})${plain}"
-            echo -e "${red}Install a release that ships it, or 'dev' for the rolling build. Your existing installation has not been touched.${plain}"
-            exit 1
-        fi
-    done
+validate_release_archive() {
+    local archive="$1" entry
+    while IFS= read -r entry; do
+        [[ -n "$entry" ]] || continue
+        [[ "$entry" == x-ui || "$entry" == x-ui/* ]] || return 1
+        [[ "$entry" != /* && "$entry" != *"../"* && "$entry" != *"/.." ]] || return 1
+    done < <(tar -tzf "$archive") || return 1
+    while IFS= read -r entry; do
+        case "${entry:0:1}" in
+            - | d) ;;
+            *) return 1 ;;
+        esac
+    done < <(tar -tvzf "$archive") || return 1
 }
 
 install_x-ui() {
     cd ${xui_folder%/x-ui}/
 
-    # Download resources
+    # Resolve and validate the CatX-UI release before touching an installation.
     if [ $# == 0 ]; then
         tag_version=$(resolve_latest_tag)
         if [[ ! -n "$tag_version" ]]; then
             echo -e "${red}Failed to fetch x-ui version, it may be due to GitHub API restrictions, please try it later${plain}"
             exit 1
         fi
-        echo -e "Got x-ui latest version: ${tag_version}, beginning the installation..."
-        curl -fLR --retry 5 --retry-delay 3 --connect-timeout 15 --speed-limit 1 --speed-time 300 -o ${xui_folder}-linux-$(arch).tar.gz https://github.com/MHSanaei/3x-ui/releases/download/${tag_version}/x-ui-linux-$(arch).tar.gz
-        if [[ $? -ne 0 ]]; then
-            echo -e "${red}Downloading x-ui failed, please be sure that your server can access GitHub ${plain}"
-            exit 1
-        fi
-        if [[ ! -s ${xui_folder}-linux-$(arch).tar.gz ]]; then
-            rm ${xui_folder}-linux-$(arch).tar.gz -f
-            echo -e "${red}Downloaded x-ui release archive is empty${plain}"
-            exit 1
-        fi
-        verify_release_checksum "https://github.com/MHSanaei/3x-ui/releases/download/${tag_version}/x-ui-linux-$(arch).tar.gz" "${xui_folder}-linux-$(arch).tar.gz"
     else
         tag_version=$1
         # The rolling dev channel ships under a fixed, non-semver tag that is
         # force-moved to the latest main commit on every push. Accept `dev` as a
         # convenient alias and skip the numeric floor check for it.
-        if [[ "$tag_version" == "dev" || "$tag_version" == "dev-latest" ]]; then
-            tag_version="dev-latest"
-            echo -e "${yellow}Installing the rolling dev build (tag: dev-latest). This is a per-commit pre-release, not a stable version.${plain}"
+        if [[ "$tag_version" == "dev" || "$tag_version" == "${CATX_DEV_RELEASE_TAG}" ]]; then
+            tag_version="${CATX_DEV_RELEASE_TAG}"
+            echo -e "${yellow}Installing the rolling CatX-UI dev build. This is a per-commit pre-release, not a stable version.${plain}"
         else
-            tag_version_numeric=${tag_version#v}
-            min_version="2.3.5"
-
-            if [[ "$(printf '%s\n' "$min_version" "$tag_version_numeric" | sort -V | head -n1)" != "$min_version" ]]; then
-                echo -e "${red}Please use a newer version (at least v2.3.5). Exiting installation.${plain}"
+            tag_version="v${tag_version#v}"
+            if [[ ! "$tag_version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+                echo -e "${red}Invalid CatX-UI release tag: ${tag_version}${plain}"
                 exit 1
             fi
         fi
+    fi
 
-        url="https://github.com/MHSanaei/3x-ui/releases/download/${tag_version}/x-ui-linux-$(arch).tar.gz"
-        echo -e "Beginning to install x-ui ${tag_version}"
-        curl -fLR --retry 5 --retry-delay 3 --connect-timeout 15 --speed-limit 1 --speed-time 300 -o ${xui_folder}-linux-$(arch).tar.gz ${url}
-        if [[ $? -ne 0 ]]; then
-            echo -e "${red}Download x-ui ${tag_version} failed, please check if the version exists ${plain}"
-            exit 1
-        fi
-        if [[ ! -s ${xui_folder}-linux-$(arch).tar.gz ]]; then
-            rm ${xui_folder}-linux-$(arch).tar.gz -f
-            echo -e "${red}Downloaded x-ui release archive is empty${plain}"
-            exit 1
-        fi
-        verify_release_checksum "${url}" "${xui_folder}-linux-$(arch).tar.gz"
+    # Reinstallation is an update and must use the transactional updater.
+    if [[ -x "${xui_folder}/x-ui" ]]; then
+        local updater="/tmp/${CATX_ASSET_PREFIX}-update.$$.sh"
+        local updater_url="${CATX_RELEASE_WEB}/releases/download/${tag_version}/${CATX_ASSET_PREFIX}-update.sh"
+        curl -fLR --retry 5 --retry-delay 3 -o "${updater}" "${updater_url}" || exit 1
+        verify_release_checksum "${updater_url}" "${updater}"
+        chmod 700 "${updater}"
+        XUI_UPDATE_TAG="${tag_version}" XUI_MAIN_FOLDER="${xui_folder}" XUI_SERVICE="${xui_service}" bash "${updater}"
+        local update_rc=$?
+        rm -f "${updater}"
+        return "${update_rc}"
     fi
-    # x-ui.sh, x-ui.rc and the unit files must come from the same release as
-    # the binary; only the rolling dev build tracks main.
-    local script_ref="${tag_version}"
-    if [[ "${tag_version}" == "dev-latest" ]]; then
-        script_ref="main"
-    fi
-    # The unit files are only fetched when the release tarball lacks them, so
-    # they are checked at that point instead of here.
-    local required_files=("x-ui.sh")
-    [[ $release == "alpine" ]] && required_files+=("x-ui.rc")
-    require_repo_files "${script_ref}" "${required_files[@]}"
+
+    local archive="${CATX_ASSET_PREFIX}-linux-$(arch).tar.gz"
+    local url="${CATX_RELEASE_WEB}/releases/download/${tag_version}/${archive}"
+    echo -e "Beginning to install CatX-UI ${tag_version}"
+    curl -fLR --retry 5 --retry-delay 3 --connect-timeout 15 --speed-limit 1 --speed-time 300 -o "${archive}" "${url}" || exit 1
+    [[ -s "${archive}" ]] || { rm -f "${archive}"; echo -e "${red}Downloaded CatX-UI archive is empty${plain}"; exit 1; }
+    verify_release_checksum "${url}" "${archive}"
+    validate_release_archive "${archive}" || {
+        rm -f "${archive}"
+        echo -e "${red}CatX-UI release archive contains an unsafe entry${plain}"
+        exit 1
+    }
+
     local xui_script_temp="/usr/bin/x-ui-temp.$$"
     rm -f "${xui_script_temp}"
-    curl -fLRo "${xui_script_temp}" "https://raw.githubusercontent.com/MHSanaei/3x-ui/${script_ref}/x-ui.sh"
-    if [[ $? -ne 0 ]]; then
-        rm -f "${xui_script_temp}"
-        echo -e "${red}Failed to download x-ui.sh${plain}"
-        exit 1
-    fi
-    if [[ ! -s "${xui_script_temp}" ]]; then
-        rm -f "${xui_script_temp}"
-        echo -e "${red}Downloaded x-ui.sh is empty${plain}"
-        exit 1
-    fi
 
     # Stop x-ui service and remove old resources
     local custom_bin_backup=""
@@ -1626,14 +1611,14 @@ install_x-ui() {
     fi
 
     # Extract resources and set permissions
-    tar zxvf x-ui-linux-$(arch).tar.gz
+    tar zxvf "${archive}"
     if [[ $? -ne 0 ]]; then
-        rm x-ui-linux-$(arch).tar.gz -f
+        rm -f "${archive}"
         rm -f "${xui_script_temp}"
         echo -e "${red}Failed to extract the x-ui release archive -- the previous installation has already been removed, so the panel will not start until this is fixed; try running the installer again${plain}"
         exit 1
     fi
-    rm x-ui-linux-$(arch).tar.gz -f
+    rm -f "${archive}"
 
     cd x-ui
     if [[ $? -ne 0 || ! -s x-ui ]]; then
@@ -1643,6 +1628,28 @@ install_x-ui() {
     fi
     chmod +x x-ui
     chmod +x x-ui.sh
+    identity=$(./x-ui release-info 2> /dev/null) || {
+        echo -e "${red}Candidate does not expose CatX-UI release identity${plain}"
+        exit 1
+    }
+    grep -Fxq "product=CatX-UI" <<< "${identity}" &&
+        grep -Fxq "repository=${CATX_RELEASE_SLUG}" <<< "${identity}" || {
+        echo -e "${red}Candidate identity is not ${CATX_RELEASE_SLUG}${plain}"
+        exit 1
+    }
+    if [[ "${tag_version}" =~ ^v ]]; then
+        grep -Fxq "channel=stable" <<< "${identity}" &&
+            grep -Fxq "fork_version=${tag_version#v}" <<< "${identity}" || {
+            echo -e "${red}Candidate version does not match release tag ${tag_version}${plain}"
+            exit 1
+        }
+    else
+        grep -Fxq "channel=dev" <<< "${identity}" || {
+            echo -e "${red}Rolling candidate is not a dev-channel build${plain}"
+            exit 1
+        }
+    fi
+    cp -f x-ui.sh "${xui_script_temp}" || exit 1
 
     # Check the system's architecture and rename the file accordingly.
     # The panel binary maps GOARCH=arm to "arm32" (internal/xray/process.go),
@@ -1728,7 +1735,7 @@ install_x-ui() {
     if [[ $release == "alpine" ]]; then
         xui_rc_temp="/etc/init.d/x-ui.tmp.$$"
         rm -f "${xui_rc_temp}"
-        curl -fLRo "${xui_rc_temp}" "https://raw.githubusercontent.com/MHSanaei/3x-ui/${script_ref}/x-ui.rc"
+        cp -f "x-ui.rc" "${xui_rc_temp}"
         if [[ $? -ne 0 ]]; then
             rm -f "${xui_rc_temp}"
             echo -e "${red}Failed to download x-ui.rc${plain}"
@@ -1788,26 +1795,10 @@ install_x-ui() {
             esac
         fi
 
-        # If service file not found in tar.gz, download from GitHub
+        # A release is incomplete if it does not carry its own service unit.
         if [ "$service_installed" = false ]; then
-            echo -e "${yellow}Service files not found in tar.gz, downloading from GitHub...${plain}"
-            case "${release}" in
-                ubuntu | debian | armbian)
-                    service_unit_url="https://raw.githubusercontent.com/MHSanaei/3x-ui/${script_ref}/x-ui.service.debian"
-                    ;;
-                arch | manjaro | parch)
-                    service_unit_url="https://raw.githubusercontent.com/MHSanaei/3x-ui/${script_ref}/x-ui.service.arch"
-                    ;;
-                *)
-                    service_unit_url="https://raw.githubusercontent.com/MHSanaei/3x-ui/${script_ref}/x-ui.service.rhel"
-                    ;;
-            esac
-
-            if ! _install_xui_service_unit "$service_unit_url" "true"; then
-                echo -e "${red}Failed to install x-ui.service from GitHub (${script_ref}) -- the release tarball did not ship one either${plain}"
-                exit 1
-            fi
-            service_installed=true
+            echo -e "${red}CatX-UI release ${tag_version} does not contain a service unit for ${release}${plain}"
+            exit 1
         fi
 
         if [ "$service_installed" = true ]; then

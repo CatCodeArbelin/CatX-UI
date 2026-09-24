@@ -6,6 +6,15 @@ blue='\033[0;34m'
 yellow='\033[0;33m'
 plain='\033[0m'
 
+# Mirrored from internal/forkrelease/identity.env. A release gate rejects drift.
+readonly CATX_RELEASE_OWNER="CatCodeArbelin"
+readonly CATX_RELEASE_REPOSITORY="CatX-UI"
+readonly CATX_RELEASE_SLUG="${CATX_RELEASE_OWNER}/${CATX_RELEASE_REPOSITORY}"
+readonly CATX_ASSET_PREFIX="catx-ui"
+readonly CATX_DEV_RELEASE_TAG="dev-latest"
+readonly CATX_RELEASE_WEB="https://github.com/${CATX_RELEASE_SLUG}"
+readonly CATX_RELEASE_API="https://api.github.com/repos/${CATX_RELEASE_SLUG}"
+
 xui_folder="${XUI_MAIN_FOLDER:=/usr/local/x-ui}"
 xui_service="${XUI_SERVICE:=/etc/systemd/system}"
 
@@ -44,17 +53,22 @@ xui_update_status_file="${XUI_UPDATE_STATUS_FILE:-/etc/x-ui/update-status.json}"
 _write_update_status() {
     local state="$1"
     local exit_code="$2"
-    local status_dir
+    local status_dir rolled_back=false rollback_healthy=false
+    [[ "${catx_rollback_attempted:-0}" -eq 1 ]] && rolled_back=true
+    [[ "${catx_rollback_healthy:-0}" -eq 1 ]] && rollback_healthy=true
     status_dir="$(dirname "${xui_update_status_file}")"
     mkdir -p "${status_dir}" > /dev/null 2>&1
     local tmp_file="${xui_update_status_file}.tmp.$$"
-    printf '{"runId":"%s","state":"%s","exitCode":%s,"finishedAt":%s}\n' \
-        "${xui_update_run_id}" "${state}" "${exit_code}" "$(date +%s)" > "${tmp_file}" 2> /dev/null
+    printf '{"runId":"%s","state":"%s","exitCode":%s,"finishedAt":%s,"rolledBack":%s,"rollbackHealthy":%s}\n' \
+        "${xui_update_run_id}" "${state}" "${exit_code}" "$(date +%s)" "$rolled_back" "$rollback_healthy" > "${tmp_file}" 2> /dev/null
     mv -f "${tmp_file}" "${xui_update_status_file}" > /dev/null 2>&1
 }
 
 _report_update_exit() {
     local code=$?
+    if declare -F catx_update_exit_guard > /dev/null 2>&1; then
+        catx_update_exit_guard "${code}"
+    fi
     if [[ "${code}" -eq 0 ]]; then
         _write_update_status "success" "0"
     else
@@ -982,311 +996,51 @@ require_repo_files() {
     shift
     [[ "${ref}" == "main" ]] && return 0
     for name in "$@"; do
-        status=$(${curl_bin} -sIL --retry 3 --connect-timeout 15 -o /dev/null -w '%{http_code}' "https://raw.githubusercontent.com/MHSanaei/3x-ui/${ref}/${name}")
+        status=$(${curl_bin} -sIL --retry 3 --connect-timeout 15 -o /dev/null -w '%{http_code}' "https://raw.githubusercontent.com/${CATX_RELEASE_SLUG}/${ref}/${name}")
         if [[ "${status}" != "200" ]]; then
             _fail "ERROR: ${name} is not available for ${ref} (HTTP ${status}). Update to a release that ships it, or to 'dev-latest'. The current installation is untouched."
         fi
     done
 }
 
-update_x-ui() {
-    cd ${xui_folder%/x-ui}/
-
-    load_xui_env
-
-    if [ -f "${xui_folder}/x-ui" ]; then
-        current_xui_version=$(${xui_folder}/x-ui -v)
-        echo -e "${green}Current x-ui version: ${current_xui_version}${plain}"
-    else
-        _fail "ERROR: Current x-ui version: unknown"
+catx_load_transaction_module() {
+    local tag="${XUI_UPDATE_TAG:-}" asset="${CATX_ASSET_PREFIX}-update-lib.sh"
+    local module sums code expected actual recorded_name
+    if [[ -z "$tag" ]]; then
+        tag=$(${curl_bin} -fsSL "${CATX_RELEASE_API}/releases/latest" 2> /dev/null |
+            grep '"tag_name":' | head -n1 | sed -E 's/.*"([^"]+)".*/\1/')
     fi
+    [[ "$tag" == "${CATX_DEV_RELEASE_TAG}" || "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] ||
+        _fail "ERROR: Refusing invalid CatX-UI update tag: ${tag:-<empty>}"
+    XUI_UPDATE_TAG="$tag"
+    export XUI_UPDATE_TAG
 
-    echo -e "${green}Downloading new x-ui version...${plain}"
-
-    # XUI_UPDATE_TAG lets the panel target a specific release tag (e.g. the
-    # rolling dev-latest pre-release). Empty keeps the default latest-stable flow.
-    if [[ -n "${XUI_UPDATE_TAG}" ]]; then
-        tag_version="${XUI_UPDATE_TAG}"
-        echo -e "${green}Using update tag: ${tag_version}${plain}"
-    else
-        tag_version=$(${curl_bin} -Ls "https://api.github.com/repos/MHSanaei/3x-ui/releases/latest" 2> /dev/null | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
-        if [[ ! -n "$tag_version" ]]; then
-            _fail "ERROR: Failed to fetch x-ui version, it may be due to GitHub API restrictions, please try it later"
-        fi
+    module=$(mktemp "/tmp/${asset}.XXXXXX") || _fail "ERROR: Could not create updater module staging file"
+    sums="${module}.sha256"
+    ${curl_bin} -fLR --retry 5 --retry-delay 3 -o "$module" \
+        "${CATX_RELEASE_WEB}/releases/download/${tag}/${asset}" || _fail "ERROR: Could not download CatX-UI transaction module"
+    code=$(${curl_bin} -sL --retry 5 --retry-delay 3 -o "$sums" -w '%{http_code}' \
+        "${CATX_RELEASE_WEB}/releases/download/${tag}/${asset}.sha256" 2> /dev/null)
+    [[ "$code" == "200" ]] || {
+        rm -f "$module" "$sums"
+        _fail "ERROR: Required updater module checksum is unavailable (HTTP ${code})"
+    }
+    [[ $(grep -cve '^[[:space:]]*$' "$sums") -eq 1 ]] || _fail "ERROR: Invalid updater module checksum file"
+    expected=$(awk 'NF {print $1}' "$sums")
+    recorded_name=$(awk 'NF {print $2}' "$sums")
+    actual=$(sha256sum "$module" | awk '{print $1}')
+    rm -f "$sums"
+    if [[ ! "$expected" =~ ^[0-9a-f]{64}$ || "$recorded_name" != "$asset" || "$expected" != "$actual" ]]; then
+        rm -f "$module"
+        _fail "ERROR: CatX-UI transaction module integrity verification failed"
     fi
-    echo -e "Got x-ui latest version: ${tag_version}, beginning the installation..."
-    # x-ui.sh, x-ui.rc and the unit files must come from the same release as
-    # the binary; only the rolling dev build tracks main.
-    script_ref="${tag_version}"
-    if [[ "${tag_version}" == "dev-latest" ]]; then
-        script_ref="main"
-    fi
-    # The unit files are only fetched when the release tarball lacks them, so
-    # they are checked at that point instead of here.
-    local required_files=("x-ui.sh")
-    [[ $release == "alpine" ]] && required_files+=("x-ui.rc")
-    require_repo_files "${script_ref}" "${required_files[@]}"
-    ${curl_bin} -fLRo ${xui_folder}-linux-$(arch).tar.gz https://github.com/MHSanaei/3x-ui/releases/download/${tag_version}/x-ui-linux-$(arch).tar.gz 2> /dev/null
-    if [[ $? -ne 0 ]]; then
-        _fail "ERROR: Failed to download x-ui, please be sure that your server can access GitHub"
-    fi
-    if [[ ! -s ${xui_folder}-linux-$(arch).tar.gz ]]; then
-        rm ${xui_folder}-linux-$(arch).tar.gz -f > /dev/null 2>&1
-        _fail "ERROR: Downloaded x-ui release archive is empty, please be sure that your server can access GitHub"
-    fi
-    # Releases publish <asset>.sha256 next to each archive. A mismatch or a
-    # failed sidecar download aborts the update; only a 404 (releases
-    # predating the sidecar) is tolerated with a warning.
-    archive="${xui_folder}-linux-$(arch).tar.gz"
-    rm -f "${archive}.sha256"
-    sidecar_code=$(${curl_bin} -sL --retry 3 --retry-delay 3 --connect-timeout 15 --max-time 60 -o "${archive}.sha256" -w '%{http_code}' "https://github.com/MHSanaei/3x-ui/releases/download/${tag_version}/x-ui-linux-$(arch).tar.gz.sha256" 2> /dev/null)
-    if [[ "${sidecar_code}" == "200" ]]; then
-        expected_sha256=$(awk 'NR == 1 {print $1}' "${archive}.sha256")
-        actual_sha256=$(sha256sum "${archive}" | awk '{print $1}')
-        rm -f "${archive}.sha256"
-        if [[ ! "${expected_sha256}" =~ ^[0-9a-f]{64}$ || "${expected_sha256}" != "${actual_sha256}" ]]; then
-            rm -f "${archive}"
-            _fail "ERROR: Checksum mismatch for $(basename "${archive}"): expected ${expected_sha256:-<none>}, got ${actual_sha256}"
-        fi
-        echo -e "${green}Checksum verified: ${actual_sha256}${plain}"
-    elif [[ "${sidecar_code}" == "404" ]]; then
-        rm -f "${archive}.sha256"
-        echo -e "${yellow}No checksum published for this release, skipping verification${plain}"
-    else
-        rm -f "${archive}.sha256" "${archive}"
-        _fail "ERROR: Failed to download the checksum for x-ui-linux-$(arch).tar.gz (HTTP ${sidecar_code})"
-    fi
-
-    if [[ -e ${xui_folder}/ ]]; then
-        echo -e "${green}Stopping x-ui...${plain}"
-        if [[ $release == "alpine" ]]; then
-            if [ -f "/etc/init.d/x-ui" ]; then
-                rc-service x-ui stop > /dev/null 2>&1
-                rc-update del x-ui > /dev/null 2>&1
-                echo -e "${green}Removing old service unit version...${plain}"
-                rm -f /etc/init.d/x-ui > /dev/null 2>&1
-            else
-                rm x-ui-linux-$(arch).tar.gz -f > /dev/null 2>&1
-                _fail "ERROR: x-ui service unit not installed."
-            fi
-        else
-            if [ -f "${xui_service}/x-ui.service" ]; then
-                systemctl stop x-ui > /dev/null 2>&1
-                systemctl disable x-ui > /dev/null 2>&1
-                echo -e "${green}Removing old systemd unit version...${plain}"
-                rm ${xui_service}/x-ui.service -f > /dev/null 2>&1
-                systemctl daemon-reload > /dev/null 2>&1
-            else
-                rm x-ui-linux-$(arch).tar.gz -f > /dev/null 2>&1
-                _fail "ERROR: x-ui systemd unit not installed."
-            fi
-        fi
-        # Kill any leftover mtg (MTProto) sidecars. x-ui runs them outside its own
-        # lifecycle, so on Linux a stale one can survive the stop and keep holding
-        # an inbound port with an outdated secret, silently breaking new clients.
-        # The new panel respawns a clean mtg per inbound on next start.
-        pkill -f 'mtg-linux-[^ ]* run ' > /dev/null 2>&1 || true
-        pkill -f 'tuic-server.*-c .*bin/tuic/tuic_[0-9]+\.json' > /dev/null 2>&1 || true
-        echo -e "${green}Removing old x-ui version...${plain}"
-        rm ${xui_folder} -f > /dev/null 2>&1
-        rm ${xui_folder}/x-ui.service -f > /dev/null 2>&1
-        rm ${xui_folder}/x-ui.service.debian -f > /dev/null 2>&1
-        rm ${xui_folder}/x-ui.service.arch -f > /dev/null 2>&1
-        rm ${xui_folder}/x-ui.service.rhel -f > /dev/null 2>&1
-        rm ${xui_folder}/x-ui -f > /dev/null 2>&1
-        rm ${xui_folder}/x-ui.sh -f > /dev/null 2>&1
-        echo -e "${green}Removing old mtg version...${plain}"
-        rm ${xui_folder}/bin/mtg-linux-$(arch) -f > /dev/null 2>&1
-        echo -e "${green}Removing old xray version...${plain}"
-        rm ${xui_folder}/bin/xray-linux-$(arch) -f > /dev/null 2>&1
-        echo -e "${green}Removing old README and LICENSE file...${plain}"
-        rm ${xui_folder}/bin/README.md -f > /dev/null 2>&1
-        rm ${xui_folder}/bin/LICENSE -f > /dev/null 2>&1
-    else
-        rm x-ui-linux-$(arch).tar.gz -f > /dev/null 2>&1
-        _fail "ERROR: x-ui not installed."
-    fi
-
-    echo -e "${green}Installing new x-ui version...${plain}"
-    tar zxvf x-ui-linux-$(arch).tar.gz > /dev/null 2>&1
-    if [[ $? -ne 0 ]]; then
-        rm x-ui-linux-$(arch).tar.gz -f > /dev/null 2>&1
-        _fail "ERROR: Failed to extract the x-ui release archive -- the previous installation has already been removed, so the panel will not start until this is fixed; try running the update again"
-    fi
-    rm x-ui-linux-$(arch).tar.gz -f > /dev/null 2>&1
-    cd x-ui > /dev/null 2>&1
-    if [[ $? -ne 0 || ! -s x-ui ]]; then
-        _fail "ERROR: Extracted x-ui archive is missing the x-ui binary -- the previous installation has already been removed, so the panel will not start until this is fixed; try running the update again"
-    fi
-    chmod +x x-ui > /dev/null 2>&1
-
-    # Check the system's architecture and rename the file accordingly.
-    # The panel binary maps GOARCH=arm to "arm32" (internal/xray/process.go),
-    # so the Xray binary must be named xray-linux-arm32; mtg keeps plain "arm".
-    if [[ $(arch) == "armv5" || $(arch) == "armv6" || $(arch) == "armv7" ]]; then
-        mv bin/xray-linux-$(arch) bin/xray-linux-arm32 > /dev/null 2>&1
-        chmod +x bin/xray-linux-arm32 > /dev/null 2>&1
-        if [[ -f bin/mtg-linux-$(arch) ]]; then
-            mv bin/mtg-linux-$(arch) bin/mtg-linux-arm > /dev/null 2>&1
-            chmod +x bin/mtg-linux-arm > /dev/null 2>&1
-        fi
-    fi
-
-    chmod +x x-ui bin/xray-linux-$(arch) > /dev/null 2>&1
-    if [[ -f bin/mtg-linux-arm ]]; then
-        chmod +x bin/mtg-linux-arm > /dev/null 2>&1
-    elif [[ -f bin/mtg-linux-$(arch) ]]; then
-        chmod +x bin/mtg-linux-$(arch) > /dev/null 2>&1
-    fi
-    if [[ -f bin/tuic-server ]]; then
-        chmod +x bin/tuic-server > /dev/null 2>&1
-    fi
-
-    echo -e "${green}Downloading and installing x-ui.sh script...${plain}"
-    local xui_script_temp="/usr/bin/x-ui-temp.$$"
-    rm -f "${xui_script_temp}"
-    ${curl_bin} -fLRo "${xui_script_temp}" "https://raw.githubusercontent.com/MHSanaei/3x-ui/${script_ref}/x-ui.sh" > /dev/null 2>&1
-    if [[ $? -ne 0 ]]; then
-        rm -f "${xui_script_temp}"
-        _fail "ERROR: Failed to download x-ui.sh script, please be sure that your server can access GitHub"
-    fi
-    if [[ ! -s "${xui_script_temp}" ]]; then
-        rm -f "${xui_script_temp}"
-        _fail "ERROR: Downloaded x-ui.sh script is empty, please be sure that your server can access GitHub"
-    fi
-    mv -f "${xui_script_temp}" /usr/bin/x-ui
-    if [[ $? -ne 0 ]]; then
-        rm -f "${xui_script_temp}"
-        _fail "ERROR: Failed to install x-ui.sh script"
-    fi
-
-    chmod +x ${xui_folder}/x-ui.sh > /dev/null 2>&1
-    chmod +x /usr/bin/x-ui > /dev/null 2>&1
-    mkdir -p /var/log/x-ui > /dev/null 2>&1
-
-    echo -e "${green}Changing owner...${plain}"
-    chown -R root:root ${xui_folder} > /dev/null 2>&1
-
-    if [ -f "${xui_folder}/bin/config.json" ]; then
-        echo -e "${green}Changing on config file permissions...${plain}"
-        chmod 640 ${xui_folder}/bin/config.json > /dev/null 2>&1
-    fi
-
-    if [[ $release == "alpine" ]]; then
-        echo -e "${green}Downloading and installing startup unit x-ui.rc...${plain}"
-        xui_rc_temp="/etc/init.d/x-ui.tmp.$$"
-        rm -f "${xui_rc_temp}"
-        ${curl_bin} -fLRo "${xui_rc_temp}" "https://raw.githubusercontent.com/MHSanaei/3x-ui/${script_ref}/x-ui.rc" > /dev/null 2>&1
-        if [[ $? -ne 0 ]]; then
-            rm -f "${xui_rc_temp}"
-            _fail "ERROR: Failed to download startup unit x-ui.rc, please be sure that your server can access GitHub"
-        fi
-        if [[ ! -s "${xui_rc_temp}" ]]; then
-            rm -f "${xui_rc_temp}"
-            _fail "ERROR: Downloaded startup unit x-ui.rc is empty, please be sure that your server can access GitHub"
-        fi
-        mv -f "${xui_rc_temp}" /etc/init.d/x-ui
-        if [[ $? -ne 0 ]]; then
-            rm -f "${xui_rc_temp}"
-            _fail "ERROR: Failed to install startup unit x-ui.rc"
-        fi
-        chmod +x /etc/init.d/x-ui > /dev/null 2>&1
-        chown root:root /etc/init.d/x-ui > /dev/null 2>&1
-        rc-update add x-ui > /dev/null 2>&1
-        rc-service x-ui start > /dev/null 2>&1
-    else
-        if [ -f "x-ui.service" ]; then
-            echo -e "${green}Installing systemd unit...${plain}"
-            if ! _install_xui_service_unit "x-ui.service" "false"; then
-                echo -e "${red}Failed to copy x-ui.service${plain}"
-                exit 1
-            fi
-        else
-            service_installed=false
-            case "${release}" in
-                ubuntu | debian | armbian)
-                    if [ -f "x-ui.service.debian" ]; then
-                        echo -e "${green}Installing debian-like systemd unit...${plain}"
-                        if _install_xui_service_unit "x-ui.service.debian" "false"; then
-                            service_installed=true
-                        fi
-                    fi
-                    ;;
-                arch | manjaro | parch)
-                    if [ -f "x-ui.service.arch" ]; then
-                        echo -e "${green}Installing arch-like systemd unit...${plain}"
-                        if _install_xui_service_unit "x-ui.service.arch" "false"; then
-                            service_installed=true
-                        fi
-                    fi
-                    ;;
-                *)
-                    if [ -f "x-ui.service.rhel" ]; then
-                        echo -e "${green}Installing rhel-like systemd unit...${plain}"
-                        if _install_xui_service_unit "x-ui.service.rhel" "false"; then
-                            service_installed=true
-                        fi
-                    fi
-                    ;;
-            esac
-
-            # If service file not found in tar.gz, download from GitHub
-            if [ "$service_installed" = false ]; then
-                echo -e "${yellow}Service files not found in tar.gz, downloading from GitHub...${plain}"
-                case "${release}" in
-                    ubuntu | debian | armbian)
-                        service_unit_url="https://raw.githubusercontent.com/MHSanaei/3x-ui/${script_ref}/x-ui.service.debian"
-                        ;;
-                    arch | manjaro | parch)
-                        service_unit_url="https://raw.githubusercontent.com/MHSanaei/3x-ui/${script_ref}/x-ui.service.arch"
-                        ;;
-                    *)
-                        service_unit_url="https://raw.githubusercontent.com/MHSanaei/3x-ui/${script_ref}/x-ui.service.rhel"
-                        ;;
-                esac
-
-                if ! _install_xui_service_unit "$service_unit_url" "true"; then
-                    echo -e "${red}Failed to install x-ui.service from GitHub (${script_ref}) -- the release tarball did not ship one either${plain}"
-                    exit 1
-                fi
-            fi
-        fi
-        chown root:root ${xui_service}/x-ui.service > /dev/null 2>&1
-        chmod 644 ${xui_service}/x-ui.service > /dev/null 2>&1
-        systemctl daemon-reload > /dev/null 2>&1
-        systemctl enable x-ui > /dev/null 2>&1
-        systemctl start x-ui > /dev/null 2>&1
-    fi
-
-    config_after_update
-
-    # IP Limit relies on fail2ban; install + configure it now so the feature
-    # works out of the box on update too (no-op when XUI_ENABLE_FAIL2BAN=false).
-    # Never fatal.
-    setup_fail2ban
-
-    echo -e "${green}x-ui ${tag_version}${plain} updating finished, it is running now..."
-    echo -e ""
-    echo -e "┌───────────────────────────────────────────────────────┐
-│  ${blue}x-ui control menu usages (subcommands):${plain}              │
-│                                                       │
-│  ${blue}x-ui${plain}              - Admin Management Script          │
-│  ${blue}x-ui start${plain}        - Start                            │
-│  ${blue}x-ui stop${plain}         - Stop                             │
-│  ${blue}x-ui restart${plain}      - Restart                          │
-│  ${blue}x-ui status${plain}       - Current Status                   │
-│  ${blue}x-ui settings${plain}     - Current Settings                 │
-│  ${blue}x-ui enable${plain}       - Enable Autostart on OS Startup   │
-│  ${blue}x-ui disable${plain}      - Disable Autostart on OS Startup  │
-│  ${blue}x-ui log${plain}          - Check logs                       │
-│  ${blue}x-ui banlog${plain}       - Check Fail2ban ban logs          │
-│  ${blue}x-ui update${plain}       - Update                           │
-│  ${blue}x-ui legacy${plain}       - Legacy version                   │
-│  ${blue}x-ui install${plain}      - Install                          │
-│  ${blue}x-ui uninstall${plain}    - Uninstall                        │
-└───────────────────────────────────────────────────────┘"
+    # shellcheck disable=SC1090
+    source "$module"
+    rm -f "$module"
+    declare -F catx_transactional_update > /dev/null 2>&1 || _fail "ERROR: Invalid CatX-UI transaction module"
 }
 
 echo -e "${green}Running...${plain}"
 install_base
-update_x-ui $1
+catx_load_transaction_module
+catx_transactional_update "$@"

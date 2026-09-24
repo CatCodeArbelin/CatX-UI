@@ -837,6 +837,8 @@ export interface OutboundTraffics {
 export interface PanelUpdateStatus {
   exitCode: number;
   finishedAt: number;
+  rollbackHealthy: boolean;
+  rolledBack: boolean;
   runId: string;
   state: string;
 }

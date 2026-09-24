@@ -3712,6 +3712,12 @@
             "format": "int64",
             "type": "integer"
           },
+          "rollbackHealthy": {
+            "type": "boolean"
+          },
+          "rolledBack": {
+            "type": "boolean"
+          },
           "runId": {
             "example": "1735689600123456789",
             "type": "string"
@@ -3724,6 +3730,8 @@
         "required": [
           "exitCode",
           "finishedAt",
+          "rollbackHealthy",
+          "rolledBack",
           "runId",
           "state"
         ],
@@ -6151,6 +6159,8 @@
                   "obj": {
                     "exitCode": 0,
                     "finishedAt": 1735689612,
+                    "rollbackHealthy": false,
+                    "rolledBack": false,
                     "runId": "1735689600123456789",
                     "state": "success"
                   }
