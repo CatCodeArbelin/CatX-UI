@@ -28,6 +28,8 @@ type Repository interface {
 	ListAggregates(ctx context.Context, clientEmail, bucketWidth string, from, to int64) ([]ServiceCategoryAggregate, error)
 	SummarizeSessions(ctx context.Context, clientEmail string, from, to int64) (SessionSummary, error)
 	Prune(ctx context.Context, now time.Time, policy RetentionPolicy) (PruneResult, error)
+	CommitAccessLogBatch(ctx context.Context, events []MetadataEvent, sessions []NetworkSession, cursor AccessLogCursor) error
+	LoadAccessLogCursor(ctx context.Context, cursorKey string) (AccessLogCursor, error)
 }
 
 type SessionSummary struct {
@@ -51,11 +53,47 @@ func (r *GormRepository) RecordDestination(ctx context.Context, event MetadataEv
 	if err := event.Validate(); err != nil {
 		return err
 	}
-	return r.db.WithContext(ctx).Create(&DestinationObservation{ /* populated below for readable validation boundary */
+	observation := DestinationObservation{ /* populated below for readable validation boundary */
 		ObservedAt: event.ObservedAt, ClientEmail: event.ClientEmail, ClientGroup: event.ClientGroup, NodeID: event.NodeID, InboundID: event.InboundID,
 		Domain: event.Domain, DestinationIP: event.DestinationIP, Port: event.Port, Protocol: event.Protocol, SNI: event.SNI, Category: event.Category,
-		SessionKey: event.SessionKey, Source: event.Source, Provenance: event.Provenance, Confidence: event.Confidence,
-	}).Error
+		SessionKey: event.SessionKey, EventKey: event.EventKey, Source: event.Source, Provenance: event.Provenance, Confidence: event.Confidence,
+	}
+	if event.EventKey == "" {
+		return r.db.WithContext(ctx).Create(&observation).Error
+	}
+	return r.db.WithContext(ctx).Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "event_key"}}, DoNothing: true}).Create(&observation).Error
+}
+
+func (r *GormRepository) CommitAccessLogBatch(ctx context.Context, events []MetadataEvent, sessions []NetworkSession, cursor AccessLogCursor) error {
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		for _, event := range events {
+			if err := event.Validate(); err != nil {
+				return err
+			}
+			observation := event.Observation()
+			if err := tx.Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "event_key"}}, DoNothing: true}).Create(&observation).Error; err != nil {
+				return err
+			}
+		}
+		for _, session := range sessions {
+			if session.SessionKey == "" || session.FirstSeen <= 0 || session.LastSeen < session.FirstSeen {
+				return errors.New("invalid analytics network session")
+			}
+			if err := tx.Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "session_key"}}, DoUpdates: clause.AssignmentColumns([]string{"client_email", "node_id", "inbound_id", "last_seen", "protocol", "source", "provenance", "confidence"})}).Create(&session).Error; err != nil {
+				return err
+			}
+		}
+		return tx.Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "cursor_key"}}, DoUpdates: clause.AssignmentColumns([]string{"file_identity", "offset", "generation", "updated_at"})}).Create(&cursor).Error
+	})
+}
+
+func (r *GormRepository) LoadAccessLogCursor(ctx context.Context, cursorKey string) (AccessLogCursor, error) {
+	var cursor AccessLogCursor
+	err := r.db.WithContext(ctx).Where("cursor_key = ?", cursorKey).First(&cursor).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return AccessLogCursor{CursorKey: cursorKey}, nil
+	}
+	return cursor, err
 }
 
 func (r *GormRepository) RecordDNS(ctx context.Context, observation DNSObservation) error {
@@ -179,4 +217,11 @@ func (NoopRepository) SummarizeSessions(context.Context, string, int64, int64) (
 
 func (NoopRepository) Prune(context.Context, time.Time, RetentionPolicy) (PruneResult, error) {
 	return PruneResult{}, nil
+}
+
+func (NoopRepository) CommitAccessLogBatch(context.Context, []MetadataEvent, []NetworkSession, AccessLogCursor) error {
+	return nil
+}
+func (NoopRepository) LoadAccessLogCursor(_ context.Context, key string) (AccessLogCursor, error) {
+	return AccessLogCursor{CursorKey: key}, nil
 }

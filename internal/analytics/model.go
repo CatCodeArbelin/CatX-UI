@@ -37,6 +37,7 @@ type DestinationObservation struct {
 	SNI           string  `json:"sni,omitempty"`
 	Category      string  `json:"category,omitempty" gorm:"index:idx_analytics_dest_category_time,priority:1"`
 	SessionKey    string  `json:"sessionKey,omitempty" gorm:"index:idx_analytics_dest_session"`
+	EventKey      string  `json:"-" gorm:"index:idx_analytics_dest_event_key,unique,where:event_key <> ''"`
 	Source        string  `json:"source" gorm:"not null"`
 	Provenance    string  `json:"provenance" gorm:"not null"`
 	Confidence    float64 `json:"confidence" gorm:"not null"`
@@ -107,6 +108,7 @@ type MetadataEvent struct {
 	NodeID, InboundID                                          int
 	Domain, DestinationIP, Protocol, SNI, Category, SessionKey string
 	Port                                                       int
+	EventKey                                                   string
 	Source, Provenance                                         string
 	Confidence                                                 float64
 }
@@ -134,5 +136,18 @@ func (e MetadataEvent) Validate() error {
 }
 
 func (e MetadataEvent) Observation() DestinationObservation {
-	return DestinationObservation{ObservedAt: e.ObservedAt, ClientEmail: e.ClientEmail, ClientGroup: e.ClientGroup, NodeID: e.NodeID, InboundID: e.InboundID, Domain: e.Domain, DestinationIP: e.DestinationIP, Port: e.Port, Protocol: e.Protocol, SNI: e.SNI, Category: e.Category, SessionKey: e.SessionKey, Source: e.Source, Provenance: e.Provenance, Confidence: e.Confidence}
+	return DestinationObservation{ObservedAt: e.ObservedAt, ClientEmail: e.ClientEmail, ClientGroup: e.ClientGroup, NodeID: e.NodeID, InboundID: e.InboundID, Domain: e.Domain, DestinationIP: e.DestinationIP, Port: e.Port, Protocol: e.Protocol, SNI: e.SNI, Category: e.Category, SessionKey: e.SessionKey, EventKey: e.EventKey, Source: e.Source, Provenance: e.Provenance, Confidence: e.Confidence}
 }
+
+// AccessLogCursor is the durable high-water mark for one collector path.
+// FileIdentity distinguishes a replacement/rotated file from a resumed one.
+type AccessLogCursor struct {
+	ID           uint   `json:"id" gorm:"primaryKey"`
+	CursorKey    string `json:"cursorKey" gorm:"uniqueIndex;not null"`
+	FileIdentity string `json:"fileIdentity" gorm:"not null"`
+	Offset       int64  `json:"offset" gorm:"not null"`
+	Generation   int64  `json:"generation" gorm:"not null;default:0"`
+	UpdatedAt    int64  `json:"updatedAt" gorm:"not null"`
+}
+
+func (AccessLogCursor) TableName() string { return "analytics_access_log_cursors" }

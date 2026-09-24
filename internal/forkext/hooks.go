@@ -25,19 +25,25 @@ func Install() {}
 // migrations. Analytics is opt-in; the default path is an exact no-op.
 func RegisterMigrations(db *gorm.DB) error {
 	if db == nil {
+		analytics.Configure(analytics.NoopRepository{}, false)
 		return nil
 	}
 	enabled, err := NewSettings(db).Enabled(FlagAnalytics)
 	if err != nil {
 		log.Printf("fork analytics disabled: cannot read feature flag: %v", err)
+		analytics.Configure(analytics.NoopRepository{}, false)
 		return nil
 	}
 	if !enabled {
+		analytics.Configure(analytics.NoopRepository{}, false)
 		return nil
 	}
 	if err := analytics.Migrate(db); err != nil {
 		log.Printf("fork analytics migration skipped after error: %v", err)
+		analytics.Configure(analytics.NoopRepository{}, false)
+		return nil
 	}
+	analytics.Configure(analytics.NewRepository(db, true), true)
 	return nil
 }
 
@@ -54,7 +60,7 @@ func RegisterEventSubscribers(_ *eventbus.Bus) {}
 
 // Start is the lifecycle integration point for fork-owned goroutines. The
 // returned closer is always safe to call in the no-op foundation state.
-func Start(_ context.Context) (func(), error) { return func() {}, nil }
+func Start(ctx context.Context) (func(), error) { return analytics.Start(ctx) }
 
 // Stop is the matching lifecycle shutdown hook.
 func Stop() {}
