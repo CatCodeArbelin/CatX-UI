@@ -17,6 +17,18 @@ const (
 	ProvenanceObserved   = "observed"
 	ProvenanceInferred   = "inferred"
 	ProvenanceCorrelated = "correlated"
+
+	CategorySocial      = "social"
+	CategoryVideo       = "video/streaming"
+	CategoryMessaging   = "messaging"
+	CategoryGaming      = "gaming"
+	CategoryCloudCDN    = "cloud/CDN"
+	CategorySearch      = "search"
+	CategorySoftware    = "software/update"
+	CategoryAdvertising = "advertising"
+	CategoryAdult       = "adult"
+	CategoryGambling    = "gambling"
+	CategoryUnknown     = "unknown"
 )
 
 // DestinationObservation is a normalized metadata event. It contains no
@@ -30,17 +42,28 @@ type DestinationObservation struct {
 	NodeID      int    `json:"nodeId,omitempty" gorm:"index:idx_analytics_dest_node_time,priority:1"`
 	InboundID   int    `json:"inboundId,omitempty" gorm:"index:idx_analytics_dest_inbound_time,priority:1"`
 
-	Domain        string  `json:"domain,omitempty" gorm:"index:idx_analytics_dest_domain_time,priority:1"`
-	DestinationIP string  `json:"destinationIp,omitempty" gorm:"index:idx_analytics_dest_ip_time,priority:1"`
-	Port          int     `json:"port,omitempty"`
-	Protocol      string  `json:"protocol,omitempty"`
-	SNI           string  `json:"sni,omitempty"`
-	Category      string  `json:"category,omitempty" gorm:"index:idx_analytics_dest_category_time,priority:1"`
-	SessionKey    string  `json:"sessionKey,omitempty" gorm:"index:idx_analytics_dest_session"`
-	EventKey      string  `json:"-" gorm:"index:idx_analytics_dest_event_key,unique,where:event_key <> ''"`
-	Source        string  `json:"source" gorm:"not null"`
-	Provenance    string  `json:"provenance" gorm:"not null"`
-	Confidence    float64 `json:"confidence" gorm:"not null"`
+	Domain                   string  `json:"domain,omitempty" gorm:"index:idx_analytics_dest_domain_time,priority:1"`
+	DestinationIP            string  `json:"destinationIp,omitempty" gorm:"index:idx_analytics_dest_ip_time,priority:1"`
+	Port                     int     `json:"port,omitempty"`
+	Protocol                 string  `json:"protocol,omitempty"`
+	SNI                      string  `json:"sni,omitempty"`
+	Category                 string  `json:"category,omitempty" gorm:"index:idx_analytics_dest_category_time,priority:1"`
+	Service                  string  `json:"service,omitempty" gorm:"index:idx_analytics_dest_service_time,priority:1"`
+	ASN                      uint32  `json:"asn,omitempty"`
+	Country                  string  `json:"country,omitempty"`
+	ClassificationSource     string  `json:"classificationSource,omitempty"`
+	ClassificationProvenance string  `json:"classificationProvenance,omitempty"`
+	ClassificationConfidence float64 `json:"classificationConfidence,omitempty"`
+	ClassificationLevel      string  `json:"classificationLevel,omitempty"`
+	ClassificationFirstParty bool    `json:"classificationFirstParty,omitempty"`
+	ClassificationConflict   bool    `json:"classificationConflict,omitempty"`
+	ClassificationCandidates string  `json:"classificationCandidates,omitempty" gorm:"type:text"`
+	ClassificationReason     string  `json:"classificationReason,omitempty"`
+	SessionKey               string  `json:"sessionKey,omitempty" gorm:"index:idx_analytics_dest_session"`
+	EventKey                 string  `json:"-" gorm:"index:idx_analytics_dest_event_key,unique,where:event_key <> ''"`
+	Source                   string  `json:"source" gorm:"not null"`
+	Provenance               string  `json:"provenance" gorm:"not null"`
+	Confidence               float64 `json:"confidence" gorm:"not null"`
 }
 
 func (DestinationObservation) TableName() string { return "analytics_destination_observations" }
@@ -105,14 +128,19 @@ func (ServiceCategoryAggregate) TableName() string { return "analytics_service_c
 
 // MetadataEvent is the ingestion-facing abstraction shared by future sources.
 type MetadataEvent struct {
-	ObservedAt                                                 int64
-	ClientEmail, ClientGroup                                   string
-	NodeID, InboundID                                          int
-	Domain, DestinationIP, Protocol, SNI, Category, SessionKey string
-	Port                                                       int
-	EventKey                                                   string
-	Source, Provenance                                         string
-	Confidence                                                 float64
+	ObservedAt                                                                            int64
+	ClientEmail, ClientGroup                                                              string
+	NodeID, InboundID                                                                     int
+	Domain, DestinationIP, Protocol, SNI, Category, SessionKey                            string
+	Service, Country, ClassificationSource, ClassificationProvenance, ClassificationLevel string
+	ASN                                                                                   uint32
+	ClassificationConfidence                                                              float64
+	ClassificationFirstParty, ClassificationConflict                                      bool
+	ClassificationCandidates, ClassificationReason                                        string
+	Port                                                                                  int
+	EventKey                                                                              string
+	Source, Provenance                                                                    string
+	Confidence                                                                            float64
 }
 
 func (e MetadataEvent) Validate() error {
@@ -138,7 +166,7 @@ func (e MetadataEvent) Validate() error {
 }
 
 func (e MetadataEvent) Observation() DestinationObservation {
-	return DestinationObservation{ObservedAt: e.ObservedAt, ClientEmail: e.ClientEmail, ClientGroup: e.ClientGroup, NodeID: e.NodeID, InboundID: e.InboundID, Domain: e.Domain, DestinationIP: e.DestinationIP, Port: e.Port, Protocol: e.Protocol, SNI: e.SNI, Category: e.Category, SessionKey: e.SessionKey, EventKey: e.EventKey, Source: e.Source, Provenance: e.Provenance, Confidence: e.Confidence}
+	return DestinationObservation{ObservedAt: e.ObservedAt, ClientEmail: e.ClientEmail, ClientGroup: e.ClientGroup, NodeID: e.NodeID, InboundID: e.InboundID, Domain: e.Domain, DestinationIP: e.DestinationIP, Port: e.Port, Protocol: e.Protocol, SNI: e.SNI, Category: e.Category, Service: e.Service, ASN: e.ASN, Country: e.Country, ClassificationSource: e.ClassificationSource, ClassificationProvenance: e.ClassificationProvenance, ClassificationConfidence: e.ClassificationConfidence, ClassificationLevel: e.ClassificationLevel, ClassificationFirstParty: e.ClassificationFirstParty, ClassificationConflict: e.ClassificationConflict, ClassificationCandidates: e.ClassificationCandidates, ClassificationReason: e.ClassificationReason, SessionKey: e.SessionKey, EventKey: e.EventKey, Source: e.Source, Provenance: e.Provenance, Confidence: e.Confidence}
 }
 
 // AccessLogCursor is the durable high-water mark for one collector path.
