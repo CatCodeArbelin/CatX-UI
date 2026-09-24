@@ -36,6 +36,7 @@ func (r *captureRepo) CommitAccessLogBatch(_ context.Context, events []MetadataE
 	r.cursor = cursor
 	return nil
 }
+
 func (r *captureRepo) ListDestinationPage(_ context.Context, _ string, _, _ int64, limit, offset int) (DestinationPage, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -52,6 +53,7 @@ func (r *captureRepo) ListDestinationPage(_ context.Context, _ string, _, _ int6
 	}
 	return DestinationPage{Items: items, Total: int64(len(r.events))}, nil
 }
+
 func (r *captureRepo) ListSessionPage(_ context.Context, _ string, _, _ int64, limit, offset int) (SessionPage, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
