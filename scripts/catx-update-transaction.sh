@@ -15,6 +15,7 @@ catx_transaction_active=0
 catx_transaction_tag=""
 catx_rollback_healthy=0
 catx_rollback_attempted=0
+catx_service_quiesced=0
 
 _catx_log() {
     printf '%s\n' "$*"
@@ -171,6 +172,17 @@ _catx_service_healthy() {
         attempts=$((attempts - 1))
         sleep 1
     done
+    return 1
+}
+
+_catx_resume_known_good() {
+    if _catx_start_service && _catx_service_healthy; then
+        catx_service_quiesced=0
+        _catx_audit aborted "update stopped before activation; previous installation remains healthy"
+        return 0
+    fi
+    _catx_audit rollback-failed "could not resume previous installation before activation"
+    _catx_log "CRITICAL: previous installation could not be resumed after the update aborted"
     return 1
 }
 
@@ -341,6 +353,7 @@ _catx_rollback() {
     _catx_service_healthy || return 1
     catx_rollback_healthy=1
     catx_transaction_active=0
+    catx_service_quiesced=0
     _catx_audit rollback "previous installation, configuration, and database restored"
     return 0
 }
@@ -364,17 +377,23 @@ catx_apply_staged_update() {
     [[ -d "$live" && -x "$live/x-ui" ]] || return 1
 
     mkdir -p "$backup"
-    _catx_stop_service || return 1
+    # Mark the quiesced window before stopping so TERM/INT during the stop can
+    # still restart and healthcheck the known-good installation.
+    catx_service_quiesced=1
+    if ! _catx_stop_service; then
+        catx_service_quiesced=0
+        return 1
+    fi
     _catx_snapshot_database "$backup" || {
-        _catx_start_service || true
+        _catx_resume_known_good || return 3
         return 1
     }
     _catx_snapshot_external "$backup" || {
-        _catx_start_service || true
+        _catx_resume_known_good || return 3
         return 1
     }
     mv "$live" "$backup/live" || {
-        _catx_start_service || true
+        _catx_resume_known_good || return 3
         return 1
     }
     catx_transaction_active=1
@@ -415,6 +434,7 @@ catx_apply_staged_update() {
     }
 
     catx_transaction_active=0
+    catx_service_quiesced=0
     _catx_audit commit "candidate installed, migrated, and healthy"
     rm -rf -- "$catx_transaction_dir"
     catx_transaction_dir=""
@@ -465,5 +485,15 @@ catx_update_exit_guard() {
     local code="$1"
     if [[ "$code" -ne 0 && "$catx_transaction_active" -eq 1 ]]; then
         _catx_fail_and_rollback "update interrupted with exit code ${code}" || true
+    elif [[ "$code" -ne 0 && "$catx_service_quiesced" -eq 1 ]]; then
+        # If the atomic live->backup rename completed just before a signal was
+        # delivered, promote this to the full rollback path. Otherwise no live
+        # files changed and only the old service needs to be resumed.
+        if [[ -d "${catx_transaction_dir}/backup/live" ]]; then
+            catx_transaction_active=1
+            _catx_fail_and_rollback "update interrupted at activation boundary with exit code ${code}" || true
+        else
+            _catx_resume_known_good || true
+        fi
     fi
 }

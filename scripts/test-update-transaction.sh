@@ -95,6 +95,7 @@ setup_case() {
     catx_transaction_active=0
     catx_transaction_tag=v0.1.0
     catx_rollback_healthy=0
+    catx_service_quiesced=0
 
     CANDIDATE="$catx_transaction_dir/stage/x-ui"
     mkdir -p "$CANDIDATE/bin"
@@ -168,6 +169,28 @@ assert_file "$CATX_CLI_PATH" old-cli "stop-failure preserved CLI"
     echo "FAIL: stop-failure moved the live installation" >&2
     failures=$((failures + 1))
 }
+teardown_case
+
+setup_case
+catx_service_quiesced=1
+catx_update_exit_guard 143
+assert_eq 0 "$catx_service_quiesced" "pre-activation interruption resumed service"
+assert_file "$xui_folder/version-state" old-install "pre-activation interruption preserved installation"
+assert_file "$XUI_DB_FOLDER/state" old-db "pre-activation interruption preserved database"
+grep -q 'outcome=aborted ' "$CATX_UPDATE_AUDIT_FILE" || {
+    echo "FAIL: pre-activation interruption was not audited" >&2
+    failures=$((failures + 1))
+}
+teardown_case
+
+setup_case
+mkdir -p "$catx_transaction_dir/backup"
+mv "$xui_folder" "$catx_transaction_dir/backup/live"
+_catx_snapshot_database "$catx_transaction_dir/backup"
+_catx_snapshot_external "$catx_transaction_dir/backup"
+catx_service_quiesced=1
+catx_update_exit_guard 143
+assert_rolled_back "activation-boundary interruption"
 teardown_case
 
 setup_case
