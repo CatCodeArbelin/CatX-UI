@@ -59,6 +59,9 @@ jobs:
           set -e
           if [ "$status" -ne 0 ]; then
             echo "::error file=Makefile,title=verify-fork failure::make verify-fork exited with status $status"
+            git status --short | while IFS= read -r line; do
+              echo "::error file=Makefile::working tree status: $line"
+            done
             tail -n 30 "$RUNNER_TEMP/verify-fork.log" | while IFS= read -r line; do
               line=${line//$'\r'/}
               line=${line//$'\n'/ }
