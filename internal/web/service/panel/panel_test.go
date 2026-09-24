@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/mhsanaei/3x-ui/v3/internal/config"
-	"github.com/mhsanaei/3x-ui/v3/internal/web/service"
+	"github.com/mhsanaei/3x-ui/v3/internal/forkrelease"
 )
 
 func TestIsNewerVersion(t *testing.T) {
@@ -96,27 +96,27 @@ func TestExtractReleaseCommit(t *testing.T) {
 	full := "1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b"
 	cases := []struct {
 		name    string
-		release service.Release
+		release forkrelease.Release
 		want    string
 	}{
 		{
 			name:    "from body marker",
-			release: service.Release{Body: "Rolling build\n\ncommit=" + full + "\nbuilt=2026-06-24T00:00:00Z"},
+			release: forkrelease.Release{Body: "Rolling build\n\ncommit=" + full + "\nbuilt=2026-06-24T00:00:00Z"},
 			want:    full,
 		},
 		{
 			name:    "body marker is case-insensitive and wins over target",
-			release: service.Release{Body: "COMMIT=" + full, TargetCommitish: "deadbeef"},
+			release: forkrelease.Release{Body: "COMMIT=" + full, TargetCommitish: "deadbeef"},
 			want:    full,
 		},
 		{
 			name:    "fallback to target commit sha",
-			release: service.Release{Body: "no marker here", TargetCommitish: full},
+			release: forkrelease.Release{Body: "no marker here", TargetCommitish: full},
 			want:    full,
 		},
 		{
 			name:    "branch target is not a commit",
-			release: service.Release{Body: "no marker", TargetCommitish: "main"},
+			release: forkrelease.Release{Body: "no marker", TargetCommitish: "main"},
 			want:    "",
 		},
 	}

@@ -12,10 +12,9 @@ import (
 	"strconv"
 	"strings"
 	"testing"
-)
 
-//go:embed version
-var version string
+	"github.com/mhsanaei/3x-ui/v3/internal/forkrelease"
+)
 
 //go:embed name
 var name string
@@ -41,12 +40,28 @@ const (
 	Error   LogLevel = "error"
 )
 
-// GetBaseVersion returns the raw embedded release version of the 3x-ui panel
-// (e.g. "3.4.0"). This is the panel's own version, not the Xray version. For the
-// version a panel advertises/displays (which adds a "dev+<sha>" label on dev
-// builds), use GetPanelVersion.
+// GetForkVersion returns the CatX-UI release version. It is deliberately
+// independent from both the upstream 3x-ui base and the bundled Xray version.
+func GetForkVersion() string {
+	return forkrelease.ForkVersion()
+}
+
+// GetUpstreamBaseVersion returns the 3x-ui version this CatX-UI release is
+// based on. It is release metadata, not the self-update comparison version.
+func GetUpstreamBaseVersion() string {
+	return forkrelease.UpstreamBaseVersion()
+}
+
+// GetBundledXrayVersion returns the Xray version packaged by the release
+// workflow. The running Xray version is still probed independently at runtime.
+func GetBundledXrayVersion() string {
+	return forkrelease.Current.BundledXrayVersion
+}
+
+// GetBaseVersion is retained for upstream compatibility. Fork code should use
+// GetForkVersion or GetUpstreamBaseVersion explicitly to avoid ambiguity.
 func GetBaseVersion() string {
-	return strings.TrimSpace(version)
+	return GetForkVersion()
 }
 
 // GetName returns the name of the 3x-ui application.
@@ -78,7 +93,7 @@ func IsDevBuild() bool {
 // as up to date instead of always showing "update available".
 func GetPanelVersion() string {
 	if !IsDevBuild() {
-		return GetBaseVersion()
+		return GetForkVersion()
 	}
 	commit := GetBuildCommit()
 	if len(commit) > 8 {

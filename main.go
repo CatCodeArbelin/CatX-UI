@@ -19,6 +19,7 @@ import (
 	"github.com/mhsanaei/3x-ui/v3/internal/crypto/nodetoken"
 	"github.com/mhsanaei/3x-ui/v3/internal/database"
 	"github.com/mhsanaei/3x-ui/v3/internal/forkext"
+	"github.com/mhsanaei/3x-ui/v3/internal/forkrelease"
 	"github.com/mhsanaei/3x-ui/v3/internal/logger"
 	"github.com/mhsanaei/3x-ui/v3/internal/sub"
 	"github.com/mhsanaei/3x-ui/v3/internal/tunnelmonitor"
@@ -656,6 +657,8 @@ func main() {
 	}
 
 	switch os.Args[1] {
+	case "release-info":
+		fmt.Print(releaseInfoText())
 	case "run":
 		err := runCmd.Parse(os.Args[2:])
 		if err != nil {
@@ -762,10 +765,30 @@ func main() {
 	}
 }
 
+// releaseInfoText is a machine-readable identity probe used to validate a
+// staged updater candidate before it can replace the known-good binary. The
+// simple key=value format deliberately needs no jq/eval in the shell updater.
+func releaseInfoText() string {
+	channel := string(forkrelease.ChannelStable)
+	if config.IsDevBuild() {
+		channel = string(forkrelease.ChannelDev)
+	}
+	return fmt.Sprintf("product=%s\nrepository=%s\nfork_version=%s\nupstream_base_version=%s\nbundled_xray_version=%s\nchannel=%s\nbuild_commit=%s\n",
+		forkrelease.Current.ProductName,
+		forkrelease.Current.RepositorySlug(),
+		config.GetForkVersion(),
+		config.GetUpstreamBaseVersion(),
+		config.GetBundledXrayVersion(),
+		channel,
+		config.GetBuildCommit(),
+	)
+}
+
 func commandHelp() string {
 	return `
 Commands:
     run            run web panel
+    release-info   print fork/upstream/Xray release identity
     migrate        migrate from other/old x-ui
     migrate-db     SQLite <-> .dump (--dump/--restore) or copy into PostgreSQL (--dsn)
     encrypt-tokens encrypt node bearer tokens with the configured active key
