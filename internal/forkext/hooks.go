@@ -49,7 +49,7 @@ func RegisterMigrations(db *gorm.DB) error {
 
 // RegisterRoutes is the protected API integration point for fork endpoints.
 // An empty registration preserves the upstream route set exactly.
-func RegisterRoutes(_ *gin.RouterGroup) {}
+func RegisterRoutes(api *gin.RouterGroup) { analytics.RegisterActivityRoutes(api) }
 
 // RegisterJobs is the fixed scheduler integration point for fork jobs.
 func RegisterJobs(_ context.Context, _ *cron.Cron) {}
