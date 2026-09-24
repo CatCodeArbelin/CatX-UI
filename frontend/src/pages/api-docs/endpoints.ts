@@ -2744,13 +2744,13 @@ export const sections: readonly Section[] = [
     endpoints: [
       {
         method: 'GET',
-        path: '/analytics/status',
+        path: '/panel/api/analytics/status',
         summary: 'Return whether analytics collection and activity queries are enabled.',
         response: '{ success, obj: { enabled } }',
       },
       {
         method: 'GET',
-        path: '/analytics/clients/:email/activity',
+        path: '/panel/api/analytics/clients/:email/activity',
         summary: 'Return a paginated client destination activity timeline.',
         params: [
           { name: 'email', in: 'path', type: 'string', desc: 'Existing upstream client identity.' },
@@ -2773,7 +2773,7 @@ export const sections: readonly Section[] = [
       },
       {
         method: 'GET',
-        path: '/analytics/clients/:email/sessions',
+        path: '/panel/api/analytics/clients/:email/sessions',
         summary: 'Return a paginated client session history.',
         params: [
           { name: 'email', in: 'path', type: 'string', desc: 'Existing upstream client identity.' },

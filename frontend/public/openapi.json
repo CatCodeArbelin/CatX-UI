@@ -15877,13 +15877,13 @@
         ]
       }
     },
-    "/analytics/status": {
+    "/panel/api/analytics/status": {
       "get": {
         "tags": [
           "Client activity analytics"
         ],
         "summary": "Return whether analytics collection and activity queries are enabled.",
-        "operationId": "get_analytics_status",
+        "operationId": "get_panel_api_analytics_status",
         "responses": {
           "200": {
             "description": "Successful response",
@@ -15907,13 +15907,13 @@
         }
       }
     },
-    "/analytics/clients/{email}/activity": {
+    "/panel/api/analytics/clients/{email}/activity": {
       "get": {
         "tags": [
           "Client activity analytics"
         ],
         "summary": "Return a paginated client destination activity timeline.",
-        "operationId": "get_analytics_clients_email_activity",
+        "operationId": "get_panel_api_analytics_clients_email_activity",
         "parameters": [
           {
             "name": "email",
@@ -15986,13 +15986,13 @@
         }
       }
     },
-    "/analytics/clients/{email}/sessions": {
+    "/panel/api/analytics/clients/{email}/sessions": {
       "get": {
         "tags": [
           "Client activity analytics"
         ],
         "summary": "Return a paginated client session history.",
-        "operationId": "get_analytics_clients_email_sessions",
+        "operationId": "get_panel_api_analytics_clients_email_sessions",
         "parameters": [
           {
             "name": "email",
