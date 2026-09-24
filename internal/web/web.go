@@ -19,6 +19,7 @@ import (
 	"github.com/mhsanaei/3x-ui/v3/internal/amneziawgnet"
 	"github.com/mhsanaei/3x-ui/v3/internal/config"
 	"github.com/mhsanaei/3x-ui/v3/internal/eventbus"
+	"github.com/mhsanaei/3x-ui/v3/internal/forkext"
 	"github.com/mhsanaei/3x-ui/v3/internal/logger"
 	"github.com/mhsanaei/3x-ui/v3/internal/mtproto"
 	"github.com/mhsanaei/3x-ui/v3/internal/tuic"
@@ -130,6 +131,7 @@ type Server struct {
 
 	bus                  *eventbus.Bus
 	cron                 *cron.Cron
+	forkStop             func()
 	discordNotifyEntryID cron.EntryID
 
 	ctx    context.Context
@@ -316,6 +318,7 @@ const (
 // startTask schedules background jobs (Xray checks, traffic jobs, cron
 // jobs) which the panel relies on for periodic maintenance and monitoring.
 func (s *Server) startTask(restartXray bool, loc *time.Location) {
+	forkext.RegisterJobs(s.ctx, s.cron)
 	if restartXray {
 		err := s.xrayService.RestartXray(true)
 		if err != nil {
@@ -659,6 +662,11 @@ func (s *Server) start(restartXray bool, startTgBot bool) (err error) {
 	service.SetEventBus(s.bus)
 	job.EventBus = s.bus
 	tgbot.EventBus = s.bus
+	forkext.RegisterEventSubscribers(s.bus)
+	s.forkStop, err = forkext.Start(s.ctx)
+	if err != nil {
+		return err
+	}
 
 	// Wire xray crash callback BEFORE startTask so it's ready
 	xray.OnCrash = func(err error) {
@@ -785,6 +793,11 @@ func (s *Server) StopPanelOnly() error {
 
 func (s *Server) stop(stopXray bool, stopTgBot bool) error {
 	s.cancel()
+	if s.forkStop != nil {
+		s.forkStop()
+		s.forkStop = nil
+	}
+	forkext.Stop()
 	if stopXray {
 		_ = s.xrayService.StopXray()
 		mtproto.GetManager().StopAll()
