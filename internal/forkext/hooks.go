@@ -24,6 +24,7 @@ func Install() {}
 // RegisterMigrations is the single database integration point for fork-owned
 // migrations. Analytics is opt-in; the default path is an exact no-op.
 func RegisterMigrations(db *gorm.DB) error {
+	setSettingsDB(db)
 	if db == nil {
 		analytics.Configure(analytics.NoopRepository{}, false)
 		return nil
@@ -44,6 +45,7 @@ func RegisterMigrations(db *gorm.DB) error {
 		return nil
 	}
 	analytics.Configure(analytics.NewRepository(db, true), true)
+	analytics.SetRetentionPolicy(retentionPolicyFromDB(db))
 	dnsEnabled, err := NewSettings(db).Enabled(FlagDNSIntelligence)
 	if err != nil {
 		log.Printf("fork DNS intelligence disabled: cannot read feature flag: %v", err)
@@ -55,7 +57,10 @@ func RegisterMigrations(db *gorm.DB) error {
 
 // RegisterRoutes is the protected API integration point for fork endpoints.
 // An empty registration preserves the upstream route set exactly.
-func RegisterRoutes(api *gin.RouterGroup) { analytics.RegisterActivityRoutes(api) }
+func RegisterRoutes(api *gin.RouterGroup) {
+	analytics.RegisterActivityRoutes(api)
+	registerAnalyticsSettingsRoutes(api)
+}
 
 // RegisterJobs is the fixed scheduler integration point for fork jobs.
 func RegisterJobs(_ context.Context, _ *cron.Cron) {}

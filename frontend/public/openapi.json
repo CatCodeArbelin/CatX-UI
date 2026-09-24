@@ -15907,6 +15907,82 @@
         }
       }
     },
+    "/panel/api/analytics/settings": {
+      "get": {
+        "tags": [
+          "Client activity analytics"
+        ],
+        "summary": "Read analytics privacy and retention settings.",
+        "operationId": "get_panel_api_analytics_settings",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Client activity analytics"
+        ],
+        "summary": "Update DNS intelligence and fork-owned analytics retention.",
+        "operationId": "post_panel_api_analytics_settings",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "dnsIntelligence": {
+                    "type": "boolean"
+                  },
+                  "retention": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/panel/api/analytics/clients/{email}/activity": {
       "get": {
         "tags": [
@@ -16016,6 +16092,85 @@
             "name": "to",
             "in": "query",
             "required": true,
+            "description": "End time in milliseconds since epoch.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "integer",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/analytics/clients/{email}/dns": {
+      "get": {
+        "tags": [
+          "Client activity analytics"
+        ],
+        "summary": "Return paginated metadata-only DNS observations for an existing client.",
+        "operationId": "get_panel_api_analytics_clients_email_dns",
+        "parameters": [
+          {
+            "name": "email",
+            "in": "path",
+            "required": true,
+            "description": "Existing upstream client identity.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "description": "Start time in milliseconds since epoch.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
             "description": "End time in milliseconds since epoch.",
             "schema": {
               "type": "integer"

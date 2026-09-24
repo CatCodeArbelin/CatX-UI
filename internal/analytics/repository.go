@@ -15,13 +15,14 @@ import (
 )
 
 type RetentionPolicy struct {
-	RawEvents  time.Duration
-	Sessions   time.Duration
-	Aggregates time.Duration
+	RawEvents       time.Duration
+	DNSObservations time.Duration
+	Sessions        time.Duration
+	Aggregates      time.Duration
 }
 
 func DefaultRetentionPolicy() RetentionPolicy {
-	return RetentionPolicy{RawEvents: 7 * 24 * time.Hour, Sessions: 30 * 24 * time.Hour, Aggregates: 365 * 24 * time.Hour}
+	return RetentionPolicy{RawEvents: 7 * 24 * time.Hour, DNSObservations: 7 * 24 * time.Hour, Sessions: 30 * 24 * time.Hour, Aggregates: 365 * 24 * time.Hour}
 }
 
 type Repository interface {
@@ -33,6 +34,7 @@ type Repository interface {
 	UpsertAggregate(ctx context.Context, aggregate ServiceCategoryAggregate) error
 	ListDestinations(ctx context.Context, clientEmail string, from, to int64, limit int) ([]DestinationObservation, error)
 	ListDestinationPage(ctx context.Context, clientEmail string, from, to int64, limit, offset int) (DestinationPage, error)
+	ListDNSPage(ctx context.Context, clientEmail string, from, to int64, limit, offset int) (DNSPage, error)
 	ListSessionPage(ctx context.Context, clientEmail string, from, to int64, limit, offset int) (SessionPage, error)
 	ListAggregates(ctx context.Context, clientEmail, bucketWidth string, from, to int64) ([]ServiceCategoryAggregate, error)
 	SummarizeSessions(ctx context.Context, clientEmail string, from, to int64) (SessionSummary, error)
@@ -49,6 +51,11 @@ type SessionSummary struct {
 
 type DestinationPage struct {
 	Items []DestinationObservation
+	Total int64
+}
+
+type DNSPage struct {
+	Items []DNSObservation
 	Total int64
 }
 
@@ -229,6 +236,29 @@ func (r *GormRepository) ListSessionPage(ctx context.Context, clientEmail string
 	return SessionPage{Items: rows, Total: total}, err
 }
 
+func (r *GormRepository) ListDNSPage(ctx context.Context, clientEmail string, from, to int64, limit, offset int) (DNSPage, error) {
+	if limit <= 0 {
+		limit = 50
+	}
+	if limit > 200 {
+		limit = 200
+	}
+	if offset < 0 {
+		offset = 0
+	}
+	q := r.db.WithContext(ctx).Model(&DNSObservation{}).Where("observed_at >= ? AND observed_at < ?", from, to)
+	if clientEmail != "" {
+		q = q.Where("client_email = ?", clientEmail)
+	}
+	var total int64
+	if err := q.Count(&total).Error; err != nil {
+		return DNSPage{}, err
+	}
+	var rows []DNSObservation
+	err := q.Order("observed_at DESC, id DESC").Limit(limit).Offset(offset).Find(&rows).Error
+	return DNSPage{Items: rows, Total: total}, err
+}
+
 func (r *GormRepository) ListAggregates(ctx context.Context, clientEmail, bucketWidth string, from, to int64) ([]ServiceCategoryAggregate, error) {
 	q := r.db.WithContext(ctx).Where("bucket_start >= ? AND bucket_start < ?", from, to).Order("bucket_start ASC")
 	if clientEmail != "" {
@@ -252,6 +282,11 @@ func (r *GormRepository) SummarizeSessions(ctx context.Context, clientEmail stri
 }
 
 func (r *GormRepository) Prune(ctx context.Context, now time.Time, policy RetentionPolicy) (PruneResult, error) {
+	// Preserve the pre-WP-2C policy contract for callers that do not yet
+	// provide a DNS-specific duration: DNS then follows raw-event retention.
+	if policy.DNSObservations <= 0 {
+		policy.DNSObservations = policy.RawEvents
+	}
 	if policy.RawEvents <= 0 || policy.Sessions <= 0 || policy.Aggregates <= 0 {
 		return PruneResult{}, errors.New("analytics retention durations must be positive")
 	}
@@ -264,7 +299,7 @@ func (r *GormRepository) Prune(ctx context.Context, now time.Time, policy Retent
 			count  *int64
 		}{
 			{&DestinationObservation{}, "observed_at", now.Add(-policy.RawEvents).UnixMilli(), &out.RawEvents},
-			{&DNSObservation{}, "observed_at", now.Add(-policy.RawEvents).UnixMilli(), &out.DNSObservations},
+			{&DNSObservation{}, "observed_at", now.Add(-policy.DNSObservations).UnixMilli(), &out.DNSObservations},
 			{&EvidenceObservation{}, "observed_at", now.Add(-policy.RawEvents).UnixMilli(), &out.Evidence},
 			{&NetworkSession{}, "last_seen", now.Add(-policy.Sessions).UnixMilli(), &out.Sessions},
 			{&ServiceCategoryAggregate{}, "bucket_start", now.Add(-policy.Aggregates).UnixMilli(), &out.Aggregates},
@@ -310,6 +345,10 @@ func (NoopRepository) ListDestinations(context.Context, string, int64, int64, in
 
 func (NoopRepository) ListDestinationPage(context.Context, string, int64, int64, int, int) (DestinationPage, error) {
 	return DestinationPage{Items: []DestinationObservation{}}, nil
+}
+
+func (NoopRepository) ListDNSPage(context.Context, string, int64, int64, int, int) (DNSPage, error) {
+	return DNSPage{Items: []DNSObservation{}}, nil
 }
 
 func (NoopRepository) ListSessionPage(context.Context, string, int64, int64, int, int) (SessionPage, error) {
@@ -391,10 +430,8 @@ func RegisterActivityRoutes(api *gin.RouterGroup) {
 		return
 	}
 	api.GET("/analytics/status", func(c *gin.Context) {
-		configured.RLock()
-		enabled := configured.enabled
-		configured.RUnlock()
-		activityEnvelope(c, gin.H{"enabled": enabled})
+		status := CurrentStatus()
+		activityEnvelope(c, gin.H{"enabled": status.Enabled, "dnsIntelligence": status.DNSIntelligence})
 	})
 	api.GET("/analytics/clients/:email/activity", func(c *gin.Context) {
 		configured.RLock()
@@ -433,5 +470,24 @@ func RegisterActivityRoutes(api *gin.RouterGroup) {
 			return
 		}
 		activityEnvelope(c, gin.H{"enabled": enabled, "items": page.Items, "page": query.Page, "pageSize": query.PageSize, "total": page.Total, "from": query.From, "to": query.To})
+	})
+	api.GET("/analytics/clients/:email/dns", func(c *gin.Context) {
+		configured.RLock()
+		repo, enabled, dnsEnabled := configured.repo, configured.enabled, configured.evidenceEnabled
+		configured.RUnlock()
+		query, err := parseActivityQuery(c)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"success": false, "msg": err.Error()})
+			return
+		}
+		page := DNSPage{Items: []DNSObservation{}}
+		if enabled && dnsEnabled && repo != nil {
+			page, err = repo.ListDNSPage(c.Request.Context(), c.Param("email"), query.From, query.To, query.PageSize, (query.Page-1)*query.PageSize)
+		}
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"success": false, "msg": "DNS intelligence unavailable"})
+			return
+		}
+		activityEnvelope(c, gin.H{"enabled": enabled && dnsEnabled, "items": page.Items, "page": query.Page, "pageSize": query.PageSize, "total": page.Total, "from": query.From, "to": query.To})
 	})
 }

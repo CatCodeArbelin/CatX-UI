@@ -39,4 +39,19 @@ func TestActivityRoutesAreExactNoOpWhenDisabled(t *testing.T) {
 	}
 }
 
+func TestDNSActivityRouteExposesMetadataOnlyPage(t *testing.T) {
+	repo := &captureRepo{dns: []DNSObservation{{ID: 4, Domain: "example.com", ResolvedIP: "192.0.2.4", Source: SourceDNSObserver, Provenance: ProvenanceObserved, Confidence: .9}}}
+	Configure(repo, true)
+	SetEvidenceEnabled(true)
+	t.Cleanup(func() { Configure(NoopRepository{}, false) })
+	router := gin.New()
+	RegisterActivityRoutes(router.Group("/panel/api"))
+	req := httptest.NewRequest(http.MethodGet, "/panel/api/analytics/clients/alice/dns?from=1&to=2000", nil)
+	resp := httptest.NewRecorder()
+	router.ServeHTTP(resp, req)
+	if resp.Code != http.StatusOK || !strings.Contains(resp.Body.String(), "example.com") || !strings.Contains(resp.Body.String(), "192.0.2.4") {
+		t.Fatalf("unexpected DNS response: %d %s", resp.Code, resp.Body.String())
+	}
+}
+
 var _ Repository = (*captureRepo)(nil)
