@@ -178,7 +178,7 @@ func (t *Tailer) Run(ctx context.Context) error {
 			active, activeIdentity = f, id
 		}
 		read, next, partial, readErr := readLines(active, offset, pending)
-		if readErr != nil && !errors.Is(readErr, io.EOF) {
+		if !errors.Is(readErr, io.EOF) {
 			_ = active.Close()
 			active = nil
 			continue
@@ -271,6 +271,7 @@ func currentChanged(path, identity string, offset int64) (bool, error) {
 	_ = f.Close()
 	return id != identity || size < offset, nil
 }
+
 func openCurrent(path string) (*os.File, string, int64, error) {
 	f, err := os.Open(path)
 	if err != nil {
@@ -386,15 +387,18 @@ func destination(raw string) (string, string, int) {
 	}
 	return strings.Trim(host, "[]"), "", port
 }
+
 func protocol(raw string) string {
 	if i := strings.IndexByte(raw, ':'); i > 0 {
 		return strings.ToLower(raw[:i])
 	}
 	return ""
 }
+
 func sessionKey(e AccessLogEntry) string {
 	return digest(strings.Join([]string{e.Email, e.Inbound, e.From, protocol(e.Destination), e.ObservedAt.UTC().Format("200601021504")}, "|"))
 }
+
 func sessionFor(e MetadataEvent) NetworkSession {
 	return NetworkSession{SessionKey: e.SessionKey, ClientEmail: e.ClientEmail, InboundID: e.InboundID, FirstSeen: e.ObservedAt, LastSeen: e.ObservedAt, Protocol: e.Protocol, Source: SourceAccessLog, Provenance: ProvenanceCorrelated, Confidence: 0.8}
 }

@@ -27,6 +27,7 @@ func (r *captureRepo) LoadAccessLogCursor(_ context.Context, key string) (Access
 	}
 	return r.cursor, nil
 }
+
 func (r *captureRepo) CommitAccessLogBatch(_ context.Context, events []MetadataEvent, sessions []NetworkSession, cursor AccessLogCursor) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -35,6 +36,7 @@ func (r *captureRepo) CommitAccessLogBatch(_ context.Context, events []MetadataE
 	r.cursor = cursor
 	return nil
 }
+
 func (r *captureRepo) snapshot() (int, AccessLogCursor) {
 	r.mu.Lock()
 	defer r.mu.Unlock()

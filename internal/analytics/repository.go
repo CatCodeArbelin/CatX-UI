@@ -222,6 +222,7 @@ func (NoopRepository) Prune(context.Context, time.Time, RetentionPolicy) (PruneR
 func (NoopRepository) CommitAccessLogBatch(context.Context, []MetadataEvent, []NetworkSession, AccessLogCursor) error {
 	return nil
 }
+
 func (NoopRepository) LoadAccessLogCursor(_ context.Context, key string) (AccessLogCursor, error) {
 	return AccessLogCursor{CursorKey: key}, nil
 }
