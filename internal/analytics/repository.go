@@ -80,7 +80,7 @@ func (r *GormRepository) RecordDestination(ctx context.Context, event MetadataEv
 	if event.EventKey == "" {
 		return r.db.WithContext(ctx).Create(&observation).Error
 	}
-	return r.db.WithContext(ctx).Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "event_key"}}, DoNothing: true}).Create(&observation).Error
+	return r.db.WithContext(ctx).Clauses(eventKeyDoNothing()).Create(&observation).Error
 }
 
 func (r *GormRepository) CommitAccessLogBatch(ctx context.Context, events []MetadataEvent, sessions []NetworkSession, cursor AccessLogCursor) error {
@@ -90,7 +90,7 @@ func (r *GormRepository) CommitAccessLogBatch(ctx context.Context, events []Meta
 				return err
 			}
 			observation := event.Observation()
-			if err := tx.Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "event_key"}}, DoNothing: true}).Create(&observation).Error; err != nil {
+			if err := tx.Clauses(eventKeyDoNothing()).Create(&observation).Error; err != nil {
 				return err
 			}
 		}
@@ -122,7 +122,15 @@ func (r *GormRepository) RecordDNS(ctx context.Context, observation DNSObservati
 	if observation.EventKey == "" {
 		observation.EventKey = digest(strings.Join([]string{observation.ClientEmail, observation.Domain, observation.ResolvedIP, observation.RecordType, strconv.FormatInt(observation.ObservedAt, 10), strconv.FormatInt(observation.ExpiresAt, 10)}, "|"))
 	}
-	return r.db.WithContext(ctx).Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "event_key"}}, DoNothing: true}).Create(&observation).Error
+	return r.db.WithContext(ctx).Clauses(eventKeyDoNothing()).Create(&observation).Error
+}
+
+func eventKeyDoNothing() clause.OnConflict {
+	return clause.OnConflict{
+		Columns:     []clause.Column{{Name: "event_key"}},
+		TargetWhere: clause.Where{Exprs: []clause.Expression{clause.Expr{SQL: "event_key <> ''"}}},
+		DoNothing:   true,
+	}
 }
 
 func (r *GormRepository) RecordEvidence(ctx context.Context, evidence EvidenceObservation) error {
@@ -132,7 +140,7 @@ func (r *GormRepository) RecordEvidence(ctx context.Context, evidence EvidenceOb
 	if evidence.EventKey == "" {
 		evidence.EventKey = digest(strings.Join([]string{evidence.ClientEmail, evidence.DestinationIP, evidence.Domain, evidence.Kind, strconv.FormatInt(evidence.ObservedAt, 10), evidence.SessionKey}, "|"))
 	}
-	return r.db.WithContext(ctx).Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "event_key"}}, DoNothing: true}).Create(&evidence).Error
+	return r.db.WithContext(ctx).Clauses(eventKeyDoNothing()).Create(&evidence).Error
 }
 
 func (r *GormRepository) ActiveDNSForDestination(ctx context.Context, clientEmail string, nodeID, inboundID int, destinationIP string, observedAt int64) ([]DNSObservation, error) {
