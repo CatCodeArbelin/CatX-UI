@@ -2,11 +2,9 @@
   padding: 24px;
 }
 
-
 .activity-summary {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   margin: 16px 0;
-
 }
