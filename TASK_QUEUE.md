@@ -143,7 +143,7 @@ Make runtime-affecting changes recoverable before Policy Engine or traffic-contr
 
 # PHASE 1 — Analytics
 
-## WP-1A — Analytics Data Foundation — CURRENT
+## WP-1A — Analytics Data Foundation — DONE
 
 Recommended model: `Luna Medium`
 
@@ -175,7 +175,7 @@ Includes:
 
 ---
 
-## WP-1C — Activity API/UI
+## WP-1C — Activity API/UI — DONE
 
 Recommended model: `Luna Medium`
 
@@ -190,7 +190,7 @@ Includes:
 
 # PHASE 2 — DNS / Destination Intelligence
 
-## WP-2A — DNS & Evidence Fusion
+## WP-2A — DNS & Evidence Fusion — CURRENT
 
 Recommended model: `Sol High`
 

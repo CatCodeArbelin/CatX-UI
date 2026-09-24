@@ -2,35 +2,68 @@
 
 ## Work Package
 
-`WP-1C — Client Activity API & UI`
+`WP-2A — DNS & Evidence Fusion`
 
 ## Goal
 
-Expose the analytics produced by WP-1A/WP-1B in the panel through a read-only
-client activity API and UI.
+Correlate DNS, destination IP/domain, visible SNI/TLS metadata, and existing
+analytics events into a unified evidence model without TLS MITM or content
+inspection.
 
-## Scope
+## Required
 
-- read-only analytics API endpoints;
-- per-client recent activity timeline;
-- session history;
-- destination/domain display when known;
-- protocol, port, and source metadata;
-- first seen, last seen, and session counts;
-- traffic metadata only when reusable from existing upstream counters;
-- pagination and time-range filtering;
-- empty, loading, and error states;
-- analytics-disabled UI behavior;
-- frontend navigation through the WP-0A fork registry where appropriate;
-- backend/API tests and frontend tests.
+- DNS observation ingestion interfaces;
+- correlation between DNS answers and subsequent destination IP connections;
+- destination domain/IP evidence fusion;
+- visible SNI evidence where available;
+- provenance/source tracking for every inferred domain/service hint;
+- confidence score/level;
+- deduplication and expiration/TTL semantics;
+- client-aware correlation;
+- safe behavior when evidence is ambiguous or conflicting;
+- persistence using the existing WP-1A analytics layer;
+- no duplicate client/group/node models;
+- no duplicate traffic counters;
+- analytics OFF = exact no-op.
 
-- reuse the WP-1A repositories;
-- do not create another analytics persistence layer;
-- do not duplicate upstream traffic counters;
-- do not add service/category classification; WP-2 owns enrichment;
-- raw domains/IPs may be displayed only when observed;
-- expose provenance/source where useful;
-- no TLS MITM or content inspection;
-- analytics failures must not affect Xray or panel core operation;
+Evidence must distinguish at minimum:
+
+- directly observed domain;
+- DNS-derived domain;
+- SNI-derived domain;
+- IP-only destination;
+- inferred correlation.
+
+## Hard constraints
+
+- no TLS MITM;
+- no decrypted HTTPS;
+- no cookies;
+- no Authorization headers;
+- no credentials;
+- no request/response body capture;
+- do not implement service/category classification yet — WP-2B;
+- do not implement DNS UI/privacy controls yet — WP-2C;
+- evidence-fusion failure must never affect Xray/panel operation;
+- reuse WP-1A/WP-1B analytics storage and session pipeline;
+- minimal upstream-touch points;
+- `make verify-fork` must remain green.
+
+## Required tests
+
+- DNS → IP correlation;
+- TTL expiry;
+- ambiguous/multiple-domain evidence;
+- SNI precedence/provenance;
+- client isolation;
+- deduplication;
+- restart/persistence behavior;
+- race/concurrency where relevant;
+- SQLite/PostgreSQL where applicable.
+
+## Restrictions
+
 - do not modify `main`;
-- do not merge WP-1C into `develop`.
+- do not start WP-2B;
+- do not implement WP-2C;
+- do not merge WP-2A into `develop` until its merge gate is satisfied.
