@@ -49,5 +49,6 @@ jobs:
         uses: golangci/golangci-lint-action@v9
         with:
           version: latest
+          install-only: true
       - name: Run upstream and fork verification
         run: make verify-fork
