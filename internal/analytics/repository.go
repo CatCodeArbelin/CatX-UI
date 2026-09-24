@@ -3,8 +3,12 @@ package analytics
 import (
 	"context"
 	"errors"
+	"fmt"
+	"net/http"
+	"strconv"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -25,6 +29,8 @@ type Repository interface {
 	UpsertSession(ctx context.Context, session NetworkSession) error
 	UpsertAggregate(ctx context.Context, aggregate ServiceCategoryAggregate) error
 	ListDestinations(ctx context.Context, clientEmail string, from, to int64, limit int) ([]DestinationObservation, error)
+	ListDestinationPage(ctx context.Context, clientEmail string, from, to int64, limit, offset int) (DestinationPage, error)
+	ListSessionPage(ctx context.Context, clientEmail string, from, to int64, limit, offset int) (SessionPage, error)
 	ListAggregates(ctx context.Context, clientEmail, bucketWidth string, from, to int64) ([]ServiceCategoryAggregate, error)
 	SummarizeSessions(ctx context.Context, clientEmail string, from, to int64) (SessionSummary, error)
 	Prune(ctx context.Context, now time.Time, policy RetentionPolicy) (PruneResult, error)
@@ -36,6 +42,16 @@ type SessionSummary struct {
 	Count     int64
 	FirstSeen int64
 	LastSeen  int64
+}
+
+type DestinationPage struct {
+	Items []DestinationObservation
+	Total int64
+}
+
+type SessionPage struct {
+	Items []NetworkSession
+	Total int64
 }
 
 type PruneResult struct{ RawEvents, DNSObservations, Sessions, Aggregates int64 }
@@ -135,6 +151,52 @@ func (r *GormRepository) ListDestinations(ctx context.Context, clientEmail strin
 	return rows, q.Find(&rows).Error
 }
 
+func (r *GormRepository) ListDestinationPage(ctx context.Context, clientEmail string, from, to int64, limit, offset int) (DestinationPage, error) {
+	if limit <= 0 {
+		limit = 50
+	}
+	if limit > 200 {
+		limit = 200
+	}
+	if offset < 0 {
+		offset = 0
+	}
+	q := r.db.WithContext(ctx).Model(&DestinationObservation{}).Where("observed_at >= ? AND observed_at < ?", from, to)
+	if clientEmail != "" {
+		q = q.Where("client_email = ?", clientEmail)
+	}
+	var total int64
+	if err := q.Count(&total).Error; err != nil {
+		return DestinationPage{}, err
+	}
+	var rows []DestinationObservation
+	err := q.Order("observed_at DESC, id DESC").Limit(limit).Offset(offset).Find(&rows).Error
+	return DestinationPage{Items: rows, Total: total}, err
+}
+
+func (r *GormRepository) ListSessionPage(ctx context.Context, clientEmail string, from, to int64, limit, offset int) (SessionPage, error) {
+	if limit <= 0 {
+		limit = 50
+	}
+	if limit > 200 {
+		limit = 200
+	}
+	if offset < 0 {
+		offset = 0
+	}
+	q := r.db.WithContext(ctx).Model(&NetworkSession{}).Where("last_seen >= ? AND first_seen < ?", from, to)
+	if clientEmail != "" {
+		q = q.Where("client_email = ?", clientEmail)
+	}
+	var total int64
+	if err := q.Count(&total).Error; err != nil {
+		return SessionPage{}, err
+	}
+	var rows []NetworkSession
+	err := q.Order("last_seen DESC, id DESC").Limit(limit).Offset(offset).Find(&rows).Error
+	return SessionPage{Items: rows, Total: total}, err
+}
+
 func (r *GormRepository) ListAggregates(ctx context.Context, clientEmail, bucketWidth string, from, to int64) ([]ServiceCategoryAggregate, error) {
 	q := r.db.WithContext(ctx).Where("bucket_start >= ? AND bucket_start < ?", from, to).Order("bucket_start ASC")
 	if clientEmail != "" {
@@ -207,6 +269,14 @@ func (NoopRepository) ListDestinations(context.Context, string, int64, int64, in
 	return nil, nil
 }
 
+func (NoopRepository) ListDestinationPage(context.Context, string, int64, int64, int, int) (DestinationPage, error) {
+	return DestinationPage{Items: []DestinationObservation{}}, nil
+}
+
+func (NoopRepository) ListSessionPage(context.Context, string, int64, int64, int, int) (SessionPage, error) {
+	return SessionPage{Items: []NetworkSession{}}, nil
+}
+
 func (NoopRepository) ListAggregates(context.Context, string, string, int64, int64) ([]ServiceCategoryAggregate, error) {
 	return nil, nil
 }
@@ -225,4 +295,104 @@ func (NoopRepository) CommitAccessLogBatch(context.Context, []MetadataEvent, []N
 
 func (NoopRepository) LoadAccessLogCursor(_ context.Context, key string) (AccessLogCursor, error) {
 	return AccessLogCursor{CursorKey: key}, nil
+}
+
+type activityQuery struct {
+	From     int64
+	To       int64
+	Page     int
+	PageSize int
+}
+
+func parseActivityQuery(c *gin.Context) (activityQuery, error) {
+	now := time.Now().UnixMilli()
+	q := activityQuery{From: now - 7*24*time.Hour.Milliseconds(), To: now, Page: 1, PageSize: 50}
+	var err error
+	if value := c.Query("from"); value != "" {
+		q.From, err = strconv.ParseInt(value, 10, 64)
+		if err != nil {
+			return q, fmt.Errorf("invalid from")
+		}
+	}
+	if value := c.Query("to"); value != "" {
+		q.To, err = strconv.ParseInt(value, 10, 64)
+		if err != nil {
+			return q, fmt.Errorf("invalid to")
+		}
+	}
+	if value := c.Query("page"); value != "" {
+		q.Page, err = strconv.Atoi(value)
+		if err != nil || q.Page < 1 {
+			return q, fmt.Errorf("invalid page")
+		}
+	}
+	if value := c.Query("pageSize"); value != "" {
+		q.PageSize, err = strconv.Atoi(value)
+		if err != nil || q.PageSize < 1 {
+			return q, fmt.Errorf("invalid pageSize")
+		}
+	}
+	if q.PageSize > 200 {
+		q.PageSize = 200
+	}
+	if q.From < 0 || q.To <= q.From {
+		return q, fmt.Errorf("invalid time range")
+	}
+	return q, nil
+}
+
+func activityEnvelope(c *gin.Context, obj any) {
+	c.JSON(http.StatusOK, gin.H{"success": true, "msg": "", "obj": obj})
+}
+
+// RegisterActivityRoutes exposes read-only analytics views through the fixed
+// fork route hook. It never returns raw log lines or any content data.
+func RegisterActivityRoutes(api *gin.RouterGroup) {
+	if api == nil {
+		return
+	}
+	api.GET("/analytics/status", func(c *gin.Context) {
+		configured.RLock()
+		enabled := configured.enabled
+		configured.RUnlock()
+		activityEnvelope(c, gin.H{"enabled": enabled})
+	})
+	api.GET("/analytics/clients/:email/activity", func(c *gin.Context) {
+		configured.RLock()
+		repo, enabled := configured.repo, configured.enabled
+		configured.RUnlock()
+		query, err := parseActivityQuery(c)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"success": false, "msg": err.Error()})
+			return
+		}
+		page := DestinationPage{Items: []DestinationObservation{}}
+		if enabled && repo != nil {
+			page, err = repo.ListDestinationPage(c.Request.Context(), c.Param("email"), query.From, query.To, query.PageSize, (query.Page-1)*query.PageSize)
+		}
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"success": false, "msg": "analytics unavailable"})
+			return
+		}
+		activityEnvelope(c, gin.H{"enabled": enabled, "items": page.Items, "page": query.Page, "pageSize": query.PageSize, "total": page.Total, "from": query.From, "to": query.To})
+	})
+	api.GET("/analytics/clients/:email/sessions", func(c *gin.Context) {
+		configured.RLock()
+		repo, enabled := configured.repo, configured.enabled
+		configured.RUnlock()
+		query, err := parseActivityQuery(c)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"success": false, "msg": err.Error()})
+			return
+		}
+		page := SessionPage{Items: []NetworkSession{}}
+		if enabled && repo != nil {
+			page, err = repo.ListSessionPage(c.Request.Context(), c.Param("email"), query.From, query.To, query.PageSize, (query.Page-1)*query.PageSize)
+		}
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"success": false, "msg": "analytics unavailable"})
+			return
+		}
+		activityEnvelope(c, gin.H{"enabled": enabled, "items": page.Items, "page": query.Page, "pageSize": query.PageSize, "total": page.Total, "from": query.From, "to": query.To})
+	})
 }

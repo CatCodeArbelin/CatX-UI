@@ -6,6 +6,7 @@ import { Drawer, Layout, Menu, Tooltip } from 'antd';
 import type { MenuProps } from 'antd';
 import {
   ApiOutlined,
+  HistoryOutlined,
   ApartmentOutlined,
   CloseOutlined,
   CloudServerOutlined,
@@ -43,6 +44,7 @@ import { formatPanelVersion } from '@/lib/panel-version';
 import { pauseAnimationsUntilLeave, useTheme } from '@/hooks/useTheme';
 import { useAllSettings } from '@/api/queries/useAllSettings';
 import { useCommandPalette } from '@/components/command-palette/useCommandPalette';
+import { forkNavigationItems } from '@/forkext/registry';
 import './AppSidebar.css';
 
 const DONATE_URL = 'https://donate.sanaei.dev/';
@@ -70,7 +72,8 @@ type IconName =
   | 'logout'
   | 'apidocs'
   | 'outbound'
-  | 'routing';
+  | 'routing'
+  | 'activity';
 
 const iconByName: Record<IconName, ComponentType> = {
   dashboard: DashboardOutlined,
@@ -85,6 +88,7 @@ const iconByName: Record<IconName, ComponentType> = {
   apidocs: ApiOutlined,
   outbound: ExportOutlined,
   routing: SwapOutlined,
+  activity: HistoryOutlined,
 };
 
 function DonateButton({ ariaLabel }: { ariaLabel: string }) {
@@ -237,7 +241,17 @@ export default function AppSidebar() {
     [t],
   );
 
-  const navItems = useMemo(() => tabs.filter((tab) => tab.icon !== 'logout'), [tabs]);
+  const navItems = useMemo(
+    () => [
+      ...tabs.filter((tab) => tab.icon !== 'logout'),
+      ...forkNavigationItems.map((item) => ({
+        key: item.path,
+        icon: 'activity' as IconName,
+        title: item.label,
+      })),
+    ],
+    [tabs],
+  );
   const utilItems = useMemo(() => tabs.filter((tab) => tab.icon === 'logout'), [tabs]);
 
   const settingsChildren = useMemo<NonNullable<MenuProps['items']>>(() => {

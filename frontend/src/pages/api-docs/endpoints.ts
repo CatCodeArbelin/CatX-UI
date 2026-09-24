@@ -2736,5 +2736,65 @@ export const sections: readonly Section[] = [
       },
     ],
   },
+  {
+    id: 'analytics-activity',
+    title: 'Client activity analytics',
+    description:
+      'Read-only destination and session metadata collected by the optional analytics pipeline. No request content, cookies, credentials, or Authorization headers are exposed.',
+    endpoints: [
+      {
+        method: 'GET',
+        path: '/panel/api/analytics/status',
+        summary: 'Return whether analytics collection and activity queries are enabled.',
+        response: '{ success, obj: { enabled } }',
+      },
+      {
+        method: 'GET',
+        path: '/panel/api/analytics/clients/:email/activity',
+        summary: 'Return a paginated client destination activity timeline.',
+        params: [
+          { name: 'email', in: 'path', type: 'string', desc: 'Existing upstream client identity.' },
+          {
+            name: 'from',
+            in: 'query',
+            type: 'integer',
+            desc: 'Start time in milliseconds since epoch.',
+          },
+          {
+            name: 'to',
+            in: 'query',
+            type: 'integer',
+            desc: 'End time in milliseconds since epoch.',
+          },
+          { name: 'page', in: 'query', type: 'integer', optional: true, defaultValue: 1 },
+          { name: 'pageSize', in: 'query', type: 'integer', optional: true, defaultValue: 50 },
+        ],
+        response: '{ enabled, items, page, pageSize, total, from, to }',
+      },
+      {
+        method: 'GET',
+        path: '/panel/api/analytics/clients/:email/sessions',
+        summary: 'Return a paginated client session history.',
+        params: [
+          { name: 'email', in: 'path', type: 'string', desc: 'Existing upstream client identity.' },
+          {
+            name: 'from',
+            in: 'query',
+            type: 'integer',
+            desc: 'Start time in milliseconds since epoch.',
+          },
+          {
+            name: 'to',
+            in: 'query',
+            type: 'integer',
+            desc: 'End time in milliseconds since epoch.',
+          },
+          { name: 'page', in: 'query', type: 'integer', optional: true, defaultValue: 1 },
+          { name: 'pageSize', in: 'query', type: 'integer', optional: true, defaultValue: 50 },
+        ],
+        response: '{ enabled, items, page, pageSize, total, from, to }',
+      },
+    ],
+  },
   ...forkApiSections,
 ];

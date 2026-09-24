@@ -37,6 +37,37 @@ func (r *captureRepo) CommitAccessLogBatch(_ context.Context, events []MetadataE
 	return nil
 }
 
+func (r *captureRepo) ListDestinationPage(_ context.Context, _ string, _, _ int64, limit, offset int) (DestinationPage, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	end := offset + limit
+	if end > len(r.events) {
+		end = len(r.events)
+	}
+	if offset > len(r.events) {
+		offset = len(r.events)
+	}
+	items := make([]DestinationObservation, 0, end-offset)
+	for _, event := range r.events[offset:end] {
+		items = append(items, event.Observation())
+	}
+	return DestinationPage{Items: items, Total: int64(len(r.events))}, nil
+}
+
+func (r *captureRepo) ListSessionPage(_ context.Context, _ string, _, _ int64, limit, offset int) (SessionPage, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	end := offset + limit
+	if end > len(r.sessions) {
+		end = len(r.sessions)
+	}
+	if offset > len(r.sessions) {
+		offset = len(r.sessions)
+	}
+	items := append([]NetworkSession(nil), r.sessions[offset:end]...)
+	return SessionPage{Items: items, Total: int64(len(r.sessions))}, nil
+}
+
 func (r *captureRepo) snapshot() (int, AccessLogCursor) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
