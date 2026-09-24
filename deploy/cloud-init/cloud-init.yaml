@@ -1,16 +1,16 @@
 #cloud-config
 # ---------------------------------------------------------------------------
-# Generic 3x-ui unattended install via cloud-init user-data.
+# Generic CatX-UI unattended install via cloud-init user-data.
 #
 # Works on any cloud-init platform: Hetzner, AWS, DigitalOcean, Vultr, GCP,
 # Azure, Oracle. Paste the whole file as the instance "user data".
 #
-# It installs the latest 3x-ui release NON-INTERACTIVELY, generating unique
+# It installs the latest CatX-UI release NON-INTERACTIVELY, generating unique
 # random credentials per instance. Full credentials are surfaced ONLY on the
 # serial console (owner-only); /etc/motd (world-readable) shows just the access
 # URL + username. Nothing is baked in advance — every instance is unique.
 #
-# Requires the non-interactive install.sh (3x-ui with XUI_NONINTERACTIVE support).
+# Requires the CatX-UI release installer with XUI_NONINTERACTIVE support.
 # Edit the exported XUI_* knobs in /opt/xui-bootstrap.sh below to customise.
 # ---------------------------------------------------------------------------
 
@@ -44,7 +44,21 @@ write_files:
       #   export XUI_DB_DSN="postgres://user:pass@host:5432/db?sslmode=disable"
       # ------------------------------------------------------------------------
 
-      curl -fsSL https://raw.githubusercontent.com/MHSanaei/3x-ui/main/install.sh | bash
+      release_json=$(curl -fsSL https://api.github.com/repos/CatCodeArbelin/CatX-UI/releases/latest)
+      release_tag=$(grep '"tag_name":' <<< "$release_json" | head -n1 | sed -E 's/.*"([^"]+)".*/\1/')
+      [[ "$release_tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+      bootstrap_dir=$(mktemp -d)
+      trap 'rm -rf "$bootstrap_dir"' EXIT
+      asset=catx-ui-install.sh
+      release_url="https://github.com/CatCodeArbelin/CatX-UI/releases/download/${release_tag}"
+      curl -fsSL -o "$bootstrap_dir/$asset" "$release_url/$asset"
+      curl -fsSL -o "$bootstrap_dir/$asset.sha256" "$release_url/$asset.sha256"
+      [[ $(grep -cve '^[[:space:]]*$' "$bootstrap_dir/$asset.sha256") -eq 1 ]]
+      expected=$(awk 'NF {print $1}' "$bootstrap_dir/$asset.sha256")
+      recorded_name=$(awk 'NF {print $2}' "$bootstrap_dir/$asset.sha256")
+      actual=$(sha256sum "$bootstrap_dir/$asset" | awk '{print $1}')
+      [[ "$expected" =~ ^[0-9a-f]{64}$ && "$recorded_name" == "$asset" && "$actual" == "$expected" ]]
+      bash "$bootstrap_dir/$asset" "$release_tag"
 
       # Surface the generated credentials. Full creds (incl. password + API token)
       # go ONLY to the serial console (/dev/console, owner-only). /etc/motd is
@@ -53,7 +67,7 @@ write_files:
       if [ -r /etc/x-ui/install-result.env ]; then
         {
           echo
-          echo "=== 3x-ui panel credentials (generated on first boot) ==="
+          echo "=== CatX-UI panel credentials (generated on first boot) ==="
           cat /etc/x-ui/install-result.env
           echo "========================================================"
           echo "Change the password after first login."
@@ -63,7 +77,7 @@ write_files:
         . /etc/x-ui/install-result.env
         {
           echo
-          echo "=== 3x-ui panel (generated on first boot) ==="
+          echo "=== CatX-UI panel (generated on first boot) ==="
           echo "URL:      ${XUI_ACCESS_URL:-unknown}"
           echo "Username: ${XUI_USERNAME:-unknown}"
           echo "Password + API token: sudo cat /etc/x-ui/install-result.env"
@@ -75,4 +89,4 @@ write_files:
 runcmd:
   - [bash, /opt/xui-bootstrap.sh]
 
-final_message: "3x-ui installed — full credentials in /etc/x-ui/install-result.env (sudo); /etc/motd shows the URL + username only."
+final_message: "CatX-UI installed — full credentials in /etc/x-ui/install-result.env (sudo); /etc/motd shows the URL + username only."

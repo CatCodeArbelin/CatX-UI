@@ -4,6 +4,8 @@ on:
   pull_request:
     paths:
       - "**.go"
+      - "**.sh"
+      - "internal/forkrelease/**"
       - "go.mod"
       - "go.sum"
       - "frontend/**"
@@ -12,9 +14,11 @@ on:
       - ".github/workflows/**"
   push:
     branches:
-      - "feature/wp-0a-foundation-guardrails"
+      - "feature/wp-*"
     paths:
       - "**.go"
+      - "**.sh"
+      - "internal/forkrelease/**"
       - "go.mod"
       - "go.sum"
       - "frontend/**"

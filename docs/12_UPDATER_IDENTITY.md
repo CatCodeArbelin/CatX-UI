@@ -23,6 +23,11 @@ Use a fork-owned release repository/source.
 
 Do not rely on hidden DB edits to override upstream updater behavior.
 
+The authoritative CatX-UI source is `CatCodeArbelin/CatX-UI`. Release assets
+use the `catx-ui-*` prefix. Go reads the identity and version metadata from
+`internal/forkrelease`; standalone shell entry points mirror the identity and
+`scripts/test-release-identity.sh` rejects drift or official-upstream URLs.
+
 ## Channels
 
 ```text
@@ -72,6 +77,19 @@ restore binary/config
 → healthcheck
 → audit
 ```
+
+The current implementation stages below the installation parent, verifies the
+candidate's embedded CatX-UI identity, stops the existing service, and snapshots
+the installation, CLI, service unit, environment files, and database. SQLite
+state is copied while the service is stopped. PostgreSQL uses `pg_dump` and is
+restored with `pg_restore --single-transaction`.
+
+The candidate is then activated, migrated, started, and required to pass two
+consecutive service-health probes. Any install, migration, start, healthcheck,
+or interruption failure restores the known-good files and database, starts the
+old service, healthchecks it, and appends a mode-0600 audit record. A failed
+rollback healthcheck is reported distinctly and leaves the recovery snapshot
+in place for diagnosis.
 
 ## Xray updater
 

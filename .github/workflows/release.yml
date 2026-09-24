@@ -1,4 +1,4 @@
-name: Release 3X-UI
+name: Release CatX-UI
 
 on:
   workflow_dispatch:
@@ -12,6 +12,8 @@ on:
       - "go.mod"
       - "go.sum"
       - "**.sh"
+      - "internal/forkrelease/**"
+      - "scripts/catx-update-transaction.sh"
       - "frontend/**"
       - "x-ui.service.debian"
       - "x-ui.service.arch"
@@ -23,6 +25,8 @@ on:
       - "go.mod"
       - "go.sum"
       - "**.sh"
+      - "internal/forkrelease/**"
+      - "scripts/catx-update-transaction.sh"
       - "frontend/**"
       - "x-ui.service.debian"
       - "x-ui.service.arch"
@@ -30,7 +34,32 @@ on:
       - ".github/workflows/release.yml"
 
 jobs:
+  validate-release-identity:
+    name: Validate CatX-UI release identity
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+      - name: Refuse foreign repositories and mismatched release tags
+        shell: bash
+        run: |
+          set -euo pipefail
+          source internal/forkrelease/identity.env
+          expected="${CATX_RELEASE_OWNER}/${CATX_RELEASE_REPOSITORY}"
+          [[ "$GITHUB_REPOSITORY" == "$expected" ]] || {
+            echo "release workflow may run only in $expected" >&2
+            exit 1
+          }
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            fork_version=$(tr -d '[:space:]' < internal/forkrelease/fork_version)
+            [[ "$GITHUB_REF_NAME" == "v${fork_version}" ]] || {
+              echo "release tag $GITHUB_REF_NAME does not match CatX-UI fork version v${fork_version}" >&2
+              exit 1
+            }
+          fi
+
   build:
+    needs: validate-release-identity
     permissions:
       contents: write
     strategy:
@@ -73,8 +102,9 @@ jobs:
           npm run build
         working-directory: frontend
 
-      - name: Build 3X-UI
+      - name: Build CatX-UI
         run: |
+          source internal/forkrelease/identity.env
           CURL_RETRY="--retry 5 --retry-all-errors --retry-delay 3"
           fetch() { wget -q --tries=5 --waitretry=10 --retry-on-http-error=429,500,502,503 "$@"; }
           export CGO_ENABLED=1
@@ -119,12 +149,13 @@ jobs:
           cp x-ui.service.arch x-ui/
           cp x-ui.service.rhel x-ui/
           cp x-ui.sh x-ui/
+          cp x-ui.rc x-ui/
           mv x-ui/xui-release x-ui/x-ui
           mkdir x-ui/bin
           cd x-ui/bin
 
           # Download dependencies
-          Xray_URL="https://github.com/XTLS/Xray-core/releases/download/v26.9.9/"
+          Xray_URL="https://github.com/XTLS/Xray-core/releases/download/v${CATX_XRAY_VERSION}/"
           if [ "${{ matrix.platform }}" == "amd64" ]; then
             fetch ${Xray_URL}Xray-linux-64.zip
             unzip Xray-linux-64.zip
@@ -206,16 +237,18 @@ jobs:
 
       - name: Package
         run: |
-          tar -zcvf x-ui-linux-${{ matrix.platform }}.tar.gz x-ui
-          sha256sum x-ui-linux-${{ matrix.platform }}.tar.gz > x-ui-linux-${{ matrix.platform }}.tar.gz.sha256
+          source internal/forkrelease/identity.env
+          asset="${CATX_ASSET_PREFIX}-linux-${{ matrix.platform }}.tar.gz"
+          tar -zcvf "$asset" x-ui
+          sha256sum "$asset" > "${asset}.sha256"
 
       - name: Upload files to Artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: x-ui-linux-${{ matrix.platform }}
+          name: catx-ui-linux-${{ matrix.platform }}
           path: |
-            ./x-ui-linux-${{ matrix.platform }}.tar.gz
-            ./x-ui-linux-${{ matrix.platform }}.tar.gz.sha256
+            ./catx-ui-linux-${{ matrix.platform }}.tar.gz
+            ./catx-ui-linux-${{ matrix.platform }}.tar.gz.sha256
 
       - name: Upload files to GH release
         uses: svenstaro/upload-release-action@v2
@@ -223,15 +256,16 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref_name }}
-          file: x-ui-linux-${{ matrix.platform }}.tar.gz*
+          file: catx-ui-linux-${{ matrix.platform }}.tar.gz*
           file_glob: true
           overwrite: true
-          prerelease: true
+          prerelease: false
 
   # =================================
   #  Windows Build
   # =================================
   build-windows:
+    needs: validate-release-identity
     name: Build for Windows
     permissions:
       contents: write
@@ -278,7 +312,7 @@ jobs:
             mingw-w64-x86_64-sqlite3
             mingw-w64-x86_64-pkg-config
 
-      - name: Build 3X-UI for Windows (CGO)
+      - name: Build CatX-UI for Windows (CGO)
         shell: msys2 {0}
         run: |
           export PATH="/c/hostedtoolcache/windows/go/$(ls /c/hostedtoolcache/windows/go | sort -V | tail -n1)/x64/bin:$PATH"
@@ -303,13 +337,14 @@ jobs:
         shell: pwsh
         run: |
           $retry = @{ MaximumRetryCount = 5; RetryIntervalSec = 10 }
+          $identity = Get-Content "internal/forkrelease/identity.env" | ConvertFrom-StringData
           mkdir x-ui
           Copy-Item xui-release.exe x-ui\x-ui.exe
           mkdir x-ui\bin
           cd x-ui\bin
 
           # Download Xray for Windows
-          $Xray_URL = "https://github.com/XTLS/Xray-core/releases/download/v26.9.9/"
+          $Xray_URL = "https://github.com/XTLS/Xray-core/releases/download/v$($identity.CATX_XRAY_VERSION)/"
           Invoke-WebRequest @retry -Uri "${Xray_URL}Xray-windows-64.zip" -OutFile "Xray-windows-64.zip"
           Expand-Archive -Path "Xray-windows-64.zip" -DestinationPath .
           Remove-Item "Xray-windows-64.zip"
@@ -344,17 +379,17 @@ jobs:
       - name: Package to Zip
         shell: pwsh
         run: |
-          Compress-Archive -Path .\x-ui -DestinationPath "x-ui-windows-amd64.zip"
-          $hash = (Get-FileHash x-ui-windows-amd64.zip -Algorithm SHA256).Hash.ToLower()
-          [IO.File]::WriteAllText("$PWD\x-ui-windows-amd64.zip.sha256", "$hash  x-ui-windows-amd64.zip`n")
+          Compress-Archive -Path .\x-ui -DestinationPath "catx-ui-windows-amd64.zip"
+          $hash = (Get-FileHash catx-ui-windows-amd64.zip -Algorithm SHA256).Hash.ToLower()
+          [IO.File]::WriteAllText("$PWD\catx-ui-windows-amd64.zip.sha256", "$hash  catx-ui-windows-amd64.zip`n")
 
       - name: Upload files to Artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: x-ui-windows-amd64
+          name: catx-ui-windows-amd64
           path: |
-            ./x-ui-windows-amd64.zip
-            ./x-ui-windows-amd64.zip.sha256
+            ./catx-ui-windows-amd64.zip
+            ./catx-ui-windows-amd64.zip.sha256
 
       - name: Upload files to GH release
         uses: svenstaro/upload-release-action@v2
@@ -362,10 +397,95 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref_name }}
-          file: x-ui-windows-amd64.zip*
+          file: catx-ui-windows-amd64.zip*
           file_glob: true
           overwrite: true
-          prerelease: true
+          prerelease: false
+
+  # =================================
+  #  Verified updater/install assets and release metadata
+  # =================================
+  package-release-control:
+    name: Package release control assets
+    needs: [build, build-windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Validate repository and release identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          source internal/forkrelease/identity.env
+          expected="${CATX_RELEASE_OWNER}/${CATX_RELEASE_REPOSITORY}"
+          [[ "$GITHUB_REPOSITORY" == "$expected" ]] || {
+            echo "release workflow may publish only from $expected" >&2
+            exit 1
+          }
+          fork_version=$(tr -d '[:space:]' < internal/forkrelease/fork_version)
+          upstream_version=$(tr -d '[:space:]' < internal/forkrelease/upstream_version)
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            [[ "$GITHUB_REF_NAME" == "v${fork_version}" ]] || {
+              echo "release tag $GITHUB_REF_NAME does not match CatX-UI fork version v${fork_version}" >&2
+              exit 1
+            }
+          fi
+          printf 'fork=%s upstream=%s xray=%s repository=%s\n' "$fork_version" "$upstream_version" "$CATX_XRAY_VERSION" "$expected"
+
+      - name: Package checksummed control assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          source internal/forkrelease/identity.env
+          fork_version=$(tr -d '[:space:]' < internal/forkrelease/fork_version)
+          upstream_version=$(tr -d '[:space:]' < internal/forkrelease/upstream_version)
+          mkdir release-control
+          cp update.sh "release-control/${CATX_ASSET_PREFIX}-update.sh"
+          cp install.sh "release-control/${CATX_ASSET_PREFIX}-install.sh"
+          cp x-ui.sh "release-control/${CATX_ASSET_PREFIX}.sh"
+          cp scripts/catx-update-transaction.sh "release-control/${CATX_ASSET_PREFIX}-update-lib.sh"
+          for asset in release-control/*.sh; do
+            (cd release-control && sha256sum "$(basename "$asset")" > "$(basename "$asset").sha256")
+          done
+          previous_tag=$(git describe --tags --abbrev=0 "${GITHUB_SHA}^" 2>/dev/null || true)
+          if [[ -n "$previous_tag" ]]; then
+            git log --no-merges --pretty='format:%h %s' "${previous_tag}..${GITHUB_SHA}" > release-control/catx-ui-changelog.txt
+          else
+            git log --no-merges --pretty='format:%h %s' "${GITHUB_SHA}" > release-control/catx-ui-changelog.txt
+          fi
+          cat > release-control/catx-ui-release-metadata.json <<EOF
+          {
+            "product": "${CATX_PRODUCT_NAME}",
+            "repository": "${CATX_RELEASE_OWNER}/${CATX_RELEASE_REPOSITORY}",
+            "forkVersion": "${fork_version}",
+            "upstreamBaseVersion": "${upstream_version}",
+            "bundledXrayVersion": "${CATX_XRAY_VERSION}",
+            "channel": "$([[ "$GITHUB_REF" == refs/tags/* ]] && echo stable || echo dev)",
+            "changelogAsset": "catx-ui-changelog.txt",
+            "migrationNotes": "The transactional updater snapshots database/config state and runs the candidate x-ui migrate command before service start.",
+            "supportedLinuxArchitectures": ["amd64", "arm64", "armv7", "armv6", "386", "armv5", "s390x"],
+            "rollback": "automatic binary, service, configuration, and database recovery with post-restore healthcheck"
+          }
+          EOF
+          (cd release-control && sha256sum catx-ui-release-metadata.json > catx-ui-release-metadata.json.sha256)
+          (cd release-control && sha256sum catx-ui-changelog.txt > catx-ui-changelog.txt.sha256)
+
+      - name: Upload control artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: catx-ui-release-control
+          path: release-control/*
+
+      - name: Upload control assets to tagged release
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "${GITHUB_REF_NAME}" release-control/* --clobber
 
   # =================================
   #  Rolling dev channel (per-commit)
@@ -377,7 +497,7 @@ jobs:
   # channel is unaffected.
   publish-dev:
     name: Publish rolling dev release
-    needs: [build, build-windows]
+    needs: [build, build-windows, package-release-control]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
@@ -431,4 +551,4 @@ jobs:
               --target "${COMMIT}" --title "Dev build ${short}" --notes "${notes}"
           fi
 
-          retry gh release upload dev-latest dev-artifacts/*.tar.gz dev-artifacts/*.zip dev-artifacts/*.sha256 --clobber
+          retry gh release upload dev-latest dev-artifacts/* --clobber

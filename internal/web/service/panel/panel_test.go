@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/mhsanaei/3x-ui/v3/internal/config"
-	"github.com/mhsanaei/3x-ui/v3/internal/web/service"
+	"github.com/mhsanaei/3x-ui/v3/internal/forkrelease"
 )
 
 func TestIsNewerVersion(t *testing.T) {
@@ -96,27 +96,27 @@ func TestExtractReleaseCommit(t *testing.T) {
 	full := "1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b"
 	cases := []struct {
 		name    string
-		release service.Release
+		release forkrelease.Release
 		want    string
 	}{
 		{
 			name:    "from body marker",
-			release: service.Release{Body: "Rolling build\n\ncommit=" + full + "\nbuilt=2026-06-24T00:00:00Z"},
+			release: forkrelease.Release{Body: "Rolling build\n\ncommit=" + full + "\nbuilt=2026-06-24T00:00:00Z"},
 			want:    full,
 		},
 		{
 			name:    "body marker is case-insensitive and wins over target",
-			release: service.Release{Body: "COMMIT=" + full, TargetCommitish: "deadbeef"},
+			release: forkrelease.Release{Body: "COMMIT=" + full, TargetCommitish: "deadbeef"},
 			want:    full,
 		},
 		{
 			name:    "fallback to target commit sha",
-			release: service.Release{Body: "no marker here", TargetCommitish: full},
+			release: forkrelease.Release{Body: "no marker here", TargetCommitish: full},
 			want:    full,
 		},
 		{
 			name:    "branch target is not a commit",
-			release: service.Release{Body: "no marker", TargetCommitish: "main"},
+			release: forkrelease.Release{Body: "no marker", TargetCommitish: "main"},
 			want:    "",
 		},
 	}
@@ -345,6 +345,15 @@ func TestGetUpdateStatus(t *testing.T) {
 	}
 	if got.State != updateStateSuccess {
 		t.Fatalf("State = %q, want %q", got.State, updateStateSuccess)
+	}
+
+	rollbackBody := `{"runId":"2","state":"failed","exitCode":2,"finishedAt":1735689612,"rolledBack":true,"rollbackHealthy":true}`
+	if err := os.WriteFile(path, []byte(rollbackBody), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	got = svc.GetUpdateStatus()
+	if !got.RolledBack || !got.RollbackHealthy {
+		t.Fatalf("rollback status = %+v, want successful automatic rollback", got)
 	}
 
 	if err := os.WriteFile(path, []byte("not json"), 0o644); err != nil {

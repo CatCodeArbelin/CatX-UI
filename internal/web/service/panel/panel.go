@@ -4,8 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -18,6 +16,7 @@ import (
 	"time"
 
 	"github.com/mhsanaei/3x-ui/v3/internal/config"
+	"github.com/mhsanaei/3x-ui/v3/internal/forkrelease"
 	"github.com/mhsanaei/3x-ui/v3/internal/logger"
 	"github.com/mhsanaei/3x-ui/v3/internal/web/global"
 	"github.com/mhsanaei/3x-ui/v3/internal/web/service"
@@ -31,25 +30,29 @@ type PanelService struct{}
 // On the dev channel the version fields carry a "dev+<sha>" label and the commit
 // fields hold the short SHAs that drive the update-available decision.
 type PanelUpdateInfo struct {
-	Channel         string `json:"channel"`
-	CurrentVersion  string `json:"currentVersion"`
-	LatestVersion   string `json:"latestVersion"`
-	CurrentCommit   string `json:"currentCommit,omitempty"`
-	LatestCommit    string `json:"latestCommit,omitempty"`
-	UpdateAvailable bool   `json:"updateAvailable"`
+	Channel             string `json:"channel"`
+	CurrentVersion      string `json:"currentVersion"`
+	LatestVersion       string `json:"latestVersion"`
+	UpstreamBaseVersion string `json:"upstreamBaseVersion"`
+	BundledXrayVersion  string `json:"bundledXrayVersion"`
+	ReleaseRepository   string `json:"releaseRepository"`
+	CurrentCommit       string `json:"currentCommit,omitempty"`
+	LatestCommit        string `json:"latestCommit,omitempty"`
+	UpdateAvailable     bool   `json:"updateAvailable"`
 }
 
 const (
-	panelUpdaterURL      = "https://raw.githubusercontent.com/MHSanaei/3x-ui/main/update.sh"
 	maxPanelUpdaterBytes = 2 << 20
-	// devReleaseTag is the fixed-tag rolling pre-release the CI force-moves to the
-	// newest main commit; the dev update channel installs from it.
-	devReleaseTag = "dev-latest"
 
 	updateStatePending = "pending"
 	updateStateSuccess = "success"
 	updateStateFailed  = "failed"
 )
+
+var newPanelReleaseProvider = func(timeout time.Duration) forkrelease.Provider {
+	client := (&service.SettingService{}).NewProxiedHTTPClient(timeout)
+	return forkrelease.NewProvider(client)
+}
 
 // PanelUpdateStatus reports the outcome of the most recently launched panel
 // self-update. RunID lets the caller confirm this status belongs to the
@@ -60,10 +63,12 @@ const (
 // Number.MAX_SAFE_INTEGER), which would let two different runs round to the
 // same value on the wire and defeat the whole point of this field.
 type PanelUpdateStatus struct {
-	RunID      string `json:"runId" example:"1735689600123456789"`
-	State      string `json:"state" example:"success"`
-	ExitCode   int    `json:"exitCode" example:"0"`
-	FinishedAt int64  `json:"finishedAt" example:"1735689612"`
+	RunID           string `json:"runId" example:"1735689600123456789"`
+	State           string `json:"state" example:"success"`
+	ExitCode        int    `json:"exitCode" example:"0"`
+	FinishedAt      int64  `json:"finishedAt" example:"1735689612"`
+	RolledBack      bool   `json:"rolledBack"`
+	RollbackHealthy bool   `json:"rollbackHealthy"`
 }
 
 var releaseCommitRegex = regexp.MustCompile(`(?i)commit=([0-9a-f]{7,40})`)
@@ -136,12 +141,15 @@ func (s *PanelService) GetUpdateInfo() (*PanelUpdateInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	current := config.GetBaseVersion()
+	current := config.GetForkVersion()
 	return &PanelUpdateInfo{
-		Channel:         "stable",
-		CurrentVersion:  current,
-		LatestVersion:   latest,
-		UpdateAvailable: isNewerVersion(latest, current),
+		Channel:             string(forkrelease.ChannelStable),
+		CurrentVersion:      current,
+		LatestVersion:       latest,
+		UpstreamBaseVersion: config.GetUpstreamBaseVersion(),
+		BundledXrayVersion:  config.GetBundledXrayVersion(),
+		ReleaseRepository:   forkrelease.Current.RepositorySlug(),
+		UpdateAvailable:     isNewerVersion(latest, current),
 	}, nil
 }
 
@@ -158,7 +166,7 @@ func devChannelActive() bool {
 // getDevUpdateInfo compares the running commit against the commit recorded in the
 // rolling dev release.
 func getDevUpdateInfo() (*PanelUpdateInfo, error) {
-	release, err := fetchPanelRelease(devReleaseTag)
+	release, err := fetchPanelRelease(forkrelease.ChannelDev)
 	if err != nil {
 		return nil, err
 	}
@@ -168,16 +176,19 @@ func getDevUpdateInfo() (*PanelUpdateInfo, error) {
 	}
 	currentCommit := config.GetBuildCommit()
 	return &PanelUpdateInfo{
-		Channel:         "dev",
-		CurrentVersion:  config.GetPanelVersion(),
-		CurrentCommit:   shortCommit(currentCommit),
-		LatestCommit:    shortCommit(latestCommit),
-		LatestVersion:   "dev+" + shortCommit(latestCommit),
-		UpdateAvailable: !commitsEqual(currentCommit, latestCommit),
+		Channel:             string(forkrelease.ChannelDev),
+		CurrentVersion:      config.GetPanelVersion(),
+		LatestVersion:       "dev+" + shortCommit(latestCommit),
+		UpstreamBaseVersion: config.GetUpstreamBaseVersion(),
+		BundledXrayVersion:  config.GetBundledXrayVersion(),
+		ReleaseRepository:   forkrelease.Current.RepositorySlug(),
+		CurrentCommit:       shortCommit(currentCommit),
+		LatestCommit:        shortCommit(latestCommit),
+		UpdateAvailable:     !commitsEqual(currentCommit, latestCommit),
 	}, nil
 }
 
-// StartUpdate starts the official updater using this panel's own channel
+// StartUpdate starts the verified CatX-UI updater using this panel's own channel
 // setting. Returns the run ID to pass to GetUpdateStatus so the caller can
 // tell this run's result apart from a stale one.
 func (s *PanelService) StartUpdate() (int64, error) {
@@ -233,7 +244,16 @@ func (s *PanelService) startUpdate(useDev bool) (int64, error) {
 		return 0, fmt.Errorf("bash is required to run the panel updater: %w", err)
 	}
 
-	scriptPath, err := downloadPanelUpdater()
+	channel := forkrelease.ChannelStable
+	if useDev {
+		channel = forkrelease.ChannelDev
+	}
+	release, err := fetchPanelRelease(channel)
+	if err != nil {
+		return 0, fmt.Errorf("resolve CatX-UI %s release: %w", channel, err)
+	}
+
+	scriptPath, err := downloadPanelUpdater(release)
 	if err != nil {
 		return 0, err
 	}
@@ -241,10 +261,9 @@ func (s *PanelService) startUpdate(useDev bool) (int64, error) {
 	statusFile := config.GetUpdateStatusFilePath()
 
 	mainFolder, serviceFolder := resolveUpdateFolders()
-	updateTag := ""
-	if useDev {
-		updateTag = devReleaseTag
-	}
+	// Pin the updater to the exact release whose metadata and script payload we
+	// verified. This avoids a releases/latest change between download and run.
+	updateTag := release.TagName
 	updateScript := fmt.Sprintf("set -e; trap 'rm -f %s' EXIT; %s %s", shellQuote(scriptPath), shellQuote(bash), shellQuote(scriptPath))
 	runIDEnv := "XUI_UPDATE_RUN_ID=" + strconv.FormatInt(runID, 10)
 	statusFileEnv := "XUI_UPDATE_STATUS_FILE=" + statusFile
@@ -371,22 +390,14 @@ func releaseUpdateSlot() {
 	updateMu.Unlock()
 }
 
-func downloadPanelUpdater() (string, error) {
-	client := (&service.SettingService{}).NewProxiedHTTPClient(15 * time.Second)
-	req, reqErr := http.NewRequestWithContext(context.Background(), http.MethodGet, panelUpdaterURL, nil)
-	if reqErr != nil {
-		return "", fmt.Errorf("download panel updater: %w", reqErr)
-	}
-	resp, err := client.Do(req)
+func downloadPanelUpdater(release *forkrelease.Release) (string, error) {
+	provider := newPanelReleaseProvider(15 * time.Second)
+	payload, err := provider.DownloadVerified(context.Background(), release, forkrelease.Current.UpdateScriptAssetName(), maxPanelUpdaterBytes)
 	if err != nil {
-		return "", fmt.Errorf("download panel updater: %w", err)
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("download panel updater: unexpected HTTP %d", resp.StatusCode)
+		return "", fmt.Errorf("download verified CatX-UI updater: %w", err)
 	}
 
-	file, err := os.CreateTemp("", "3x-ui-update-*.sh")
+	file, err := os.CreateTemp("", "catx-ui-update-*.sh")
 	if err != nil {
 		return "", err
 	}
@@ -399,15 +410,8 @@ func downloadPanelUpdater() (string, error) {
 		}
 	}()
 
-	n, err := io.Copy(file, io.LimitReader(resp.Body, maxPanelUpdaterBytes+1))
-	if err != nil {
+	if _, err := file.Write(payload); err != nil {
 		return "", fmt.Errorf("write panel updater: %w", err)
-	}
-	if n == 0 {
-		return "", fmt.Errorf("panel updater download is empty")
-	}
-	if n > maxPanelUpdaterBytes {
-		return "", fmt.Errorf("panel updater exceeds %d bytes", maxPanelUpdaterBytes)
 	}
 	if err := file.Chmod(0o700); err != nil {
 		return "", err
@@ -417,7 +421,7 @@ func downloadPanelUpdater() (string, error) {
 }
 
 func fetchLatestPanelVersion() (string, error) {
-	release, err := fetchPanelRelease("")
+	release, err := fetchPanelRelease(forkrelease.ChannelStable)
 	if err != nil {
 		return "", err
 	}
@@ -427,38 +431,17 @@ func fetchLatestPanelVersion() (string, error) {
 	return release.TagName, nil
 }
 
-// fetchPanelRelease fetches a release from GitHub. An empty tag resolves the
-// latest stable release; a non-empty tag (e.g. dev-latest) resolves that tag.
-func fetchPanelRelease(tag string) (*service.Release, error) {
-	url := "https://api.github.com/repos/MHSanaei/3x-ui/releases/latest"
-	if tag != "" {
-		url = "https://api.github.com/repos/MHSanaei/3x-ui/releases/tags/" + tag
-	}
-	client := (&service.SettingService{}).NewProxiedHTTPClient(10 * time.Second)
-	req, reqErr := http.NewRequestWithContext(context.Background(), http.MethodGet, url, nil)
-	if reqErr != nil {
-		return nil, reqErr
-	}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("GitHub API returned status %d: %s", resp.StatusCode, resp.Status)
-	}
-
-	var release service.Release
-	if err := json.NewDecoder(resp.Body).Decode(&release); err != nil {
-		return nil, err
-	}
-	return &release, nil
+// fetchPanelRelease resolves only CatX-UI-owned stable/dev release metadata and
+// rejects release identities outside the fork repository.
+func fetchPanelRelease(channel forkrelease.Channel) (*forkrelease.Release, error) {
+	provider := newPanelReleaseProvider(10 * time.Second)
+	return provider.Fetch(context.Background(), channel)
 }
 
 // extractReleaseCommit reads the build commit recorded in the dev release: first
 // the `commit=<sha>` marker the CI writes into the body, falling back to the
 // tag's target commit.
-func extractReleaseCommit(release *service.Release) string {
+func extractReleaseCommit(release *forkrelease.Release) string {
 	if m := releaseCommitRegex.FindStringSubmatch(release.Body); m != nil {
 		return strings.ToLower(m[1])
 	}

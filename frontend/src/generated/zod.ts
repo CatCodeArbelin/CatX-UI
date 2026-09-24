@@ -890,6 +890,8 @@ export type OutboundTraffics = z.infer<typeof OutboundTrafficsSchema>;
 export const PanelUpdateStatusSchema = z.object({
   exitCode: z.number().int(),
   finishedAt: z.number().int(),
+  rollbackHealthy: z.boolean(),
+  rolledBack: z.boolean(),
   runId: z.string(),
   state: z.string(),
 });
