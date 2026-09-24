@@ -2,201 +2,93 @@
 
 ## Work Package
 
-`WP-0A — Foundation Guardrails`
+`WP-0B — Release Identity & Updater Safety`
 
 ## Recommended model
 
-**Luna Medium**
-
-## Branch
-
-```text
-feature/wp-0a-foundation-guardrails
-```
-
-The agent is allowed to manage this work-package branch, create checkpoint commits, and push it.
-
-Do not merge into `develop` until the merge gate is satisfied.
-
----
+**GPT-5.6 Sol High**
 
 ## Mandatory reads
 
-1. `AGENTS.md`
-2. `CURRENT_TASK.md`
-3. `TASK_QUEUE.md`
-4. `docs/19_REPOSITORY_MAP.md`
-5. `docs/05_TESTING_ROLLBACK_RELEASE.md`
-6. `docs/15_DEFINITION_OF_DONE.md`
-7. `skills/test-release-guardian/SKILL.md`
-8. `skills/feature-implementer/SKILL.md`
+- `AGENTS.md`
+- `CURRENT_TASK.md`
+- `TASK_QUEUE.md`
+- `docs/19_REPOSITORY_MAP.md`
+- `docs/12_UPDATER_IDENTITY.md`
+- `docs/05_TESTING_ROLLBACK_RELEASE.md`
+- `docs/15_DEFINITION_OF_DONE.md`
+- `docs/04_UPSTREAM_SYNC.md`
+- `adr/0004-own-updater.md`
+- `skills/test-release-guardian/SKILL.md`
+- `skills/security-privacy-review/SKILL.md`
+- `skills/feature-implementer/SKILL.md`
 
-Do not read every Markdown file.
+## Scope
 
----
+### CP-0B.1 — CatX-UI identity and version model
 
-## Important current state
+- fork version;
+- upstream base version;
+- Xray version remains separate;
+- stable/dev release channels;
+- no fake or hardcoded version ambiguity.
 
-The previous TASK-002 attempt created `docs/20_BASELINE_COMPATIBILITY.md`, but local verification was blocked because the environment reported:
+### CP-0B.2 — Updater isolation
 
-```text
-required Go: 1.27.1
-installed Go: 1.23.3
-make: unavailable
-```
+- audit and retarget all official-upstream update/install paths;
+- verified hotspots include:
+  - `internal/web/service/panel/panel.go`
+  - `update.sh`
+  - `x-ui.sh`
+  - `install.sh`
+  - `.github/workflows/release.yml`
+- CatX-UI must never accidentally install an official `MHSanaei/3x-ui` binary.
 
-Therefore baseline verification is NOT considered complete yet.
+### CP-0B.3 — Release integrity
 
-Do not claim green verification until the required checks actually execute in an approved environment.
+- CatX-UI-owned release source;
+- consistent artifact naming;
+- checksum/integrity verification;
+- tests that reject wrong repository/assets;
+- no arbitrary unverified update payload.
 
----
+### CP-0B.4 — Transactional updater
 
-# WP-0A Scope
-
-## CP-0A.1 — Baseline Compatibility
-
-First:
-
-1. inspect the existing `docs/20_BASELINE_COMPATIBILITY.md`;
-2. inspect existing upstream tests;
-3. preserve/reuse existing coverage;
-4. add only missing baseline tests/fixtures;
-5. determine the best available verification environment.
-
-Allowed verification environments, in preference order:
-
-```text
-existing working local toolchain
-WSL toolchain
-existing repository-supported container/CI workflow
-GitHub CI
-```
-
-Do not silently install arbitrary system software. Local absence of Go 1.27.1,
-`make`, WSL, or Docker is not a blocker by itself. When local verification is
-insufficient, use the existing GitHub Actions workflows or add a focused
-CatX-UI branch verification workflow on Ubuntu, using the Go version required
-by `go.mod` and the repository's existing commands. Push the checkpoint,
-trigger CI, and monitor the result before declaring verification complete.
-
-Stop only for a genuine external blocker that cannot be resolved inside the
-repository, such as inaccessible/disabled GitHub Actions, unavailable
-repository permissions, a missing required secret/credential, or an
-architectural decision that materially changes the approved specification.
-
-## CP-0A.2 — Fixed No-op Fork Hooks
-
-After baseline coverage is established:
-
-- implement only the smallest fixed first-party hook contracts identified in `docs/19_REPOSITORY_MAP.md`;
-- no generic plugin framework;
-- no product behavior;
-- exact no-op defaults;
-- preserve baseline behavior.
-
-Create a focused checkpoint commit.
-
-## CP-0A.3 — `make verify-fork` + CI
-
-Add an additive fork verification target.
-
-Do not alter the semantics of upstream `make verify`.
-
-Add CI invocation using existing repository patterns.
-
-Create a focused checkpoint commit.
-
-## CP-0A.4 — Fork Settings / Feature Flags
-
-Add a fork-owned settings facade with these initial flags:
+Required flow:
 
 ```text
-analytics.enabled
-dns_intelligence.enabled
-policies.enabled
-traffic_control.enabled
-security_anomaly.enabled
+download → verify → stage → backup → install candidate → migrate → start → healthcheck → commit
 ```
 
-Defaults:
+Failure flow:
 
 ```text
-OFF
+restore previous binary/config/state → recover DB as required → start → healthcheck → audit/report
 ```
 
-Requirements:
+### CP-0B.5 — Verification
 
-- SQLite + PostgreSQL compatible;
-- no unrelated upstream setting-field sprawl;
-- all OFF preserves baseline behavior.
+- unit tests for version/release selection;
+- fake release provider/server where appropriate;
+- updater failure-path tests;
+- rollback tests;
+- GitHub Actions verification;
+- preserve existing `make verify-fork`;
+- no weakening of WP-0A gates.
 
-Create a focused checkpoint commit.
+## Critical rules
 
-## CP-0A.5 — Empty API / OpenAPI / Frontend Registries
+- Preserve upstream 3x-ui architecture.
+- Do not rewrite the panel updater into a separate control plane.
+- Minimize permanent upstream-touch points.
+- Do not touch Policy Engine, Analytics, DNS Intelligence, or QoS.
+- Do not fork xray-core.
+- Do not change `main`.
+- Do not begin WP-0C.
+- Do not merge into `develop` during implementation.
+- Every dangerous updater action must have recovery.
+- Tests must actually run; green claims without execution are forbidden.
 
-Add minimal no-op registries/descriptors for future fork features.
+## Administrative boundary
 
-Verified integration areas are documented in `docs/19_REPOSITORY_MAP.md`.
-
-Do not add product feature pages.
-
-Create a focused checkpoint commit.
-
----
-
-# Git Automation Rules
-
-At the beginning:
-
-1. inspect current branch and working tree;
-2. if currently on the old `feature/task-002-baseline-compatibility` branch, preserve its uncommitted/committed baseline-document work;
-3. create or switch to:
-
-```text
-feature/wp-0a-foundation-guardrails
-```
-
-from the current `develop` baseline;
-4. carry forward only legitimate WP-0A work.
-
-During the package:
-
-- create one focused commit per checkpoint;
-- push after each checkpoint;
-- do not rewrite upstream history;
-- do not merge into `develop`.
-
----
-
-# Merge Gate
-
-WP-0A is complete only if:
-
-- baseline compatibility coverage exists;
-- no-op hooks preserve baseline behavior;
-- `make verify-fork` exists;
-- CI gate exists;
-- feature flags default OFF;
-- empty registries exist;
-- required relevant tests have actually passed in an approved environment;
-- no production behavior change occurs with all fork features OFF;
-- no unrelated refactor exists.
-
-If verification is blocked:
-
-**STOP. DO NOT MERGE.**
-
-Report the exact blocker.
-
----
-
-# Completion Behavior
-
-When all WP-0A checkpoints and verification pass:
-
-1. ensure working tree is clean;
-2. ensure checkpoint commits are pushed;
-3. provide a concise summary of commits/tests;
-4. stop.
-
-Do not start WP-0B automatically.
+This task activates WP-0B only. Do not begin implementation until the work-package branch is prepared and reviewed.

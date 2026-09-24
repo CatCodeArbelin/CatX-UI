@@ -10,7 +10,7 @@ The agent must stop before entering the next work package.
 
 # PHASE 0 — Fork Safety Foundation
 
-## WP-0A — Foundation Guardrails
+## WP-0A — Foundation Guardrails — DONE
 
 Recommended model: `Luna Medium`
 
@@ -84,7 +84,7 @@ If local Windows cannot run required tests, use an approved alternative such as 
 
 ---
 
-## WP-0B — Release Identity & Updater Safety
+## WP-0B — Release Identity & Updater Safety — CURRENT
 
 Recommended model: `Sol High`
 
