@@ -2,68 +2,71 @@
 
 ## Work Package
 
-`WP-2A — DNS & Evidence Fusion`
+`WP-2B — Enrichment & Classification`
+
+Recommended model: `GPT-5.6 Luna Medium`
 
 ## Goal
 
-Correlate DNS, destination IP/domain, visible SNI/TLS metadata, and existing
-analytics events into a unified evidence model without TLS MITM or content
-inspection.
+Turn normalized destination evidence from WP-2A into useful service/category metadata while preserving provenance and confidence.
 
 ## Required
 
-- DNS observation ingestion interfaces;
-- correlation between DNS answers and subsequent destination IP connections;
-- destination domain/IP evidence fusion;
-- visible SNI evidence where available;
-- provenance/source tracking for every inferred domain/service hint;
-- confidence score/level;
-- deduplication and expiration/TTL semantics;
-- client-aware correlation;
-- safe behavior when evidence is ambiguous or conflicting;
-- persistence using the existing WP-1A analytics layer;
-- no duplicate client/group/node models;
-- no duplicate traffic counters;
-- analytics OFF = exact no-op.
+- domain/service enrichment pipeline;
+- IP → ASN/country metadata;
+- service identification;
+- category identification;
+- confidence/provenance for every classification;
+- first-party vs inferred classification distinction;
+- caching;
+- bounded refresh/update behavior;
+- safe fallback to `unknown`;
+- persistence using existing analytics storage;
+- no duplicate traffic/client/node models.
 
-Evidence must distinguish at minimum:
+Initial useful categories should support examples such as:
 
-- directly observed domain;
-- DNS-derived domain;
-- SNI-derived domain;
-- IP-only destination;
-- inferred correlation.
+- social;
+- video/streaming;
+- messaging;
+- gaming;
+- cloud/CDN;
+- search;
+- software/update;
+- advertising;
+- adult;
+- gambling;
+- unknown.
 
 ## Hard constraints
 
 - no TLS MITM;
-- no decrypted HTTPS;
-- no cookies;
-- no Authorization headers;
-- no credentials;
-- no request/response body capture;
-- do not implement service/category classification yet — WP-2B;
-- do not implement DNS UI/privacy controls yet — WP-2C;
-- evidence-fusion failure must never affect Xray/panel operation;
-- reuse WP-1A/WP-1B analytics storage and session pipeline;
+- no payload/content inspection;
+- classification must never be presented as certain when evidence is weak;
+- conflicting providers/evidence must remain explainable;
+- no Policy Engine yet;
+- no blocking yet;
+- no DNS UI yet;
+- enrichment failure must never affect Xray or panel core;
+- analytics OFF = exact no-op;
 - minimal upstream-touch points;
 - `make verify-fork` must remain green.
 
 ## Required tests
 
-- DNS → IP correlation;
-- TTL expiry;
-- ambiguous/multiple-domain evidence;
-- SNI precedence/provenance;
-- client isolation;
-- deduplication;
-- restart/persistence behavior;
-- race/concurrency where relevant;
-- SQLite/PostgreSQL where applicable.
+- exact domain classification;
+- subdomain inheritance where appropriate;
+- conflicting classification;
+- ASN/GeoIP enrichment;
+- cache expiry;
+- unknown fallback;
+- confidence/provenance;
+- SQLite/PostgreSQL where applicable;
+- concurrency/race where relevant.
 
 ## Restrictions
 
 - do not modify `main`;
-- do not start WP-2B;
-- do not implement WP-2C;
-- do not merge WP-2A into `develop` until its merge gate is satisfied.
+- do not start WP-2C;
+- do not start the Policy Engine;
+- do not merge WP-2B into `develop` until its merge gate is satisfied.

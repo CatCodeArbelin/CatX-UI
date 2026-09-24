@@ -190,7 +190,7 @@ Includes:
 
 # PHASE 2 — DNS / Destination Intelligence
 
-## WP-2A — DNS & Evidence Fusion — CURRENT
+## WP-2A — DNS & Evidence Fusion — DONE
 
 Recommended model: `Sol High`
 
@@ -205,7 +205,7 @@ No TLS MITM.
 
 ---
 
-## WP-2B — Enrichment & Classification
+## WP-2B — Enrichment & Classification — CURRENT
 
 Recommended model: `Luna Medium`
 
