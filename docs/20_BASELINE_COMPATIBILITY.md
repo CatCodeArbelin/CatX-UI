@@ -2,7 +2,7 @@
 
 ## Baseline commit / upstream version
 
-- Checked-out baseline commit: `4f8646729c204693a741082ddee7fe941079ea8a` (`docs: revise roadmap after repository audit`).
+- Checked-out baseline commit: `ee7d2b2a` (`docs: allow GitHub Actions verification fallback`).
 - Upstream base: `v3.8.5`.
 - Fork state: upstream-compatible source plus documentation; no fork hooks or product features are enabled.
 
@@ -86,6 +86,10 @@ Verification blockers observed in this environment:
 
 - `go test ./internal/web/service ./internal/sub ./internal/database ./internal/xray/...` could not start because the repository requires Go `1.27.1`, while the installed toolchain is `go1.23.3`; automatic download of `go1.27.1` was denied by the restricted network.
 - `make verify` could not start because `make` is not installed or available on `PATH`.
+
+The repository's existing GitHub Actions workflow is the approved fallback for
+the required Go 1.27.1 verification. The WP-0A CI checkpoint adds the
+fork-specific invocation without changing the upstream `make verify` target.
 
 ## Commands to run
 
