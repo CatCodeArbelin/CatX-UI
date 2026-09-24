@@ -1,6 +1,6 @@
 import type { RouteObject } from 'react-router';
 
-import type { Section } from '../pages/api-docs/endpoints';
+import type { Section } from '../pages/api-docs/endpoints.ts';
 
 export interface ForkNavigationItem {
   key: string;

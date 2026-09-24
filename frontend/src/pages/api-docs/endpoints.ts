@@ -1,4 +1,4 @@
-import { forkApiSections } from '../../forkext/registry';
+import { forkApiSections } from '../../forkext/registry.ts';
 
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD';
 export type ParamLocation =
