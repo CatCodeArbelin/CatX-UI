@@ -89,8 +89,14 @@ verify: gen-check lint format-check typecheck msw-worker-check test build build-
 
 .PHONY: test-fork-go
 test-fork-go: dist-stub ## Fork-owned foundation tests
-	go test -race -shuffle=on -count=1 ./internal/forkext/...
+	go test -race -shuffle=on -count=1 ./internal/forkext/... ./internal/forkrelease/... ./internal/web/service/panel/...
+
+.PHONY: test-fork-release
+test-fork-release: ## Fork release identity, integrity, and rollback tests
+	bash -n update.sh install.sh x-ui.sh scripts/catx-update-transaction.sh scripts/test-release-identity.sh scripts/test-update-transaction.sh
+	bash scripts/test-release-identity.sh
+	bash scripts/test-update-transaction.sh
 
 .PHONY: verify-fork
-verify-fork: verify test-fork-go ## Upstream gate plus fork-owned verification
+verify-fork: verify test-fork-go test-fork-release ## Upstream gate plus fork-owned verification
 	@echo "verify-fork: OK"
