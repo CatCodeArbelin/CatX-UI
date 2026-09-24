@@ -1,3 +1,5 @@
+import { forkApiSections } from '@/forkext/registry';
+
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD';
 export type ParamLocation =
   | 'path'
@@ -2734,4 +2736,5 @@ export const sections: readonly Section[] = [
       },
     ],
   },
+  ...forkApiSections,
 ];
