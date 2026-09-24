@@ -86,3 +86,11 @@ build-storybook: ## Build the static Storybook (compile-checks all stories)
 .PHONY: verify
 verify: gen-check lint format-check typecheck msw-worker-check test build build-storybook ## Full local gate (mirrors CI)
 	@echo "verify: OK"
+
+.PHONY: test-fork-go
+test-fork-go: dist-stub ## Fork-owned foundation tests
+	go test -race -shuffle=on -count=1 ./internal/forkext/...
+
+.PHONY: verify-fork
+verify-fork: verify test-fork-go ## Upstream gate plus fork-owned verification
+	@echo "verify-fork: OK"

@@ -1,0 +1,46 @@
+name: Fork verification
+
+on:
+  pull_request:
+    paths:
+      - "**.go"
+      - "go.mod"
+      - "go.sum"
+      - "frontend/**"
+      - ".nvmrc"
+      - "Makefile"
+      - ".github/workflows/**"
+  push:
+    branches:
+      - "feature/wp-0a-foundation-guardrails"
+    paths:
+      - "**.go"
+      - "go.mod"
+      - "go.sum"
+      - "frontend/**"
+      - ".nvmrc"
+      - "Makefile"
+      - ".github/workflows/**"
+
+permissions:
+  contents: read
+
+jobs:
+  verify-fork:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: frontend
+      - name: Run upstream and fork verification
+        run: make verify-fork
