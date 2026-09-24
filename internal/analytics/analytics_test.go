@@ -44,7 +44,7 @@ func TestMigrationIsOptInAndSQLiteCRUDRetention(t *testing.T) {
 	}
 	enableAnalytics(t, db)
 
-	for _, m := range []any{&DestinationObservation{}, &DNSObservation{}, &NetworkSession{}, &ServiceCategoryAggregate{}} {
+	for _, m := range []any{&DestinationObservation{}, &DNSObservation{}, &NetworkSession{}, &ServiceCategoryAggregate{}, &EvidenceObservation{}} {
 		if !db.Migrator().HasTable(m) {
 			t.Fatalf("missing table for %T", m)
 		}
@@ -55,8 +55,18 @@ func TestMigrationIsOptInAndSQLiteCRUDRetention(t *testing.T) {
 	if err := repo.RecordDestination(ctx, MetadataEvent{ObservedAt: now.UnixMilli(), ClientEmail: "alice", Domain: "example.com", Port: 443, Protocol: "tls", Source: SourceSNI, Provenance: ProvenanceObserved, Confidence: 1}); err != nil {
 		t.Fatalf("record destination: %v", err)
 	}
-	if err := repo.RecordDNS(ctx, DNSObservation{ObservedAt: now.UnixMilli(), ClientEmail: "alice", Domain: "example.com", RecordType: "A", ResolvedIP: "192.0.2.1", Source: SourceDNSObserver, Provenance: ProvenanceObserved, Confidence: .9}); err != nil {
+	if err := repo.RecordDNS(ctx, DNSObservation{ObservedAt: now.UnixMilli(), ClientEmail: "alice", Domain: "example.com", RecordType: "A", ResolvedIP: "192.0.2.1", Source: SourceDNSObserver, Provenance: ProvenanceObserved, Confidence: .9, ExpiresAt: now.Add(time.Hour).UnixMilli(), EventKey: "dns-test"}); err != nil {
 		t.Fatalf("record dns: %v", err)
+	}
+	if err := repo.RecordDNS(ctx, DNSObservation{ObservedAt: now.UnixMilli(), ClientEmail: "alice", Domain: "example.com", RecordType: "A", ResolvedIP: "192.0.2.1", Source: SourceDNSObserver, Provenance: ProvenanceObserved, Confidence: .9, ExpiresAt: now.Add(time.Hour).UnixMilli(), EventKey: "dns-test"}); err != nil {
+		t.Fatalf("deduplicate dns: %v", err)
+	}
+	activeDNS, err := repo.ActiveDNSForDestination(ctx, "alice", 0, 0, "192.0.2.1", now.UnixMilli()+1)
+	if err != nil || len(activeDNS) != 1 {
+		t.Fatalf("active dns = %d, %v", len(activeDNS), err)
+	}
+	if err := repo.RecordEvidence(ctx, EvidenceObservation{ObservedAt: now.UnixMilli(), ClientEmail: "alice", Domain: "example.com", DestinationIP: "192.0.2.1", Kind: EvidenceDNSDomain, Source: SourceDNSObserver, Provenance: ProvenanceCorrelated, Confidence: .75, Level: ConfidenceMedium, Selected: true, EventKey: "evidence-test"}); err != nil {
+		t.Fatalf("record evidence: %v", err)
 	}
 	if err := repo.UpsertSession(ctx, NetworkSession{SessionKey: "s1", ClientEmail: "alice", FirstSeen: now.UnixMilli(), LastSeen: now.UnixMilli(), Protocol: "tls", Source: SourceXray, Provenance: ProvenanceCorrelated, Confidence: .8}); err != nil {
 		t.Fatalf("record session: %v", err)
@@ -130,11 +140,11 @@ func TestPostgresSchemaAndCRUD(t *testing.T) {
 	if err != nil {
 		t.Fatalf("open postgres: %v", err)
 	}
-	for _, m := range []any{&DestinationObservation{}, &DNSObservation{}, &NetworkSession{}, &ServiceCategoryAggregate{}} {
+	for _, m := range []any{&DestinationObservation{}, &DNSObservation{}, &NetworkSession{}, &ServiceCategoryAggregate{}, &EvidenceObservation{}} {
 		_ = db.Migrator().DropTable(m)
 	}
 	t.Cleanup(func() {
-		for _, m := range []any{&DestinationObservation{}, &DNSObservation{}, &NetworkSession{}, &ServiceCategoryAggregate{}} {
+		for _, m := range []any{&DestinationObservation{}, &DNSObservation{}, &NetworkSession{}, &ServiceCategoryAggregate{}, &EvidenceObservation{}} {
 			_ = db.Migrator().DropTable(m)
 		}
 	})
@@ -143,5 +153,8 @@ func TestPostgresSchemaAndCRUD(t *testing.T) {
 	}
 	if err := NewRepository(db, true).RecordDestination(context.Background(), MetadataEvent{ObservedAt: time.Now().UnixMilli(), Domain: "example.com", Source: SourceDestination, Provenance: ProvenanceObserved, Confidence: 1}); err != nil {
 		t.Fatalf("postgres CRUD: %v", err)
+	}
+	if err := NewRepository(db, true).RecordEvidence(context.Background(), EvidenceObservation{ObservedAt: time.Now().UnixMilli(), Domain: "example.com", DestinationIP: "192.0.2.1", Kind: EvidenceDirectDomain, Source: SourceDestination, Provenance: ProvenanceObserved, Confidence: 1, Level: ConfidenceHigh, EventKey: "postgres-evidence"}); err != nil {
+		t.Fatalf("postgres evidence CRUD: %v", err)
 	}
 }

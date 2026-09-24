@@ -44,6 +44,12 @@ func RegisterMigrations(db *gorm.DB) error {
 		return nil
 	}
 	analytics.Configure(analytics.NewRepository(db, true), true)
+	dnsEnabled, err := NewSettings(db).Enabled(FlagDNSIntelligence)
+	if err != nil {
+		log.Printf("fork DNS intelligence disabled: cannot read feature flag: %v", err)
+		dnsEnabled = false
+	}
+	analytics.SetEvidenceEnabled(dnsEnabled)
 	return nil
 }
 
