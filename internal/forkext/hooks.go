@@ -6,7 +6,9 @@ package forkext
 
 import (
 	"context"
+	"log"
 
+	"github.com/mhsanaei/3x-ui/v3/internal/analytics"
 	"github.com/mhsanaei/3x-ui/v3/internal/eventbus"
 	"github.com/mhsanaei/3x-ui/v3/internal/xray"
 
@@ -19,9 +21,25 @@ import (
 // side effects while all fork features are disabled.
 func Install() {}
 
-// RegisterMigrations is the single database integration point reserved for
-// fork-owned migrations. No fork schema exists in WP-0A.
-func RegisterMigrations(_ *gorm.DB) error { return nil }
+// RegisterMigrations is the single database integration point for fork-owned
+// migrations. Analytics is opt-in; the default path is an exact no-op.
+func RegisterMigrations(db *gorm.DB) error {
+	if db == nil {
+		return nil
+	}
+	enabled, err := NewSettings(db).Enabled(FlagAnalytics)
+	if err != nil {
+		log.Printf("fork analytics disabled: cannot read feature flag: %v", err)
+		return nil
+	}
+	if !enabled {
+		return nil
+	}
+	if err := analytics.Migrate(db); err != nil {
+		log.Printf("fork analytics migration skipped after error: %v", err)
+	}
+	return nil
+}
 
 // RegisterRoutes is the protected API integration point for fork endpoints.
 // An empty registration preserves the upstream route set exactly.

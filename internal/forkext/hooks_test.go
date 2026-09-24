@@ -4,13 +4,41 @@ import (
 	"context"
 	"testing"
 
+	"github.com/mhsanaei/3x-ui/v3/internal/analytics"
+	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
 	"github.com/mhsanaei/3x-ui/v3/internal/eventbus"
 	"github.com/mhsanaei/3x-ui/v3/internal/xray"
 
 	"github.com/gin-gonic/gin"
 	"github.com/robfig/cron/v3"
+	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
+
+func TestAnalyticsMigrationFollowsFeatureFlag(t *testing.T) {
+	db, err := gorm.Open(sqlite.Open("file:forkext-analytics-migration?mode=memory&cache=shared"), &gorm.Config{})
+	if err != nil {
+		t.Fatalf("open sqlite: %v", err)
+	}
+	if err := db.AutoMigrate(&model.Setting{}); err != nil {
+		t.Fatalf("migrate settings: %v", err)
+	}
+	if err := RegisterMigrations(db); err != nil {
+		t.Fatalf("disabled migration: %v", err)
+	}
+	if db.Migrator().HasTable(&analytics.DestinationObservation{}) {
+		t.Fatal("analytics schema created while disabled")
+	}
+	if err := NewSettings(db).Set(FlagAnalytics, true); err != nil {
+		t.Fatalf("enable analytics: %v", err)
+	}
+	if err := RegisterMigrations(db); err != nil {
+		t.Fatalf("enabled migration: %v", err)
+	}
+	if !db.Migrator().HasTable(&analytics.DestinationObservation{}) {
+		t.Fatal("analytics schema missing while enabled")
+	}
+}
 
 func TestDisabledHooksAreExactNoOps(t *testing.T) {
 	if err := RegisterMigrations((*gorm.DB)(nil)); err != nil {
