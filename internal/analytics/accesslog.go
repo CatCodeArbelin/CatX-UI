@@ -299,6 +299,7 @@ func (t *Tailer) persist(ctx context.Context, q <-chan lineRecord, path string) 
 		}
 		events, sessions := make([]MetadataEvent, 0, len(batch)), make(map[string]NetworkSession)
 		evidence := NewEvidenceService(t.cfg.Repo, EvidenceEnabled())
+		enricher := CurrentEnricher()
 		for _, record := range batch {
 			e, ok := normalize(record)
 			if !ok {
@@ -306,9 +307,18 @@ func (t *Tailer) persist(ctx context.Context, q <-chan lineRecord, path string) 
 				continue
 			}
 			events = append(events, e)
-			if _, err := evidence.Correlate(ctx, DestinationInput{ObservedAt: time.UnixMilli(e.ObservedAt), ClientEmail: e.ClientEmail, NodeID: e.NodeID, InboundID: e.InboundID, DestinationIP: e.DestinationIP, DirectDomain: e.Domain, SessionKey: e.SessionKey, Source: e.Source, EventKey: e.EventKey}); err != nil {
+			correlated, err := evidence.Correlate(ctx, DestinationInput{ObservedAt: time.UnixMilli(e.ObservedAt), ClientEmail: e.ClientEmail, NodeID: e.NodeID, InboundID: e.InboundID, DestinationIP: e.DestinationIP, DirectDomain: e.Domain, SessionKey: e.SessionKey, Source: e.Source, EventKey: e.EventKey})
+			if err != nil {
 				t.cfg.Logger.Printf("analytics access.log evidence deferred: %v", err)
 			}
+			if err == nil {
+				result := enricher.Enrich(ctx, EnrichmentInput{ObservedAt: time.UnixMilli(e.ObservedAt), Domain: e.Domain, DestinationIP: e.DestinationIP, SNI: e.SNI, Evidence: correlated.Items})
+				e.Service, e.Category, e.ASN, e.Country = result.Service, result.Category, result.ASN, result.Country
+				e.ClassificationSource, e.ClassificationProvenance, e.ClassificationConfidence, e.ClassificationLevel = result.Source, result.Provenance, result.Confidence, result.Level
+				e.ClassificationFirstParty, e.ClassificationConflict = result.FirstParty, result.Conflict
+				e.ClassificationCandidates, e.ClassificationReason = result.CandidatesJSON, result.Reason
+			}
+			events[len(events)-1] = e
 			s := sessionFor(e)
 			if old, exists := sessions[s.SessionKey]; !exists || s.LastSeen > old.LastSeen {
 				if exists && old.FirstSeen < s.FirstSeen {
@@ -423,6 +433,7 @@ func Configure(repo Repository, enabled bool) {
 		repo = NoopRepository{}
 	}
 	configured.repo, configured.enabled, configured.evidenceEnabled = repo, enabled, false
+	ConfigureEnrichment(nil, enabled)
 }
 
 // SetEvidenceEnabled applies the independent DNS intelligence flag after the

@@ -74,7 +74,8 @@ func (r *GormRepository) RecordDestination(ctx context.Context, event MetadataEv
 	}
 	observation := DestinationObservation{ /* populated below for readable validation boundary */
 		ObservedAt: event.ObservedAt, ClientEmail: event.ClientEmail, ClientGroup: event.ClientGroup, NodeID: event.NodeID, InboundID: event.InboundID,
-		Domain: event.Domain, DestinationIP: event.DestinationIP, Port: event.Port, Protocol: event.Protocol, SNI: event.SNI, Category: event.Category,
+		Domain: event.Domain, DestinationIP: event.DestinationIP, Port: event.Port, Protocol: event.Protocol, SNI: event.SNI, Category: event.Category, Service: event.Service, ASN: event.ASN, Country: event.Country,
+		ClassificationSource: event.ClassificationSource, ClassificationProvenance: event.ClassificationProvenance, ClassificationConfidence: event.ClassificationConfidence, ClassificationLevel: event.ClassificationLevel, ClassificationFirstParty: event.ClassificationFirstParty, ClassificationConflict: event.ClassificationConflict, ClassificationCandidates: event.ClassificationCandidates, ClassificationReason: event.ClassificationReason,
 		SessionKey: event.SessionKey, EventKey: event.EventKey, Source: event.Source, Provenance: event.Provenance, Confidence: event.Confidence,
 	}
 	if event.EventKey == "" {
