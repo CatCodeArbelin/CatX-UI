@@ -2,31 +2,35 @@
 
 ## Work Package
 
-`WP-1B — access.log & Session Pipeline`
+`WP-1C — Client Activity API & UI`
 
 ## Goal
 
-Implement the metadata-only access.log and session ingestion pipeline on top of
-the WP-1A analytics foundation.
+Expose the analytics produced by WP-1A/WP-1B in the panel through a read-only
+client activity API and UI.
 
 ## Scope
 
-- incremental access.log tailer;
-- persistent cursor/offset;
-- file identity/inode handling;
-- log rotation and truncation;
-- partial-line handling;
-- bounded queues and backpressure;
-- batching;
-- graceful shutdown;
-- normalization into the WP-1A DestinationEvent model;
-- client/session correlation;
-- deduplication;
-- parser fuzz tests;
-- race/concurrency tests;
-- analytics OFF = exact no-op;
-- ingestion failure must never break Xray/panel;
-- no TLS MITM and no content capture.
+- read-only analytics API endpoints;
+- per-client recent activity timeline;
+- session history;
+- destination/domain display when known;
+- protocol, port, and source metadata;
+- first seen, last seen, and session counts;
+- traffic metadata only when reusable from existing upstream counters;
+- pagination and time-range filtering;
+- empty, loading, and error states;
+- analytics-disabled UI behavior;
+- frontend navigation through the WP-0A fork registry where appropriate;
+- backend/API tests and frontend tests.
 
-Do not implement WP-1C or unrelated policy, DNS collection, or UI work in this
-package.
+- reuse the WP-1A repositories;
+- do not create another analytics persistence layer;
+- do not duplicate upstream traffic counters;
+- do not add service/category classification; WP-2 owns enrichment;
+- raw domains/IPs may be displayed only when observed;
+- expose provenance/source where useful;
+- no TLS MITM or content inspection;
+- analytics failures must not affect Xray or panel core operation;
+- do not modify `main`;
+- do not merge WP-1C into `develop`.
