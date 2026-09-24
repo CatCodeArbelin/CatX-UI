@@ -72,9 +72,17 @@ existing repository-supported container/CI workflow
 GitHub CI
 ```
 
-Do not silently install arbitrary system software.
+Do not silently install arbitrary system software. Local absence of Go 1.27.1,
+`make`, WSL, or Docker is not a blocker by itself. When local verification is
+insufficient, use the existing GitHub Actions workflows or add a focused
+CatX-UI branch verification workflow on Ubuntu, using the Go version required
+by `go.mod` and the repository's existing commands. Push the checkpoint,
+trigger CI, and monitor the result before declaring verification complete.
 
-If no verification environment is available, stop with one concise blocker report instead of pretending the checkpoint is complete.
+Stop only for a genuine external blocker that cannot be resolved inside the
+repository, such as inaccessible/disabled GitHub Actions, unavailable
+repository permissions, a missing required secret/credential, or an
+architectural decision that materially changes the approved specification.
 
 ## CP-0A.2 — Fixed No-op Fork Hooks
 

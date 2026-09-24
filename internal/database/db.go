@@ -22,6 +22,7 @@ import (
 
 	"github.com/mhsanaei/3x-ui/v3/internal/config"
 	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
+	"github.com/mhsanaei/3x-ui/v3/internal/forkext"
 	"github.com/mhsanaei/3x-ui/v3/internal/util/crypto"
 	"github.com/mhsanaei/3x-ui/v3/internal/util/random"
 	"github.com/mhsanaei/3x-ui/v3/internal/xray"
@@ -2742,6 +2743,9 @@ func InitDB(dbPath string) error {
 	sqlDB.SetConnMaxIdleTime(30 * time.Minute)
 
 	if err := initModels(); err != nil {
+		return err
+	}
+	if err := forkext.RegisterMigrations(db); err != nil {
 		return err
 	}
 
