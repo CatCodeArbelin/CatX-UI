@@ -198,7 +198,7 @@ _catx_snapshot_database() {
 }
 
 _catx_restore_database() {
-    local backup="$1" kind db_folder db_parent failed_state restore_state
+    local backup="$1" kind db_folder failed_state restore_state
     kind=$(<"$backup/db-kind")
     if [[ "$kind" == "postgres" ]]; then
         pg_restore --clean --if-exists --single-transaction --no-owner --dbname="${XUI_DB_DSN}" "$backup/database.dump" > /dev/null
@@ -206,10 +206,11 @@ _catx_restore_database() {
     fi
     db_folder="${XUI_DB_FOLDER:-/etc/x-ui}"
     _catx_safe_directory "$db_folder" || return 1
-    db_parent=$(dirname "$db_folder")
-    _catx_safe_directory "$db_parent" || return 1
     failed_state="${catx_transaction_dir}/failed-database"
-    restore_state="${db_parent}/.catx-db-restore.$$"
+    # A sibling of the live directory is on the same filesystem, allowing the
+    # final rename to be atomic. The parent may legitimately be /etc; only the
+    # actual database directory is ever a replace/delete target.
+    restore_state="${db_folder}.catx-restore.$$"
     rm -rf -- "$failed_state"
     rm -rf -- "$restore_state"
     mkdir -p "$restore_state" || return 1
