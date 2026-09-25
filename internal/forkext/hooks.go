@@ -14,6 +14,7 @@ import (
 	"github.com/mhsanaei/3x-ui/v3/internal/eventbus"
 	"github.com/mhsanaei/3x-ui/v3/internal/policy"
 	"github.com/mhsanaei/3x-ui/v3/internal/policycompiler"
+	"github.com/mhsanaei/3x-ui/v3/internal/policysim"
 	"github.com/mhsanaei/3x-ui/v3/internal/xray"
 
 	"github.com/gin-gonic/gin"
@@ -76,6 +77,7 @@ func RegisterRoutes(api *gin.RouterGroup) {
 	analytics.RegisterActivityRoutes(api)
 	registerAnalyticsSettingsRoutes(api)
 	policy.RegisterRoutes(api)
+	policysim.RegisterRoutes(api)
 }
 
 // RegisterJobs is the fixed scheduler integration point for fork jobs.

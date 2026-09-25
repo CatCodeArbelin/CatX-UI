@@ -16983,6 +16983,183 @@
           }
         }
       }
+    },
+    "/panel/api/policies/simulate": {
+      "get": {
+        "tags": [
+          "Policies (CatX-UI)"
+        ],
+        "summary": "Simulate a persisted policy decision without applying Xray changes.",
+        "operationId": "get_panel_api_policies_simulate",
+        "parameters": [
+          {
+            "name": "clientEmail",
+            "in": "query",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "groupName",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "domain",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ip",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "service",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "at",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/policies/explain": {
+      "get": {
+        "tags": [
+          "Policies (CatX-UI)"
+        ],
+        "summary": "Explain the winning policy decision and losing candidates.",
+        "operationId": "get_panel_api_policies_explain",
+        "parameters": [
+          {
+            "name": "clientEmail",
+            "in": "query",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/policies/explain-route": {
+      "get": {
+        "tags": [
+          "Policies (CatX-UI)"
+        ],
+        "summary": "Preview route fragments from the real policy compiler.",
+        "operationId": "get_panel_api_policies_explain_route",
+        "parameters": [
+          {
+            "name": "clientEmail",
+            "in": "query",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

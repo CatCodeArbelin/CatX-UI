@@ -217,7 +217,7 @@ func (r *Repository) Resolve(ctx context.Context, clientEmail, groupName string,
 		if !p.Enabled {
 			continue
 		}
-		result.Items = append(result.Items, resolvedCandidate{Source: "temporary", PolicyID: o.PolicyID, TargetType: o.TargetType, TargetRef: o.TargetRef, Priority: o.Priority + p.Priority, CreatedAt: o.CreatedAt, ID: o.ID, Active: true, Scope: o.Scope})
+		result.Items = append(result.Items, resolvedCandidate{Source: "temporary", PolicyID: o.PolicyID, TargetType: o.TargetType, TargetRef: o.TargetRef, Priority: o.Priority + p.Priority, CreatedAt: o.CreatedAt, ID: o.ID, Active: true, Scope: o.Scope, StartsAt: o.StartsAt, ExpiresAt: o.ExpiresAt})
 	}
 	sortCandidates(result.Items)
 	return result, nil

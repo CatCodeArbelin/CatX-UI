@@ -2,6 +2,7 @@ package policy
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -67,6 +68,24 @@ func TestPolicyCRUDAndAssignments(t *testing.T) {
 	decisions, err := r.ResolveDecisions(ctx, []string{"alice@example.test"}, time.Now().UnixMilli())
 	if err != nil || len(decisions) != 1 || decisions[0].OverrideScope != ScopeDomain || len(decisions[0].Destinations) != 1 || decisions[0].Destinations[0] != "example.test" {
 		t.Fatalf("domain override was not scoped: %+v, %v", decisions, err)
+	}
+	var before int64
+	if err := db.Model(&Policy{}).Count(&before).Error; err != nil {
+		t.Fatal(err)
+	}
+	hypothetical, err := r.ResolveDecision(ctx, "alice@example.test", "staff", time.Now().UnixMilli())
+	if err != nil || hypothetical == nil || hypothetical.PolicyID != decisions[0].PolicyID {
+		t.Fatalf("hypothetical resolution diverged: %+v, %v", hypothetical, err)
+	}
+	var after int64
+	if err := db.Model(&Policy{}).Count(&after).Error; err != nil {
+		t.Fatal(err)
+	}
+	if before != after {
+		t.Fatal("hypothetical resolution mutated policy storage")
+	}
+	if _, err := json.Marshal(hypothetical); err != nil {
+		t.Fatalf("decision explanation is not serializable: %v", err)
 	}
 }
 
