@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
   Button,
@@ -117,8 +117,8 @@ export default function PolicyPage() {
   const [simulation, setSimulation] = useState<Simulation | null>(null);
   const [simLoading, setSimLoading] = useState(false);
 
-  const load = async () => {
-    setLoading(true);
+  const load = useCallback(async (showLoading = true) => {
+    if (showLoading) setLoading(true);
     setError('');
     const [p, a, o, t] = await Promise.all([
       HttpUtil.get<{ enabled: boolean; items: Policy[] }>('/panel/api/policies', undefined, {
@@ -141,10 +141,10 @@ export default function PolicyPage() {
     setOverrides(o.obj?.items || []);
     setTemporary(t.obj?.items || []);
     setLoading(false);
-  };
-  useEffect(() => {
-    void load();
   }, []);
+  useEffect(() => {
+    void load(false);
+  }, [load]);
 
   const openPolicy = (policy?: Policy) => {
     setEditing(policy || null);
@@ -209,44 +209,39 @@ export default function PolicyPage() {
     setSimLoading(false);
   };
 
-  const policyColumns: ColumnsType<Policy> = useMemo(
-    () => [
-      { title: 'Name', dataIndex: 'name' },
-      { title: 'Priority', dataIndex: 'priority' },
-      {
-        title: 'State',
-        render: (_, row) => (
-          <Tag color={row.enabled ? 'green' : 'default'}>
-            {row.enabled ? 'Enabled' : 'Disabled'}
-          </Tag>
-        ),
-      },
-      {
-        title: 'Specification',
-        render: (_, row) => (
-          <Typography.Text code ellipsis={{ tooltip: row.spec }}>
-            {row.spec}
-          </Typography.Text>
-        ),
-      },
-      {
-        title: 'Actions',
-        render: (_, row) => (
-          <Space>
-            <Button
-              aria-label={`Edit ${row.name}`}
-              icon={<EditOutlined />}
-              onClick={() => openPolicy(row)}
-            />
-            <Popconfirm title="Delete this policy?" onConfirm={() => void deletePolicy(row.id)}>
-              <Button danger aria-label={`Delete ${row.name}`} icon={<DeleteOutlined />} />
-            </Popconfirm>
-          </Space>
-        ),
-      },
-    ],
-    [policies],
-  );
+  const policyColumns: ColumnsType<Policy> = [
+    { title: 'Name', dataIndex: 'name' },
+    { title: 'Priority', dataIndex: 'priority' },
+    {
+      title: 'State',
+      render: (_, row) => (
+        <Tag color={row.enabled ? 'green' : 'default'}>{row.enabled ? 'Enabled' : 'Disabled'}</Tag>
+      ),
+    },
+    {
+      title: 'Specification',
+      render: (_, row) => (
+        <Typography.Text code ellipsis={{ tooltip: row.spec }}>
+          {row.spec}
+        </Typography.Text>
+      ),
+    },
+    {
+      title: 'Actions',
+      render: (_, row) => (
+        <Space>
+          <Button
+            aria-label={`Edit ${row.name}`}
+            icon={<EditOutlined />}
+            onClick={() => openPolicy(row)}
+          />
+          <Popconfirm title="Delete this policy?" onConfirm={() => void deletePolicy(row.id)}>
+            <Button danger aria-label={`Delete ${row.name}`} icon={<DeleteOutlined />} />
+          </Popconfirm>
+        </Space>
+      ),
+    },
+  ];
   const assignmentColumns: ColumnsType<Assignment> = [
     {
       title: 'Policy',
