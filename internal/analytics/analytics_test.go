@@ -87,12 +87,24 @@ func TestMigrationIsOptInAndSQLiteCRUDRetention(t *testing.T) {
 	if err := db.Create(&DestinationObservation{ObservedAt: old, Domain: "old.example", Source: SourceAccessLog, Provenance: ProvenanceObserved, Confidence: 1}).Error; err != nil {
 		t.Fatalf("seed old event: %v", err)
 	}
-	result, err := repo.Prune(ctx, now, RetentionPolicy{RawEvents: 24 * time.Hour, Sessions: 48 * time.Hour, Aggregates: 72 * time.Hour})
+	if err := db.Create(&DNSObservation{ObservedAt: old, Domain: "old-dns.example", ResolvedIP: "192.0.2.8", Source: SourceDNSObserver, Provenance: ProvenanceObserved, Confidence: 1, EventKey: "old-dns"}).Error; err != nil {
+		t.Fatalf("seed old DNS: %v", err)
+	}
+	if err := db.Create(&NetworkSession{SessionKey: "old-session", FirstSeen: old, LastSeen: old, Source: SourceXray, Provenance: ProvenanceCorrelated, Confidence: 1}).Error; err != nil {
+		t.Fatalf("seed old session: %v", err)
+	}
+	if err := db.Create(&ServiceCategoryAggregate{BucketStart: old, BucketWidth: BucketDaily, Category: CategoryUnknown, FirstSeen: old, LastSeen: old, Source: SourceXray, Provenance: ProvenanceCorrelated, Confidence: 1}).Error; err != nil {
+		t.Fatalf("seed old aggregate: %v", err)
+	}
+	result, err := repo.Prune(ctx, now, RetentionPolicy{RawEvents: 24 * time.Hour, DNSObservations: time.Hour, Sessions: 24 * time.Hour, Aggregates: 24 * time.Hour})
 	if err != nil {
 		t.Fatalf("prune: %v", err)
 	}
 	if result.RawEvents != 1 {
 		t.Fatalf("pruned raw events = %d, want 1", result.RawEvents)
+	}
+	if result.DNSObservations != 1 || result.Sessions != 1 || result.Aggregates != 1 {
+		t.Fatalf("independent prune counts = %+v", result)
 	}
 	var upstream int64
 	if err := db.Model(&model.Setting{}).Count(&upstream).Error; err != nil || upstream != 1 {

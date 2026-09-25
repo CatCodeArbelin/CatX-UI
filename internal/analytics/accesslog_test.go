@@ -17,6 +17,7 @@ type captureRepo struct {
 	cursor   AccessLogCursor
 	events   []MetadataEvent
 	sessions []NetworkSession
+	dns      []DNSObservation
 }
 
 func (r *captureRepo) LoadAccessLogCursor(_ context.Context, key string) (AccessLogCursor, error) {
@@ -66,6 +67,19 @@ func (r *captureRepo) ListSessionPage(_ context.Context, _ string, _, _ int64, l
 	}
 	items := append([]NetworkSession(nil), r.sessions[offset:end]...)
 	return SessionPage{Items: items, Total: int64(len(r.sessions))}, nil
+}
+
+func (r *captureRepo) ListDNSPage(_ context.Context, _ string, _, _ int64, limit, offset int) (DNSPage, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	end := offset + limit
+	if end > len(r.dns) {
+		end = len(r.dns)
+	}
+	if offset > len(r.dns) {
+		offset = len(r.dns)
+	}
+	return DNSPage{Items: append([]DNSObservation(nil), r.dns[offset:end]...), Total: int64(len(r.dns))}, nil
 }
 
 func (r *captureRepo) snapshot() (int, AccessLogCursor) {

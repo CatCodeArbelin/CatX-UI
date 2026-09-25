@@ -2750,6 +2750,22 @@ export const sections: readonly Section[] = [
       },
       {
         method: 'GET',
+        path: '/panel/api/analytics/settings',
+        summary: 'Read analytics privacy and retention settings.',
+        response: '{ success, obj: { enabled, dnsIntelligence, retention, privacy } }',
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/analytics/settings',
+        summary: 'Update DNS intelligence and fork-owned analytics retention.',
+        requestSchema: {
+          type: 'object',
+          properties: { dnsIntelligence: { type: 'boolean' }, retention: { type: 'object' } },
+        },
+        response: '{ success, obj: { enabled, dnsIntelligence, retention, privacy } }',
+      },
+      {
+        method: 'GET',
         path: '/panel/api/analytics/clients/:email/activity',
         summary: 'Return a paginated client destination activity timeline.',
         params: [
@@ -2787,6 +2803,31 @@ export const sections: readonly Section[] = [
             name: 'to',
             in: 'query',
             type: 'integer',
+            desc: 'End time in milliseconds since epoch.',
+          },
+          { name: 'page', in: 'query', type: 'integer', optional: true, defaultValue: 1 },
+          { name: 'pageSize', in: 'query', type: 'integer', optional: true, defaultValue: 50 },
+        ],
+        response: '{ enabled, items, page, pageSize, total, from, to }',
+      },
+      {
+        method: 'GET',
+        path: '/panel/api/analytics/clients/:email/dns',
+        summary: 'Return paginated metadata-only DNS observations for an existing client.',
+        params: [
+          { name: 'email', in: 'path', type: 'string', desc: 'Existing upstream client identity.' },
+          {
+            name: 'from',
+            in: 'query',
+            type: 'integer',
+            optional: true,
+            desc: 'Start time in milliseconds since epoch.',
+          },
+          {
+            name: 'to',
+            in: 'query',
+            type: 'integer',
+            optional: true,
             desc: 'End time in milliseconds since epoch.',
           },
           { name: 'page', in: 'query', type: 'integer', optional: true, defaultValue: 1 },

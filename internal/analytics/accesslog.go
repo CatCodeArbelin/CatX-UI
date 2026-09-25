@@ -422,6 +422,7 @@ var configured struct {
 	repo            Repository
 	enabled         bool
 	evidenceEnabled bool
+	retention       RetentionPolicy
 }
 
 // Configure installs the analytics repository after migrations. A disabled or
@@ -432,7 +433,7 @@ func Configure(repo Repository, enabled bool) {
 	if repo == nil {
 		repo = NoopRepository{}
 	}
-	configured.repo, configured.enabled, configured.evidenceEnabled = repo, enabled, false
+	configured.repo, configured.enabled, configured.evidenceEnabled, configured.retention = repo, enabled, false, DefaultRetentionPolicy()
 	ConfigureEnrichment(nil, enabled)
 }
 
@@ -453,16 +454,18 @@ func EvidenceEnabled() bool {
 // Start starts the collector only when analytics was explicitly enabled.
 func Start(ctx context.Context) (func(), error) {
 	configured.RLock()
-	repo, enabled := configured.repo, configured.enabled
+	repo, enabled, policy := configured.repo, configured.enabled, configured.retention
 	configured.RUnlock()
 	if !enabled || repo == nil {
 		return func() {}, nil
 	}
+	child, cancel := context.WithCancel(ctx)
+	SetRetentionPolicy(policy)
+	go pruneLoop(child, repo)
 	path, err := xray.GetAccessLogPath()
 	if err != nil || path == "" || path == "none" {
-		return func() {}, nil
+		return cancel, nil
 	}
-	child, cancel := context.WithCancel(ctx)
 	tailer := NewTailer(TailerConfig{Path: path, Repo: repo})
 	go func() { _ = tailer.Run(child) }()
 	return cancel, nil
