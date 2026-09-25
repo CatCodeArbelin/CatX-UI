@@ -935,7 +935,7 @@ func (s *InboundService) setRemoteTrafficLocked(nodeID int, snap *runtime.Traffi
 					deltaDown = 0
 				}
 			}
-			if existingEmails[cs.Email] && (deltaUp > 0 || deltaDown > 0) {
+			if _, exists := existingEmails[cs.Email]; exists && (deltaUp > 0 || deltaDown > 0) {
 				quotaDeltas = append(quotaDeltas, &xray.ClientTraffic{Email: cs.Email, Up: deltaUp, Down: deltaDown})
 			}
 

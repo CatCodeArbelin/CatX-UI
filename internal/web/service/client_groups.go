@@ -295,6 +295,7 @@ func (s *ClientService) AddToGroup(emails []string, group string) (int, error) {
 	affectedEmails := make([]string, 0, len(records))
 	tx := db.Begin()
 	quotaBatch := newTrafficMutationBatch()
+	inboundSvc := &InboundService{}
 	for _, r := range records {
 		if err := forkext.GroupQuotaChangeMembership(tx, r.Email, r.Group, group); err != nil {
 			tx.Rollback()
@@ -397,7 +398,7 @@ func (s *ClientService) AddToGroup(emails []string, group string) (int, error) {
 		tx.Rollback()
 		return 0, quotaErr
 	}
-	if _, _, _, quotaErr = s.disableInvalidClients(tx, quotaBatch); quotaErr != nil {
+	if _, _, _, quotaErr = inboundSvc.disableInvalidClients(tx, quotaBatch); quotaErr != nil {
 		tx.Rollback()
 		return 0, quotaErr
 	}
@@ -409,8 +410,8 @@ func (s *ClientService) AddToGroup(emails []string, group string) (int, error) {
 	if err := tx.Commit().Error; err != nil {
 		return 0, err
 	}
-	_ = s.applyTrafficRemotePlans(quotaBatch.remotePlans)
-	_ = s.applyTrafficMutationBatch(quotaBatch)
+	_ = inboundSvc.applyTrafficRemotePlans(quotaBatch.remotePlans)
+	_ = inboundSvc.applyTrafficMutationBatch(quotaBatch)
 	return int(affected), nil
 }
 
