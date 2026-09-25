@@ -2841,7 +2841,7 @@ export const sections: readonly Section[] = [
     id: 'fork-policies',
     title: 'Policies (CatX-UI)',
     description:
-      'Durable policy data only. These endpoints do not compile or enforce Xray routing decisions.',
+      'Policy data and explainable WP-4B enforcement capabilities. Quarantine is safety state; only a bounded quarantine-release temporary override can release it. Managed DNS and SafeSearch apply only to supported Xray-observed DNS paths.',
     endpoints: [
       {
         method: 'GET',
@@ -2947,7 +2947,7 @@ export const sections: readonly Section[] = [
         method: 'POST',
         path: '/panel/api/policies/temporary-overrides',
         summary: 'Create a persisted temporary override with explicit start and expiry.',
-        body: '{ policyId, targetType, targetRef, scope, value, priority, startsAt, expiresAt, enabled }',
+        body: '{ policyId, targetType, targetRef, scope (including quarantine-release), value, priority, startsAt, expiresAt, enabled }',
         response: 'temporaryOverride',
       },
       {
@@ -2961,7 +2961,7 @@ export const sections: readonly Section[] = [
         path: '/panel/api/policies/temporary-overrides/:id',
         summary: 'Update a temporary override.',
         params: [{ name: 'id', in: 'path', type: 'integer' }],
-        body: '{ policyId, targetType, targetRef, scope, value, priority, startsAt, expiresAt, enabled }',
+        body: '{ policyId, targetType, targetRef, scope (including quarantine-release), value, priority, startsAt, expiresAt, enabled }',
         response: 'temporaryOverride',
       },
       {
@@ -3023,21 +3023,24 @@ export const sections: readonly Section[] = [
           { name: 'service', in: 'query', type: 'string', optional: true },
           { name: 'at', in: 'query', type: 'integer', optional: true },
         ],
-        response: '{ enabled, input, decision, route, noOpReason }',
+        response:
+          '{ enabled, input, decision (quarantined, quarantineReleased, managedDns, safeSearch, dnsLimitations), route, noOpReason }',
       },
       {
         method: 'GET',
         path: '/panel/api/policies/explain',
         summary: 'Explain the winning policy decision and losing candidates.',
         params: [{ name: 'clientEmail', in: 'query', type: 'string' }],
-        response: '{ enabled, input, decision, route, noOpReason }',
+        response:
+          '{ enabled, input, decision (quarantined, quarantineReleased, managedDns, safeSearch, dnsLimitations), route, noOpReason }',
       },
       {
         method: 'GET',
         path: '/panel/api/policies/explain-route',
         summary: 'Preview route fragments from the real policy compiler.',
         params: [{ name: 'clientEmail', in: 'query', type: 'string' }],
-        response: '{ enabled, input, decision, route, noOpReason }',
+        response:
+          '{ enabled, input, decision (quarantined, quarantineReleased, managedDns, safeSearch, dnsLimitations), route, noOpReason }',
       },
     ],
   },

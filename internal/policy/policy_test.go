@@ -194,3 +194,69 @@ func TestScheduleGatesAssignmentsButTemporaryOverrideCanActivatePolicy(t *testin
 		t.Fatalf("temporary override did not activate scheduled policy: %+v %v", resolved, err)
 	}
 }
+
+func TestQuarantineCannotBeBypassedByGenericOverride(t *testing.T) {
+	db := testDB(t)
+	r := NewRepository(db)
+	ctx := context.Background()
+	p := Policy{Name: "quarantine", Spec: `{"quarantine":true,"quarantineAllowlist":["support.example"],"action":"deny"}`, Enabled: true}
+	if err := r.CreatePolicy(ctx, &p); err != nil {
+		t.Fatal(err)
+	}
+	if err := r.CreateAssignment(ctx, &PolicyAssignment{PolicyID: p.ID, TargetType: TargetClient, TargetRef: "alice@example.test", Enabled: true}); err != nil {
+		t.Fatal(err)
+	}
+	if err := r.CreateOverride(ctx, &PolicyOverride{PolicyID: p.ID, TargetType: TargetClient, TargetRef: "alice@example.test", Scope: ScopeDomain, Value: `{"action":"allow","domains":["video.example"]}`, Enabled: true}); err != nil {
+		t.Fatal(err)
+	}
+	d, err := r.ResolveDecision(ctx, "alice@example.test", "staff", time.Now().UnixMilli())
+	if err != nil || d == nil || !d.Quarantined || d.QuarantineReleased {
+		t.Fatalf("generic override bypassed quarantine: %+v %v", d, err)
+	}
+}
+
+func TestQuarantineReleaseIsBoundedAndDedicated(t *testing.T) {
+	db := testDB(t)
+	r := NewRepository(db)
+	ctx := context.Background()
+	now := time.Now().UnixMilli()
+	p := Policy{Name: "quarantine-release", Spec: `{"quarantine":true,"action":"deny"}`, Enabled: true}
+	if err := r.CreatePolicy(ctx, &p); err != nil {
+		t.Fatal(err)
+	}
+	if err := r.CreateAssignment(ctx, &PolicyAssignment{PolicyID: p.ID, TargetType: TargetClient, TargetRef: "alice@example.test", Enabled: true}); err != nil {
+		t.Fatal(err)
+	}
+	release := TemporaryOverride{PolicyID: p.ID, TargetType: TargetClient, TargetRef: "alice@example.test", Scope: ScopeQuarantineRelease, Value: `{"released":true}`, StartsAt: now - 100, ExpiresAt: now + 1000, Enabled: true}
+	if err := r.CreateTemporaryOverride(ctx, &release); err != nil {
+		t.Fatal(err)
+	}
+	d, err := r.ResolveDecision(ctx, "alice@example.test", "staff", now)
+	if err != nil || d == nil || d.Quarantined || !d.QuarantineReleased {
+		t.Fatalf("bounded release not effective: %+v %v", d, err)
+	}
+	d, err = r.ResolveDecision(ctx, "alice@example.test", "staff", now+2000)
+	if err != nil || d == nil || !d.Quarantined || d.QuarantineReleased {
+		t.Fatalf("expired release remained effective: %+v %v", d, err)
+	}
+	if err := r.CreateOverride(ctx, &PolicyOverride{PolicyID: p.ID, TargetType: TargetClient, TargetRef: "alice@example.test", Scope: ScopeQuarantineRelease, Value: `{"released":true}`, Enabled: true}); err == nil {
+		t.Fatal("persistent quarantine-release accepted")
+	}
+}
+
+func TestManagedDNSAndSafeSearchAreExplainableCapabilities(t *testing.T) {
+	db := testDB(t)
+	r := NewRepository(db)
+	ctx := context.Background()
+	p := Policy{Name: "managed-dns", Spec: `{"action":"allow","dns":{"managed":true,"safeSearch":true,"dnsOutboundTag":"safe-dns"}}`, Enabled: true}
+	if err := r.CreatePolicy(ctx, &p); err != nil {
+		t.Fatal(err)
+	}
+	if err := r.CreateAssignment(ctx, &PolicyAssignment{PolicyID: p.ID, TargetType: TargetClient, TargetRef: "alice@example.test", Enabled: true}); err != nil {
+		t.Fatal(err)
+	}
+	d, err := r.ResolveDecision(ctx, "alice@example.test", "staff", time.Now().UnixMilli())
+	if err != nil || d == nil || !d.ManagedDNS || !d.SafeSearch || d.DNSOutboundTag != "safe-dns" || len(d.DNSLimitations) != 1 {
+		t.Fatalf("capabilities not explainable: %+v %v", d, err)
+	}
+}
