@@ -463,6 +463,7 @@ func (NoopRepository) ListAggregates(context.Context, string, string, int64, int
 }
 
 func (NoopRepository) RecordTrafficSnapshots(context.Context, []TrafficSnapshot) error { return nil }
+
 func (NoopRepository) QueryTrafficHistory(_ context.Context, _ string, from, to int64) (TrafficHistory, error) {
 	return TrafficHistory{From: from, To: to, ServiceBreakdown: []TrafficBreakdown{}, CategoryBreakdown: []TrafficBreakdown{}}, nil
 }
