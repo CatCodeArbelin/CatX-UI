@@ -140,6 +140,30 @@ type ServiceCategoryAggregate struct {
 
 func (ServiceCategoryAggregate) TableName() string { return "analytics_service_category_aggregates" }
 
+// TrafficSnapshot is a point-in-time copy of the authoritative upstream
+// counters. It is history, not another accounting source: totals are derived
+// from successive samples and reset/wrap points are never treated as traffic.
+type TrafficSnapshot struct {
+	ID          uint   `json:"id" gorm:"primaryKey"`
+	ObservedAt  int64  `json:"observedAt" gorm:"not null;index:idx_analytics_traffic_time"`
+	Scope       string `json:"scope" gorm:"not null;index:idx_analytics_traffic_scope_key_time,priority:1"`
+	CounterKey  string `json:"counterKey" gorm:"not null;index:idx_analytics_traffic_scope_key_time,priority:2"`
+	ClientEmail string `json:"clientEmail,omitempty" gorm:"index:idx_analytics_traffic_client_time,priority:1"`
+	NodeID      int    `json:"nodeId,omitempty" gorm:"index:idx_analytics_traffic_node_time,priority:1"`
+	InboundID   int    `json:"inboundId,omitempty" gorm:"index:idx_analytics_traffic_inbound_time,priority:1"`
+	Tag         string `json:"tag,omitempty"`
+	Up          int64  `json:"up" gorm:"not null"`
+	Down        int64  `json:"down" gorm:"not null"`
+}
+
+func (TrafficSnapshot) TableName() string { return "analytics_traffic_snapshots" }
+
+const (
+	TrafficScopeClient   = "client"
+	TrafficScopeInbound  = "inbound"
+	TrafficScopeOutbound = "outbound"
+)
+
 // MetadataEvent is the ingestion-facing abstraction shared by future sources.
 type MetadataEvent struct {
 	ObservedAt                                                                            int64

@@ -1,9 +1,11 @@
 package job
 
 import (
+	"context"
 	"encoding/json"
 	"time"
 
+	"github.com/mhsanaei/3x-ui/v3/internal/analytics"
 	"github.com/mhsanaei/3x-ui/v3/internal/logger"
 	"github.com/mhsanaei/3x-ui/v3/internal/web/service"
 	"github.com/mhsanaei/3x-ui/v3/internal/web/service/outbound"
@@ -79,6 +81,7 @@ func (j *XrayTrafficJob) Run() {
 	if err != nil {
 		return
 	}
+	analytics.RecordUpstreamTraffic(context.Background(), time.Now().UnixMilli(), clientTraffics, traffics)
 	needRestart0, clientsDisabled, err := j.inboundService.AddTraffic(traffics, clientTraffics)
 	if err != nil {
 		logger.Warning("add inbound traffic failed:", err)

@@ -2835,6 +2835,28 @@ export const sections: readonly Section[] = [
         ],
         response: '{ enabled, items, page, pageSize, total, from, to }',
       },
+      {
+        method: 'GET',
+        path: '/panel/api/analytics/traffic',
+        summary: 'Return historical upstream traffic totals and metadata-derived service/category breakdowns.',
+        params: [
+          { name: 'clientEmail', in: 'query', type: 'string', optional: true },
+          { name: 'from', in: 'query', type: 'integer', desc: 'Start time in milliseconds since epoch.' },
+          { name: 'to', in: 'query', type: 'integer', desc: 'End time in milliseconds since epoch.' },
+        ],
+        response: '{ enabled, history: { up, down, clients, inbounds, nodes, serviceBreakdown, categoryBreakdown, from, to } }',
+      },
+      {
+        method: 'GET',
+        path: '/panel/api/analytics/clients/:email/traffic',
+        summary: 'Return one existing client’s historical upstream traffic and metadata breakdown.',
+        params: [
+          { name: 'email', in: 'path', type: 'string', desc: 'Existing upstream client identity.' },
+          { name: 'from', in: 'query', type: 'integer', desc: 'Start time in milliseconds since epoch.' },
+          { name: 'to', in: 'query', type: 'integer', desc: 'End time in milliseconds since epoch.' },
+        ],
+        response: '{ enabled, history: { up, down, clients, inbounds, nodes, serviceBreakdown, categoryBreakdown, from, to } }',
+      },
     ],
   },
   {

@@ -44,7 +44,7 @@ func TestMigrationIsOptInAndSQLiteCRUDRetention(t *testing.T) {
 	}
 	enableAnalytics(t, db)
 
-	for _, m := range []any{&DestinationObservation{}, &DNSObservation{}, &NetworkSession{}, &ServiceCategoryAggregate{}, &EvidenceObservation{}} {
+	for _, m := range []any{&DestinationObservation{}, &DNSObservation{}, &NetworkSession{}, &ServiceCategoryAggregate{}, &TrafficSnapshot{}, &EvidenceObservation{}} {
 		if !db.Migrator().HasTable(m) {
 			t.Fatalf("missing table for %T", m)
 		}
@@ -73,6 +73,16 @@ func TestMigrationIsOptInAndSQLiteCRUDRetention(t *testing.T) {
 	}
 	if err := repo.UpsertAggregate(ctx, ServiceCategoryAggregate{BucketStart: now.UnixMilli(), BucketWidth: "hour", ClientEmail: "alice", Category: "web", ObservationCount: 1, SessionCount: 1, FirstSeen: now.UnixMilli(), LastSeen: now.UnixMilli(), Source: SourceXray, Provenance: ProvenanceCorrelated, Confidence: .8}); err != nil {
 		t.Fatalf("record aggregate: %v", err)
+	}
+	if err := repo.RecordTrafficSnapshots(ctx, []TrafficSnapshot{
+		{ObservedAt: now.Add(-time.Minute).UnixMilli(), Scope: TrafficScopeClient, CounterKey: "alice", ClientEmail: "alice", Up: 100, Down: 200},
+		{ObservedAt: now.UnixMilli(), Scope: TrafficScopeClient, CounterKey: "alice", ClientEmail: "alice", Up: 175, Down: 500},
+	}); err != nil {
+		t.Fatalf("record traffic snapshots: %v", err)
+	}
+	history, err := repo.QueryTrafficHistory(ctx, "alice", now.Add(-time.Minute).UnixMilli(), now.Add(time.Minute).UnixMilli())
+	if err != nil || history.Up != 75 || history.Down != 300 {
+		t.Fatalf("traffic history = %+v, %v", history, err)
 	}
 	rows, err := repo.ListDestinations(ctx, "alice", now.Add(-time.Minute).UnixMilli(), now.Add(time.Minute).UnixMilli(), 10)
 	if err != nil || len(rows) != 1 {
@@ -152,11 +162,11 @@ func TestPostgresSchemaAndCRUD(t *testing.T) {
 	if err != nil {
 		t.Fatalf("open postgres: %v", err)
 	}
-	for _, m := range []any{&DestinationObservation{}, &DNSObservation{}, &NetworkSession{}, &ServiceCategoryAggregate{}, &EvidenceObservation{}} {
+	for _, m := range []any{&DestinationObservation{}, &DNSObservation{}, &NetworkSession{}, &ServiceCategoryAggregate{}, &TrafficSnapshot{}, &EvidenceObservation{}} {
 		_ = db.Migrator().DropTable(m)
 	}
 	t.Cleanup(func() {
-		for _, m := range []any{&DestinationObservation{}, &DNSObservation{}, &NetworkSession{}, &ServiceCategoryAggregate{}, &EvidenceObservation{}} {
+		for _, m := range []any{&DestinationObservation{}, &DNSObservation{}, &NetworkSession{}, &ServiceCategoryAggregate{}, &TrafficSnapshot{}, &EvidenceObservation{}} {
 			_ = db.Migrator().DropTable(m)
 		}
 	})

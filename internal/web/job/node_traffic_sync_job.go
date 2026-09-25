@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/mhsanaei/3x-ui/v3/internal/analytics"
 	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
 	"github.com/mhsanaei/3x-ui/v3/internal/logger"
 	"github.com/mhsanaei/3x-ui/v3/internal/util/common"
@@ -396,6 +397,7 @@ func (j *NodeTrafficSyncJob) syncOne(mgr *runtime.Manager, n *model.Node, doIpSy
 		j.inboundService.ClearNodeOnlineClients(n.Id)
 		return nil
 	}
+	analytics.RecordNodeTraffic(ctx, time.Now().UnixMilli(), n.Id, snap.Inbounds)
 	snap.ManagedAliases = rt.AdoptedInboundAliases()
 	syncCanAdopt := syncCanAdoptInbounds(n, snap.ManagedAliases)
 	service.FilterNodeSnapshot(n, snap)
