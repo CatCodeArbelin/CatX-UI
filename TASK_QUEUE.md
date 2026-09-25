@@ -321,7 +321,7 @@ Includes:
 
 # PHASE 5 — Traffic History & Quotas
 
-## WP-5A — Historical Traffic — CURRENT
+## WP-5A — Historical Traffic — DONE
 
 Recommended model: `Luna Medium`
 
@@ -333,7 +333,7 @@ Includes:
 
 ---
 
-## WP-5B — Shared Group Quota / Accounting Extensions
+## WP-5B — Shared Group Quota / Accounting Extensions — CURRENT
 
 Recommended model: `Sol Medium`
 
