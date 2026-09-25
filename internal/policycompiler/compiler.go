@@ -103,9 +103,7 @@ func supportedDestinations(d policy.Decision) ([]string, error) {
 		if s == "" {
 			continue
 		}
-		if strings.HasPrefix(s, "domain:") {
-			s = strings.TrimPrefix(s, "domain:")
-		}
+		s = strings.TrimPrefix(s, "domain:")
 		if strings.HasPrefix(s, "ip:") {
 			if net.ParseIP(strings.TrimPrefix(s, "ip:")) == nil {
 				return nil, fmt.Errorf("policy %d: malformed IP destination", d.PolicyID)
