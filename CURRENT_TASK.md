@@ -2,35 +2,45 @@
 
 ## Work Package
 
-`WP-2C — DNS UI, Privacy & Retention`
+`WP-3A — Policy Data & API`
 
 ## Goal
 
-Expose the existing metadata-only DNS/evidence and analytics controls through
-a safe, privacy-preserving UI while keeping retention behavior explicit,
-bounded, and compatible with the upstream panel.
+Build the durable fork-owned policy data model and protected API foundation
+that WP-3B can later compile into Xray behavior. WP-3A must not alter Xray
+routing behavior yet.
 
 ## Required
 
-- DNS intelligence and enrichment visibility in the fork analytics UI;
-- privacy disclosures and safe defaults;
-- retention configuration and enforcement using the existing analytics layer;
-- feature-disabled compatibility and no-op behavior;
-- SQLite/PostgreSQL compatibility where persistence changes are required;
-- focused tests and `make verify-fork` before merge.
+- Policy, policy assignment, policy override, and temporary override models;
+- client-target and group-target assignments reusing upstream identities;
+- deterministic priority/precedence metadata and inspectable evaluation order;
+- SQLite/PostgreSQL fork-owned migrations through the forkext migration seam;
+- protected CRUD/read APIs and stable API shapes for policies, assignments,
+  overrides, temporary overrides, and precedence inspection;
+- validation for targets, references, duplicates, priorities, values, scopes,
+  and temporary start/expiry semantics;
+- `policies.enabled` feature gating with safe default OFF;
+- OpenAPI registration and regenerated artifacts;
+- focused unit, persistence, API, disabled-mode, concurrency, and migration
+  coverage; `make verify` and `make verify-fork` before merge.
 
 ## Hard constraints
 
-- no TLS MITM, decrypted HTTPS, payload inspection, cookies, credentials, Authorization headers, or request bodies;
-- no Policy Engine, blocking, or traffic enforcement;
-- do not duplicate upstream client/group/node/session/traffic models;
-- analytics/DNS intelligence OFF must remain a no-op;
-- enrichment failure must never affect Xray or panel core;
-- minimal upstream-touch points;
-- do not modify `main`.
+- no Xray routing-rule compilation or `DecorateXrayConfig` policy behavior;
+- no category blocking, DNS blocking, SafeSearch, QoS, quota, or quarantine
+  enforcement;
+- no TLS MITM, decrypted HTTPS, payload inspection, cookies, credentials,
+  Authorization headers, or request bodies;
+- do not duplicate upstream client/group/node/inbound/traffic models;
+- expired temporary overrides must never evaluate as active;
+- migration failure must not prevent core panel/Xray operation under the
+  existing fork safety contract;
+- minimal upstream-touch points and no modification of `main`.
 
 ## Restrictions
 
-- do not start a later work package;
+- do not implement WP-3B or WP-3C behavior;
 - do not merge into `main`;
-- preserve the low-divergence downstream fork architecture.
+- preserve the low-divergence downstream fork architecture;
+- use explicit persisted migrations; never mutate schema at runtime.

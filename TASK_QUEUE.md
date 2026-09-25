@@ -219,7 +219,7 @@ Includes:
 
 ---
 
-## WP-2C — DNS Intelligence UI / Privacy / Retention
+## WP-2C — DNS Intelligence UI / Privacy / Retention — DONE
 
 Recommended model: `Luna Medium`
 
@@ -230,11 +230,13 @@ Includes:
 - retention controls;
 - delete-history controls.
 
+Completed and merged into `develop`.
+
 ---
 
 # PHASE 3 — Policy Engine v1
 
-## WP-3A — Policy Data/API
+## WP-3A — Policy Data/API — CURRENT
 
 Recommended model: `Luna Medium`
 
