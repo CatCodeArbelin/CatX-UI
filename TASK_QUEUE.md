@@ -291,7 +291,7 @@ Reuse upstream route-test capabilities where possible.
 
 # PHASE 4 — Policy Engine v2
 
-## WP-4A — Categories / Schedules / Temporary Overrides — CURRENT
+## WP-4A — Categories / Schedules / Temporary Overrides — DONE
 
 Recommended model: `Sol Medium`
 
@@ -302,9 +302,11 @@ Includes:
 - timezone/DST tests;
 - temporary overrides.
 
+Completed and merged into `develop` (`0de64062`).
+
 ---
 
-## WP-4B — Quarantine / Managed DNS / SafeSearch
+## WP-4B — Quarantine / Managed DNS / SafeSearch — CURRENT
 
 Recommended model: `Sol High`
 
