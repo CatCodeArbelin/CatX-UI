@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -16,7 +17,8 @@ import (
 
 func testDB(t *testing.T) *gorm.DB {
 	t.Helper()
-	db, err := gorm.Open(sqlite.Open("file:policy-test?mode=memory&cache=shared"), &gorm.Config{})
+	dsn := "file:policy-test-" + strings.ReplaceAll(t.Name(), "/", "-") + "?mode=memory&cache=shared"
+	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{})
 	if err != nil {
 		t.Skipf("SQLite unavailable: %v", err)
 	}
