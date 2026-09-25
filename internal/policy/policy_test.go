@@ -3,6 +3,7 @@ package policy
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -125,7 +126,7 @@ func TestValidation(t *testing.T) {
 	db := testDB(t)
 	r := NewRepository(db)
 	ctx := context.Background()
-	for _, p := range []Policy{{Name: "bad", Spec: `[]`}, {Name: "bad-action", Spec: `{"action":"block"}`}} {
+	for _, p := range []Policy{{Name: "bad", Spec: `[]`}, {Name: "bad-action", Spec: `{"action":"block"}`}, {Name: "bad-category", Spec: `{"action":"deny","categories":["unknown"]}`}} {
 		if err := r.CreatePolicy(ctx, &p); err == nil {
 			t.Fatal("invalid policy accepted")
 		}
@@ -158,5 +159,38 @@ func TestPrecedenceTieBreakIsDeterministic(t *testing.T) {
 	sortCandidates(items)
 	if items[0].Source != "temporary" || items[1].ID != 1 || items[2].ID != 2 || items[3].Source != "assignment" {
 		t.Fatalf("unexpected deterministic order: %+v", items)
+	}
+}
+
+func TestScheduleGatesAssignmentsButTemporaryOverrideCanActivatePolicy(t *testing.T) {
+	db := testDB(t)
+	r := NewRepository(db)
+	ctx := context.Background()
+	p := Policy{Name: "scheduled", Spec: `{"action":"deny"}`, Enabled: true}
+	if err := r.CreatePolicy(ctx, &p); err != nil {
+		t.Fatal(err)
+	}
+	schedule := PolicySchedule{PolicyID: p.ID, Timezone: "UTC", Weekdays: "1", StartMinute: 9 * 60, EndMinute: 10 * 60, Enabled: true}
+	if err := r.CreateSchedule(ctx, &schedule); err != nil {
+		t.Fatal(err)
+	}
+	p.Spec = `{"action":"deny","scheduleRef":"` + fmt.Sprint(schedule.ID) + `"}`
+	if err := r.UpdatePolicy(ctx, &p); err != nil {
+		t.Fatal(err)
+	}
+	if err := r.CreateAssignment(ctx, &PolicyAssignment{PolicyID: p.ID, TargetType: TargetClient, TargetRef: "alice@example.test", Enabled: true}); err != nil {
+		t.Fatal(err)
+	}
+	outside := time.Date(2026, 1, 5, 8, 30, 0, 0, time.UTC).UnixMilli()
+	resolved, err := r.Resolve(ctx, "alice@example.test", "staff", outside)
+	if err != nil || len(resolved.Items) != 0 {
+		t.Fatalf("scheduled assignment active outside window: %+v %v", resolved, err)
+	}
+	if err := r.CreateTemporaryOverride(ctx, &TemporaryOverride{PolicyID: p.ID, TargetType: TargetClient, TargetRef: "alice@example.test", Scope: ScopePolicy, Value: `{"action":"allow"}`, StartsAt: outside - 1000, ExpiresAt: outside + 1000, Enabled: true}); err != nil {
+		t.Fatal(err)
+	}
+	resolved, err = r.Resolve(ctx, "alice@example.test", "staff", outside)
+	if err != nil || len(resolved.Items) != 1 || resolved.Items[0].Source != "temporary" {
+		t.Fatalf("temporary override did not activate scheduled policy: %+v %v", resolved, err)
 	}
 }

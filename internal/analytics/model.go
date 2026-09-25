@@ -31,6 +31,20 @@ const (
 	CategoryUnknown     = "unknown"
 )
 
+// IsKnownCategory is the single category vocabulary contract shared by
+// analytics and policy. Unknown is an observation state, not a targetable
+// enforcement category.
+func IsKnownCategory(category string) bool {
+	switch category {
+	case CategorySocial, CategoryVideo, CategoryMessaging, CategoryGaming,
+		CategoryCloudCDN, CategorySearch, CategorySoftware, CategoryAdvertising,
+		CategoryAdult, CategoryGambling:
+		return true
+	default:
+		return false
+	}
+}
+
 // DestinationObservation is a normalized metadata event. It contains no
 // payload, credential, cookie, authorization, or decrypted message data.
 type DestinationObservation struct {
