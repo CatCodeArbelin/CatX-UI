@@ -143,7 +143,8 @@ export default function PolicyPage() {
     setLoading(false);
   }, []);
   useEffect(() => {
-    void load(false);
+    const timer = window.setTimeout(() => void load(false), 0);
+    return () => window.clearTimeout(timer);
   }, [load]);
 
   const openPolicy = (policy?: Policy) => {
