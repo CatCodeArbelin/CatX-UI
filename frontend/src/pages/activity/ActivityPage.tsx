@@ -143,7 +143,9 @@ export default function ActivityPage() {
   const [sessions, setSessions] = useState<Page<Session> | null>(null);
   const [dns, setDns] = useState<Page<DNS> | null>(null);
   const [settings, setSettings] = useState<Settings | null>(null);
-  const [traffic, setTraffic] = useState<{ enabled: boolean; history: TrafficHistory } | null>(null);
+  const [traffic, setTraffic] = useState<{ enabled: boolean; history: TrafficHistory } | null>(
+    null,
+  );
   const [loading, setLoading] = useState(Boolean(email));
   const [error, setError] = useState('');
   const [settingsError, setSettingsError] = useState('');
@@ -193,8 +195,19 @@ export default function ActivityPage() {
         if (cancelled) return;
         if (settingsResult.success && settingsResult.obj?.retention)
           setSettings(settingsResult.obj);
-        if (!eventResult.success || !sessionResult.success || !dnsResult.success || !trafficResult.success) {
-          setError(eventResult.msg || sessionResult.msg || dnsResult.msg || trafficResult.msg || text.error);
+        if (
+          !eventResult.success ||
+          !sessionResult.success ||
+          !dnsResult.success ||
+          !trafficResult.success
+        ) {
+          setError(
+            eventResult.msg ||
+              sessionResult.msg ||
+              dnsResult.msg ||
+              trafficResult.msg ||
+              text.error,
+          );
           return;
         }
         setEvents(eventResult.obj);
