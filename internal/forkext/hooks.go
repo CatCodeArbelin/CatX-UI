@@ -10,6 +10,7 @@ import (
 
 	"github.com/mhsanaei/3x-ui/v3/internal/analytics"
 	"github.com/mhsanaei/3x-ui/v3/internal/eventbus"
+	"github.com/mhsanaei/3x-ui/v3/internal/policy"
 	"github.com/mhsanaei/3x-ui/v3/internal/xray"
 
 	"github.com/gin-gonic/gin"
@@ -27,31 +28,42 @@ func RegisterMigrations(db *gorm.DB) error {
 	setSettingsDB(db)
 	if db == nil {
 		analytics.Configure(analytics.NoopRepository{}, false)
+		policy.Configure(nil, false)
 		return nil
 	}
-	enabled, err := NewSettings(db).Enabled(FlagAnalytics)
+	analyticsEnabled, err := NewSettings(db).Enabled(FlagAnalytics)
 	if err != nil {
 		log.Printf("fork analytics disabled: cannot read feature flag: %v", err)
-		analytics.Configure(analytics.NoopRepository{}, false)
-		return nil
+		analyticsEnabled = false
 	}
-	if !enabled {
+	if !analyticsEnabled {
 		analytics.Configure(analytics.NoopRepository{}, false)
-		return nil
-	}
-	if err := analytics.Migrate(db); err != nil {
+	} else if err := analytics.Migrate(db); err != nil {
 		log.Printf("fork analytics migration skipped after error: %v", err)
 		analytics.Configure(analytics.NoopRepository{}, false)
-		return nil
+		analyticsEnabled = false
+	} else {
+		analytics.Configure(analytics.NewRepository(db, true), true)
+		analytics.SetRetentionPolicy(retentionPolicyFromDB(db))
 	}
-	analytics.Configure(analytics.NewRepository(db, true), true)
-	analytics.SetRetentionPolicy(retentionPolicyFromDB(db))
+	policiesEnabled, err := NewSettings(db).Enabled(FlagPolicies)
+	if err != nil {
+		log.Printf("fork policies disabled: cannot read feature flag: %v", err)
+		policiesEnabled = false
+	}
+	if policiesEnabled {
+		if err := policy.Migrate(db); err != nil {
+			log.Printf("fork policy migration skipped after error: %v", err)
+			policiesEnabled = false
+		}
+	}
+	policy.Configure(db, policiesEnabled)
 	dnsEnabled, err := NewSettings(db).Enabled(FlagDNSIntelligence)
 	if err != nil {
 		log.Printf("fork DNS intelligence disabled: cannot read feature flag: %v", err)
 		dnsEnabled = false
 	}
-	analytics.SetEvidenceEnabled(dnsEnabled)
+	analytics.SetEvidenceEnabled(analyticsEnabled && dnsEnabled)
 	return nil
 }
 
@@ -60,6 +72,7 @@ func RegisterMigrations(db *gorm.DB) error {
 func RegisterRoutes(api *gin.RouterGroup) {
 	analytics.RegisterActivityRoutes(api)
 	registerAnalyticsSettingsRoutes(api)
+	policy.RegisterRoutes(api)
 }
 
 // RegisterJobs is the fixed scheduler integration point for fork jobs.
