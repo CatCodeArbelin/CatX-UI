@@ -1,0 +1,35 @@
+.policy-page {
+  min-height: 100vh;
+  background: var(--bg-page, #e6e8ec);
+}
+.policy-page .content-area {
+  padding: 24px;
+}
+.policy-page .ant-card {
+  border-radius: 12px;
+}
+.policy-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.policy-form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(180px, 1fr));
+  gap: 12px;
+}
+.policy-result {
+  margin-top: 20px;
+}
+@media (max-width: 768px) {
+  .policy-page .content-area {
+    padding: 8px;
+  }
+  .policy-heading {
+    flex-direction: column;
+  }
+  .policy-form-grid {
+    grid-template-columns: 1fr;
+  }
+}

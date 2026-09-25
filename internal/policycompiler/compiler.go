@@ -13,6 +13,61 @@ import (
 
 const RuleTagPrefix = "catx-policy-"
 
+type RulePreview struct {
+	RuleTag     string `json:"ruleTag"`
+	Destination string `json:"destination"`
+	User        string `json:"user"`
+	OutboundTag string `json:"outboundTag,omitempty"`
+	Order       int    `json:"order"`
+	PolicyID    uint   `json:"policyId"`
+	Source      string `json:"source"`
+	Emitted     bool   `json:"emitted"`
+	Reason      string `json:"reason,omitempty"`
+	Matched     bool   `json:"matched"`
+}
+
+// Preview uses the same destination normalization and stable rule identity
+// as Compile without reading, writing, or applying an Xray configuration.
+func Preview(decisions []policy.Decision) ([]RulePreview, error) {
+	ordered := append([]policy.Decision(nil), decisions...)
+	sort.SliceStable(ordered, func(i, j int) bool {
+		if ordered[i].ClientEmail != ordered[j].ClientEmail {
+			return ordered[i].ClientEmail < ordered[j].ClientEmail
+		}
+		return ordered[i].PolicyID < ordered[j].PolicyID
+	})
+	previews := make([]RulePreview, 0)
+	seen := map[string]struct{}{}
+	for _, d := range ordered {
+		destinations, err := supportedDestinations(d)
+		if err != nil {
+			previews = append(previews, RulePreview{PolicyID: d.PolicyID, User: d.ClientEmail, Source: d.Winner.Source, Emitted: false, Reason: err.Error()})
+			continue
+		}
+		if d.Action != "allow" && d.Action != "deny" {
+			previews = append(previews, RulePreview{PolicyID: d.PolicyID, User: d.ClientEmail, Source: d.Winner.Source, Emitted: false, Reason: "unsupported action"})
+			continue
+		}
+		outbound := "blocked"
+		if d.Action == "allow" {
+			outbound = "direct"
+		}
+		if len(destinations) == 0 {
+			previews = append(previews, RulePreview{PolicyID: d.PolicyID, User: d.ClientEmail, OutboundTag: outbound, Source: d.Winner.Source, Emitted: false, Reason: "no supported destination"})
+			continue
+		}
+		for i, destination := range destinations {
+			tag := fmt.Sprintf("%s%d-%s-%d", RuleTagPrefix, d.PolicyID, stableClient(d.ClientEmail), i)
+			if _, exists := seen[tag]; exists {
+				continue
+			}
+			seen[tag] = struct{}{}
+			previews = append(previews, RulePreview{RuleTag: tag, Destination: destination, User: d.ClientEmail, OutboundTag: outbound, Order: len(previews), PolicyID: d.PolicyID, Source: d.Winner.Source, Emitted: true})
+		}
+	}
+	return previews, nil
+}
+
 // Compile is a pure Xray-side operation. It copies only the mutable routing
 // section, removes prior CatX rules, then appends a deterministic replacement.
 func Compile(cfg *xray.Config, decisions []policy.Decision) (*xray.Config, error) {

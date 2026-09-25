@@ -42,6 +42,16 @@ func ResolveCurrent(ctx context.Context, emails []string, at int64) ([]Decision,
 	return repo.ResolveDecisions(ctx, emails, at)
 }
 
+// ResolveCurrentDecision is the read-only hypothetical-input entry point used
+// by simulator and explanation endpoints.
+func ResolveCurrentDecision(ctx context.Context, clientEmail, groupName string, at int64) (*Decision, error) {
+	repo, ok := current()
+	if !ok {
+		return nil, nil
+	}
+	return repo.ResolveDecision(ctx, clientEmail, groupName, at)
+}
+
 func current() (*Repository, bool) {
 	state.RLock()
 	defer state.RUnlock()

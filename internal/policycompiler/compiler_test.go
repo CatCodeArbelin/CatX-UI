@@ -136,3 +136,14 @@ func TestCompileConcurrentCallsAreIndependent(t *testing.T) {
 	}
 	wg.Wait()
 }
+
+func TestPreviewUsesStableCompilerRuleIdentity(t *testing.T) {
+	decision := decision("alice@example.test", "allow", 12, "example.com")
+	preview, err := Preview([]policy.Decision{decision})
+	if err != nil || len(preview) != 1 {
+		t.Fatalf("preview = %#v, err=%v", preview, err)
+	}
+	if preview[0].RuleTag != "catx-policy-12-alice-example-test-0" || preview[0].OutboundTag != "direct" || !preview[0].Emitted {
+		t.Fatalf("unexpected preview: %#v", preview[0])
+	}
+}
