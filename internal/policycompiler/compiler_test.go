@@ -147,3 +147,58 @@ func TestPreviewUsesStableCompilerRuleIdentity(t *testing.T) {
 		t.Fatalf("unexpected preview: %#v", preview[0])
 	}
 }
+
+func TestCompileQuarantineRulesPrecedeUpstreamRules(t *testing.T) {
+	d := decision("alice@example.test", "deny", 21)
+	d.Quarantined = true
+	d.QuarantineAllowlist = []string{"support.example"}
+	got, err := Compile(baseConfig(), []policy.Decision{d})
+	if err != nil {
+		t.Fatal(err)
+	}
+	r := rules(t, got)
+	if r[0]["ruleTag"] != "catx-quarantine-alice-example-test-0" || r[1]["ruleTag"] != "catx-quarantine-alice-example-test" || r[2]["ruleTag"] != "upstream-rule" {
+		t.Fatalf("quarantine ordering = %#v", r)
+	}
+	if r[1]["outboundTag"] != "blocked" {
+		t.Fatalf("quarantine catch-all = %#v", r[1])
+	}
+}
+
+func TestCompileManagedDNSUsesExistingDNSOutbound(t *testing.T) {
+	cfg := baseConfig()
+	cfg.OutboundConfigs = json_util.RawMessage(`[{"protocol":"freedom","tag":"direct"},{"protocol":"blackhole","tag":"blocked"},{"protocol":"dns","tag":"dns-out"}]`)
+	d := decision("alice@example.test", "allow", 22, "example.com")
+	d.ManagedDNS = true
+	got, err := Compile(cfg, []policy.Decision{d})
+	if err != nil {
+		t.Fatal(err)
+	}
+	r := rules(t, got)
+	if r[0]["outboundTag"] != "dns-out" || r[0]["port"] != "53" || r[0]["network"] != "tcp,udp" {
+		t.Fatalf("dns rule = %#v", r[0])
+	}
+}
+
+func TestCompileManagedDNSRequiresDNSOutbound(t *testing.T) {
+	d := decision("alice@example.test", "allow", 24, "example.com")
+	d.ManagedDNS = true
+	if _, err := Compile(baseConfig(), []policy.Decision{d}); err == nil {
+		t.Fatal("managed DNS compiled without a dns outbound")
+	}
+}
+
+func TestCompileSafeSearchRequiresExplicitDNSOutboundProfile(t *testing.T) {
+	cfg := baseConfig()
+	cfg.OutboundConfigs = json_util.RawMessage(`[{"protocol":"freedom","tag":"direct"},{"protocol":"blackhole","tag":"blocked"},{"protocol":"dns","tag":"safe-dns"}]`)
+	d := decision("alice@example.test", "allow", 27, "example.com")
+	d.SafeSearch = true
+	d.ManagedDNS = true
+	if _, err := Compile(cfg, []policy.Decision{d}); err == nil {
+		t.Fatal("SafeSearch compiled without explicit DNS profile")
+	}
+	d.DNSOutboundTag = "safe-dns"
+	if _, err := Compile(cfg, []policy.Decision{d}); err != nil {
+		t.Fatalf("explicit SafeSearch profile rejected: %v", err)
+	}
+}

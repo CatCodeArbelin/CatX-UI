@@ -17,28 +17,31 @@ import (
 )
 
 const (
-	TargetClient = "client"
-	TargetGroup  = "group"
-	ScopePolicy  = "policy"
-	ScopeService = "service"
-	ScopeDomain  = "domain"
-	ScopeDNS     = "dns"
-	ScopeQuota   = "quota"
-	ScopeQoS     = "qos"
+	TargetClient           = "client"
+	TargetGroup            = "group"
+	ScopePolicy            = "policy"
+	ScopeService           = "service"
+	ScopeDomain            = "domain"
+	ScopeDNS               = "dns"
+	ScopeQuota             = "quota"
+	ScopeQoS               = "qos"
+	ScopeQuarantineRelease = "quarantine-release"
 )
 
 // Definition is an intentionally declarative, future-compatible policy
 // document. WP-3A stores and validates it; WP-3B is responsible for meaning.
 type Definition struct {
-	Action       string         `json:"action"`
-	Services     []string       `json:"services,omitempty"`
-	Categories   []string       `json:"categories,omitempty"`
-	Destinations []string       `json:"destinations,omitempty"`
-	DNS          map[string]any `json:"dns,omitempty"`
-	Quota        map[string]any `json:"quota,omitempty"`
-	QoS          map[string]any `json:"qos,omitempty"`
-	ScheduleRef  string         `json:"scheduleRef,omitempty"`
-	Metadata     map[string]any `json:"metadata,omitempty"`
+	Action              string         `json:"action"`
+	Services            []string       `json:"services,omitempty"`
+	Categories          []string       `json:"categories,omitempty"`
+	Destinations        []string       `json:"destinations,omitempty"`
+	DNS                 map[string]any `json:"dns,omitempty"`
+	Quarantine          bool           `json:"quarantine,omitempty"`
+	QuarantineAllowlist []string       `json:"quarantineAllowlist,omitempty"`
+	Quota               map[string]any `json:"quota,omitempty"`
+	QoS                 map[string]any `json:"qos,omitempty"`
+	ScheduleRef         string         `json:"scheduleRef,omitempty"`
+	Metadata            map[string]any `json:"metadata,omitempty"`
 }
 
 type Policy struct {
@@ -118,10 +121,36 @@ func validateTarget(targetType, targetRef string) error {
 
 func validateScope(scope string) error {
 	switch scope {
-	case ScopePolicy, ScopeService, ScopeDomain, ScopeDNS, ScopeQuota, ScopeQoS:
+	case ScopePolicy, ScopeService, ScopeDomain, ScopeDNS, ScopeQuota, ScopeQoS, ScopeQuarantineRelease:
 		return nil
 	}
 	return fmt.Errorf("invalid override scope")
+}
+
+func validateDNS(dns map[string]any) error {
+	if dns == nil {
+		return nil
+	}
+	if managed, ok := dns["managed"]; ok {
+		if _, ok := managed.(bool); !ok {
+			return errors.New("dns managed must be boolean")
+		}
+	}
+	if safeSearch, ok := dns["safeSearch"]; ok {
+		if _, ok := safeSearch.(bool); !ok {
+			return errors.New("dns safeSearch must be boolean")
+		}
+	}
+	if tag, ok := dns["dnsOutboundTag"]; ok {
+		value, ok := tag.(string)
+		if !ok || strings.TrimSpace(value) == "" {
+			return errors.New("dns dnsOutboundTag must be a non-empty string")
+		}
+	}
+	if _, ok := dns["safeSearchHosts"]; ok {
+		return errors.New("dns safeSearchHosts is unsupported; use dnsOutboundTag with a resolver that enforces SafeSearch")
+	}
+	return nil
 }
 
 func validateJSON(raw string, field string) error {
@@ -152,6 +181,14 @@ func validateDefinition(spec string) error {
 	for _, category := range d.Categories {
 		if !analytics.IsKnownCategory(category) {
 			return fmt.Errorf("unsupported policy category %q", category)
+		}
+	}
+	if err := validateDNS(d.DNS); err != nil {
+		return err
+	}
+	for _, destination := range d.QuarantineAllowlist {
+		if strings.TrimSpace(destination) == "" {
+			return errors.New("quarantine allowlist contains an empty destination")
 		}
 	}
 	return nil
@@ -196,6 +233,9 @@ func validateOverride(o *PolicyOverride) error {
 	if err := validateScope(o.Scope); err != nil {
 		return err
 	}
+	if o.Scope == ScopeQuarantineRelease {
+		return errors.New("quarantine-release must be temporary")
+	}
 	if o.Priority < -100000 || o.Priority > 100000 {
 		return errors.New("override priority is out of range")
 	}
@@ -208,6 +248,14 @@ func validateTemporary(o *TemporaryOverride) error {
 	}
 	if err := validateScope(o.Scope); err != nil {
 		return err
+	}
+	if o.Scope == ScopeQuarantineRelease {
+		var release struct {
+			Released bool `json:"released"`
+		}
+		if err := json.Unmarshal([]byte(o.Value), &release); err != nil || !release.Released {
+			return errors.New("quarantine-release value must set released=true")
+		}
 	}
 	if o.StartsAt <= 0 || o.ExpiresAt <= o.StartsAt {
 		return errors.New("temporary override must have a positive start before expiry")

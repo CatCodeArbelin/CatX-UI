@@ -11,7 +11,11 @@ import (
 	"github.com/mhsanaei/3x-ui/v3/internal/xray"
 )
 
-const RuleTagPrefix = "catx-policy-"
+const (
+	RuleTagPrefix           = "catx-policy-"
+	QuarantineRuleTagPrefix = "catx-quarantine-"
+	DNSRuleTagPrefix        = "catx-dns-"
+)
 
 type RulePreview struct {
 	RuleTag     string `json:"ruleTag"`
@@ -39,6 +43,19 @@ func Preview(decisions []policy.Decision) ([]RulePreview, error) {
 	previews := make([]RulePreview, 0)
 	seen := map[string]struct{}{}
 	for _, d := range ordered {
+		if d.Quarantined {
+			if d.ManagedDNS {
+				previews = append(previews, RulePreview{RuleTag: fmt.Sprintf("%s%s", DNSRuleTagPrefix, stableClient(d.ClientEmail)), Destination: "dns:53/udp,tcp", User: d.ClientEmail, OutboundTag: d.DNSOutboundTag, Order: len(previews), PolicyID: d.PolicyID, Source: d.Winner.Source, Emitted: true, Reason: "managed DNS infrastructure exception"})
+			}
+			for i, destination := range d.QuarantineAllowlist {
+				previews = append(previews, RulePreview{RuleTag: fmt.Sprintf("%s%s-%d", QuarantineRuleTagPrefix, stableClient(d.ClientEmail), i), Destination: destination, User: d.ClientEmail, OutboundTag: "direct", Order: len(previews), PolicyID: d.PolicyID, Source: d.Winner.Source, Emitted: true})
+			}
+			previews = append(previews, RulePreview{RuleTag: fmt.Sprintf("%s%s", QuarantineRuleTagPrefix, stableClient(d.ClientEmail)), User: d.ClientEmail, OutboundTag: "blocked", Order: len(previews), PolicyID: d.PolicyID, Source: d.Winner.Source, Emitted: true, Reason: "quarantine catch-all"})
+			continue
+		}
+		if d.ManagedDNS {
+			previews = append(previews, RulePreview{RuleTag: fmt.Sprintf("%s%s", DNSRuleTagPrefix, stableClient(d.ClientEmail)), Destination: "dns:53/udp,tcp", User: d.ClientEmail, OutboundTag: d.DNSOutboundTag, Order: len(previews), PolicyID: d.PolicyID, Source: d.Winner.Source, Emitted: true, Reason: "intercepted plaintext DNS only"})
+		}
 		destinations, err := supportedDestinations(d)
 		if err != nil {
 			previews = append(previews, RulePreview{PolicyID: d.PolicyID, User: d.ClientEmail, Source: d.Winner.Source, Emitted: false, Reason: err.Error()})
@@ -93,7 +110,7 @@ func Compile(cfg *xray.Config, decisions []policy.Decision) (*xray.Config, error
 		if !ok {
 			return cfg, fmt.Errorf("policy routing rule has invalid shape")
 		}
-		if tag, _ := obj["ruleTag"].(string); strings.HasPrefix(tag, RuleTagPrefix) {
+		if tag, _ := obj["ruleTag"].(string); strings.HasPrefix(tag, RuleTagPrefix) || strings.HasPrefix(tag, QuarantineRuleTagPrefix) || strings.HasPrefix(tag, DNSRuleTagPrefix) {
 			continue
 		}
 		kept = append(kept, raw)
@@ -106,9 +123,37 @@ func Compile(cfg *xray.Config, decisions []policy.Decision) (*xray.Config, error
 		return ordered[i].PolicyID < ordered[j].PolicyID
 	})
 	generated := make(map[string]struct{})
+	quarantineRules := make([]any, 0)
 	for _, d := range ordered {
 		if d.Action != "allow" && d.Action != "deny" {
 			return cfg, fmt.Errorf("policy %d: unsupported action %q", d.PolicyID, d.Action)
+		}
+		if d.ManagedDNS {
+			if d.SafeSearch && d.DNSOutboundTag == "" {
+				return cfg, fmt.Errorf("policy %d: SafeSearch requires an explicit dnsOutboundTag", d.PolicyID)
+			}
+			dnsTag, dnsErr := selectDNSOutbound(cfg.OutboundConfigs, d.DNSOutboundTag)
+			if dnsErr != nil {
+				return cfg, fmt.Errorf("policy %d: managed DNS requires an existing Xray dns outbound: %w", d.PolicyID, dnsErr)
+			}
+			tag := fmt.Sprintf("%s%s", DNSRuleTagPrefix, stableClient(d.ClientEmail))
+			quarantineRules = append(quarantineRules, map[string]any{"type": "field", "user": []string{d.ClientEmail}, "port": "53", "network": "tcp,udp", "outboundTag": dnsTag, "ruleTag": tag})
+		}
+		if d.Quarantined {
+			for i, destination := range d.QuarantineAllowlist {
+				normalized, normalizeErr := supportedDestinations(policy.Decision{PolicyID: d.PolicyID, Destinations: []string{destination}})
+				if normalizeErr != nil {
+					return cfg, normalizeErr
+				}
+				if len(normalized) != 1 {
+					return cfg, fmt.Errorf("policy %d: malformed quarantine allowlist", d.PolicyID)
+				}
+				tag := fmt.Sprintf("%s%s-%d", QuarantineRuleTagPrefix, stableClient(d.ClientEmail), i)
+				quarantineRules = append(quarantineRules, map[string]any{"type": "field", "user": []string{d.ClientEmail}, "domain": []string{normalized[0]}, "outboundTag": "direct", "ruleTag": tag})
+			}
+			tag := fmt.Sprintf("%s%s", QuarantineRuleTagPrefix, stableClient(d.ClientEmail))
+			quarantineRules = append(quarantineRules, map[string]any{"type": "field", "user": []string{d.ClientEmail}, "outboundTag": "blocked", "ruleTag": tag})
+			continue
 		}
 		outbound, err := selectOutbound(cfg.OutboundConfigs, d.Action)
 		if err != nil {
@@ -133,6 +178,7 @@ func Compile(cfg *xray.Config, decisions []policy.Decision) (*xray.Config, error
 			kept = append(kept, selector)
 		}
 	}
+	kept = append(quarantineRules, kept...)
 	if len(kept) == len(rules) && len(decisions) > 0 {
 		return cfg, nil
 	}
@@ -206,4 +252,20 @@ func selectOutbound(raw []byte, action string) (string, error) {
 		}
 	}
 	return "", fmt.Errorf("no compatible %s outbound", action)
+}
+
+func selectDNSOutbound(raw []byte, requested string) (string, error) {
+	var outbounds []map[string]any
+	if err := json.Unmarshal(raw, &outbounds); err != nil {
+		return "", fmt.Errorf("policy outbounds decode: %w", err)
+	}
+	for _, outbound := range outbounds {
+		protocol, _ := outbound["protocol"].(string)
+		if strings.EqualFold(protocol, "dns") && (requested == "" || outbound["tag"] == requested) {
+			if tag, ok := outbound["tag"].(string); ok && tag != "" {
+				return tag, nil
+			}
+		}
+	}
+	return "", fmt.Errorf("no compatible dns outbound")
 }

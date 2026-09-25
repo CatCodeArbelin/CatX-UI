@@ -4435,7 +4435,7 @@
     },
     {
       "name": "Policies (CatX-UI)",
-      "description": "Durable policy data only. These endpoints do not compile or enforce Xray routing decisions."
+      "description": "Policy data and explainable WP-4B enforcement capabilities. Quarantine is safety state; only a bounded quarantine-release temporary override can release it. Managed DNS and SafeSearch apply only to supported Xray-observed DNS paths."
     }
   ],
   "paths": {

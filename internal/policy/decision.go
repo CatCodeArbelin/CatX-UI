@@ -36,19 +36,26 @@ type CandidateExplanation struct {
 }
 
 type Decision struct {
-	ClientEmail   string                 `json:"clientEmail"`
-	GroupName     string                 `json:"groupName,omitempty"`
-	PolicyID      uint                   `json:"policyId"`
-	PolicyName    string                 `json:"policyName"`
-	Action        string                 `json:"action"`
-	Services      []string               `json:"services,omitempty"`
-	Categories    []string               `json:"categories,omitempty"`
-	Destinations  []string               `json:"destinations,omitempty"`
-	Winner        ResolvedCandidate      `json:"winner"`
-	Candidates    []ResolvedCandidate    `json:"candidates"`
-	Explanations  []CandidateExplanation `json:"explanations"`
-	Explanation   string                 `json:"explanation"`
-	OverrideScope string                 `json:"overrideScope,omitempty"`
+	ClientEmail         string                 `json:"clientEmail"`
+	GroupName           string                 `json:"groupName,omitempty"`
+	PolicyID            uint                   `json:"policyId"`
+	PolicyName          string                 `json:"policyName"`
+	Action              string                 `json:"action"`
+	Services            []string               `json:"services,omitempty"`
+	Categories          []string               `json:"categories,omitempty"`
+	Destinations        []string               `json:"destinations,omitempty"`
+	Winner              ResolvedCandidate      `json:"winner"`
+	Candidates          []ResolvedCandidate    `json:"candidates"`
+	Explanations        []CandidateExplanation `json:"explanations"`
+	Explanation         string                 `json:"explanation"`
+	OverrideScope       string                 `json:"overrideScope,omitempty"`
+	Quarantined         bool                   `json:"quarantined,omitempty"`
+	QuarantineReleased  bool                   `json:"quarantineReleased,omitempty"`
+	QuarantineAllowlist []string               `json:"quarantineAllowlist,omitempty"`
+	ManagedDNS          bool                   `json:"managedDns,omitempty"`
+	DNSOutboundTag      string                 `json:"dnsOutboundTag,omitempty"`
+	SafeSearch          bool                   `json:"safeSearch,omitempty"`
+	DNSLimitations      []string               `json:"dnsLimitations,omitempty"`
 }
 
 // ResolveDecisions resolves one deterministic decision per known client. It
@@ -128,11 +135,14 @@ func (r *Repository) ResolveDecision(ctx context.Context, clientEmail, groupName
 			value = row.Value
 		}
 		var patch struct {
-			Action       string   `json:"action"`
-			Services     []string `json:"services"`
-			Categories   []string `json:"categories"`
-			Destinations []string `json:"destinations"`
-			Domains      []string `json:"domains"`
+			Action              string         `json:"action"`
+			Services            []string       `json:"services"`
+			Categories          []string       `json:"categories"`
+			Destinations        []string       `json:"destinations"`
+			Domains             []string       `json:"domains"`
+			Quarantine          *bool          `json:"quarantine"`
+			QuarantineAllowlist []string       `json:"quarantineAllowlist"`
+			DNS                 map[string]any `json:"dns"`
 		}
 		if err := json.Unmarshal([]byte(value), &patch); err != nil {
 			return nil, fmt.Errorf("policy %d: malformed override: %w", p.ID, err)
@@ -161,10 +171,29 @@ func (r *Repository) ResolveDecision(ctx context.Context, clientEmail, groupName
 			if patch.Services != nil {
 				spec.Services = patch.Services
 			}
+		case ScopeDNS:
+			if patch.DNS != nil {
+				spec.DNS = patch.DNS
+			}
+		}
+		if winner.Scope == ScopePolicy {
+			if patch.Quarantine != nil {
+				spec.Quarantine = *patch.Quarantine
+			}
+			if patch.QuarantineAllowlist != nil {
+				spec.QuarantineAllowlist = patch.QuarantineAllowlist
+			}
 		}
 	}
-	if spec.Action == "" {
+	quarantined, released, allowlist, managedDNS, dnsOutboundTag, safeSearch, limitations, err := r.resolveCapabilities(ctx, resolved.Items)
+	if err != nil {
+		return nil, err
+	}
+	if spec.Action == "" && !quarantined && !managedDNS && !safeSearch {
 		return nil, nil
+	}
+	if spec.Action == "" {
+		spec.Action = "deny"
 	}
 	if spec.Action != "allow" && spec.Action != "deny" {
 		return nil, fmt.Errorf("policy %d: unsupported action %q", p.ID, spec.Action)
@@ -177,5 +206,122 @@ func (r *Repository) ResolveDecision(ctx context.Context, clientEmail, groupName
 		}
 		explanations = append(explanations, CandidateExplanation{Candidate: candidate, Won: i == 0, Reason: reason})
 	}
-	return &Decision{ClientEmail: clientEmail, GroupName: groupName, PolicyID: p.ID, PolicyName: p.Name, Action: spec.Action, Services: spec.Services, Categories: spec.Categories, Destinations: spec.Destinations, Winner: winner, Candidates: resolved.Items, Explanations: explanations, OverrideScope: winner.Scope, Explanation: fmt.Sprintf("%s %s target %s by %s", winner.Source, winner.TargetType, winner.TargetRef, p.Name)}, nil
+	explanation := fmt.Sprintf("%s %s target %s by %s", winner.Source, winner.TargetType, winner.TargetRef, p.Name)
+	if quarantined {
+		explanation += "; quarantine is effective and generic policy overrides cannot bypass it"
+	}
+	if released {
+		explanation += "; bounded quarantine-release is effective"
+	}
+	return &Decision{ClientEmail: clientEmail, GroupName: groupName, PolicyID: p.ID, PolicyName: p.Name, Action: spec.Action, Services: spec.Services, Categories: spec.Categories, Destinations: spec.Destinations, Winner: winner, Candidates: resolved.Items, Explanations: explanations, OverrideScope: winner.Scope, Explanation: explanation, Quarantined: quarantined, QuarantineReleased: released, QuarantineAllowlist: allowlist, ManagedDNS: managedDNS, DNSOutboundTag: dnsOutboundTag, SafeSearch: safeSearch, DNSLimitations: limitations}, nil
+}
+
+// resolveCapabilities intentionally runs alongside ordinary winner selection.
+// Quarantine is a safety state: generic allow/domain/service/category rules do
+// not clear it. Only an active temporary override with the dedicated
+// quarantine-release scope can release it.
+func (r *Repository) resolveCapabilities(ctx context.Context, candidates []resolvedCandidate) (bool, bool, []string, bool, string, bool, []string, error) {
+	quarantined, released, managedDNS, safeSearch := false, false, false, false
+	dnsOutboundTag := ""
+	dnsSelected := false
+	allow := map[string]struct{}{}
+	limitations := []string{}
+	for _, candidate := range candidates {
+		var p Policy
+		if err := r.db.WithContext(ctx).First(&p, candidate.PolicyID).Error; err != nil {
+			return false, false, nil, false, "", false, nil, err
+		}
+		var d Definition
+		if err := json.Unmarshal([]byte(p.Spec), &d); err != nil {
+			return false, false, nil, false, "", false, nil, err
+		}
+		if candidate.Scope == ScopeDNS && (candidate.Source == "override" || candidate.Source == "temporary") {
+			var value string
+			if candidate.Source == "override" {
+				var row PolicyOverride
+				if err := r.db.WithContext(ctx).First(&row, candidate.ID).Error; err != nil {
+					return false, false, nil, false, "", false, nil, err
+				}
+				value = row.Value
+			} else {
+				var row TemporaryOverride
+				if err := r.db.WithContext(ctx).First(&row, candidate.ID).Error; err != nil {
+					return false, false, nil, false, "", false, nil, err
+				}
+				value = row.Value
+			}
+			var patch struct {
+				DNS map[string]any `json:"dns"`
+			}
+			if err := json.Unmarshal([]byte(value), &patch); err != nil {
+				return false, false, nil, false, "", false, nil, err
+			}
+			if patch.DNS != nil {
+				d.DNS = patch.DNS
+			}
+		}
+		if d.Quarantine {
+			quarantined = true
+			for _, item := range d.QuarantineAllowlist {
+				allow[strings.ToLower(strings.TrimSpace(item))] = struct{}{}
+			}
+		}
+		if !dnsSelected && len(d.DNS) > 0 {
+			dnsSelected = true
+			if managed, _ := d.DNS["managed"].(bool); managed {
+				managedDNS = true
+			}
+			if tag, _ := d.DNS["dnsOutboundTag"].(string); strings.TrimSpace(tag) != "" {
+				dnsOutboundTag = strings.TrimSpace(tag)
+			}
+			if ss, _ := d.DNS["safeSearch"].(bool); ss {
+				safeSearch = true
+				managedDNS = true
+				if dnsOutboundTag == "" {
+					limitations = append(limitations, "SafeSearch requires an explicit dnsOutboundTag whose resolver enforces SafeSearch")
+				}
+			}
+		}
+		if candidate.Source == "temporary" && candidate.Scope == ScopeQuarantineRelease && d.Quarantine {
+			var row TemporaryOverride
+			if err := r.db.WithContext(ctx).First(&row, candidate.ID).Error; err != nil {
+				return false, false, nil, false, "", false, nil, err
+			}
+			var release struct {
+				Released bool `json:"released"`
+			}
+			if err := json.Unmarshal([]byte(row.Value), &release); err != nil {
+				return false, false, nil, false, "", false, nil, err
+			}
+			if release.Released {
+				released = true
+			}
+		}
+	}
+	if released {
+		quarantined = false
+	}
+	if managedDNS || safeSearch {
+		limitations = append(limitations, "client-controlled DoH/DoH3, DoT, and cached DNS are outside Xray-observed DNS paths")
+	}
+	allowlist := make([]string, 0, len(allow))
+	for item := range allow {
+		allowlist = append(allowlist, item)
+	}
+	sort.Strings(allowlist)
+	return quarantined, released, allowlist, managedDNS, dnsOutboundTag, safeSearch, uniqueStrings(limitations), nil
+}
+
+func uniqueStrings(values []string) []string {
+	seen := map[string]struct{}{}
+	out := make([]string, 0, len(values))
+	for _, value := range values {
+		if _, ok := seen[value]; ok {
+			continue
+		}
+		seen[value] = struct{}{}
+		out = append(out, value)
+	}
+	sort.Strings(out)
+	return out
 }

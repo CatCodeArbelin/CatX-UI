@@ -61,6 +61,11 @@ type Decision = {
   policyName: string;
   action: string;
   explanation: string;
+  quarantined?: boolean;
+  quarantineReleased?: boolean;
+  managedDns?: boolean;
+  safeSearch?: boolean;
+  dnsLimitations?: string[];
   winner: {
     source: string;
     targetType: string;
@@ -545,10 +550,12 @@ export default function PolicyPage() {
                           </Form.Item>
                           <Form.Item name="scope" initialValue="policy">
                             <Select
-                              options={['policy', 'domain', 'service'].map((value) => ({
-                                value,
-                                label: value,
-                              }))}
+                              options={['policy', 'domain', 'service', 'quarantine-release'].map(
+                                (value) => ({
+                                  value,
+                                  label: value,
+                                }),
+                              )}
                             />
                           </Form.Item>
                           <Form.Item name="startsAt" rules={[{ required: true }]}>
@@ -715,6 +722,12 @@ export default function PolicyPage() {
             <Form.Item name="spec" label="Policy JSON" rules={[{ required: true }]}>
               <Input.TextArea rows={10} spellCheck={false} />
             </Form.Item>
+            <Alert
+              type="info"
+              showIcon
+              message="WP-4B capabilities"
+              description='Use quarantine:true with an optional quarantineAllowlist. Use dns:{ managed:true, dnsOutboundTag:"dns-out" } for intercepted plaintext DNS. SafeSearch requires safeSearch:true and an explicit dnsOutboundTag whose resolver enforces SafeSearch. A bounded release uses temporary scope quarantine-release with value {"released":true}.'
+            />
             <Form.Item name="categories" label="Known categories">
               <Select
                 mode="multiple"
@@ -767,10 +780,21 @@ function SimulationView({ value }: { value: Simulation }) {
   return (
     <div className="policy-result">
       <Alert
-        type={value.decision.action === 'deny' ? 'warning' : 'success'}
+        type={
+          value.decision.quarantined || value.decision.action === 'deny' ? 'warning' : 'success'
+        }
         message={`${value.decision.action.toUpperCase()} · ${value.decision.policyName}`}
         description={value.decision.explanation}
       />
+      <Space wrap style={{ marginTop: 12 }}>
+        {value.decision.quarantined && <Tag color="red">Quarantined</Tag>}
+        {value.decision.quarantineReleased && <Tag color="orange">Bounded release active</Tag>}
+        {value.decision.managedDns && <Tag color="blue">Managed DNS</Tag>}
+        {value.decision.safeSearch && <Tag color="purple">SafeSearch capability</Tag>}
+      </Space>
+      {value.decision.dnsLimitations?.map((limitation) => (
+        <Alert key={limitation} style={{ marginTop: 12 }} type="warning" message={limitation} />
+      ))}
       <Typography.Title level={5}>Decision candidates</Typography.Title>
       <Table
         rowKey={(row) =>
