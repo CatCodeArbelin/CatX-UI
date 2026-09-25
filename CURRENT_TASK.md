@@ -2,61 +2,57 @@
 
 ## Work Package
 
-`WP-3B — Policy Decision Engine & Xray Compiler`
+`WP-3C — Simulator / Explain / UI`
 
 ## Goal
 
-Build a deterministic policy decision engine and compile its decisions into
-Xray routing/config behavior through the existing authoritative Xray config
-path. Existing upstream `GetXrayConfig()` remains authoritative; policy
-compilation must attach through the existing fork decorator seam near the end
-of config construction.
+Build the human-facing inspection and management layer for the policy engine
+without changing WP-3A/WP-3B decision semantics. The simulator must reuse the
+real decision engine and explain-route must reuse the real Xray compiler.
 
 ## Required
 
-- Reuse the WP-3A policy data contracts and upstream client/group identities;
-- separate policy resolution, inspectable decision representation, and pure
-  Xray compilation;
-- preserve the established precedence contract: temporary override, explicit
-  override, client assignment, group assignment, then priority and the
-  established deterministic tie-break rules;
-- ignore expired temporary overrides and disabled policies;
-- retain explanation metadata for future WP-3C simulator/explain behavior;
-- compile only authorized policy dimensions, at minimum durable allow/deny
-  targets and conservatively supported domain/category/service targets;
-- preserve upstream inbounds, outbounds, and routing; append only stable,
-  fork-owned fragments in deterministic order;
-- make decoration idempotent, duplicate-safe, side-effect free where possible,
-  and an exact no-op when policies are disabled or no effective policy exists;
-- fail explicitly and safely on malformed policy state without returning a
-  partially corrupted candidate configuration;
-- use the existing candidate validation and recovery path where practical;
-- add comprehensive decision, compiler, structural, idempotence, malformed
-  input, isolation, concurrency/race, and feature-disabled tests;
-- run the strongest local checks available and use GitHub Actions as the
-  canonical Linux verification environment.
+- side-effect-free simulation for client, group, domain, IP/CIDR, category,
+  service, timestamp, and persisted policy state;
+- simulator never mutates storage, feature flags, Xray config, or runtime;
+- inspectable explain-decision output containing final action, winner,
+  assignment/override source, precedence stage, priority, client/group source,
+  temporary status/expiry, deterministic tie-break data, and reasons for
+  winners and losers;
+- explain-route derived from the actual compiler representation, including
+  CatX rule identity, destination, user selector, outbound, ordering, source,
+  and whether a rule would be emitted;
+- protected simulator/explain APIs through the existing fork API boundary;
+- explicit stable schemas and regenerated OpenAPI artifacts;
+- policy management UI using existing 3x-ui containers, spacing, Ant Design
+  tokens, tables, forms, drawers/modals, typography, states, and responsive
+  conventions;
+- UI for policy CRUD, client/group assignments, explicit and temporary
+  overrides, simulator, decision explanation, and route explanation;
+- frontend must consume existing protected APIs rather than duplicate CRUD
+  semantics;
+- tests for equivalence, zero side effects, explanations, route previews,
+  validation, disabled/empty/loading/error states, frontend behavior, and
+  concurrency where applicable;
+- run full `make verify-fork` and Release CatX-UI through GitHub Actions.
 
 ## Hard constraints
 
-- do not create a second Xray config generator;
-- do not rewrite upstream controller/service/database layers or spread policy
-  logic through upstream core files;
-- do not invent packet inspection or infer a domain solely from a shared IP;
-- unknown or ambiguous classifications must not cause destructive blocking;
-- no TLS MITM, decrypted HTTPS, payload inspection, cookies, credentials,
+- do not create a second decision engine or Xray compiler;
+- do not apply simulation results or restart/reload Xray;
+- do not change WP-3A/WP-3B precedence or compiler behavior except for a
+  clearly required compatibility adapter;
+- no TLS MITM, decrypted HTTPS, payload inspection, credentials, cookies,
   Authorization headers, or request bodies;
-- no duplicate client/group/node/inbound models;
-- do not implement WP-3C simulator/UI, schedules UI, quarantine UI, managed
-  DNS enforcement unless explicitly authorized here, SafeSearch, QoS,
-  throttling, traffic quotas, security anomaly actions, or multi-node policy
-  distribution;
+- no schedules UI, quarantine, managed DNS enforcement, SafeSearch, QoS,
+  quotas, anomaly actions, or multi-node distribution in WP-3C;
+- preserve feature-disabled upstream-compatible no-op behavior;
 - do not modify or merge into `main`;
-- do not merge WP-3B into `develop` automatically; stop on the feature branch
-  after green CI for review.
+- do not merge WP-3C into `develop` automatically; stop on the feature branch
+  after both required CI workflows are green.
 
-## Recovery and safety
+## Safety
 
-Use the existing snapshot, candidate validation, apply, healthcheck, and
-rollback behavior for Xray changes. A compiler error must leave the original
-upstream configuration untouched and be explicit/testable. Feature-disabled
-behavior must remain as close to upstream as possible.
+Simulation and explanation are read-only. Malformed or unsupported policy
+state must be represented explicitly and conservatively; it must never cause
+an Xray mutation. Keep API errors stable and testable.

@@ -205,7 +205,7 @@ No TLS MITM.
 
 ---
 
-## WP-2B — Enrichment & Classification — CURRENT
+## WP-2B — Enrichment & Classification — DONE
 
 Recommended model: `Luna Medium`
 
@@ -216,6 +216,8 @@ Includes:
 - category classifier;
 - first-seen/new-domain intelligence;
 - relationship graph.
+
+Completed and merged into `develop` (`a1895d77`).
 
 ---
 
@@ -253,7 +255,7 @@ Completed and merged into `develop`.
 
 ---
 
-## WP-3B — Policy Decision Engine & Xray Compiler — CURRENT
+## WP-3B — Policy Decision Engine & Xray Compiler — DONE
 
 Recommended model: `Sol High`
 
@@ -266,9 +268,11 @@ Includes:
 - Xray validation;
 - rollback integration.
 
+Completed and merged into `develop`.
+
 ---
 
-## WP-3C — Simulator / Explain / UI
+## WP-3C — Simulator / Explain / UI — CURRENT
 
 Recommended model: `Luna Medium`
 
