@@ -64,6 +64,10 @@ func TestPolicyCRUDAndAssignments(t *testing.T) {
 	if len(resolved.Items) != 2 || resolved.Items[0].Source != "override" {
 		t.Fatalf("unexpected precedence: %+v", resolved.Items)
 	}
+	decisions, err := r.ResolveDecisions(ctx, []string{"alice@example.test"}, time.Now().UnixMilli())
+	if err != nil || len(decisions) != 1 || decisions[0].OverrideScope != ScopeDomain || len(decisions[0].Destinations) != 1 || decisions[0].Destinations[0] != "example.test" {
+		t.Fatalf("domain override was not scoped: %+v, %v", decisions, err)
+	}
 }
 
 func TargetTypeForTest() string { return TargetClient }

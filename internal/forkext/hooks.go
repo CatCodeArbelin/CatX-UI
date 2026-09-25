@@ -6,11 +6,14 @@ package forkext
 
 import (
 	"context"
+	"encoding/json"
 	"log"
+	"time"
 
 	"github.com/mhsanaei/3x-ui/v3/internal/analytics"
 	"github.com/mhsanaei/3x-ui/v3/internal/eventbus"
 	"github.com/mhsanaei/3x-ui/v3/internal/policy"
+	"github.com/mhsanaei/3x-ui/v3/internal/policycompiler"
 	"github.com/mhsanaei/3x-ui/v3/internal/xray"
 
 	"github.com/gin-gonic/gin"
@@ -92,6 +95,41 @@ func Stop() {}
 // DecorateXrayConfig is called after upstream has assembled the complete
 // candidate configuration. Returning the same pointer is the exact no-op
 // behavior required while fork features are disabled.
-func DecorateXrayConfig(_ context.Context, cfg *xray.Config) (*xray.Config, error) {
-	return cfg, nil
+func DecorateXrayConfig(ctx context.Context, cfg *xray.Config) (*xray.Config, error) {
+	if cfg == nil || !policy.Enabled() {
+		return cfg, nil
+	}
+	set := map[string]struct{}{}
+	for _, inbound := range cfg.InboundConfigs {
+		var settings map[string]any
+		if len(inbound.Settings) == 0 {
+			continue
+		}
+		if err := json.Unmarshal(inbound.Settings, &settings); err != nil {
+			return cfg, err
+		}
+		clients, ok := settings["clients"].([]any)
+		if !ok {
+			continue
+		}
+		for _, raw := range clients {
+			if client, ok := raw.(map[string]any); ok {
+				if email, ok := client["email"].(string); ok && email != "" {
+					set[email] = struct{}{}
+				}
+			}
+		}
+	}
+	emails := make([]string, 0, len(set))
+	for email := range set {
+		emails = append(emails, email)
+	}
+	decisions, err := policy.ResolveCurrent(ctx, emails, time.Now().UnixMilli())
+	if err != nil {
+		return cfg, err
+	}
+	if len(decisions) == 0 {
+		return cfg, nil
+	}
+	return policycompiler.Compile(cfg, decisions)
 }

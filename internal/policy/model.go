@@ -243,16 +243,7 @@ func clientOrGroupExists(db *gorm.DB, targetType, ref string) error {
 	return nil
 }
 
-type resolvedCandidate struct {
-	Source     string
-	PolicyID   uint
-	TargetType string
-	TargetRef  string
-	Priority   int
-	CreatedAt  int64
-	ID         uint
-	Active     bool
-}
+type resolvedCandidate = ResolvedCandidate
 
 type ResolvedPolicy struct {
 	TargetClient string              `json:"targetClient,omitempty"`

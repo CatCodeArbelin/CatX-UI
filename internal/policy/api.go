@@ -1,6 +1,7 @@
 package policy
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -30,6 +31,17 @@ func Configure(db *gorm.DB, enabled bool) {
 }
 
 func Enabled() bool { state.RLock(); defer state.RUnlock(); return state.enabled }
+
+// ResolveCurrent exposes the configured repository without exposing its
+// database handle to Xray compilation code.
+func ResolveCurrent(ctx context.Context, emails []string, at int64) ([]Decision, error) {
+	repo, ok := current()
+	if !ok {
+		return nil, nil
+	}
+	return repo.ResolveDecisions(ctx, emails, at)
+}
+
 func current() (*Repository, bool) {
 	state.RLock()
 	defer state.RUnlock()
