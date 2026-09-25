@@ -11,9 +11,11 @@ import (
 	"github.com/mhsanaei/3x-ui/v3/internal/xray"
 )
 
-const RuleTagPrefix = "catx-policy-"
-const QuarantineRuleTagPrefix = "catx-quarantine-"
-const DNSRuleTagPrefix = "catx-dns-"
+const (
+	RuleTagPrefix           = "catx-policy-"
+	QuarantineRuleTagPrefix = "catx-quarantine-"
+	DNSRuleTagPrefix        = "catx-dns-"
+)
 
 type RulePreview struct {
 	RuleTag     string `json:"ruleTag"`
