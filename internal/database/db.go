@@ -64,7 +64,7 @@ const (
 )
 
 func allModels() []any {
-	return []any{
+	models := []any{
 		&model.User{},
 		&model.Inbound{},
 		&model.OutboundTraffics{},
@@ -87,6 +87,7 @@ func allModels() []any {
 		&model.OutboundSubscription{},
 		&model.SubBalancer{},
 	}
+	return append(models, forkext.MigrationModels()...)
 }
 
 func migrateClientTrafficLastSubFetchColumn() error {

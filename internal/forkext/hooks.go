@@ -12,6 +12,7 @@ import (
 
 	"github.com/mhsanaei/3x-ui/v3/internal/analytics"
 	"github.com/mhsanaei/3x-ui/v3/internal/eventbus"
+	"github.com/mhsanaei/3x-ui/v3/internal/forkext/groupquota"
 	"github.com/mhsanaei/3x-ui/v3/internal/policy"
 	"github.com/mhsanaei/3x-ui/v3/internal/policycompiler"
 	"github.com/mhsanaei/3x-ui/v3/internal/policysim"
@@ -31,10 +32,21 @@ func Install() {}
 func RegisterMigrations(db *gorm.DB) error {
 	setSettingsDB(db)
 	if db == nil {
+		groupquota.Configure(nil, false)
 		analytics.Configure(analytics.NoopRepository{}, false)
 		policy.Configure(nil, false)
 		return nil
 	}
+	trafficControlEnabled, err := NewSettings(db).Enabled(FlagTrafficControl)
+	if err != nil {
+		trafficControlEnabled = false
+	}
+	if trafficControlEnabled {
+		if err := groupquota.Migrate(db); err != nil {
+			return err
+		}
+	}
+	groupquota.Configure(db, trafficControlEnabled)
 	analyticsEnabled, err := NewSettings(db).Enabled(FlagAnalytics)
 	if err != nil {
 		log.Printf("fork analytics disabled: cannot read feature flag: %v", err)
@@ -78,14 +90,68 @@ func RegisterRoutes(api *gin.RouterGroup) {
 	registerAnalyticsSettingsRoutes(api)
 	policy.RegisterRoutes(api)
 	policysim.RegisterRoutes(api)
+	groupquota.RegisterRoutes(api)
 }
 
 // RegisterJobs is the fixed scheduler integration point for fork jobs.
-func RegisterJobs(_ context.Context, _ *cron.Cron) {}
+func RegisterJobs(_ context.Context, scheduler *cron.Cron) { groupquota.RegisterJobs(scheduler) }
+
+func SetTrafficControlRestartCallback(fn func()) { groupquota.SetRestartCallback(fn) }
 
 // RegisterEventSubscribers is the fixed event-bus integration point for fork
 // subscribers.
 func RegisterEventSubscribers(_ *eventbus.Bus) {}
+
+// GroupQuotaApplyDeltas is the sole accounting handoff from upstream traffic
+// writes to the fork quota module.
+func GroupQuotaApplyDeltas(tx *gorm.DB, traffics []*xray.ClientTraffic) error {
+	return groupquota.ApplyClientDeltas(tx, traffics)
+}
+
+func GroupQuotaDepletedEmails(tx *gorm.DB) ([]string, error) {
+	return groupquota.DepletedEmails(tx)
+}
+
+func GroupQuotaPreserveReset(tx *gorm.DB, email string, newUp, newDown int64) error {
+	return groupquota.PreserveReset(tx, email, newUp, newDown)
+}
+
+func GroupQuotaClearOwnership(tx *gorm.DB, email string) error {
+	return groupquota.ClearOwnership(tx, email)
+}
+
+func GroupQuotaIsBlocked(tx *gorm.DB, email string) (bool, error) {
+	return groupquota.IsBlocked(tx, email)
+}
+
+func GroupQuotaIsGroupDepleted(tx *gorm.DB, group string) (bool, error) {
+	return groupquota.IsGroupDepleted(tx, group)
+}
+
+func GroupQuotaReset(tx *gorm.DB, group string) ([]string, error) {
+	return groupquota.Reset(tx, group)
+}
+
+func GroupQuotaChangeMembership(tx *gorm.DB, email, oldGroup, newGroup string) error {
+	return groupquota.ChangeMembership(tx, email, oldGroup, newGroup)
+}
+func GroupQuotaRemoveMembership(tx *gorm.DB, email string) error {
+	return groupquota.RemoveMembershipByEmail(tx, email)
+}
+
+func GroupQuotaViews(tx *gorm.DB) ([]groupquota.GroupView, error) {
+	return groupquota.ListViews(tx)
+}
+
+func GroupQuotaRename(tx *gorm.DB, oldName, newName string) error {
+	return groupquota.RenameGroup(tx, oldName, newName)
+}
+func GroupQuotaReconcileEnabled(tx *gorm.DB) error { return groupquota.ReconcileEnabled(tx) }
+func GroupQuotaRebaselineClient(tx *gorm.DB, email string, up, down int64) error {
+	return groupquota.RebaselineClient(tx, email, up, down)
+}
+
+func MigrationModels() []any { return groupquota.Models() }
 
 // Start is the lifecycle integration point for fork-owned goroutines. The
 // returned closer is always safe to call in the no-op foundation state.
