@@ -631,6 +631,7 @@ func (s *InboundService) setRemoteTrafficLocked(nodeID int, snap *runtime.Traffi
 	structuralChange := false
 	lifecycleLifted := false
 	quotaDeltas := make([]*xray.ClientTraffic, 0)
+	staleNodeDisableEmails := make(map[string]bool)
 
 	var adoptedInbounds []*model.Inbound
 	type pendingAdopt struct {
@@ -1103,6 +1104,8 @@ func (s *InboundService) setRemoteTrafficLocked(nodeID int, snap *runtime.Traffi
 				// an old disable must not overwrite a master quota top-up in a later
 				// lifecycle/settings merge.
 				if preserveMasterEnable {
+					existing.Enable = masterEnable
+					staleNodeDisableEmails[cs.Email] = true
 					if err := tx.Model(xray.ClientTraffic{}).
 						Where("email = ?", cs.Email).
 						Update("enable", masterEnable).Error; err != nil {
@@ -1337,6 +1340,15 @@ func (s *InboundService) setRemoteTrafficLocked(nodeID int, snap *runtime.Traffi
 
 	if err := liftActivatedClientRecordExpiries(tx); err != nil {
 		logger.Warning("setRemoteTraffic: lift activated expiries failed:", err)
+	}
+	// SyncInbound merges node settings after the traffic row merge. Reassert the
+	// decision made from the authoritative pre-merge master row so a stale node
+	// disable cannot latch during that later lifecycle pass. Group quota
+	// depletion is evaluated immediately afterward and may still disable it.
+	for email := range staleNodeDisableEmails {
+		if err := tx.Model(xray.ClientTraffic{}).Where("email = ?", email).Update("enable", true).Error; err != nil {
+			return false, err
+		}
 	}
 	if err := forkext.GroupQuotaApplyDeltas(tx, quotaDeltas); err != nil {
 		return false, err
