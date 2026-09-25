@@ -123,6 +123,7 @@ func (a *GroupController) resetTraffic(c *gin.Context) {
 		jsonMsg(c, I18nWeb(c, "somethingWentWrong"), err)
 		return
 	}
+	a.xrayService.SetToNeedRestart()
 	jsonObj(c, gin.H{"name": body.Name}, nil)
 	notifyClientsChanged()
 }

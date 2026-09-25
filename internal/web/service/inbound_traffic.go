@@ -13,6 +13,7 @@ import (
 
 	"github.com/mhsanaei/3x-ui/v3/internal/database"
 	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
+	"github.com/mhsanaei/3x-ui/v3/internal/forkext"
 	"github.com/mhsanaei/3x-ui/v3/internal/logger"
 	"github.com/mhsanaei/3x-ui/v3/internal/web/runtime"
 	"github.com/mhsanaei/3x-ui/v3/internal/xray"
@@ -52,7 +53,10 @@ func (s *InboundService) addTrafficLocked(inboundTraffics []*xray.Traffic, clien
 		if err := s.addInboundTraffic(tx, inboundTraffics); err != nil {
 			return err
 		}
-		return s.addClientTraffic(tx, clientTraffics)
+		if err := s.addClientTraffic(tx, clientTraffics); err != nil {
+			return err
+		}
+		return forkext.GroupQuotaApplyDeltas(tx, clientTraffics)
 	}); err != nil {
 		return false, false, nil, nil, err
 	}
@@ -72,6 +76,13 @@ func (s *InboundService) addTrafficLocked(inboundTraffics []*xray.Traffic, clien
 		if count > 0 {
 			logger.Debugf("%v clients renewed", count)
 		}
+		// Evaluate after auto-renew: a renewal may set enable=true, but a
+		// depleted group must still own and immediately re-disable that client.
+		groupEmails, err := forkext.GroupQuotaDepletedEmails(tx)
+		if err != nil {
+			return fmt.Errorf("evaluate group quotas: %w", err)
+		}
+		batch.groupQuotaEmails = groupEmails
 
 		needRestart1, count, nodeIDs, err := s.disableInvalidClients(tx, batch)
 		if err != nil {
@@ -613,6 +624,9 @@ func (s *InboundService) UpdateClientStat(tx *gorm.DB, email string, client *mod
 }
 
 func (s *InboundService) DelClientStat(tx *gorm.DB, email string) error {
+	if err := forkext.GroupQuotaRemoveMembership(tx, email); err != nil {
+		return err
+	}
 	if err := adjustGroupBaselinesForRemovedTraffic(tx, []string{email}); err != nil {
 		return err
 	}
@@ -626,6 +640,11 @@ func (s *InboundService) DelClientStat(tx *gorm.DB, email string) error {
 }
 
 func (s *InboundService) delClientStatsByEmails(tx *gorm.DB, emails []string) error {
+	for _, email := range emails {
+		if err := forkext.GroupQuotaRemoveMembership(tx, email); err != nil {
+			return err
+		}
+	}
 	if err := adjustGroupBaselinesForRemovedTraffic(tx, emails); err != nil {
 		return err
 	}
@@ -652,12 +671,18 @@ func (s *InboundService) ResetClientTrafficByEmail(clientEmail string) error {
 			if err := adjustGroupBaselinesForRemovedTraffic(tx, []string{clientEmail}); err != nil {
 				return err
 			}
+			if err := forkext.GroupQuotaPreserveReset(tx, clientEmail, 0, 0); err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+				return err
+			}
 			if err := clearGlobalTraffic(tx, clientEmail); err != nil {
 				return err
 			}
 			if err := tx.Model(xray.ClientTraffic{}).
 				Where("email = ?", clientEmail).
 				Updates(map[string]any{"enable": true, "up": 0, "down": 0}).Error; err != nil {
+				return err
+			}
+			if err := forkext.GroupQuotaReconcileEnabled(tx); err != nil {
 				return err
 			}
 			return tx.Where("email = ?", clientEmail).Delete(&model.NodeClientTraffic{}).Error
@@ -760,7 +785,13 @@ func (s *InboundService) resetClientTrafficLocked(id int, clientEmail string) (b
 		if err := adjustGroupBaselinesForRemovedTraffic(tx, []string{clientEmail}); err != nil {
 			return err
 		}
+		if err := forkext.GroupQuotaPreserveReset(tx, clientEmail, 0, 0); err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+			return err
+		}
 		if err := tx.Save(traffic).Error; err != nil {
+			return err
+		}
+		if _, err := forkext.GroupQuotaDepletedEmails(tx); err != nil {
 			return err
 		}
 		if err := clearGlobalTraffic(tx, clientEmail); err != nil {
@@ -783,6 +814,15 @@ func (s *InboundService) resetClientTrafficLocked(id int, clientEmail string) (b
 		return nil
 	}); err != nil {
 		return false, nil, err
+	}
+	if blocked, blockErr := forkext.GroupQuotaIsBlocked(database.GetDB(), clientEmail); blockErr != nil {
+		return false, nil, blockErr
+	} else if blocked {
+		// The quota reconciliation above owns the disable and settings mutation;
+		// do not apply the stale reset-time re-enable plan.
+		reenablePlan = nil
+		reenableNodeID = nil
+		needRestart = s.reconcileGroupQuotaRuntime() || needRestart
 	}
 
 	if reenablePlan != nil {
@@ -1228,12 +1268,12 @@ func (s *InboundService) GetClientTrafficByEmail(email string) (traffic *xray.Cl
 func (s *InboundService) UpdateClientTrafficByEmail(email string, upload int64, download int64) error {
 	return submitTrafficWrite(func() error {
 		db := database.GetDB()
-		err := db.Model(xray.ClientTraffic{}).
-			Where("email = ?", email).
-			Updates(map[string]any{
-				"up":   upload,
-				"down": download,
-			}).Error
+		err := db.Transaction(func(tx *gorm.DB) error {
+			if err := forkext.GroupQuotaRebaselineClient(tx, email, upload, download); err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+				return err
+			}
+			return tx.Model(xray.ClientTraffic{}).Where("email = ?", email).Updates(map[string]any{"up": upload, "down": download}).Error
+		})
 		if err != nil {
 			logger.Warningf("Error updating ClientTraffic with email %s: %v", email, err)
 		}

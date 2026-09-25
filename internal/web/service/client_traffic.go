@@ -1,10 +1,12 @@
 package service
 
 import (
+	"errors"
 	"time"
 
 	"github.com/mhsanaei/3x-ui/v3/internal/database"
 	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
+	"github.com/mhsanaei/3x-ui/v3/internal/forkext"
 	"github.com/mhsanaei/3x-ui/v3/internal/logger"
 	"github.com/mhsanaei/3x-ui/v3/internal/util/common"
 	"github.com/mhsanaei/3x-ui/v3/internal/xray"
@@ -84,6 +86,11 @@ func (s *ClientService) BulkResetTraffic(inboundSvc *InboundService, emails []st
 	err = submitTrafficWrite(func() error {
 		db := database.GetDB()
 		return db.Transaction(func(tx *gorm.DB) error {
+			for _, email := range cleanEmails {
+				if err := forkext.GroupQuotaPreserveReset(tx, email, 0, 0); err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+					return err
+				}
+			}
 			if err := adjustGroupBaselinesForRemovedTraffic(tx, cleanEmails); err != nil {
 				return err
 			}
@@ -97,6 +104,9 @@ func (s *ClientService) BulkResetTraffic(inboundSvc *InboundService, emails []st
 				affected += int(res.RowsAffected)
 			}
 			if err := clearGlobalTraffic(tx, cleanEmails...); err != nil {
+				return err
+			}
+			if err := forkext.GroupQuotaReconcileEnabled(tx); err != nil {
 				return err
 			}
 			for _, batch := range chunkStrings(cleanEmails, sqlInChunk) {
@@ -152,6 +162,11 @@ func (s *ClientService) resetAllClientTrafficsLocked(id int) error {
 		if err := adjustGroupBaselinesForRemovedTraffic(tx, resetEmails); err != nil {
 			return err
 		}
+		for _, email := range resetEmails {
+			if err := forkext.GroupQuotaPreserveReset(tx, email, 0, 0); err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+				return err
+			}
+		}
 
 		result := tx.Model(xray.ClientTraffic{}).
 			Where("email IN ?", resetEmails).
@@ -162,6 +177,9 @@ func (s *ClientService) resetAllClientTrafficsLocked(id int) error {
 		}
 
 		if err := clearGlobalTraffic(tx, resetEmails...); err != nil {
+			return err
+		}
+		if err := forkext.GroupQuotaReconcileEnabled(tx); err != nil {
 			return err
 		}
 
@@ -193,6 +211,15 @@ func (s *ClientService) ResetAllTraffics() (bool, error) {
 	var affected int64
 	err := submitTrafficWrite(func() error {
 		return database.GetDB().Transaction(func(tx *gorm.DB) error {
+			var emails []string
+			if err := tx.Model(xray.ClientTraffic{}).Pluck("email", &emails).Error; err != nil {
+				return err
+			}
+			for _, email := range emails {
+				if err := forkext.GroupQuotaPreserveReset(tx, email, 0, 0); err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+					return err
+				}
+			}
 			res := tx.Model(&xray.ClientTraffic{}).
 				Where("1 = 1").
 				Updates(map[string]any{"enable": true, "up": 0, "down": 0})
@@ -201,6 +228,9 @@ func (s *ClientService) ResetAllTraffics() (bool, error) {
 			}
 			affected = res.RowsAffected
 			if err := tx.Where("1 = 1").Delete(&model.ClientGlobalTraffic{}).Error; err != nil {
+				return err
+			}
+			if err := forkext.GroupQuotaReconcileEnabled(tx); err != nil {
 				return err
 			}
 			return tx.Where("1 = 1").Delete(&model.NodeClientTraffic{}).Error

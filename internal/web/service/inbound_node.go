@@ -11,6 +11,7 @@ import (
 
 	"github.com/mhsanaei/3x-ui/v3/internal/database"
 	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
+	"github.com/mhsanaei/3x-ui/v3/internal/forkext"
 	"github.com/mhsanaei/3x-ui/v3/internal/logger"
 	"github.com/mhsanaei/3x-ui/v3/internal/util/common"
 	"github.com/mhsanaei/3x-ui/v3/internal/web/runtime"
@@ -629,6 +630,7 @@ func (s *InboundService) setRemoteTrafficLocked(nodeID int, snap *runtime.Traffi
 
 	structuralChange := false
 	lifecycleLifted := false
+	quotaDeltas := make([]*xray.ClientTraffic, 0)
 
 	var adoptedInbounds []*model.Inbound
 	type pendingAdopt struct {
@@ -932,6 +934,9 @@ func (s *InboundService) setRemoteTrafficLocked(nodeID int, snap *runtime.Traffi
 				if deltaDown = canon.Down - base.Down; deltaDown < 0 {
 					deltaDown = 0
 				}
+			}
+			if existingEmails[cs.Email] && (deltaUp > 0 || deltaDown > 0) {
+				quotaDeltas = append(quotaDeltas, &xray.ClientTraffic{Email: cs.Email, Up: deltaUp, Down: deltaDown})
 			}
 
 			if _, rowExists := existingEmails[cs.Email]; !rowExists {
@@ -1314,11 +1319,22 @@ func (s *InboundService) setRemoteTrafficLocked(nodeID int, snap *runtime.Traffi
 	if err := liftActivatedClientRecordExpiries(tx); err != nil {
 		logger.Warning("setRemoteTraffic: lift activated expiries failed:", err)
 	}
+	if err := forkext.GroupQuotaApplyDeltas(tx, quotaDeltas); err != nil {
+		return false, err
+	}
+	if _, err := forkext.GroupQuotaDepletedEmails(tx); err != nil {
+		return false, err
+	}
 
 	if err := tx.Commit().Error; err != nil {
 		return false, err
 	}
 	committed = true
+	if len(quotaDeltas) > 0 {
+		// The transaction only records authoritative counters and quota state.
+		// Enforcement settings and runtime/node calls happen after commit.
+		_ = (&InboundService{}).reconcileGroupQuotaRuntime()
+	}
 
 	if lifecycleLifted && !dirty {
 		var already model.Node

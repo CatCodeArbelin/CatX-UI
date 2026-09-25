@@ -11,6 +11,7 @@ import (
 
 	"github.com/mhsanaei/3x-ui/v3/internal/database"
 	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
+	"github.com/mhsanaei/3x-ui/v3/internal/forkext"
 	"github.com/mhsanaei/3x-ui/v3/internal/logger"
 	"github.com/mhsanaei/3x-ui/v3/internal/util/common"
 	"github.com/mhsanaei/3x-ui/v3/internal/xray"
@@ -1572,6 +1573,15 @@ func (s *ClientService) BulkSetEnable(inboundSvc *InboundService, emails []strin
 		if _, ok := recordsByEmail[email]; !ok {
 			skippedReasons[email] = "client not found"
 		}
+		if enable {
+			blocked, err := forkext.GroupQuotaIsBlocked(db, email)
+			if err != nil {
+				return result, false, err
+			}
+			if blocked {
+				skippedReasons[email] = "client group quota is depleted"
+			}
+		}
 	}
 
 	clientIds := make([]int, 0, len(recordsByEmail))
@@ -1636,6 +1646,13 @@ func (s *ClientService) BulkSetEnable(inboundSvc *InboundService, emails []strin
 	if len(successEmails) > 0 {
 		now := time.Now().UnixMilli()
 		if err := runSerializedTx(func(tx *gorm.DB) error {
+			if !enable {
+				for _, email := range successEmails {
+					if err := forkext.GroupQuotaClearOwnership(tx, email); err != nil {
+						return err
+					}
+				}
+			}
 			for _, batch := range chunkStrings(successEmails, sqlInChunk) {
 				if e := tx.Model(xray.ClientTraffic{}).Where("email IN ?", batch).Update("enable", enable).Error; e != nil {
 					return e
@@ -1648,6 +1665,9 @@ func (s *ClientService) BulkSetEnable(inboundSvc *InboundService, emails []strin
 			return nil
 		}); err != nil {
 			return result, needRestart, err
+		}
+		if enable && inboundSvc != nil {
+			needRestart = inboundSvc.reconcileGroupQuotaRuntime() || needRestart
 		}
 	}
 

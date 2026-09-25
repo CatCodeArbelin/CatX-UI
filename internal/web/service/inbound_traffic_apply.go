@@ -4,7 +4,9 @@ import (
 	"context"
 	"strings"
 
+	"github.com/mhsanaei/3x-ui/v3/internal/database"
 	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
+	"github.com/mhsanaei/3x-ui/v3/internal/forkext"
 	"github.com/mhsanaei/3x-ui/v3/internal/logger"
 	"github.com/mhsanaei/3x-ui/v3/internal/xray"
 
@@ -27,9 +29,10 @@ type trafficLocalApplyPlan struct {
 }
 
 type trafficMutationBatch struct {
-	localPlans  []trafficLocalApplyPlan
-	remotePlans []trafficInboundUpdatePlan
-	nodeIDs     map[int]struct{}
+	localPlans       []trafficLocalApplyPlan
+	remotePlans      []trafficInboundUpdatePlan
+	nodeIDs          map[int]struct{}
+	groupQuotaEmails []string
 }
 
 type trafficInboundUpdatePlan struct{ oldInbound, newInbound model.Inbound }
@@ -125,4 +128,27 @@ func (s *InboundService) applyTrafficMutationBatch(b *trafficMutationBatch) bool
 		}
 	}
 	return needRestart
+}
+
+// reconcileGroupQuotaRuntime performs the quota decision under the same DB
+// transaction as the enforcement rows, then applies Xray/node changes only
+// after commit.
+func (s *InboundService) reconcileGroupQuotaRuntime() bool {
+	batch := newTrafficMutationBatch()
+	if err := database.GetDB().Transaction(func(tx *gorm.DB) error {
+		var err error
+		batch.groupQuotaEmails, err = forkext.GroupQuotaDepletedEmails(tx)
+		if err != nil {
+			return err
+		}
+		if _, _, _, err = s.disableInvalidClients(tx, batch); err != nil {
+			return err
+		}
+		return batch.markNodesTx(tx)
+	}); err != nil {
+		logger.Warning("group quota runtime reconciliation failed:", err)
+		return true
+	}
+	needRestart := s.applyTrafficRemotePlans(batch.remotePlans)
+	return s.applyTrafficMutationBatch(batch) || needRestart
 }
