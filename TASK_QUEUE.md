@@ -236,7 +236,7 @@ Completed and merged into `develop`.
 
 # PHASE 3 — Policy Engine v1
 
-## WP-3A — Policy Data/API — CURRENT
+## WP-3A — Policy Data/API — DONE
 
 Recommended model: `Luna Medium`
 
@@ -249,9 +249,11 @@ Includes:
 
 Reuse upstream `ClientGroup` and normalized clients.
 
+Completed and merged into `develop`.
+
 ---
 
-## WP-3B — Policy Decision Engine & Xray Compiler
+## WP-3B — Policy Decision Engine & Xray Compiler — CURRENT
 
 Recommended model: `Sol High`
 

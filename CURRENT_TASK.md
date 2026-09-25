@@ -2,45 +2,61 @@
 
 ## Work Package
 
-`WP-3A — Policy Data & API`
+`WP-3B — Policy Decision Engine & Xray Compiler`
 
 ## Goal
 
-Build the durable fork-owned policy data model and protected API foundation
-that WP-3B can later compile into Xray behavior. WP-3A must not alter Xray
-routing behavior yet.
+Build a deterministic policy decision engine and compile its decisions into
+Xray routing/config behavior through the existing authoritative Xray config
+path. Existing upstream `GetXrayConfig()` remains authoritative; policy
+compilation must attach through the existing fork decorator seam near the end
+of config construction.
 
 ## Required
 
-- Policy, policy assignment, policy override, and temporary override models;
-- client-target and group-target assignments reusing upstream identities;
-- deterministic priority/precedence metadata and inspectable evaluation order;
-- SQLite/PostgreSQL fork-owned migrations through the forkext migration seam;
-- protected CRUD/read APIs and stable API shapes for policies, assignments,
-  overrides, temporary overrides, and precedence inspection;
-- validation for targets, references, duplicates, priorities, values, scopes,
-  and temporary start/expiry semantics;
-- `policies.enabled` feature gating with safe default OFF;
-- OpenAPI registration and regenerated artifacts;
-- focused unit, persistence, API, disabled-mode, concurrency, and migration
-  coverage; `make verify` and `make verify-fork` before merge.
+- Reuse the WP-3A policy data contracts and upstream client/group identities;
+- separate policy resolution, inspectable decision representation, and pure
+  Xray compilation;
+- preserve the established precedence contract: temporary override, explicit
+  override, client assignment, group assignment, then priority and the
+  established deterministic tie-break rules;
+- ignore expired temporary overrides and disabled policies;
+- retain explanation metadata for future WP-3C simulator/explain behavior;
+- compile only authorized policy dimensions, at minimum durable allow/deny
+  targets and conservatively supported domain/category/service targets;
+- preserve upstream inbounds, outbounds, and routing; append only stable,
+  fork-owned fragments in deterministic order;
+- make decoration idempotent, duplicate-safe, side-effect free where possible,
+  and an exact no-op when policies are disabled or no effective policy exists;
+- fail explicitly and safely on malformed policy state without returning a
+  partially corrupted candidate configuration;
+- use the existing candidate validation and recovery path where practical;
+- add comprehensive decision, compiler, structural, idempotence, malformed
+  input, isolation, concurrency/race, and feature-disabled tests;
+- run the strongest local checks available and use GitHub Actions as the
+  canonical Linux verification environment.
 
 ## Hard constraints
 
-- no Xray routing-rule compilation or `DecorateXrayConfig` policy behavior;
-- no category blocking, DNS blocking, SafeSearch, QoS, quota, or quarantine
-  enforcement;
+- do not create a second Xray config generator;
+- do not rewrite upstream controller/service/database layers or spread policy
+  logic through upstream core files;
+- do not invent packet inspection or infer a domain solely from a shared IP;
+- unknown or ambiguous classifications must not cause destructive blocking;
 - no TLS MITM, decrypted HTTPS, payload inspection, cookies, credentials,
   Authorization headers, or request bodies;
-- do not duplicate upstream client/group/node/inbound/traffic models;
-- expired temporary overrides must never evaluate as active;
-- migration failure must not prevent core panel/Xray operation under the
-  existing fork safety contract;
-- minimal upstream-touch points and no modification of `main`.
+- no duplicate client/group/node/inbound models;
+- do not implement WP-3C simulator/UI, schedules UI, quarantine UI, managed
+  DNS enforcement unless explicitly authorized here, SafeSearch, QoS,
+  throttling, traffic quotas, security anomaly actions, or multi-node policy
+  distribution;
+- do not modify or merge into `main`;
+- do not merge WP-3B into `develop` automatically; stop on the feature branch
+  after green CI for review.
 
-## Restrictions
+## Recovery and safety
 
-- do not implement WP-3B or WP-3C behavior;
-- do not merge into `main`;
-- preserve the low-divergence downstream fork architecture;
-- use explicit persisted migrations; never mutate schema at runtime.
+Use the existing snapshot, candidate validation, apply, healthcheck, and
+rollback behavior for Xray changes. A compiler error must leave the original
+upstream configuration untouched and be explicit/testable. Feature-disabled
+behavior must remain as close to upstream as possible.
