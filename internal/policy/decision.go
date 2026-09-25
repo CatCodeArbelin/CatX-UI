@@ -24,20 +24,22 @@ type ResolvedCandidate struct {
 	CreatedAt  int64  `json:"createdAt"`
 	ID         uint   `json:"id"`
 	Active     bool   `json:"active"`
+	Scope      string `json:"scope,omitempty"`
 }
 
 type Decision struct {
-	ClientEmail  string              `json:"clientEmail"`
-	GroupName    string              `json:"groupName,omitempty"`
-	PolicyID     uint                `json:"policyId"`
-	PolicyName   string              `json:"policyName"`
-	Action       string              `json:"action"`
-	Services     []string            `json:"services,omitempty"`
-	Categories   []string            `json:"categories,omitempty"`
-	Destinations []string            `json:"destinations,omitempty"`
-	Winner       ResolvedCandidate   `json:"winner"`
-	Candidates   []ResolvedCandidate `json:"candidates"`
-	Explanation  string              `json:"explanation"`
+	ClientEmail   string              `json:"clientEmail"`
+	GroupName     string              `json:"groupName,omitempty"`
+	PolicyID      uint                `json:"policyId"`
+	PolicyName    string              `json:"policyName"`
+	Action        string              `json:"action"`
+	Services      []string            `json:"services,omitempty"`
+	Categories    []string            `json:"categories,omitempty"`
+	Destinations  []string            `json:"destinations,omitempty"`
+	Winner        ResolvedCandidate   `json:"winner"`
+	Candidates    []ResolvedCandidate `json:"candidates"`
+	Explanation   string              `json:"explanation"`
+	OverrideScope string              `json:"overrideScope,omitempty"`
 }
 
 // ResolveDecisions resolves one deterministic decision per known client. It
@@ -105,27 +107,44 @@ func (r *Repository) ResolveDecisions(ctx context.Context, emails []string, at i
 				Services     []string `json:"services"`
 				Categories   []string `json:"categories"`
 				Destinations []string `json:"destinations"`
+				Domains      []string `json:"domains"`
 			}
 			if err := json.Unmarshal([]byte(value), &patch); err != nil {
 				return nil, fmt.Errorf("policy %d: malformed override: %w", p.ID, err)
 			}
-			if patch.Action != "" {
-				spec.Action = patch.Action
+			switch winner.Scope {
+			case ScopePolicy:
+				if patch.Action != "" {
+					spec.Action = patch.Action
+				}
+				if patch.Services != nil {
+					spec.Services = patch.Services
+				}
+				if patch.Categories != nil {
+					spec.Categories = patch.Categories
+				}
+				if patch.Destinations != nil {
+					spec.Destinations = patch.Destinations
+				}
+			case ScopeDomain:
+				if patch.Destinations != nil {
+					spec.Destinations = patch.Destinations
+				} else {
+					spec.Destinations = patch.Domains
+				}
+			case ScopeService:
+				if patch.Services != nil {
+					spec.Services = patch.Services
+				}
 			}
-			if patch.Services != nil {
-				spec.Services = patch.Services
-			}
-			if patch.Categories != nil {
-				spec.Categories = patch.Categories
-			}
-			if patch.Destinations != nil {
-				spec.Destinations = patch.Destinations
-			}
+		}
+		if spec.Action == "" {
+			continue
 		}
 		if spec.Action != "allow" && spec.Action != "deny" {
 			return nil, fmt.Errorf("policy %d: unsupported action %q", p.ID, spec.Action)
 		}
-		out = append(out, Decision{ClientEmail: c.Email, GroupName: c.Group, PolicyID: p.ID, PolicyName: p.Name, Action: spec.Action, Services: spec.Services, Categories: spec.Categories, Destinations: spec.Destinations, Winner: winner, Candidates: resolved.Items, Explanation: fmt.Sprintf("%s %s target %s by %s", winner.Source, winner.TargetType, winner.TargetRef, p.Name)})
+		out = append(out, Decision{ClientEmail: c.Email, GroupName: c.Group, PolicyID: p.ID, PolicyName: p.Name, Action: spec.Action, Services: spec.Services, Categories: spec.Categories, Destinations: spec.Destinations, Winner: winner, Candidates: resolved.Items, OverrideScope: winner.Scope, Explanation: fmt.Sprintf("%s %s target %s by %s", winner.Source, winner.TargetType, winner.TargetRef, p.Name)})
 	}
 	return out, nil
 }

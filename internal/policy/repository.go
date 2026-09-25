@@ -200,7 +200,7 @@ func (r *Repository) Resolve(ctx context.Context, clientEmail, groupName string,
 		if !p.Enabled {
 			continue
 		}
-		result.Items = append(result.Items, resolvedCandidate{Source: "override", PolicyID: o.PolicyID, TargetType: o.TargetType, TargetRef: o.TargetRef, Priority: o.Priority + p.Priority, CreatedAt: o.CreatedAt, ID: o.ID, Active: true})
+		result.Items = append(result.Items, resolvedCandidate{Source: "override", PolicyID: o.PolicyID, TargetType: o.TargetType, TargetRef: o.TargetRef, Priority: o.Priority + p.Priority, CreatedAt: o.CreatedAt, ID: o.ID, Active: true, Scope: o.Scope})
 	}
 	var temporary []TemporaryOverride
 	if err := r.db.WithContext(ctx).Where("enabled = ? AND starts_at <= ? AND expires_at > ? AND ((target_type = ? AND target_ref = ?) OR (target_type = ? AND target_ref = ?))", true, at, at, TargetClient, clientEmail, TargetGroup, groupName).Find(&temporary).Error; err != nil {
@@ -217,7 +217,7 @@ func (r *Repository) Resolve(ctx context.Context, clientEmail, groupName string,
 		if !p.Enabled {
 			continue
 		}
-		result.Items = append(result.Items, resolvedCandidate{Source: "temporary", PolicyID: o.PolicyID, TargetType: o.TargetType, TargetRef: o.TargetRef, Priority: o.Priority + p.Priority, CreatedAt: o.CreatedAt, ID: o.ID, Active: true})
+		result.Items = append(result.Items, resolvedCandidate{Source: "temporary", PolicyID: o.PolicyID, TargetType: o.TargetType, TargetRef: o.TargetRef, Priority: o.Priority + p.Priority, CreatedAt: o.CreatedAt, ID: o.ID, Active: true, Scope: o.Scope})
 	}
 	sortCandidates(result.Items)
 	return result, nil

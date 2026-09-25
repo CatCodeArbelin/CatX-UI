@@ -3,6 +3,7 @@ package policycompiler
 import (
 	"encoding/json"
 	"reflect"
+	"sync"
 	"testing"
 
 	"github.com/mhsanaei/3x-ui/v3/internal/policy"
@@ -99,4 +100,39 @@ func TestCompileCategoryOnlyIsConservativeNoOp(t *testing.T) {
 	if err != nil || got != cfg {
 		t.Fatalf("category-only decision must not create destructive rule: %v", err)
 	}
+}
+
+func TestCompileDuplicateDecisionsDoNotDuplicateRules(t *testing.T) {
+	cfg := baseConfig()
+	got, err := Compile(cfg, []policy.Decision{
+		decision("alice@example.test", "deny", 9, "example.com"),
+		decision("alice@example.test", "deny", 9, "example.com"),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if gotRules := rules(t, got); len(gotRules) != 2 {
+		t.Fatalf("duplicate decisions emitted %d rules", len(gotRules))
+	}
+}
+
+func TestCompileConcurrentCallsAreIndependent(t *testing.T) {
+	decisions := []policy.Decision{decision("alice@example.test", "deny", 4, "example.com")}
+	want, err := Compile(baseConfig(), decisions)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantRules := rules(t, want)
+	var wg sync.WaitGroup
+	for i := 0; i < 16; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			got, compileErr := Compile(baseConfig(), decisions)
+			if compileErr != nil || !reflect.DeepEqual(rules(t, got), wantRules) {
+				t.Errorf("concurrent compile mismatch: %v", compileErr)
+			}
+		}()
+	}
+	wg.Wait()
 }
