@@ -135,6 +135,7 @@ func GroupQuotaReset(tx *gorm.DB, group string) ([]string, error) {
 func GroupQuotaChangeMembership(tx *gorm.DB, email, oldGroup, newGroup string) error {
 	return groupquota.ChangeMembership(tx, email, oldGroup, newGroup)
 }
+
 func GroupQuotaRemoveMembership(tx *gorm.DB, email string) error {
 	return groupquota.RemoveMembershipByEmail(tx, email)
 }

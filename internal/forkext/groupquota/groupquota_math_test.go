@@ -1,8 +1,9 @@
 package groupquota
 
-import "testing"
-
-import "time"
+import (
+	"testing"
+	"time"
+)
 
 func TestCeilMulUsesFixedPointWithoutFloatDrift(t *testing.T) {
 	tests := []struct {
