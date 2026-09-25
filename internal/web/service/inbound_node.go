@@ -984,7 +984,15 @@ func (s *InboundService) setRemoteTrafficLocked(nodeID int, snap *runtime.Traffi
 			}
 
 			existing := centralCSByEmail[cs.Email]
+			preserveMasterEnable := false
+			masterEnable := false
 			if existing != nil {
+				// Decide against the authoritative master limits before the merge
+				// below copies the node's possibly stale quota into existing.Total.
+				// The decision and the enable state must come from the same version
+				// of the master row.
+				masterEnable = existing.Enable
+				preserveMasterEnable = !cs.Enable && nodeDisableIsStale(existing, cs, now, deltaUp, deltaDown)
 				expiryChanged := !lifecycleFrozen && existing.ExpiryTime != mergeActivationExpiry(existing.ExpiryTime, cs.ExpiryTime)
 				// Only a real latch to disabled is structural; one-way merge never
 				// re-enables from the node.
@@ -1094,10 +1102,10 @@ func (s *InboundService) setRemoteTrafficLocked(nodeID int, snap *runtime.Traffi
 				// explicit after the counter update as well. A node snapshot carrying
 				// an old disable must not overwrite a master quota top-up in a later
 				// lifecycle/settings merge.
-				if existing != nil && !cs.Enable && nodeDisableIsStale(existing, cs, now, deltaUp, deltaDown) {
+				if preserveMasterEnable {
 					if err := tx.Model(xray.ClientTraffic{}).
 						Where("email = ?", cs.Email).
-						Update("enable", existing.Enable).Error; err != nil {
+						Update("enable", masterEnable).Error; err != nil {
 						return false, err
 					}
 				}
