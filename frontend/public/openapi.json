@@ -9590,6 +9590,143 @@
         }
       }
     },
+    "/panel/api/clients/groups/quota/{name}": {
+      "get": {
+        "tags": [
+          "Clients"
+        ],
+        "summary": "Read shared group quota state, including authoritative-counter usage, remaining bytes, active/pending multiplier, and depletion state.",
+        "operationId": "get_panel_api_clients_groups_quota_name",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "description": "Group name (URL-encoded).",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Clients"
+        ],
+        "summary": "Update group quota configuration. Multiplier changes are pending until the next group reset/rebaseline and do not reprice existing usage.",
+        "operationId": "put_panel_api_clients_groups_quota_name",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "description": "Group name (URL-encoded).",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              },
+              "example": {
+                "quotaBytes": 107374182400,
+                "multiplierPpm": 1000000,
+                "resetPeriod": "monthly",
+                "resetDay": 1
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/clients/groups/quota/{name}/reset": {
+      "post": {
+        "tags": [
+          "Clients"
+        ],
+        "summary": "Reset group quota carry and membership bases, activate the pending multiplier, and re-enable only clients owned by this group quota.",
+        "operationId": "post_panel_api_clients_groups_quota_name_reset",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "description": "Group name (URL-encoded).",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/panel/api/clients/resetTraffic/{email}": {
       "post": {
         "tags": [
