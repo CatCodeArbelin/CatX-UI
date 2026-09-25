@@ -2,57 +2,46 @@
 
 ## Work Package
 
-`WP-3C — Simulator / Explain / UI`
+`WP-4A — Categories / Schedules / Temporary Overrides`
 
 ## Goal
 
-Build the human-facing inspection and management layer for the policy engine
-without changing WP-3A/WP-3B decision semantics. The simulator must reuse the
-real decision engine and explain-route must reuse the real Xray compiler.
+Extend the existing policy engine with conservative category decisions, durable
+timezone-aware schedules, and the temporary override behavior required by the
+roadmap without changing WP-3A/WP-3B semantics or creating parallel models.
 
 ## Required
 
-- side-effect-free simulation for client, group, domain, IP/CIDR, category,
-  service, timestamp, and persisted policy state;
-- simulator never mutates storage, feature flags, Xray config, or runtime;
-- inspectable explain-decision output containing final action, winner,
-  assignment/override source, precedence stage, priority, client/group source,
-  temporary status/expiry, deterministic tie-break data, and reasons for
-  winners and losers;
-- explain-route derived from the actual compiler representation, including
-  CatX rule identity, destination, user selector, outbound, ordering, source,
-  and whether a rule would be emitted;
-- protected simulator/explain APIs through the existing fork API boundary;
-- explicit stable schemas and regenerated OpenAPI artifacts;
-- policy management UI using existing 3x-ui containers, spacing, Ant Design
-  tokens, tables, forms, drawers/modals, typography, states, and responsive
-  conventions;
-- UI for policy CRUD, client/group assignments, explicit and temporary
-  overrides, simulator, decision explanation, and route explanation;
-- frontend must consume existing protected APIs rather than duplicate CRUD
-  semantics;
-- tests for equivalence, zero side effects, explanations, route previews,
-  validation, disabled/empty/loading/error states, frontend behavior, and
-  concurrency where applicable;
-- run full `make verify-fork` and Release CatX-UI through GitHub Actions.
+- reuse the authoritative analytics/enrichment category vocabulary and
+  provenance/uncertainty contracts;
+- add durable schedules with explicit IANA timezone, weekdays, local start/end
+  times, cross-midnight handling, restart-safe persistence, injectable time, and
+  deterministic DST behavior;
+- extend the existing WP-3A temporary override model only where required;
+- extend the existing decision engine and Xray compiler, not a second evaluator;
+- add minimum protected API/UI for category policies, schedule CRUD/assignment,
+  temporary override management, and active/next-active state;
+- regenerate OpenAPI and add comprehensive unit, integration, API, frontend,
+  SQLite/PostgreSQL-appropriate, and race/concurrency coverage;
+- run full fork verification and Release CatX-UI CI.
+
+## Required behavior
+
+- unknown or ambiguous classifications must not cause destructive decisions
+  unless an explicit safe rule contract supports them;
+- schedules support normal, cross-midnight, weekday, DST-forward, DST-backward,
+  non-DST, and timezone-change cases, with explicit invalid-timezone rejection;
+- schedules never mutate their underlying policy;
+- disabled schedules and expired temporary overrides are immediately inactive;
+- preserve deterministic precedence, idempotent compilation, exact disabled/no-
+  policy no-op behavior, and upstream Xray config preservation.
 
 ## Hard constraints
 
-- do not create a second decision engine or Xray compiler;
-- do not apply simulation results or restart/reload Xray;
-- do not change WP-3A/WP-3B precedence or compiler behavior except for a
-  clearly required compatibility adapter;
-- no TLS MITM, decrypted HTTPS, payload inspection, credentials, cookies,
-  Authorization headers, or request bodies;
-- no schedules UI, quarantine, managed DNS enforcement, SafeSearch, QoS,
-  quotas, anomaly actions, or multi-node distribution in WP-3C;
-- preserve feature-disabled upstream-compatible no-op behavior;
-- do not modify or merge into `main`;
-- do not merge WP-3C into `develop` automatically; stop on the feature branch
-  after both required CI workflows are green.
-
-## Safety
-
-Simulation and explanation are read-only. Malformed or unsupported policy
-state must be represented explicitly and conservatively; it must never cause
-an Xray mutation. Keep API errors stable and testable.
+- no duplicate client/group/node/category models;
+- no TLS MITM, decrypted HTTPS, payload inspection, SafeSearch, quarantine,
+  managed DNS, QoS, quotas, anomaly actions, or multi-node distribution;
+- no upstream service rewrite or second recovery mechanism;
+- do not implement WP-4B;
+- keep WP-4A on its own feature branch and merge only after all required tests
+  and CI are green; do not modify `main`.

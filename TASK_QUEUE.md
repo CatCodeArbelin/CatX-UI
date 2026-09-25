@@ -272,7 +272,7 @@ Completed and merged into `develop`.
 
 ---
 
-## WP-3C — Simulator / Explain / UI — CURRENT
+## WP-3C — Simulator / Explain / UI — DONE
 
 Recommended model: `Luna Medium`
 
@@ -283,13 +283,15 @@ Includes:
 - Explain Route;
 - policy UI.
 
+Completed and merged into `develop` (`15c7e310`).
+
 Reuse upstream route-test capabilities where possible.
 
 ---
 
 # PHASE 4 — Policy Engine v2
 
-## WP-4A — Categories / Schedules / Temporary Overrides
+## WP-4A — Categories / Schedules / Temporary Overrides — CURRENT
 
 Recommended model: `Sol Medium`
 
