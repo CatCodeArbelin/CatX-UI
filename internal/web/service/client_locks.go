@@ -235,7 +235,7 @@ func stripTombstonedClients(settings string) (string, bool) {
 }
 
 // liftClientLifecycleInSettings rewrites adopted settings from master traffic
-// so a lagging node blob cannot store pre-extension expiry/enable (#6228).
+// so a lagging node blob cannot store pre-extension expiry/enable/quota (#6228).
 func liftClientLifecycleInSettings(settings string, trafficByEmail map[string]*xray.ClientTraffic) (string, bool) {
 	if settings == "" || len(trafficByEmail) == 0 {
 		return settings, false
@@ -263,18 +263,22 @@ func liftClientLifecycleInSettings(settings string, trafficByEmail map[string]*x
 			continue
 		}
 		nodeExpiry, hasExpiry := jsonClientInt64(cm["expiryTime"])
-		if !hasExpiry {
-			continue
-		}
-		merged := mergeActivationExpiry(tr.ExpiryTime, nodeExpiry)
-		if merged != nodeExpiry {
-			cm["expiryTime"] = merged
-			changed = true
+		if hasExpiry {
+			merged := mergeActivationExpiry(tr.ExpiryTime, nodeExpiry)
+			if merged != nodeExpiry {
+				cm["expiryTime"] = merged
+				changed = true
+			}
 		}
 		// tr is the already-merged master row, authoritative in both directions:
 		// a lagging blob must not re-enable a disabled client either (#4917).
 		if nodeEnable, _ := cm["enable"].(bool); nodeEnable != tr.Enable {
 			cm["enable"] = tr.Enable
+			changed = true
+		}
+		nodeTotal, hasTotal := jsonClientInt64(cm["totalGB"])
+		if !hasTotal || nodeTotal != tr.Total {
+			cm["totalGB"] = tr.Total
 			changed = true
 		}
 		clients[i] = cm
