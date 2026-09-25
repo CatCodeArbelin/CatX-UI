@@ -992,8 +992,14 @@ func (s *InboundService) setRemoteTrafficLocked(nodeID int, snap *runtime.Traffi
 				// below copies the node's possibly stale quota into existing.Total.
 				// The decision and the enable state must come from the same version
 				// of the master row.
-				masterEnable = existing.Enable
-				preserveMasterEnable = !cs.Enable && nodeDisableIsStale(existing, cs, now, deltaUp, deltaDown)
+				var authoritative xray.ClientTraffic
+				if err := tx.Where("email = ?", cs.Email).First(&authoritative).Error; err == nil {
+					masterEnable = authoritative.Enable
+					preserveMasterEnable = !cs.Enable && nodeDisableIsStale(&authoritative, cs, now, deltaUp, deltaDown)
+				} else {
+					masterEnable = existing.Enable
+					preserveMasterEnable = !cs.Enable && nodeDisableIsStale(existing, cs, now, deltaUp, deltaDown)
+				}
 				expiryChanged := !lifecycleFrozen && existing.ExpiryTime != mergeActivationExpiry(existing.ExpiryTime, cs.ExpiryTime)
 				// Only a real latch to disabled is structural; one-way merge never
 				// re-enables from the node.
