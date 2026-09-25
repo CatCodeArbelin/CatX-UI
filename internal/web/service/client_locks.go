@@ -277,7 +277,7 @@ func liftClientLifecycleInSettings(settings string, trafficByEmail map[string]*x
 			changed = true
 		}
 		nodeTotal, hasTotal := jsonClientInt64(cm["totalGB"])
-		if !hasTotal || nodeTotal != tr.Total {
+		if (hasTotal && nodeTotal != tr.Total) || (!hasTotal && tr.Total != 0) {
 			cm["totalGB"] = tr.Total
 			changed = true
 		}
