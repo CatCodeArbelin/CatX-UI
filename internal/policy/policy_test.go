@@ -2,6 +2,7 @@ package policy
 
 import (
 	"context"
+	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
@@ -113,7 +114,7 @@ func TestDisabledNoOpAPI(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
 	RegisterRoutes(router.Group("/panel/api"))
-	req := httptest.NewRequest("GET", "/panel/api/policies", nil)
+	req := httptest.NewRequest(http.MethodGet, "/panel/api/policies", nil)
 	res := httptest.NewRecorder()
 	router.ServeHTTP(res, req)
 	if res.Code != 200 || Enabled() {

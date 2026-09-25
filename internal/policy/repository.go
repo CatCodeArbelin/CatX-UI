@@ -18,22 +18,26 @@ func (r *Repository) CreatePolicy(ctx context.Context, p *Policy) error {
 	}
 	return r.db.WithContext(ctx).Create(p).Error
 }
+
 func (r *Repository) GetPolicy(ctx context.Context, id uint) (Policy, error) {
 	var p Policy
 	err := r.db.WithContext(ctx).First(&p, id).Error
 	return p, err
 }
+
 func (r *Repository) ListPolicies(ctx context.Context) ([]Policy, error) {
 	var rows []Policy
 	err := r.db.WithContext(ctx).Order("priority DESC, id ASC").Find(&rows).Error
 	return rows, err
 }
+
 func (r *Repository) UpdatePolicy(ctx context.Context, p *Policy) error {
 	if err := validatePolicy(p); err != nil {
 		return err
 	}
 	return r.db.WithContext(ctx).Model(&Policy{}).Where("id = ?", p.ID).Updates(map[string]any{"name": p.Name, "description": p.Description, "spec": p.Spec, "priority": p.Priority, "enabled": p.Enabled, "updated_at": time.Now().UnixMilli()}).Error
 }
+
 func (r *Repository) DeletePolicy(ctx context.Context, id uint) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		for _, m := range []any{&PolicyAssignment{}, &PolicyOverride{}, &TemporaryOverride{}} {
@@ -57,14 +61,17 @@ func (r *Repository) CreateAssignment(ctx context.Context, a *PolicyAssignment) 
 	}
 	return r.db.WithContext(ctx).Create(a).Error
 }
+
 func (r *Repository) ListAssignments(ctx context.Context) ([]PolicyAssignment, error) {
 	var rows []PolicyAssignment
 	err := r.db.WithContext(ctx).Order("priority DESC, id ASC").Find(&rows).Error
 	return rows, err
 }
+
 func (r *Repository) DeleteAssignment(ctx context.Context, id uint) error {
 	return r.db.WithContext(ctx).Delete(&PolicyAssignment{}, id).Error
 }
+
 func (r *Repository) UpdateAssignment(ctx context.Context, a *PolicyAssignment) error {
 	if err := validateAssignment(a); err != nil {
 		return err
@@ -90,14 +97,17 @@ func (r *Repository) CreateOverride(ctx context.Context, o *PolicyOverride) erro
 	}
 	return r.db.WithContext(ctx).Create(o).Error
 }
+
 func (r *Repository) ListOverrides(ctx context.Context) ([]PolicyOverride, error) {
 	var rows []PolicyOverride
 	err := r.db.WithContext(ctx).Order("priority DESC, id ASC").Find(&rows).Error
 	return rows, err
 }
+
 func (r *Repository) DeleteOverride(ctx context.Context, id uint) error {
 	return r.db.WithContext(ctx).Delete(&PolicyOverride{}, id).Error
 }
+
 func (r *Repository) UpdateOverride(ctx context.Context, o *PolicyOverride) error {
 	if err := validateOverride(o); err != nil {
 		return err
@@ -123,14 +133,17 @@ func (r *Repository) CreateTemporaryOverride(ctx context.Context, o *TemporaryOv
 	}
 	return r.db.WithContext(ctx).Create(o).Error
 }
+
 func (r *Repository) ListTemporaryOverrides(ctx context.Context, now int64) ([]TemporaryOverride, error) {
 	var rows []TemporaryOverride
 	err := r.db.WithContext(ctx).Where("expires_at > ?", now).Order("priority DESC, id ASC").Find(&rows).Error
 	return rows, err
 }
+
 func (r *Repository) DeleteTemporaryOverride(ctx context.Context, id uint) error {
 	return r.db.WithContext(ctx).Delete(&TemporaryOverride{}, id).Error
 }
+
 func (r *Repository) UpdateTemporaryOverride(ctx context.Context, o *TemporaryOverride) error {
 	if err := validateTemporary(o); err != nil {
 		return err

@@ -39,6 +39,7 @@ func current() (*Repository, bool) {
 func response(c *gin.Context, obj any) {
 	c.JSON(http.StatusOK, gin.H{"success": true, "msg": "", "obj": obj})
 }
+
 func fail(c *gin.Context, status int, msg string) {
 	c.JSON(status, gin.H{"success": false, "msg": msg})
 }
@@ -51,6 +52,7 @@ func parseID(c *gin.Context) (uint, bool) {
 	}
 	return uint(n), true
 }
+
 func repoOrUnavailable(c *gin.Context) (*Repository, bool) {
 	r, ok := current()
 	if !ok {
@@ -58,6 +60,7 @@ func repoOrUnavailable(c *gin.Context) (*Repository, bool) {
 	}
 	return r, ok
 }
+
 func mapError(c *gin.Context, err error) {
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		fail(c, http.StatusNotFound, "not found")
@@ -173,6 +176,7 @@ func createPolicy(c *gin.Context) {
 	}
 	response(c, p)
 }
+
 func getPolicy(c *gin.Context) {
 	r, ok := repoOrUnavailable(c)
 	if !ok {
@@ -189,6 +193,7 @@ func getPolicy(c *gin.Context) {
 	}
 	response(c, p)
 }
+
 func updatePolicy(c *gin.Context) {
 	r, ok := repoOrUnavailable(c)
 	if !ok {
@@ -210,6 +215,7 @@ func updatePolicy(c *gin.Context) {
 	}
 	response(c, p)
 }
+
 func deletePolicy(c *gin.Context) {
 	r, ok := repoOrUnavailable(c)
 	if !ok {
@@ -246,6 +252,7 @@ func createAssignment(c *gin.Context) {
 	}
 	response(c, a)
 }
+
 func listAssignments(c *gin.Context) {
 	r, ok := current()
 	if !ok {
@@ -259,6 +266,7 @@ func listAssignments(c *gin.Context) {
 	}
 	response(c, gin.H{"enabled": true, "items": rows})
 }
+
 func deleteAssignment(c *gin.Context) {
 	r, ok := repoOrUnavailable(c)
 	if !ok {
@@ -274,6 +282,7 @@ func deleteAssignment(c *gin.Context) {
 	}
 	response(c, gin.H{"deleted": id})
 }
+
 func updateAssignment(c *gin.Context) {
 	r, ok := repoOrUnavailable(c)
 	if !ok {
@@ -319,6 +328,7 @@ func createOverride(c *gin.Context) {
 	}
 	response(c, o)
 }
+
 func listOverrides(c *gin.Context) {
 	r, ok := current()
 	if !ok {
@@ -332,6 +342,7 @@ func listOverrides(c *gin.Context) {
 	}
 	response(c, gin.H{"enabled": true, "items": rows})
 }
+
 func deleteOverride(c *gin.Context) {
 	r, ok := repoOrUnavailable(c)
 	if !ok {
@@ -347,6 +358,7 @@ func deleteOverride(c *gin.Context) {
 	}
 	response(c, gin.H{"deleted": id})
 }
+
 func updateOverride(c *gin.Context) {
 	r, ok := repoOrUnavailable(c)
 	if !ok {
@@ -392,6 +404,7 @@ func createTemporary(c *gin.Context) {
 	}
 	response(c, o)
 }
+
 func listTemporary(c *gin.Context) {
 	r, ok := current()
 	if !ok {
@@ -405,6 +418,7 @@ func listTemporary(c *gin.Context) {
 	}
 	response(c, gin.H{"enabled": true, "items": rows})
 }
+
 func deleteTemporary(c *gin.Context) {
 	r, ok := repoOrUnavailable(c)
 	if !ok {
@@ -420,6 +434,7 @@ func deleteTemporary(c *gin.Context) {
 	}
 	response(c, gin.H{"deleted": id})
 }
+
 func updateTemporary(c *gin.Context) {
 	r, ok := repoOrUnavailable(c)
 	if !ok {
