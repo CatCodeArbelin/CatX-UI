@@ -46,6 +46,17 @@ type Override = Assignment & {
   startsAt?: number;
   expiresAt?: number;
 };
+type Schedule = {
+  id: number;
+  policyId: number;
+  timezone: string;
+  weekdays: string;
+  startMinute: number;
+  endMinute: number;
+  enabled: boolean;
+  active: boolean;
+  nextActiveAt: number;
+};
 type Decision = {
   policyName: string;
   action: string;
@@ -98,12 +109,28 @@ const parseSpec = (value: string): Record<string, unknown> => {
     throw new Error('Policy spec must be valid JSON object syntax.');
   }
 };
+const POLICY_CATEGORIES = [
+  'social',
+  'video/streaming',
+  'messaging',
+  'gaming',
+  'cloud/CDN',
+  'search',
+  'software/update',
+  'advertising',
+  'adult',
+  'gambling',
+].map((value) => ({ value, label: value }));
+
+const formatMinute = (value: number) =>
+  `${String(Math.floor(value / 60)).padStart(2, '0')}:${String(value % 60).padStart(2, '0')}`;
 
 export default function PolicyPage() {
   const [policies, setPolicies] = useState<Policy[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [overrides, setOverrides] = useState<Override[]>([]);
   const [temporary, setTemporary] = useState<Override[]>([]);
+  const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [enabled, setEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -114,13 +141,14 @@ export default function PolicyPage() {
   const [assignmentForm] = Form.useForm();
   const [overrideForm] = Form.useForm();
   const [temporaryForm] = Form.useForm();
+  const [scheduleForm] = Form.useForm();
   const [simulation, setSimulation] = useState<Simulation | null>(null);
   const [simLoading, setSimLoading] = useState(false);
 
   const load = useCallback(async (showLoading = true) => {
     if (showLoading) setLoading(true);
     setError('');
-    const [p, a, o, t] = await Promise.all([
+    const [p, a, o, t, s] = await Promise.all([
       HttpUtil.get<{ enabled: boolean; items: Policy[] }>('/panel/api/policies', undefined, {
         silent: true,
       }),
@@ -133,6 +161,9 @@ export default function PolicyPage() {
       HttpUtil.get<{ items: Override[] }>('/panel/api/policies/temporary-overrides', undefined, {
         silent: true,
       }),
+      HttpUtil.get<{ items: Schedule[] }>('/panel/api/policies/schedules', undefined, {
+        silent: true,
+      }),
     ]);
     if (!p.success) setError(p.msg || 'Policies could not be loaded.');
     setEnabled(p.obj?.enabled !== false);
@@ -140,6 +171,7 @@ export default function PolicyPage() {
     setAssignments(a.obj?.items || []);
     setOverrides(o.obj?.items || []);
     setTemporary(t.obj?.items || []);
+    setSchedules(s.obj?.items || []);
     setLoading(false);
   }, []);
   useEffect(() => {
@@ -149,12 +181,19 @@ export default function PolicyPage() {
 
   const openPolicy = (policy?: Policy) => {
     setEditing(policy || null);
+    let policySpec: Record<string, unknown> = {};
+    try {
+      policySpec = parseSpec(policy?.spec || '{}');
+    } catch {
+      policySpec = {};
+    }
     form.setFieldsValue({
       name: policy?.name || '',
       description: policy?.description || '',
       priority: policy?.priority || 0,
       enabled: policy?.enabled ?? true,
       spec: policy?.spec || '{\n  "action": "allow",\n  "destinations": ["example.com"]\n}',
+      categories: Array.isArray(policySpec.categories) ? policySpec.categories : [],
     });
     setPolicyModal(true);
   };
@@ -164,6 +203,7 @@ export default function PolicyPage() {
     priority?: number;
     enabled?: boolean;
     spec: string;
+    categories?: string[];
   }) => {
     let spec: Record<string, unknown>;
     try {
@@ -172,7 +212,10 @@ export default function PolicyPage() {
       message.error((err as Error).message);
       return;
     }
-    const payload = { ...values, spec };
+    const payloadSpec = { ...spec };
+    if (values.categories?.length) payloadSpec.categories = values.categories;
+    else delete payloadSpec.categories;
+    const payload = { ...values, spec: payloadSpec };
     const result = editing
       ? await HttpUtil.put(`/panel/api/policies/${editing.id}`, payload)
       : await HttpUtil.post('/panel/api/policies', payload);
@@ -274,6 +317,35 @@ export default function PolicyPage() {
       title: 'Actions',
       render: (_, row) => (
         <Popconfirm title="Delete this override?" onConfirm={() => void deleteRecord(path, row.id)}>
+          <Button danger icon={<DeleteOutlined />} />
+        </Popconfirm>
+      ),
+    },
+  ];
+  const scheduleColumns: ColumnsType<Schedule> = [
+    {
+      title: 'Policy',
+      render: (_, row) => policies.find((p) => p.id === row.policyId)?.name || `#${row.policyId}`,
+    },
+    { title: 'Timezone', dataIndex: 'timezone' },
+    { title: 'Weekdays', dataIndex: 'weekdays' },
+    {
+      title: 'Local window',
+      render: (_, row) => `${formatMinute(row.startMinute)}–${formatMinute(row.endMinute)}`,
+    },
+    {
+      title: 'State',
+      render: (_, row) => (
+        <Tag color={row.active ? 'green' : 'default'}>{row.active ? 'Active' : 'Inactive'}</Tag>
+      ),
+    },
+    {
+      title: 'Actions',
+      render: (_, row) => (
+        <Popconfirm
+          title="Delete this schedule?"
+          onConfirm={() => void deleteRecord('/panel/api/policies/schedules', row.id)}
+        >
           <Button danger icon={<DeleteOutlined />} />
         </Popconfirm>
       ),
@@ -505,6 +577,67 @@ export default function PolicyPage() {
                     ),
                   },
                   {
+                    key: 'schedules',
+                    label: `Schedules (${schedules.length})`,
+                    children: (
+                      <Space direction="vertical" style={{ width: '100%' }}>
+                        <Form
+                          form={scheduleForm}
+                          layout="inline"
+                          onFinish={(values) =>
+                            void createRecord('/panel/api/policies/schedules', values, scheduleForm)
+                          }
+                        >
+                          <Form.Item name="policyId" rules={[{ required: true }]}>
+                            <Select
+                              placeholder="Policy"
+                              style={{ width: 160 }}
+                              options={policies.map((p) => ({ value: p.id, label: p.name }))}
+                            />
+                          </Form.Item>
+                          <Form.Item
+                            name="timezone"
+                            initialValue="UTC"
+                            rules={[{ required: true }]}
+                          >
+                            <Input placeholder="IANA timezone" />
+                          </Form.Item>
+                          <Form.Item
+                            name="weekdays"
+                            initialValue="1,2,3,4,5"
+                            rules={[{ required: true }]}
+                          >
+                            <Input placeholder="Weekdays 0–6" />
+                          </Form.Item>
+                          <Form.Item
+                            name="startMinute"
+                            initialValue={9 * 60}
+                            rules={[{ required: true }]}
+                          >
+                            <InputNumber placeholder="Start minute" />
+                          </Form.Item>
+                          <Form.Item
+                            name="endMinute"
+                            initialValue={17 * 60}
+                            rules={[{ required: true }]}
+                          >
+                            <InputNumber placeholder="End minute" />
+                          </Form.Item>
+                          <Button type="primary" htmlType="submit">
+                            Add schedule
+                          </Button>
+                        </Form>
+                        <Table
+                          rowKey="id"
+                          columns={scheduleColumns}
+                          dataSource={schedules}
+                          pagination={{ pageSize: 10 }}
+                          locale={{ emptyText: <Empty description="No schedules." /> }}
+                        />
+                      </Space>
+                    ),
+                  },
+                  {
                     key: 'simulator',
                     label: 'Simulator',
                     children: (
@@ -581,6 +714,13 @@ export default function PolicyPage() {
             </Space>
             <Form.Item name="spec" label="Policy JSON" rules={[{ required: true }]}>
               <Input.TextArea rows={10} spellCheck={false} />
+            </Form.Item>
+            <Form.Item name="categories" label="Known categories">
+              <Select
+                mode="multiple"
+                options={POLICY_CATEGORIES}
+                placeholder="Optional category targets"
+              />
             </Form.Item>
           </Form>
         </Modal>

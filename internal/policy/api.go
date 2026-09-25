@@ -144,6 +144,15 @@ type temporaryInput struct {
 	Enabled    *bool           `json:"enabled"`
 }
 
+type scheduleInput struct {
+	PolicyID    uint   `json:"policyId"`
+	Timezone    string `json:"timezone"`
+	Weekdays    string `json:"weekdays"`
+	StartMinute int    `json:"startMinute"`
+	EndMinute   int    `json:"endMinute"`
+	Enabled     *bool  `json:"enabled"`
+}
+
 func RegisterRoutes(api *gin.RouterGroup) {
 	if api == nil {
 		return
@@ -178,6 +187,11 @@ func RegisterRoutes(api *gin.RouterGroup) {
 	api.POST("/policies/temporary-overrides", createTemporary)
 	api.DELETE("/policies/temporary-overrides/:id", deleteTemporary)
 	api.PUT("/policies/temporary-overrides/:id", updateTemporary)
+	api.GET("/policies/schedules", listSchedules)
+	api.POST("/policies/schedules", createSchedule)
+	api.GET("/policies/schedules/:id", getSchedule)
+	api.PUT("/policies/schedules/:id", updateSchedule)
+	api.DELETE("/policies/schedules/:id", deleteSchedule)
 	api.GET("/policies/resolve", resolve)
 }
 
@@ -480,6 +494,111 @@ func updateTemporary(c *gin.Context) {
 		return
 	}
 	response(c, o)
+}
+
+func scheduleFromInput(in scheduleInput, id uint) PolicySchedule {
+	s := PolicySchedule{ID: id, PolicyID: in.PolicyID, Timezone: in.Timezone, Weekdays: in.Weekdays, StartMinute: in.StartMinute, EndMinute: in.EndMinute, Enabled: true}
+	if in.Enabled != nil {
+		s.Enabled = *in.Enabled
+	}
+	return s
+}
+
+func scheduleResponse(s PolicySchedule, at int64) gin.H {
+	active, next := NewRepository(nil).ScheduleState(s, at)
+	return gin.H{"id": s.ID, "policyId": s.PolicyID, "timezone": s.Timezone, "weekdays": s.Weekdays, "startMinute": s.StartMinute, "endMinute": s.EndMinute, "enabled": s.Enabled, "createdAt": s.CreatedAt, "updatedAt": s.UpdatedAt, "active": active, "nextActiveAt": next}
+}
+
+func listSchedules(c *gin.Context) {
+	r, ok := current()
+	if !ok {
+		response(c, gin.H{"enabled": false, "items": []gin.H{}})
+		return
+	}
+	rows, err := r.ListSchedules(c.Request.Context())
+	if err != nil {
+		fail(c, 500, "policy data unavailable")
+		return
+	}
+	at := time.Now().UnixMilli()
+	items := make([]gin.H, 0, len(rows))
+	for _, row := range rows {
+		items = append(items, scheduleResponse(row, at))
+	}
+	response(c, gin.H{"enabled": true, "items": items})
+}
+
+func createSchedule(c *gin.Context) {
+	r, ok := repoOrUnavailable(c)
+	if !ok {
+		return
+	}
+	var in scheduleInput
+	if c.ShouldBindJSON(&in) != nil {
+		fail(c, 400, "invalid schedule")
+		return
+	}
+	s := scheduleFromInput(in, 0)
+	if err := r.CreateSchedule(c.Request.Context(), &s); err != nil {
+		mapError(c, err)
+		return
+	}
+	response(c, scheduleResponse(s, time.Now().UnixMilli()))
+}
+
+func getSchedule(c *gin.Context) {
+	r, ok := repoOrUnavailable(c)
+	if !ok {
+		return
+	}
+	id, ok := parseID(c)
+	if !ok {
+		return
+	}
+	s, err := r.GetSchedule(c.Request.Context(), id)
+	if err != nil {
+		mapError(c, err)
+		return
+	}
+	response(c, scheduleResponse(s, time.Now().UnixMilli()))
+}
+
+func updateSchedule(c *gin.Context) {
+	r, ok := repoOrUnavailable(c)
+	if !ok {
+		return
+	}
+	id, ok := parseID(c)
+	if !ok {
+		return
+	}
+	var in scheduleInput
+	if c.ShouldBindJSON(&in) != nil {
+		fail(c, 400, "invalid schedule")
+		return
+	}
+	s := scheduleFromInput(in, id)
+	if err := r.UpdateSchedule(c.Request.Context(), &s); err != nil {
+		mapError(c, err)
+		return
+	}
+	response(c, scheduleResponse(s, time.Now().UnixMilli()))
+}
+
+func deleteSchedule(c *gin.Context) {
+	r, ok := repoOrUnavailable(c)
+	if !ok {
+		return
+	}
+	id, ok := parseID(c)
+	if !ok {
+		return
+	}
+	if err := r.DeleteSchedule(c.Request.Context(), id); err != nil {
+		mapError(c, err)
+		return
+	}
+	response(c, gin.H{"deleted": id})
 }
 
 func resolve(c *gin.Context) {

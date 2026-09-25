@@ -2,7 +2,11 @@ package policy
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"gorm.io/gorm"
@@ -40,7 +44,7 @@ func (r *Repository) UpdatePolicy(ctx context.Context, p *Policy) error {
 
 func (r *Repository) DeletePolicy(ctx context.Context, id uint) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		for _, m := range []any{&PolicyAssignment{}, &PolicyOverride{}, &TemporaryOverride{}} {
+		for _, m := range []any{&PolicyAssignment{}, &PolicyOverride{}, &TemporaryOverride{}, &PolicySchedule{}} {
 			if err := tx.Where("policy_id = ?", id).Delete(m).Error; err != nil {
 				return err
 			}
@@ -186,6 +190,13 @@ func (r *Repository) Resolve(ctx context.Context, clientEmail, groupName string,
 		if !p.Enabled {
 			continue
 		}
+		active, err := r.policyScheduleActive(ctx, p, at)
+		if err != nil {
+			return result, err
+		}
+		if !active {
+			continue
+		}
 		result.Items = append(result.Items, resolvedCandidate{Source: "assignment", PolicyID: p.ID, TargetType: a.TargetType, TargetRef: a.TargetRef, Priority: a.Priority + p.Priority, CreatedAt: a.CreatedAt, ID: a.ID, Active: true})
 	}
 	var overrides []PolicyOverride
@@ -198,6 +209,13 @@ func (r *Repository) Resolve(ctx context.Context, clientEmail, groupName string,
 			return result, err
 		}
 		if !p.Enabled {
+			continue
+		}
+		active, err := r.policyScheduleActive(ctx, p, at)
+		if err != nil {
+			return result, err
+		}
+		if !active {
 			continue
 		}
 		result.Items = append(result.Items, resolvedCandidate{Source: "override", PolicyID: o.PolicyID, TargetType: o.TargetType, TargetRef: o.TargetRef, Priority: o.Priority + p.Priority, CreatedAt: o.CreatedAt, ID: o.ID, Active: true, Scope: o.Scope})
@@ -221,4 +239,32 @@ func (r *Repository) Resolve(ctx context.Context, clientEmail, groupName string,
 	}
 	sortCandidates(result.Items)
 	return result, nil
+}
+
+func (r *Repository) policyScheduleActive(ctx context.Context, p Policy, at int64) (bool, error) {
+	var spec Definition
+	if strings.TrimSpace(p.Spec) == "" {
+		return true, nil
+	}
+	if err := json.Unmarshal([]byte(p.Spec), &spec); err != nil {
+		return false, fmt.Errorf("policy %d: malformed spec: %w", p.ID, err)
+	}
+	if strings.TrimSpace(spec.ScheduleRef) == "" {
+		return true, nil
+	}
+	id, err := strconv.ParseUint(strings.TrimSpace(spec.ScheduleRef), 10, 32)
+	if err != nil || id == 0 {
+		return false, fmt.Errorf("policy %d: invalid schedule reference", p.ID)
+	}
+	var schedule PolicySchedule
+	if err := r.db.WithContext(ctx).First(&schedule, uint(id)).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return false, nil
+		}
+		return false, err
+	}
+	if schedule.PolicyID != p.ID {
+		return false, nil
+	}
+	return scheduleActiveAt(schedule, at), nil
 }

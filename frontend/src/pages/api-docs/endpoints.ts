@@ -2966,6 +2966,41 @@ export const sections: readonly Section[] = [
       },
       {
         method: 'GET',
+        path: '/panel/api/policies/schedules',
+        summary: 'List durable policy schedules with current and next-active state.',
+        response:
+          '{ enabled, items: [{ id, policyId, timezone, weekdays, startMinute, endMinute, active, nextActiveAt }] }',
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/policies/schedules',
+        summary: 'Create a validated IANA-timezone weekly policy schedule.',
+        body: '{ policyId, timezone, weekdays, startMinute, endMinute, enabled }',
+        response: 'schedule',
+      },
+      {
+        method: 'GET',
+        path: '/panel/api/policies/schedules/:id',
+        summary: 'Read one policy schedule and its current state.',
+        params: [{ name: 'id', in: 'path', type: 'integer' }],
+        response: 'schedule',
+      },
+      {
+        method: 'PUT',
+        path: '/panel/api/policies/schedules/:id',
+        summary: 'Update a policy schedule.',
+        params: [{ name: 'id', in: 'path', type: 'integer' }],
+        body: '{ policyId, timezone, weekdays, startMinute, endMinute, enabled }',
+        response: 'schedule',
+      },
+      {
+        method: 'DELETE',
+        path: '/panel/api/policies/schedules/:id',
+        summary: 'Delete a policy schedule.',
+        params: [{ name: 'id', in: 'path', type: 'integer' }],
+      },
+      {
+        method: 'GET',
         path: '/panel/api/policies/resolve',
         summary: 'Inspect deterministic policy-data precedence without returning an Xray decision.',
         params: [

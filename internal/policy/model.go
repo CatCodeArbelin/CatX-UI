@@ -12,6 +12,7 @@ import (
 
 	"gorm.io/gorm"
 
+	"github.com/mhsanaei/3x-ui/v3/internal/analytics"
 	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
 )
 
@@ -102,7 +103,7 @@ func Migrate(db *gorm.DB) error {
 	if db == nil {
 		return nil
 	}
-	return db.AutoMigrate(&Policy{}, &PolicyAssignment{}, &PolicyOverride{}, &TemporaryOverride{})
+	return db.AutoMigrate(&Policy{}, &PolicyAssignment{}, &PolicyOverride{}, &TemporaryOverride{}, &PolicySchedule{})
 }
 
 func validateTarget(targetType, targetRef string) error {
@@ -147,6 +148,11 @@ func validateDefinition(spec string) error {
 	}
 	if d.Action != "" && d.Action != "allow" && d.Action != "deny" {
 		return fmt.Errorf("policy action must be allow or deny")
+	}
+	for _, category := range d.Categories {
+		if !analytics.IsKnownCategory(category) {
+			return fmt.Errorf("unsupported policy category %q", category)
+		}
 	}
 	return nil
 }
