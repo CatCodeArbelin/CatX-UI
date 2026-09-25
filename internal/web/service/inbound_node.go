@@ -995,7 +995,9 @@ func (s *InboundService) setRemoteTrafficLocked(nodeID int, snap *runtime.Traffi
 				var authoritative xray.ClientTraffic
 				if err := tx.Where("email = ?", cs.Email).First(&authoritative).Error; err == nil {
 					masterEnable = authoritative.Enable
-					preserveMasterEnable = !cs.Enable && nodeDisableIsStale(&authoritative, cs, now, deltaUp, deltaDown)
+					preserveMasterEnable = !cs.Enable && authoritative.Enable &&
+						(cs.Total != authoritative.Total || cs.ExpiryTime != authoritative.ExpiryTime) &&
+						masterLimitsAllowClient(&authoritative, now, deltaUp, deltaDown)
 				} else {
 					masterEnable = existing.Enable
 					preserveMasterEnable = !cs.Enable && nodeDisableIsStale(existing, cs, now, deltaUp, deltaDown)
