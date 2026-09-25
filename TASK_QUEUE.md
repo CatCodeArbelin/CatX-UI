@@ -306,7 +306,7 @@ Completed and merged into `develop` (`0de64062`).
 
 ---
 
-## WP-4B — Quarantine / Managed DNS / SafeSearch — CURRENT
+## WP-4B — Quarantine / Managed DNS / SafeSearch — DONE
 
 Recommended model: `Sol High`
 
@@ -321,7 +321,7 @@ Includes:
 
 # PHASE 5 — Traffic History & Quotas
 
-## WP-5A — Historical Traffic
+## WP-5A — Historical Traffic — CURRENT
 
 Recommended model: `Luna Medium`
 
