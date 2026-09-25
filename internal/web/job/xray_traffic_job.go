@@ -82,8 +82,7 @@ func (j *XrayTrafficJob) Run() {
 		return
 	}
 	// This scheduler job has no request context; the analytics write is best-effort.
-	//nolint:noctx
-	analytics.RecordUpstreamTraffic(context.Background(), time.Now().UnixMilli(), clientTraffics, traffics)
+	analytics.RecordUpstreamTraffic(context.Background(), time.Now().UnixMilli(), clientTraffics, traffics) //nolint:noctx
 	needRestart0, clientsDisabled, err := j.inboundService.AddTraffic(traffics, clientTraffics)
 	if err != nil {
 		logger.Warning("add inbound traffic failed:", err)
