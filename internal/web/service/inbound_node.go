@@ -1090,6 +1090,17 @@ func (s *InboundService) setRemoteTrafficLocked(nodeID int, snap *runtime.Traffi
 					existing.Total = cs.Total
 					existing.Reset = cs.Reset
 				}
+				// The SQL merge mirrors nodeDisableIsStale, but keep the decision
+				// explicit after the counter update as well. A node snapshot carrying
+				// an old disable must not overwrite a master quota top-up in a later
+				// lifecycle/settings merge.
+				if existing != nil && !cs.Enable && nodeDisableIsStale(existing, cs, now, deltaUp, deltaDown) {
+					if err := tx.Model(xray.ClientTraffic{}).
+						Where("email = ?", cs.Email).
+						Update("enable", existing.Enable).Error; err != nil {
+						return false, err
+					}
+				}
 			}
 			// A dip plus a lagging longer expiry mimics nodeClientRenewed and would
 			// undo a master shorten once the freeze lifts (#6228).

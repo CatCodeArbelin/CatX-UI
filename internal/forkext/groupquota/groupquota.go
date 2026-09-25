@@ -485,7 +485,7 @@ func IsGroupDepleted(tx *gorm.DB, group string) (bool, error) {
 }
 
 func RegisterRoutes(api *gin.RouterGroup) {
-	if !Enabled() || api == nil {
+	if api == nil {
 		return
 	}
 	g := api.Group("/clients/groups/quota")

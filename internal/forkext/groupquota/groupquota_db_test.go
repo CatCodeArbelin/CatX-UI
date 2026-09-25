@@ -2,6 +2,7 @@ package groupquota
 
 import (
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"testing"
@@ -17,7 +18,8 @@ import (
 
 func newQuotaTestDB(t *testing.T) *gorm.DB {
 	t.Helper()
-	db, err := gorm.Open(sqlite.Open("file:groupquota_test_"+strings.ReplaceAll(t.Name(), "/", "_")+"_"+time.Now().Format("150405.000000000")+"?mode=memory&cache=shared"), &gorm.Config{})
+	dbPath := filepath.Join(t.TempDir(), "groupquota.db")
+	db, err := gorm.Open(sqlite.Open(dbPath+"?_journal_mode=WAL&_busy_timeout=10000&_txlock=immediate"), &gorm.Config{})
 	if err != nil {
 		if strings.Contains(err.Error(), "CGO_ENABLED=0") {
 			t.Skip("SQLite coverage requires cgo")
@@ -25,6 +27,12 @@ func newQuotaTestDB(t *testing.T) *gorm.DB {
 		t.Fatal(err)
 	}
 	if err := db.AutoMigrate(&State{}, &Membership{}, &model.ClientRecord{}, &xray.ClientTraffic{}); err != nil {
+		t.Fatal(err)
+	}
+	if sqlDB, err := db.DB(); err == nil {
+		sqlDB.SetMaxOpenConns(8)
+		sqlDB.SetMaxIdleConns(8)
+	} else {
 		t.Fatal(err)
 	}
 	Configure(db, true)

@@ -70,16 +70,13 @@ func (s *ClientService) BulkResetTraffic(inboundSvc *InboundService, emails []st
 	if err != nil {
 		return 0, err
 	}
+	reenableEmails := make([]string, 0, len(cleanEmails))
 	for _, e := range cleanEmails {
 		rec := recordsByEmail[e]
 		if rec == nil || rec.Enable {
 			continue
 		}
-		updated := rec.ToClient()
-		updated.Enable = true
-		if _, uErr := s.Update(inboundSvc, rec.Id, *updated, rec.LimitHwid); uErr != nil {
-			logger.Warning("Failed to auto-enable client during bulk traffic reset:", uErr)
-		}
+		reenableEmails = append(reenableEmails, e)
 	}
 
 	affected := 0
@@ -119,6 +116,14 @@ func (s *ClientService) BulkResetTraffic(inboundSvc *InboundService, emails []st
 	})
 	if err != nil {
 		return 0, err
+	}
+	// Reconcile the upstream lifecycle state after the authoritative reset has
+	// committed. This preserves the existing bulk-reset re-enable behavior while
+	// allowing group quota enforcement to veto only clients that remain blocked.
+	if len(reenableEmails) > 0 {
+		if _, _, err := s.BulkSetEnable(inboundSvc, reenableEmails, true); err != nil {
+			return 0, err
+		}
 	}
 	return affected, nil
 }
