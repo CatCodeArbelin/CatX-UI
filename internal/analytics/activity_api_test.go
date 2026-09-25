@@ -54,4 +54,29 @@ func TestDNSActivityRouteExposesMetadataOnlyPage(t *testing.T) {
 	}
 }
 
+func TestTrafficHistoryRouteReturnsBoundedHistoryShape(t *testing.T) {
+	Configure(NoopRepository{}, true)
+	t.Cleanup(func() { Configure(NoopRepository{}, false) })
+	router := gin.New()
+	RegisterActivityRoutes(router.Group("/panel/api"))
+	req := httptest.NewRequest(http.MethodGet, "/panel/api/analytics/clients/alice/traffic?from=1&to=2000", nil)
+	resp := httptest.NewRecorder()
+	router.ServeHTTP(resp, req)
+	if resp.Code != http.StatusOK || !strings.Contains(resp.Body.String(), `"serviceBreakdown":[]`) || !strings.Contains(resp.Body.String(), `"categoryBreakdown":[]`) {
+		t.Fatalf("unexpected traffic response: %d %s", resp.Code, resp.Body.String())
+	}
+}
+
+func TestActivityQueryRejectsUnboundedRange(t *testing.T) {
+	Configure(NoopRepository{}, false)
+	router := gin.New()
+	RegisterActivityRoutes(router.Group("/panel/api"))
+	req := httptest.NewRequest(http.MethodGet, "/panel/api/analytics/traffic?from=1&to=9999999999999", nil)
+	resp := httptest.NewRecorder()
+	router.ServeHTTP(resp, req)
+	if resp.Code != http.StatusBadRequest {
+		t.Fatalf("unbounded range status = %d, body = %s", resp.Code, resp.Body.String())
+	}
+}
+
 var _ Repository = (*captureRepo)(nil)

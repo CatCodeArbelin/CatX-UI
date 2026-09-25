@@ -83,6 +83,18 @@ type Settings = {
   retention: Retention;
   privacy: { metadataOnly: boolean; classificationsMayBeUncertain: boolean };
 };
+type TrafficBreakdown = { name: string; observations: number; sessions: number };
+type TrafficHistory = {
+  from: number;
+  to: number;
+  up: number;
+  down: number;
+  clients: number;
+  inbounds: number;
+  nodes: number;
+  serviceBreakdown: TrafficBreakdown[];
+  categoryBreakdown: TrafficBreakdown[];
+};
 
 const RANGE: [Dayjs, Dayjs] = [dayjs().subtract(7, 'day'), dayjs()];
 const SIZE = 25;
@@ -99,8 +111,15 @@ const text = {
   noActivity: 'No observed activity in this range.',
   noDns: 'No DNS observations in this range.',
   noSessions: 'No sessions in this range.',
+  noTraffic: 'No historical traffic in this range.',
 };
 const time = (value?: number) => (value ? new Date(value).toLocaleString() : '—');
+const bytes = (value: number) => {
+  if (!value) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const index = Math.min(Math.floor(Math.log(value) / Math.log(1024)), units.length - 1);
+  return `${(value / 1024 ** index).toFixed(index ? 2 : 0)} ${units[index]}`;
+};
 const provenance = (source: string, value: string) => (
   <Tag>
     {source || 'unknown'} · {value || 'unknown'}
@@ -124,6 +143,9 @@ export default function ActivityPage() {
   const [sessions, setSessions] = useState<Page<Session> | null>(null);
   const [dns, setDns] = useState<Page<DNS> | null>(null);
   const [settings, setSettings] = useState<Settings | null>(null);
+  const [traffic, setTraffic] = useState<{ enabled: boolean; history: TrafficHistory } | null>(
+    null,
+  );
   const [loading, setLoading] = useState(Boolean(email));
   const [error, setError] = useState('');
   const [settingsError, setSettingsError] = useState('');
@@ -162,19 +184,36 @@ export default function ActivityPage() {
         params,
         { silent: true },
       ),
+      HttpUtil.get<{ enabled: boolean; history: TrafficHistory }>(
+        `/panel/api/analytics/clients/${encodeURIComponent(email)}/traffic`,
+        { from: params.from, to: params.to },
+        { silent: true },
+      ),
       settingsRequest,
     ])
-      .then(([eventResult, sessionResult, dnsResult, settingsResult]) => {
+      .then(([eventResult, sessionResult, dnsResult, trafficResult, settingsResult]) => {
         if (cancelled) return;
         if (settingsResult.success && settingsResult.obj?.retention)
           setSettings(settingsResult.obj);
-        if (!eventResult.success || !sessionResult.success || !dnsResult.success) {
-          setError(eventResult.msg || sessionResult.msg || dnsResult.msg || text.error);
+        if (
+          !eventResult.success ||
+          !sessionResult.success ||
+          !dnsResult.success ||
+          !trafficResult.success
+        ) {
+          setError(
+            eventResult.msg ||
+              sessionResult.msg ||
+              dnsResult.msg ||
+              trafficResult.msg ||
+              text.error,
+          );
           return;
         }
         setEvents(eventResult.obj);
         setSessions(sessionResult.obj);
         setDns(dnsResult.obj);
+        if (trafficResult.obj) setTraffic(trafficResult.obj);
       })
       .catch(() => {
         if (!cancelled) setError(text.error);
@@ -194,6 +233,7 @@ export default function ActivityPage() {
     setEvents(null);
     setSessions(null);
     setDns(null);
+    setTraffic(null);
     setLoading(Boolean(next));
     setEmail(next);
     if (next) setQuery({ email: next });
@@ -401,6 +441,41 @@ export default function ActivityPage() {
                         }}
                         locale={{ emptyText: <Empty description={text.noSessions} /> }}
                       />
+                    ),
+                  },
+                  {
+                    key: 'traffic',
+                    label: 'Traffic history',
+                    children: traffic?.history ? (
+                      <Space direction="vertical" style={{ width: '100%' }}>
+                        <div className="activity-summary">
+                          <Tag>Upload: {bytes(traffic.history.up)}</Tag>
+                          <Tag>Download: {bytes(traffic.history.down)}</Tag>
+                          <Tag>Clients: {traffic.history.clients}</Tag>
+                          <Tag>Inbounds: {traffic.history.inbounds}</Tag>
+                          <Tag>Nodes: {traffic.history.nodes}</Tag>
+                        </div>
+                        <Table<TrafficBreakdown>
+                          rowKey="name"
+                          columns={[
+                            { title: 'Service / category', dataIndex: 'name' },
+                            { title: 'Observations', dataIndex: 'observations' },
+                            { title: 'Sessions', dataIndex: 'sessions' },
+                          ]}
+                          dataSource={[
+                            ...traffic.history.serviceBreakdown,
+                            ...traffic.history.categoryBreakdown,
+                          ]}
+                          pagination={false}
+                          locale={{ emptyText: <Empty description={text.noTraffic} /> }}
+                        />
+                        <Typography.Text type="secondary">
+                          Service and category rows are metadata-derived observations and sessions;
+                          byte totals come only from upstream traffic accounting.
+                        </Typography.Text>
+                      </Space>
+                    ) : (
+                      <Empty description={text.noTraffic} />
                     ),
                   },
                 ]}

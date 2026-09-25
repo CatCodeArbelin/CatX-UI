@@ -10,6 +10,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"net"
@@ -20,6 +21,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
 	"github.com/mhsanaei/3x-ui/v3/internal/xray"
 )
 
@@ -469,4 +471,71 @@ func Start(ctx context.Context) (func(), error) {
 	tailer := NewTailer(TailerConfig{Path: path, Repo: repo})
 	go func() { _ = tailer.Run(child) }()
 	return cancel, nil
+}
+
+// RecordUpstreamTraffic stores samples from the existing Xray accounting poll.
+// It deliberately does not update, reset, or reconcile any traffic counter.
+func RecordUpstreamTraffic(ctx context.Context, observedAt int64, clients []*xray.ClientTraffic, traffics []*xray.Traffic) {
+	configured.RLock()
+	repo, enabled := configured.repo, configured.enabled
+	configured.RUnlock()
+	if !enabled || repo == nil {
+		return
+	}
+	snapshots := make([]TrafficSnapshot, 0, len(clients)+len(traffics))
+	for _, client := range clients {
+		if client == nil || client.Email == "" {
+			continue
+		}
+		snapshots = append(snapshots, TrafficSnapshot{ObservedAt: observedAt, Scope: TrafficScopeClient, CounterKey: client.Email, ClientEmail: client.Email, InboundID: client.InboundId, Up: maxTraffic(client.Up), Down: maxTraffic(client.Down)})
+	}
+	for _, traffic := range traffics {
+		if traffic == nil || traffic.Tag == "" {
+			continue
+		}
+		scope := TrafficScopeOutbound
+		if traffic.IsInbound {
+			scope = TrafficScopeInbound
+		}
+		snapshots = append(snapshots, TrafficSnapshot{ObservedAt: observedAt, Scope: scope, CounterKey: traffic.Tag, Tag: traffic.Tag, Up: maxTraffic(traffic.Up), Down: maxTraffic(traffic.Down)})
+	}
+	if err := repo.RecordTrafficSnapshots(ctx, snapshots); err != nil {
+		log.Printf("analytics traffic snapshot deferred: %v", err)
+	}
+}
+
+// RecordNodeTraffic captures the same upstream per-inbound/per-client samples
+// received by the existing node synchronizer, retaining node attribution.
+func RecordNodeTraffic(ctx context.Context, observedAt int64, nodeID int, inbounds []*model.Inbound) {
+	configured.RLock()
+	repo, enabled := configured.repo, configured.enabled
+	configured.RUnlock()
+	if !enabled || repo == nil || nodeID == 0 {
+		return
+	}
+	snapshots := make([]TrafficSnapshot, 0)
+	for _, inbound := range inbounds {
+		if inbound == nil || inbound.Tag == "" {
+			continue
+		}
+		key := fmt.Sprintf("node:%d:inbound:%s", nodeID, inbound.Tag)
+		snapshots = append(snapshots, TrafficSnapshot{ObservedAt: observedAt, Scope: TrafficScopeInbound, CounterKey: key, NodeID: nodeID, InboundID: inbound.Id, Tag: inbound.Tag, Up: maxTraffic(inbound.Up), Down: maxTraffic(inbound.Down)})
+		for _, client := range inbound.ClientStats {
+			if client.Email == "" {
+				continue
+			}
+			clientKey := fmt.Sprintf("node:%d:client:%s", nodeID, client.Email)
+			snapshots = append(snapshots, TrafficSnapshot{ObservedAt: observedAt, Scope: TrafficScopeClient, CounterKey: clientKey, ClientEmail: client.Email, NodeID: nodeID, InboundID: inbound.Id, Up: maxTraffic(client.Up), Down: maxTraffic(client.Down)})
+		}
+	}
+	if err := repo.RecordTrafficSnapshots(ctx, snapshots); err != nil {
+		log.Printf("analytics node traffic snapshot deferred: %v", err)
+	}
+}
+
+func maxTraffic(value int64) int64 {
+	if value < 0 {
+		return 0
+	}
+	return value
 }

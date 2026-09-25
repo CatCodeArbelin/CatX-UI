@@ -37,6 +37,8 @@ type Repository interface {
 	ListDNSPage(ctx context.Context, clientEmail string, from, to int64, limit, offset int) (DNSPage, error)
 	ListSessionPage(ctx context.Context, clientEmail string, from, to int64, limit, offset int) (SessionPage, error)
 	ListAggregates(ctx context.Context, clientEmail, bucketWidth string, from, to int64) ([]ServiceCategoryAggregate, error)
+	RecordTrafficSnapshots(ctx context.Context, snapshots []TrafficSnapshot) error
+	QueryTrafficHistory(ctx context.Context, clientEmail string, from, to int64) (TrafficHistory, error)
 	SummarizeSessions(ctx context.Context, clientEmail string, from, to int64) (SessionSummary, error)
 	Prune(ctx context.Context, now time.Time, policy RetentionPolicy) (PruneResult, error)
 	CommitAccessLogBatch(ctx context.Context, events []MetadataEvent, sessions []NetworkSession, cursor AccessLogCursor) error
@@ -64,7 +66,25 @@ type SessionPage struct {
 	Total int64
 }
 
-type PruneResult struct{ RawEvents, DNSObservations, Evidence, Sessions, Aggregates int64 }
+type PruneResult struct{ RawEvents, DNSObservations, Evidence, Sessions, Aggregates, TrafficSnapshots int64 }
+
+type TrafficHistory struct {
+	From              int64              `json:"from"`
+	To                int64              `json:"to"`
+	Up                int64              `json:"up"`
+	Down              int64              `json:"down"`
+	Clients           int64              `json:"clients"`
+	Inbounds          int64              `json:"inbounds"`
+	Nodes             int64              `json:"nodes"`
+	ServiceBreakdown  []TrafficBreakdown `json:"serviceBreakdown"`
+	CategoryBreakdown []TrafficBreakdown `json:"categoryBreakdown"`
+}
+
+type TrafficBreakdown struct {
+	Name         string `json:"name"`
+	Observations int64  `json:"observations"`
+	Sessions     int64  `json:"sessions"`
+}
 
 type GormRepository struct{ db *gorm.DB }
 
@@ -271,6 +291,88 @@ func (r *GormRepository) ListAggregates(ctx context.Context, clientEmail, bucket
 	return rows, q.Find(&rows).Error
 }
 
+func (r *GormRepository) RecordTrafficSnapshots(ctx context.Context, snapshots []TrafficSnapshot) error {
+	if len(snapshots) == 0 {
+		return nil
+	}
+	for _, snapshot := range snapshots {
+		if snapshot.ObservedAt <= 0 || snapshot.CounterKey == "" || snapshot.Scope == "" || snapshot.Up < 0 || snapshot.Down < 0 {
+			return errors.New("invalid traffic snapshot")
+		}
+	}
+	return r.db.WithContext(ctx).Create(&snapshots).Error
+}
+
+func (r *GormRepository) QueryTrafficHistory(ctx context.Context, clientEmail string, from, to int64) (TrafficHistory, error) {
+	if from < 0 || to <= from {
+		return TrafficHistory{}, errors.New("invalid traffic range")
+	}
+	q := r.db.WithContext(ctx).Where("observed_at <= ?", to).Order("counter_key ASC, observed_at ASC, id ASC")
+	if clientEmail != "" {
+		q = q.Where("client_email = ?", clientEmail)
+	}
+	var rows []TrafficSnapshot
+	if err := q.Find(&rows).Error; err != nil {
+		return TrafficHistory{}, err
+	}
+	result := TrafficHistory{From: from, To: to}
+	last := map[string]TrafficSnapshot{}
+	seenClient, seenInbound, seenNode := map[string]struct{}{}, map[string]struct{}{}, map[int]struct{}{}
+	for _, row := range rows {
+		previous, hasPrevious := last[row.Scope+"\x00"+row.CounterKey]
+		last[row.Scope+"\x00"+row.CounterKey] = row
+		if row.ObservedAt < from || row.ObservedAt > to || !hasPrevious {
+			continue
+		}
+		if row.Up < previous.Up || row.Down < previous.Down {
+			continue
+		}
+		result.Up += row.Up - previous.Up
+		result.Down += row.Down - previous.Down
+		if row.ClientEmail != "" {
+			seenClient[row.ClientEmail] = struct{}{}
+		}
+		if row.InboundID != 0 {
+			seenInbound[fmt.Sprint(row.InboundID)] = struct{}{}
+		}
+		if row.NodeID != 0 {
+			seenNode[row.NodeID] = struct{}{}
+		}
+	}
+	result.Clients, result.Inbounds, result.Nodes = int64(len(seenClient)), int64(len(seenInbound)), int64(len(seenNode))
+	obs, err := r.destinationBreakdown(ctx, clientEmail, from, to)
+	if err != nil {
+		return TrafficHistory{}, err
+	}
+	result.ServiceBreakdown, result.CategoryBreakdown = obs.services, obs.categories
+	return result, nil
+}
+
+type breakdownResult struct{ services, categories []TrafficBreakdown }
+
+func (r *GormRepository) destinationBreakdown(ctx context.Context, clientEmail string, from, to int64) (breakdownResult, error) {
+	base := r.db.WithContext(ctx).Model(&DestinationObservation{}).Where("observed_at >= ? AND observed_at < ?", from, to)
+	if clientEmail != "" {
+		base = base.Where("client_email = ?", clientEmail)
+	}
+	collect := func(column string) ([]TrafficBreakdown, error) {
+		var rows []TrafficBreakdown
+		if err := base.Select(column + " AS name, COUNT(*) AS observations, COUNT(DISTINCT session_key) AS sessions").Where(column + " <> ''").Group(column).Order("observations DESC, name ASC").Scan(&rows).Error; err != nil {
+			return nil, err
+		}
+		return rows, nil
+	}
+	services, err := collect("service")
+	if err != nil {
+		return breakdownResult{}, err
+	}
+	categories, err := collect("category")
+	if err != nil {
+		return breakdownResult{}, err
+	}
+	return breakdownResult{services: services, categories: categories}, nil
+}
+
 func (r *GormRepository) SummarizeSessions(ctx context.Context, clientEmail string, from, to int64) (SessionSummary, error) {
 	q := r.db.WithContext(ctx).Model(&NetworkSession{}).Where("last_seen >= ? AND first_seen < ?", from, to)
 	if clientEmail != "" {
@@ -303,6 +405,7 @@ func (r *GormRepository) Prune(ctx context.Context, now time.Time, policy Retent
 			{&EvidenceObservation{}, "observed_at", now.Add(-policy.RawEvents).UnixMilli(), &out.Evidence},
 			{&NetworkSession{}, "last_seen", now.Add(-policy.Sessions).UnixMilli(), &out.Sessions},
 			{&ServiceCategoryAggregate{}, "bucket_start", now.Add(-policy.Aggregates).UnixMilli(), &out.Aggregates},
+			{&TrafficSnapshot{}, "observed_at", now.Add(-policy.Aggregates).UnixMilli(), &out.TrafficSnapshots},
 		} {
 			result := tx.Where(item.column+" < ?", item.before).Delete(item.model)
 			if result.Error != nil {
@@ -359,6 +462,12 @@ func (NoopRepository) ListAggregates(context.Context, string, string, int64, int
 	return nil, nil
 }
 
+func (NoopRepository) RecordTrafficSnapshots(context.Context, []TrafficSnapshot) error { return nil }
+
+func (NoopRepository) QueryTrafficHistory(_ context.Context, _ string, from, to int64) (TrafficHistory, error) {
+	return TrafficHistory{From: from, To: to, ServiceBreakdown: []TrafficBreakdown{}, CategoryBreakdown: []TrafficBreakdown{}}, nil
+}
+
 func (NoopRepository) SummarizeSessions(context.Context, string, int64, int64) (SessionSummary, error) {
 	return SessionSummary{}, nil
 }
@@ -413,7 +522,7 @@ func parseActivityQuery(c *gin.Context) (activityQuery, error) {
 	if q.PageSize > 200 {
 		q.PageSize = 200
 	}
-	if q.From < 0 || q.To <= q.From {
+	if q.From < 0 || q.To <= q.From || q.To > now+5*time.Minute.Milliseconds() || q.To-q.From > (400*24*time.Hour).Milliseconds() {
 		return q, fmt.Errorf("invalid time range")
 	}
 	return q, nil
@@ -432,6 +541,45 @@ func RegisterActivityRoutes(api *gin.RouterGroup) {
 	api.GET("/analytics/status", func(c *gin.Context) {
 		status := CurrentStatus()
 		activityEnvelope(c, gin.H{"enabled": status.Enabled, "dnsIntelligence": status.DNSIntelligence})
+	})
+	api.GET("/analytics/traffic", func(c *gin.Context) {
+		configured.RLock()
+		repo, enabled := configured.repo, configured.enabled
+		configured.RUnlock()
+		query, err := parseActivityQuery(c)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"success": false, "msg": err.Error()})
+			return
+		}
+		client := c.Query("clientEmail")
+		result := TrafficHistory{From: query.From, To: query.To, ServiceBreakdown: []TrafficBreakdown{}, CategoryBreakdown: []TrafficBreakdown{}}
+		if enabled && repo != nil {
+			result, err = repo.QueryTrafficHistory(c.Request.Context(), client, query.From, query.To)
+		}
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"success": false, "msg": "traffic history unavailable"})
+			return
+		}
+		activityEnvelope(c, gin.H{"enabled": enabled, "history": result})
+	})
+	api.GET("/analytics/clients/:email/traffic", func(c *gin.Context) {
+		configured.RLock()
+		repo, enabled := configured.repo, configured.enabled
+		configured.RUnlock()
+		query, err := parseActivityQuery(c)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"success": false, "msg": err.Error()})
+			return
+		}
+		result := TrafficHistory{From: query.From, To: query.To, ServiceBreakdown: []TrafficBreakdown{}, CategoryBreakdown: []TrafficBreakdown{}}
+		if enabled && repo != nil {
+			result, err = repo.QueryTrafficHistory(c.Request.Context(), c.Param("email"), query.From, query.To)
+		}
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"success": false, "msg": "traffic history unavailable"})
+			return
+		}
+		activityEnvelope(c, gin.H{"enabled": enabled, "history": result})
 	})
 	api.GET("/analytics/clients/:email/activity", func(c *gin.Context) {
 		configured.RLock()

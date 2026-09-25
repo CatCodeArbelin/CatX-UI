@@ -16224,6 +16224,124 @@
         }
       }
     },
+    "/panel/api/analytics/traffic": {
+      "get": {
+        "tags": [
+          "Client activity analytics"
+        ],
+        "summary": "Return historical upstream traffic totals and metadata-derived service/category breakdowns.",
+        "operationId": "get_panel_api_analytics_traffic",
+        "parameters": [
+          {
+            "name": "clientEmail",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "description": "Start time in milliseconds since epoch.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "description": "End time in milliseconds since epoch.",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/analytics/clients/{email}/traffic": {
+      "get": {
+        "tags": [
+          "Client activity analytics"
+        ],
+        "summary": "Return one existing client’s historical upstream traffic and metadata breakdown.",
+        "operationId": "get_panel_api_analytics_clients_email_traffic",
+        "parameters": [
+          {
+            "name": "email",
+            "in": "path",
+            "required": true,
+            "description": "Existing upstream client identity.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "description": "Start time in milliseconds since epoch.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "description": "End time in milliseconds since epoch.",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/panel/api/policies/status": {
       "get": {
         "tags": [

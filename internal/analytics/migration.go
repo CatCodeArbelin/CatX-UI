@@ -9,5 +9,5 @@ func Migrate(db *gorm.DB) error {
 	if db == nil {
 		return nil
 	}
-	return db.AutoMigrate(&DestinationObservation{}, &DNSObservation{}, &NetworkSession{}, &ServiceCategoryAggregate{}, &AccessLogCursor{}, &EvidenceObservation{})
+	return db.AutoMigrate(&DestinationObservation{}, &DNSObservation{}, &NetworkSession{}, &ServiceCategoryAggregate{}, &TrafficSnapshot{}, &AccessLogCursor{}, &EvidenceObservation{})
 }
