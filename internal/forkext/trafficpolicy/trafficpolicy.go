@@ -466,6 +466,7 @@ func hasEnforcementState() bool {
 }
 
 // ReconcileEnforcement is the single Stage B producer-to-substrate path.
+// Its production provider set remains empty until stable kernel identity is proven.
 // When provider is nil it is an exact no-op: production currently has no
 // proven generic Xray-user attribution provider.
 func ReconcileEnforcement(ctx context.Context, provider AttributionProvider, shaper trafficcontrol.Shaper) (trafficcontrol.Status, error) {
