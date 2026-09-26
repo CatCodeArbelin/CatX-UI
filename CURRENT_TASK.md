@@ -6,8 +6,8 @@
 
 ## Status
 
-WP-6A is DONE and merged into `develop`. WP-6B Stage A is authorized for
-implementation on the current feature branch. Do not modify `main`, start
+WP-6A is DONE and merged into `develop`. WP-6B Stage A implementation is
+complete on the current feature branch; CI rerun is pending. Do not modify `main`, start
 WP-7A, or touch preview/demo data.
 
 ## Authorized Stage A scope
