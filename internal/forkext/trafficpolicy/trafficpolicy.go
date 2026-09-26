@@ -237,7 +237,7 @@ func effectiveView(tx *gorm.DB, email string) (View, error) {
 	v := View{Policy: p, Lifecycle: state.Lifecycle, Owner: state.Owner, Reason: state.Reason, WindowStart: state.WindowStart, WindowEnd: state.WindowEnd, UsedBytes: used, RemainingBytes: remaining}
 	if state.Lifecycle == StateDisabled {
 		v.Enforcement, v.EnforcementNote = StateDisabled, state.Reason
-	} else if !trafficcontrol.StatusView().Capabilities.UserAttribution {
+	} else if !trafficcontrol.StatusView().UserAttribution {
 		v.Enforcement, v.EnforcementNote = StateUnsupported, "kernel attribution is not proven for generic Xray users"
 	} else {
 		v.Enforcement = state.Lifecycle
@@ -380,7 +380,7 @@ func RegisterRoutes(api *gin.RouterGroup) {
 // proven. The caller supplies the node/interface/mark allocated by the
 // substrate; this package never invents a routing or mark allocation path.
 func DesiredRule(view View, nodeKey, iface string, mark uint32, selectors []string) (trafficcontrol.DesiredRule, error) {
-	if !trafficcontrol.StatusView().Capabilities.UserAttribution {
+	if !trafficcontrol.StatusView().UserAttribution {
 		return trafficcontrol.DesiredRule{}, trafficcontrol.ErrUnsupported
 	}
 	upload, download := view.ActiveUploadBps, view.ActiveDownloadBps
@@ -401,7 +401,7 @@ func DesiredRuleFor(view View) (trafficcontrol.DesiredRule, error) {
 // generic users before making a remote mutation; a future proven attribution
 // implementation can supply the rule without changing the node transport.
 func ReconcileRemote(ctx context.Context, remote trafficcontrol.RemoteTransport, view View) (trafficcontrol.Status, error) {
-	if !trafficcontrol.StatusView().Capabilities.UserAttribution {
+	if !trafficcontrol.StatusView().UserAttribution {
 		return trafficcontrol.Status{Capabilities: trafficcontrol.Capabilities{State: "unsupported", Reason: "generic Xray user attribution is not proven"}}, trafficcontrol.ErrUnsupported
 	}
 	rule, err := DesiredRuleFor(view)

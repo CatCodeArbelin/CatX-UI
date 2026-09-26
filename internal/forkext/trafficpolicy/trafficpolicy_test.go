@@ -1,6 +1,7 @@
 package trafficpolicy
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/mhsanaei/3x-ui/v3/internal/forkext/trafficcontrol"
@@ -66,10 +67,10 @@ func TestFixedWindowAndSoftThrottleLifecycle(t *testing.T) {
 
 func TestGenericUserMarkPathRemainsUnsupported(t *testing.T) {
 	trafficcontrol.Configure(false)
-	if _, err := DesiredRuleFor(View{}); err != trafficcontrol.ErrUnsupported {
+	if _, err := DesiredRuleFor(View{}); !errors.Is(err, trafficcontrol.ErrUnsupported) {
 		t.Fatalf("DesiredRuleFor error = %v", err)
 	}
-	if _, err := ReconcileRemote(nil, nil, View{}); err != trafficcontrol.ErrUnsupported {
+	if _, err := ReconcileRemote(nil, nil, View{}); !errors.Is(err, trafficcontrol.ErrUnsupported) {
 		t.Fatalf("ReconcileRemote error = %v", err)
 	}
 }
