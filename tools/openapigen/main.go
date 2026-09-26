@@ -115,6 +115,10 @@ func run(root, outDir string) error {
 			StructAllow: setOf("ApiTokenView", "PanelUpdateStatus"),
 		},
 		{
+			Path:        resolveRel(root, "internal/forkext/trafficpolicy"),
+			StructAllow: setOf("Policy", "State", "View"),
+		},
+		{
 			Path:        resolveRel(root, "internal/amneziawg"),
 			StructAllow: setOf("ServerSettings"),
 		},

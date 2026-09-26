@@ -911,6 +911,20 @@ export const PeerActivitySchema = z.object({
 });
 export type PeerActivity = z.infer<typeof PeerActivitySchema>;
 
+export const PolicySchema = z.object({
+  activeDownloadBps: z.number().int(),
+  activeUploadBps: z.number().int(),
+  clientEmail: z.string(),
+  enabled: z.boolean(),
+  id: z.number().int(),
+  quotaBytes: z.number().int(),
+  throttleDownloadBps: z.number().int(),
+  throttleUploadBps: z.number().int(),
+  updatedAt: z.number().int(),
+  windowSeconds: z.number().int(),
+});
+export type Policy = z.infer<typeof PolicySchema>;
+
 export const ProbeResultUISchema = z.object({
   cpuPct: z.number(),
   error: z.string(),
@@ -998,6 +1012,19 @@ export const SettingSchema = z.object({
 });
 export type Setting = z.infer<typeof SettingSchema>;
 
+export const StateSchema = z.object({
+  clientEmail: z.string(),
+  id: z.number().int(),
+  lastError: z.string().optional(),
+  lifecycle: z.string(),
+  owner: z.string(),
+  reason: z.string(),
+  updatedAt: z.number().int(),
+  windowEnd: z.number().int(),
+  windowStart: z.number().int(),
+});
+export type State = z.infer<typeof StateSchema>;
+
 export const SubBalancerSchema = z.object({
   createdAt: z.number().int(),
   enabled: z.boolean(),
@@ -1048,4 +1075,27 @@ export const UserSchema = z.object({
   username: z.string(),
 });
 export type User = z.infer<typeof UserSchema>;
+
+export const ViewSchema = z.object({
+  activeDownloadBps: z.number().int(),
+  activeUploadBps: z.number().int(),
+  clientEmail: z.string(),
+  enabled: z.boolean(),
+  enforcement: z.string(),
+  enforcementNote: z.string().optional(),
+  id: z.number().int(),
+  lifecycle: z.string(),
+  owner: z.string(),
+  quotaBytes: z.number().int(),
+  reason: z.string(),
+  remainingBytes: z.number().int(),
+  throttleDownloadBps: z.number().int(),
+  throttleUploadBps: z.number().int(),
+  updatedAt: z.number().int(),
+  usedBytes: z.number().int(),
+  windowEnd: z.number().int(),
+  windowSeconds: z.number().int(),
+  windowStart: z.number().int(),
+});
+export type View = z.infer<typeof ViewSchema>;
 

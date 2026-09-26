@@ -856,6 +856,19 @@ export interface PeerActivity {
   up: number;
 }
 
+export interface Policy {
+  activeDownloadBps: number;
+  activeUploadBps: number;
+  clientEmail: string;
+  enabled: boolean;
+  id: number;
+  quotaBytes: number;
+  throttleDownloadBps: number;
+  throttleUploadBps: number;
+  updatedAt: number;
+  windowSeconds: number;
+}
+
 export interface ProbeResultUI {
   cpuPct: number;
   error: string;
@@ -939,6 +952,18 @@ export interface Setting {
   value: string;
 }
 
+export interface State {
+  clientEmail: string;
+  id: number;
+  lastError?: string;
+  lifecycle: string;
+  owner: string;
+  reason: string;
+  updatedAt: number;
+  windowEnd: number;
+  windowStart: number;
+}
+
 export interface SubBalancer {
   createdAt: number;
   enabled: boolean;
@@ -983,5 +1008,27 @@ export interface User {
   id: number;
   password: string;
   username: string;
+}
+
+export interface View {
+  activeDownloadBps: number;
+  activeUploadBps: number;
+  clientEmail: string;
+  enabled: boolean;
+  enforcement: string;
+  enforcementNote?: string;
+  id: number;
+  lifecycle: string;
+  owner: string;
+  quotaBytes: number;
+  reason: string;
+  remainingBytes: number;
+  throttleDownloadBps: number;
+  throttleUploadBps: number;
+  updatedAt: number;
+  usedBytes: number;
+  windowEnd: number;
+  windowSeconds: number;
+  windowStart: number;
 }
 

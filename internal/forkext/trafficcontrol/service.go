@@ -68,6 +68,38 @@ func Reconcile(ctx context.Context, rules []DesiredRule) (Status, error) {
 	return status, err
 }
 
+func (s *serviceState) Capabilities(ctx context.Context) Capabilities {
+	return DetectCapabilities(ctx)
+}
+
+func (s *serviceState) Reconcile(ctx context.Context, rules []DesiredRule) (Status, error) {
+	return Reconcile(ctx, rules)
+}
+
+func (s *serviceState) ApplyClientLimit(ctx context.Context, rule DesiredRule) error {
+	service.mu.RLock()
+	b, enabled := service.backend, service.enabled
+	service.mu.RUnlock()
+	if !enabled {
+		return ErrUnsupported
+	}
+	return b.ApplyClientLimit(ctx, rule)
+}
+
+func (s *serviceState) RemoveClientLimit(ctx context.Context, nodeKey, clientKey string) error {
+	service.mu.RLock()
+	b, enabled := service.backend, service.enabled
+	service.mu.RUnlock()
+	if !enabled {
+		return ErrUnsupported
+	}
+	return b.RemoveClientLimit(ctx, nodeKey, clientKey)
+}
+
+// GlobalShaper exposes the single WP-6A substrate to fork-owned producers.
+// It does not create another backend or reconciliation state store.
+func GlobalShaper() Shaper { return service }
+
 func StatusView() Status {
 	service.mu.RLock()
 	status, initialized := service.status, service.status.State != ""

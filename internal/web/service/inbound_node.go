@@ -1369,7 +1369,7 @@ func (s *InboundService) setRemoteTrafficLocked(nodeID int, snap *runtime.Traffi
 			return false, err
 		}
 	}
-	if err := forkext.GroupQuotaApplyDeltas(tx, quotaDeltas); err != nil {
+	if err := forkext.ApplyTrafficDeltas(tx, quotaDeltas); err != nil {
 		return false, err
 	}
 	if _, err := forkext.GroupQuotaDepletedEmails(tx); err != nil {

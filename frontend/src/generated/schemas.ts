@@ -3773,6 +3773,61 @@ export const SCHEMAS: Record<string, unknown> = {
     ],
     "type": "object"
   },
+  "Policy": {
+    "description": "Policy contains desired policy only. Traffic bytes remain authoritative in\nxray.ClientTraffic; this table never accumulates a second traffic counter.",
+    "properties": {
+      "activeDownloadBps": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "activeUploadBps": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "clientEmail": {
+        "type": "string"
+      },
+      "enabled": {
+        "type": "boolean"
+      },
+      "id": {
+        "type": "integer"
+      },
+      "quotaBytes": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "throttleDownloadBps": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "throttleUploadBps": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "updatedAt": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "windowSeconds": {
+        "format": "int64",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "activeDownloadBps",
+      "activeUploadBps",
+      "clientEmail",
+      "enabled",
+      "id",
+      "quotaBytes",
+      "throttleDownloadBps",
+      "throttleUploadBps",
+      "updatedAt",
+      "windowSeconds"
+    ],
+    "type": "object"
+  },
   "ProbeResultUI": {
     "properties": {
       "cpuPct": {
@@ -4109,6 +4164,52 @@ export const SCHEMAS: Record<string, unknown> = {
     ],
     "type": "object"
   },
+  "State": {
+    "description": "State stores a cumulative-counter checkpoint and lifecycle ownership. The\ncurrent usage is always derived as client_traffics - baseline.",
+    "properties": {
+      "clientEmail": {
+        "type": "string"
+      },
+      "id": {
+        "type": "integer"
+      },
+      "lastError": {
+        "type": "string"
+      },
+      "lifecycle": {
+        "type": "string"
+      },
+      "owner": {
+        "type": "string"
+      },
+      "reason": {
+        "type": "string"
+      },
+      "updatedAt": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "windowEnd": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "windowStart": {
+        "format": "int64",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "clientEmail",
+      "id",
+      "lifecycle",
+      "owner",
+      "reason",
+      "updatedAt",
+      "windowEnd",
+      "windowStart"
+    ],
+    "type": "object"
+  },
   "SubBalancer": {
     "description": "SubBalancer is one extra JSON-subscription config document whose members are\nthe selected inbounds' proxy outbounds. SortOrder shares SubSortIndex semantics.",
     "properties": {
@@ -4305,6 +4406,99 @@ export const SCHEMAS: Record<string, unknown> = {
       "id",
       "password",
       "username"
+    ],
+    "type": "object"
+  },
+  "View": {
+    "properties": {
+      "activeDownloadBps": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "activeUploadBps": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "clientEmail": {
+        "type": "string"
+      },
+      "enabled": {
+        "type": "boolean"
+      },
+      "enforcement": {
+        "type": "string"
+      },
+      "enforcementNote": {
+        "type": "string"
+      },
+      "id": {
+        "type": "integer"
+      },
+      "lifecycle": {
+        "type": "string"
+      },
+      "owner": {
+        "type": "string"
+      },
+      "quotaBytes": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "reason": {
+        "type": "string"
+      },
+      "remainingBytes": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "throttleDownloadBps": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "throttleUploadBps": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "updatedAt": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "usedBytes": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "windowEnd": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "windowSeconds": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "windowStart": {
+        "format": "int64",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "activeDownloadBps",
+      "activeUploadBps",
+      "clientEmail",
+      "enabled",
+      "enforcement",
+      "id",
+      "lifecycle",
+      "owner",
+      "quotaBytes",
+      "reason",
+      "remainingBytes",
+      "throttleDownloadBps",
+      "throttleUploadBps",
+      "updatedAt",
+      "usedBytes",
+      "windowEnd",
+      "windowSeconds",
+      "windowStart"
     ],
     "type": "object"
   }

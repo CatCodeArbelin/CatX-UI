@@ -166,6 +166,10 @@ func TestNodeSyncScopeAllowlistMatchesRemoteInventory(t *testing.T) {
 		"/hosts/list":                   {http.MethodGet: {}},
 		"/traffic-control/capabilities": {http.MethodGet: {}},
 		"/traffic-control/reconcile":    {http.MethodPost: {}},
+		"/traffic-control/clients/:email/policy": {
+			http.MethodGet: {}, http.MethodPut: {},
+		},
+		"/traffic-control/clients/:email/policy/reset": {http.MethodPost: {}},
 	}
 	if !reflect.DeepEqual(nodeSyncScopeAllow, expected) {
 		t.Fatalf("node-sync allowlist drift:\n got: %#v\nwant: %#v", nodeSyncScopeAllow, expected)
