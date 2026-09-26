@@ -2,64 +2,58 @@
 
 ## Work Package
 
-`WP-6A — Shaping Core`
+`WP-6B — Speed / Rolling Quota / Soft Throttle`
 
 ## Status
 
-WP-5B is DONE and merged into `develop`. WP-6A is authorized for full
-implementation on the current feature branch. Do not merge WP-6A, start WP-6B,
-modify `main`, or touch preview/demo data.
+WP-6A is DONE and merged into `develop` at the green CI head. WP-6B is
+authorized for an implementation-readiness review only. Do not implement
+production code, modify `main`, or touch preview/demo data.
 
-## Scope
+## Review scope
 
-The package implements the shaping substrate, not WP-6B speed-limit policy.
-Implement capability detection, the Shaper contract, Linux tc/nft/IFB state,
-deterministic ownership/naming, mark allocation and collision detection, local
-reconciliation, the status API, restart/drift reconciliation, rollback, and
-unsupported-platform exact no-op behavior.
+Resolve the minimum modular design for:
 
-Do not add generic Xray user-to-marked-outbound routing in WP-6A; actual Xray
-user-to-mark injection remains an explicit integration boundary for WP-6B.
-Linux uses CatX-owned tc/nft state, conntrack mark propagation, and IFB for
-reverse-path shaping. Never replace an incompatible or admin-owned qdisc.
-Remote shaping uses the existing authenticated runtime.Remote/CatX API
-architecture; no new agent and no SSH fallback. Do not add traffic counters or
-a shaping-policy table.
+- per-client upload/download speed limits over the WP-6A shaping substrate;
+- generic Xray-user-to-kernel-mark attribution without bypassing existing
+  routing, policies, balancers, WARP, direct, or blocked paths;
+- rolling/fixed-window quota accounting without duplicate counters;
+- ACTIVE → THROTTLED → ACTIVE lifecycle and interaction with WP-5B hard
+  quota/disable semantics;
+- restart/reconciliation and local/remote-node enforcement;
+- optional category caps only when attribution is reliable;
+- schema/API/UI, rollback/failure, unsupported behavior, and concurrency tests.
 
-## Required workflow
-
-- Read the authorized documents and skills, inspect the actual current
-  integration points, and implement the scoped substrate with focused commits.
-- Add deterministic fake-executor coverage for apply, drift, and rollback;
-  add privileged Linux/network-namespace coverage when supported.
-- Run relevant tests and both canonical CI workflows; fix genuine failures.
-- Do not merge WP-6A, start WP-6B, modify `main`, or touch preview/demo data.
-- Keep the working tree clean at handoff.
+Do not introduce a second routing compiler, traffic counter, or node subsystem.
+The review must identify the smallest upstream integration boundary, exact
+unsupported/degraded behavior, and genuine blockers before implementation.
 
 ## Authorized documents
 
 - `docs/01_ARCHITECTURE.md`
 - `docs/05_TESTING_ROLLBACK_RELEASE.md`
 - `docs/07_SECURITY_PRIVACY.md`
+- `docs/08_FRONTEND_UX.md`
 - `docs/11_QOS_TRAFFIC_CONTROL.md`
 - `docs/15_DEFINITION_OF_DONE.md`
 - `docs/19_REPOSITORY_MAP.md`
 
 ## Authorized skills
 
-- `skills/feature-implementer/SKILL.md`
 - `skills/security-privacy-review/SKILL.md`
 
 ## Hard constraints
 
-- reuse existing Xray, client, inbound, and node boundaries;
-- no second traffic/accounting engine;
+- reuse existing Xray, client, inbound, traffic, and node boundaries;
+- use the WP-6A Shaper and existing traffic accounting only;
 - no sensitive payloads, cookies, credentials, or decrypted message storage;
 - no runtime schema mutation outside migrations;
-- no changes to `main` and no preview/demo data changes;
+- no generic mark path that changes existing route/policy decisions;
+- no production implementation in this review;
+- no changes to `main` or preview/demo data;
 - keep the working tree clean at handoff.
 
 ## Stop condition
 
-Stop on the green pushed WP-6A feature branch. Do not merge WP-6A or start
-WP-6B.
+Stop after the WP-6B readiness report. Do not implement production code or
+advance to another work package.

@@ -347,7 +347,7 @@ Includes:
 
 # PHASE 6 — QoS / Traffic Control
 
-## WP-6A — Shaping Core — CURRENT
+## WP-6A — Shaping Core — DONE
 
 Recommended model: `Sol High`
 
@@ -360,7 +360,7 @@ Includes:
 
 ---
 
-## WP-6B — Speed / Rolling Quota / Soft Throttle
+## WP-6B — Speed / Rolling Quota / Soft Throttle — CURRENT
 
 Recommended model: `Sol High`
 
