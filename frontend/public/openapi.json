@@ -4436,6 +4436,10 @@
     {
       "name": "Policies (CatX-UI)",
       "description": "Policy data and explainable WP-4B enforcement capabilities. Quarantine is safety state; only a bounded quarantine-release temporary override can release it. Managed DNS and SafeSearch apply only to supported Xray-observed DNS paths."
+    },
+    {
+      "name": "Traffic control",
+      "description": "Capability and reconciliation endpoints for the CatX shaping substrate. WP-6A does not define speed-limit policy."
     }
   ],
   "paths": {
@@ -17590,6 +17594,106 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/traffic-control/status": {
+      "get": {
+        "tags": [
+          "Traffic control"
+        ],
+        "summary": "Return local shaping capability and current reconciliation status.",
+        "operationId": "get_panel_api_traffic_control_status",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/traffic-control/capabilities": {
+      "get": {
+        "tags": [
+          "Traffic control"
+        ],
+        "summary": "Probe tc, nftables, IFB, explicit interfaces, and privilege capability.",
+        "operationId": "get_panel_api_traffic_control_capabilities",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/traffic-control/reconcile": {
+      "post": {
+        "tags": [
+          "Traffic control"
+        ],
+        "summary": "Apply a validated CatX-owned shaping substrate desired state on this node.",
+        "operationId": "post_panel_api_traffic_control_reconcile",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Successful response",
