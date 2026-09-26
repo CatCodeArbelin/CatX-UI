@@ -333,7 +333,7 @@ Includes:
 
 ---
 
-## WP-5B — Shared Group Quota / Accounting Extensions — CURRENT
+## WP-5B — Shared Group Quota / Accounting Extensions — DONE
 
 Recommended model: `Sol Medium`
 
@@ -347,7 +347,7 @@ Includes:
 
 # PHASE 6 — QoS / Traffic Control
 
-## WP-6A — Shaping Core
+## WP-6A — Shaping Core — CURRENT
 
 Recommended model: `Sol High`
 
