@@ -2,6 +2,7 @@ package trafficcontrol
 
 import (
 	"context"
+	"crypto/sha256"
 	"fmt"
 	"net"
 	"runtime"
@@ -354,7 +355,8 @@ func (b *Backend) execSimpleInput(ctx context.Context, name string, args []strin
 func ifbName(iface string) string {
 	n := "catx-" + iface
 	if len(n) > 15 {
-		n = "catx-ifb" + fmt.Sprintf("%x", []byte(iface))[:5]
+		sum := sha256.Sum256([]byte(iface))
+		n = "catx-ifb" + fmt.Sprintf("%x", sum[:])[:8]
 	}
 	return n
 }
