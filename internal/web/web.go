@@ -318,6 +318,7 @@ const (
 // startTask schedules background jobs (Xray checks, traffic jobs, cron
 // jobs) which the panel relies on for periodic maintenance and monitoring.
 func (s *Server) startTask(restartXray bool, loc *time.Location) {
+	forkext.SetTrafficControlRestartCallback(s.xrayService.SetToNeedRestart)
 	forkext.RegisterJobs(s.ctx, s.cron)
 	if restartXray {
 		err := s.xrayService.RestartXray(true)

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
+	"github.com/mhsanaei/3x-ui/v3/internal/forkext"
 	"github.com/mhsanaei/3x-ui/v3/internal/xray"
 
 	"gorm.io/gorm"
@@ -87,6 +88,34 @@ func (s *InboundService) disableInvalidClients(tx *gorm.DB, mutationBatch *traff
 		Find(&depletedRows).Error
 	if err != nil {
 		return false, 0, nil, err
+	}
+	// An individual quota/expiry/policy reason takes ownership away from the
+	// group. A later group reset must not re-enable a client that still has any
+	// other disabling reason.
+	for i := range depletedRows {
+		if depletedRows[i].Email == "" {
+			continue
+		}
+		if err := forkext.GroupQuotaClearOwnership(tx, depletedRows[i].Email); err != nil {
+			return false, 0, nil, err
+		}
+	}
+	if len(mutationBatch.groupQuotaEmails) > 0 {
+		var groupRows []xray.ClientTraffic
+		if err := tx.Where("email IN ? AND enable = ?", mutationBatch.groupQuotaEmails, true).Find(&groupRows).Error; err != nil {
+			return false, 0, nil, err
+		}
+		seen := make(map[string]struct{}, len(depletedRows)+len(groupRows))
+		for i := range depletedRows {
+			seen[depletedRows[i].Email] = struct{}{}
+		}
+		for i := range groupRows {
+			if _, ok := seen[groupRows[i].Email]; ok {
+				continue
+			}
+			depletedRows = append(depletedRows, groupRows[i])
+			seen[groupRows[i].Email] = struct{}{}
+		}
 	}
 	if len(depletedRows) == 0 {
 		return false, 0, nil, nil

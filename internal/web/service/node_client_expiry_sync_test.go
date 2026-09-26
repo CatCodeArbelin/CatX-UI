@@ -7,6 +7,7 @@ import (
 
 	"github.com/mhsanaei/3x-ui/v3/internal/database"
 	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
+	"github.com/mhsanaei/3x-ui/v3/internal/forkext/groupquota"
 	"github.com/mhsanaei/3x-ui/v3/internal/web/runtime"
 	"github.com/mhsanaei/3x-ui/v3/internal/xray"
 )
@@ -764,6 +765,117 @@ func TestNodeQuotaTopUp_LaggingDisableIgnored(t *testing.T) {
 	})
 	if got := readTraffic(t, db, email); !got.Enable {
 		t.Fatal("node disable decided on the pre-top-up quota latched over the raised one")
+	}
+}
+
+// A lagging settings blob must not reintroduce the pre-top-up quota after the
+// traffic merge rejects the node's stale disable. The lifted settings and the
+// client record are the source of the next node push, so all three stores must
+// retain the same authoritative limit.
+func TestNodeQuotaTopUp_LaggingSettingsPreserveMasterLimit(t *testing.T) {
+	db := initTrafficTestDB(t)
+	createNodeInboundWithClient(t, db, 1, "n1-in", 41001, "topped-up-settings")
+	svc := &InboundService{}
+
+	const email = "topped-up-settings"
+	liveSettings := fmt.Sprintf(
+		`{"clients":[{"email":%q,"enable":true,"totalGB":100,"expiryTime":%d}]}`, email, lateAbs)
+	staleSettings := fmt.Sprintf(
+		`{"clients":[{"email":%q,"enable":false,"totalGB":100,"expiryTime":%d}]}`, email, lateAbs)
+
+	syncNodeWithSettings(t, svc, 1, "n1-in", liveSettings, xray.ClientTraffic{
+		Email: email, Up: 10, Down: 10, Total: 100, ExpiryTime: lateAbs, Enable: true,
+	})
+	if err := db.Model(xray.ClientTraffic{}).Where("email = ?", email).
+		Updates(map[string]any{
+			"total": int64(500), "enable": true, "up": int64(60), "down": int64(50),
+		}).Error; err != nil {
+		t.Fatalf("master top-up traffic: %v", err)
+	}
+	if err := db.Model(&model.ClientRecord{}).Where("email = ?", email).
+		Updates(map[string]any{"total_gb": int64(500), "enable": true}).Error; err != nil {
+		t.Fatalf("master top-up record: %v", err)
+	}
+
+	syncNodeWithSettings(t, svc, 1, "n1-in", staleSettings, xray.ClientTraffic{
+		Email: email, Up: 60, Down: 50, Total: 100, ExpiryTime: lateAbs, Enable: false,
+	})
+
+	if got := readTraffic(t, db, email); !got.Enable || got.Total != 500 {
+		t.Fatalf("traffic row lost authoritative top-up: total=%d enable=%v", got.Total, got.Enable)
+	}
+	var rec model.ClientRecord
+	if err := db.Where("email = ?", email).First(&rec).Error; err != nil {
+		t.Fatalf("read client record: %v", err)
+	}
+	if !rec.Enable || rec.TotalGB != 500 {
+		t.Fatalf("client record lost authoritative top-up: total=%d enable=%v", rec.TotalGB, rec.Enable)
+	}
+	var ib model.Inbound
+	if err := db.Where("tag = ?", "n1-in").First(&ib).Error; err != nil {
+		t.Fatalf("read inbound: %v", err)
+	}
+	clients, err := svc.GetClients(&ib)
+	if err != nil {
+		t.Fatalf("GetClients: %v", err)
+	}
+	for _, client := range clients {
+		if client.Email == email {
+			if !client.Enable || client.TotalGB != 500 {
+				t.Fatalf("lifted settings lost authoritative top-up: total=%d enable=%v", client.TotalGB, client.Enable)
+			}
+			return
+		}
+	}
+	t.Fatal("client missing from lifted inbound settings")
+}
+
+func TestNodeQuotaTopUp_GroupDepletionStillWins(t *testing.T) {
+	db := initTrafficTestDB(t)
+	if err := groupquota.Migrate(db); err != nil {
+		t.Fatalf("migrate group quota: %v", err)
+	}
+	groupquota.Configure(db, true)
+	t.Cleanup(func() { groupquota.Configure(nil, false) })
+	createNodeInboundWithClient(t, db, 1, "n1-in", 41001, "group-depleted")
+	svc := &InboundService{}
+
+	const email = "group-depleted"
+	settings := fmt.Sprintf(
+		`{"clients":[{"email":%q,"enable":true,"totalGB":100,"expiryTime":%d}]}`, email, lateAbs)
+	staleSettings := fmt.Sprintf(
+		`{"clients":[{"email":%q,"enable":false,"totalGB":100,"expiryTime":%d}]}`, email, lateAbs)
+	syncNodeWithSettings(t, svc, 1, "n1-in", settings, xray.ClientTraffic{
+		Email: email, Up: 10, Down: 10, Total: 100, ExpiryTime: lateAbs, Enable: true,
+	})
+	if err := db.Model(&model.ClientRecord{}).Where("email = ?", email).
+		Update("group_name", "family").Error; err != nil {
+		t.Fatalf("assign group: %v", err)
+	}
+	if err := groupquota.UpsertConfig(db, "family", 50, groupquota.Scale, "never", 1); err != nil {
+		t.Fatalf("configure group quota: %v", err)
+	}
+	if err := db.Model(xray.ClientTraffic{}).Where("email = ?", email).
+		Updates(map[string]any{
+			"total": int64(500), "enable": true, "up": int64(60), "down": int64(50),
+		}).Error; err != nil {
+		t.Fatalf("master top-up: %v", err)
+	}
+
+	syncNodeWithSettings(t, svc, 1, "n1-in", staleSettings, xray.ClientTraffic{
+		Email: email, Up: 60, Down: 50, Total: 100, ExpiryTime: lateAbs, Enable: false,
+	})
+
+	if got := readTraffic(t, db, email); got.Enable {
+		view, viewErr := groupquota.View(db, "family")
+		t.Fatalf("group-depleted client was re-enabled by stale-disable rejection: traffic=%+v view=%+v viewErr=%v", got, view, viewErr)
+	}
+	var membership groupquota.Membership
+	if err := db.Where("group_name = ? AND client_email = ?", "family", email).First(&membership).Error; err != nil {
+		t.Fatalf("read group membership: %v", err)
+	}
+	if !membership.DisabledByGroup {
+		t.Fatal("group depletion did not retain disable ownership")
 	}
 }
 

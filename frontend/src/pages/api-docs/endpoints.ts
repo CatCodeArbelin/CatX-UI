@@ -2674,6 +2674,28 @@ export const sections: readonly Section[] = [
         },
       },
       {
+        method: 'GET',
+        path: '/panel/api/clients/groups/quota/:name',
+        summary:
+          'Read shared group quota state, including authoritative-counter usage, remaining bytes, active/pending multiplier, and depletion state.',
+        params: [{ name: 'name', in: 'path', type: 'string', desc: 'Group name (URL-encoded).' }],
+      },
+      {
+        method: 'PUT',
+        path: '/panel/api/clients/groups/quota/:name',
+        summary:
+          'Update group quota configuration. Multiplier changes are pending until the next group reset/rebaseline and do not reprice existing usage.',
+        params: [{ name: 'name', in: 'path', type: 'string', desc: 'Group name (URL-encoded).' }],
+        body: '{\n  "quotaBytes": 107374182400,\n  "multiplierPpm": 1000000,\n  "resetPeriod": "monthly",\n  "resetDay": 1\n}',
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/clients/groups/quota/:name/reset',
+        summary:
+          'Reset group quota carry and membership bases, activate the pending multiplier, and re-enable only clients owned by this group quota.',
+        params: [{ name: 'name', in: 'path', type: 'string', desc: 'Group name (URL-encoded).' }],
+      },
+      {
         method: 'HEAD',
         path: '/{subPath}:subid/hwid-status',
         summary:

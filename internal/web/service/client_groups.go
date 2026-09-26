@@ -2,22 +2,34 @@ package service
 
 import (
 	"encoding/json"
+	"errors"
 	"sort"
 	"strings"
 
 	"github.com/mhsanaei/3x-ui/v3/internal/database"
 	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
+	"github.com/mhsanaei/3x-ui/v3/internal/forkext"
 	"github.com/mhsanaei/3x-ui/v3/internal/util/common"
+	"github.com/mhsanaei/3x-ui/v3/internal/xray"
 
 	"gorm.io/gorm"
 )
 
 type GroupSummary struct {
-	Name        string `json:"name"`
-	ClientCount int    `json:"clientCount"`
-	TrafficUsed int64  `json:"trafficUsed"`
-	Up          int64  `json:"up"`
-	Down        int64  `json:"down"`
+	Name                 string `json:"name"`
+	ClientCount          int    `json:"clientCount"`
+	TrafficUsed          int64  `json:"trafficUsed"`
+	Up                   int64  `json:"up"`
+	Down                 int64  `json:"down"`
+	QuotaBytes           int64  `json:"quotaBytes"`
+	UsedBytes            int64  `json:"usedBytes"`
+	RemainingBytes       int64  `json:"remainingBytes"`
+	QuotaEnabled         bool   `json:"quotaEnabled"`
+	QuotaDepleted        bool   `json:"quotaDepleted"`
+	ActiveMultiplierPPM  int64  `json:"activeMultiplierPpm"`
+	PendingMultiplierPPM int64  `json:"pendingMultiplierPpm"`
+	ResetPeriod          string `json:"resetPeriod"`
+	ResetDay             int    `json:"resetDay"`
 }
 
 func (s *ClientService) ListGroups() ([]GroupSummary, error) {
@@ -54,10 +66,28 @@ func (s *ClientService) ListGroups() ([]GroupSummary, error) {
 		merged[g.Name] = groupAgg{count: g.ClientCount, up: g.Up, down: g.Down}
 	}
 	out := make([]GroupSummary, 0, len(merged))
+	quotaViews, _ := forkext.GroupQuotaViews(db)
+	quotaByName := make(map[string]struct {
+		QuotaBytes, UsedBytes, RemainingBytes int64
+		Enabled, Depleted                     bool
+		Active, Pending                       int64
+		Period                                string
+		Day                                   int
+	}, len(quotaViews))
+	for _, v := range quotaViews {
+		quotaByName[v.GroupName] = struct {
+			QuotaBytes, UsedBytes, RemainingBytes int64
+			Enabled, Depleted                     bool
+			Active, Pending                       int64
+			Period                                string
+			Day                                   int
+		}{v.QuotaBytes, v.UsedBytes, v.RemainingBytes, v.QuotaEnabled, v.Depleted, v.ActiveMultiplierPPM, v.PendingMultiplierPPM, v.ResetPeriod, v.ResetDay}
+	}
 	for name, agg := range merged {
 		up := max(agg.up-baseUp[name], 0)
 		down := max(agg.down-baseDown[name], 0)
-		out = append(out, GroupSummary{Name: name, ClientCount: agg.count, TrafficUsed: up + down, Up: up, Down: down})
+		v := quotaByName[name]
+		out = append(out, GroupSummary{Name: name, ClientCount: agg.count, TrafficUsed: up + down, Up: up, Down: down, QuotaBytes: v.QuotaBytes, UsedBytes: v.UsedBytes, RemainingBytes: v.RemainingBytes, QuotaEnabled: v.Enabled, QuotaDepleted: v.Depleted, ActiveMultiplierPPM: v.Active, PendingMultiplierPPM: v.Pending, ResetPeriod: v.Period, ResetDay: v.Day})
 	}
 	sort.Slice(out, func(i, j int) bool {
 		return strings.ToLower(out[i].Name) < strings.ToLower(out[j].Name)
@@ -156,11 +186,29 @@ func (s *ClientService) ResetGroupTraffic(name string) error {
 	if err := db.Model(&model.ClientGroup{}).Where("name = ?", name).Count(&count).Error; err != nil {
 		return err
 	}
-	if count == 0 {
-		return db.Create(&model.ClientGroup{Name: name, ResetUp: agg.Up, ResetDown: agg.Down}).Error
-	}
-	return db.Model(&model.ClientGroup{}).Where("name = ?", name).
-		Updates(map[string]any{"reset_up": agg.Up, "reset_down": agg.Down}).Error
+	return db.Transaction(func(tx *gorm.DB) error {
+		if count == 0 {
+			if err := tx.Create(&model.ClientGroup{Name: name, ResetUp: agg.Up, ResetDown: agg.Down}).Error; err != nil {
+				return err
+			}
+		} else if err := tx.Model(&model.ClientGroup{}).Where("name = ?", name).
+			Updates(map[string]any{"reset_up": agg.Up, "reset_down": agg.Down}).Error; err != nil {
+			return err
+		}
+		owned, err := forkext.GroupQuotaReset(tx, name)
+		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+			return err
+		}
+		if len(owned) > 0 {
+			if err := tx.Model(&xray.ClientTraffic{}).Where("email IN ?", owned).Updates(map[string]any{"enable": true}).Error; err != nil {
+				return err
+			}
+			if err := tx.Model(&model.ClientRecord{}).Where("email IN ?", owned).Updates(map[string]any{"enable": true}).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 }
 
 func (s *ClientService) CreateGroup(name string) error {
@@ -245,11 +293,19 @@ func (s *ClientService) AddToGroup(emails []string, group string) (int, error) {
 		return 0, nil
 	}
 	affectedEmails := make([]string, 0, len(records))
+	tx := db.Begin()
+	quotaBatch := newTrafficMutationBatch()
+	inboundSvc := &InboundService{}
+	for _, r := range records {
+		if err := forkext.GroupQuotaChangeMembership(tx, r.Email, r.Group, group); err != nil {
+			tx.Rollback()
+			return 0, err
+		}
+	}
 	for _, r := range records {
 		affectedEmails = append(affectedEmails, r.Email)
 	}
 
-	tx := db.Begin()
 	var affected int64
 	for _, batch := range chunkStrings(affectedEmails, sqlInChunk) {
 		result := tx.Model(&model.ClientRecord{}).
@@ -333,15 +389,37 @@ func (s *ClientService) AddToGroup(emails []string, group string) (int, error) {
 			}
 		}
 	}
+	// Membership changes can place a live client into an already depleted
+	// group. Reconcile before commit and apply the resulting runtime changes
+	// only after commit, preserving the no-network-in-transaction boundary.
+	var quotaErr error
+	quotaBatch.groupQuotaEmails, quotaErr = forkext.GroupQuotaDepletedEmails(tx)
+	if quotaErr != nil {
+		tx.Rollback()
+		return 0, quotaErr
+	}
+	if _, _, _, quotaErr = inboundSvc.disableInvalidClients(tx, quotaBatch); quotaErr != nil {
+		tx.Rollback()
+		return 0, quotaErr
+	}
+	if err := quotaBatch.markNodesTx(tx); err != nil {
+		tx.Rollback()
+		return 0, err
+	}
 
 	if err := tx.Commit().Error; err != nil {
 		return 0, err
 	}
+	_ = inboundSvc.applyTrafficRemotePlans(quotaBatch.remotePlans)
+	_ = inboundSvc.applyTrafficMutationBatch(quotaBatch)
 	return int(affected), nil
 }
 
 func (s *ClientService) replaceGroupValue(oldName, newName string) (int, error) {
 	db := database.GetDB()
+	if err := db.Transaction(func(tx *gorm.DB) error { return forkext.GroupQuotaRename(tx, oldName, newName) }); err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return 0, err
+	}
 	if newName == "" {
 		if err := db.Where("name = ?", oldName).Delete(&model.ClientGroup{}).Error; err != nil {
 			return 0, err

@@ -11,6 +11,7 @@ import (
 
 	"github.com/mhsanaei/3x-ui/v3/internal/database"
 	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
+	"github.com/mhsanaei/3x-ui/v3/internal/forkext"
 	"github.com/mhsanaei/3x-ui/v3/internal/logger"
 	"github.com/mhsanaei/3x-ui/v3/internal/util/common"
 	"github.com/mhsanaei/3x-ui/v3/internal/web/runtime"
@@ -284,6 +285,7 @@ func applyMasterClientLifecycle(c *model.Client, master *xray.ClientTraffic, cs 
 		return
 	}
 	c.ExpiryTime = mergeActivationExpiry(master.ExpiryTime, c.ExpiryTime)
+	c.TotalGB = master.Total
 	c.Enable = master.Enable
 }
 
@@ -629,6 +631,8 @@ func (s *InboundService) setRemoteTrafficLocked(nodeID int, snap *runtime.Traffi
 
 	structuralChange := false
 	lifecycleLifted := false
+	quotaDeltas := make([]*xray.ClientTraffic, 0)
+	staleNodeDisableMasters := make(map[string]xray.ClientTraffic)
 
 	var adoptedInbounds []*model.Inbound
 	type pendingAdopt struct {
@@ -933,6 +937,9 @@ func (s *InboundService) setRemoteTrafficLocked(nodeID int, snap *runtime.Traffi
 					deltaDown = 0
 				}
 			}
+			if _, exists := existingEmails[cs.Email]; exists && (deltaUp > 0 || deltaDown > 0) {
+				quotaDeltas = append(quotaDeltas, &xray.ClientTraffic{Email: cs.Email, Up: deltaUp, Down: deltaDown})
+			}
 
 			if _, rowExists := existingEmails[cs.Email]; !rowExists {
 				if dirty {
@@ -979,7 +986,23 @@ func (s *InboundService) setRemoteTrafficLocked(nodeID int, snap *runtime.Traffi
 			}
 
 			existing := centralCSByEmail[cs.Email]
+			preserveMasterLifecycle := false
+			var masterLifecycle xray.ClientTraffic
 			if existing != nil {
+				// Decide against the authoritative master limits before the merge
+				// below copies the node's possibly stale quota into existing.Total.
+				// The decision and the enable state must come from the same version
+				// of the master row.
+				var authoritative xray.ClientTraffic
+				if err := tx.Where("email = ?", cs.Email).First(&authoritative).Error; err == nil {
+					masterLifecycle = authoritative
+					preserveMasterLifecycle = !cs.Enable && authoritative.Enable &&
+						(cs.Total != authoritative.Total || cs.ExpiryTime != authoritative.ExpiryTime) &&
+						masterLimitsAllowClient(&authoritative, now, deltaUp, deltaDown)
+				} else {
+					masterLifecycle = *existing
+					preserveMasterLifecycle = !cs.Enable && nodeDisableIsStale(existing, cs, now, deltaUp, deltaDown)
+				}
 				expiryChanged := !lifecycleFrozen && existing.ExpiryTime != mergeActivationExpiry(existing.ExpiryTime, cs.ExpiryTime)
 				// Only a real latch to disabled is structural; one-way merge never
 				// re-enables from the node.
@@ -1084,6 +1107,25 @@ func (s *InboundService) setRemoteTrafficLocked(nodeID int, snap *runtime.Traffi
 					existing.Down = clampTrafficCounter(existing.Down + deltaDown)
 					existing.Total = cs.Total
 					existing.Reset = cs.Reset
+				}
+				// The SQL merge mirrors nodeDisableIsStale, but keep the decision
+				// explicit after the counter update as well. A node snapshot carrying
+				// an old disable must not overwrite a master quota top-up in a later
+				// lifecycle/settings merge.
+				if preserveMasterLifecycle {
+					existing.Enable = masterLifecycle.Enable
+					existing.Total = masterLifecycle.Total
+					existing.ExpiryTime = masterLifecycle.ExpiryTime
+					staleNodeDisableMasters[cs.Email] = masterLifecycle
+					if err := tx.Model(xray.ClientTraffic{}).
+						Where("email = ?", cs.Email).
+						Updates(map[string]any{
+							"enable":      masterLifecycle.Enable,
+							"total":       masterLifecycle.Total,
+							"expiry_time": masterLifecycle.ExpiryTime,
+						}).Error; err != nil {
+						return false, err
+					}
 				}
 			}
 			// A dip plus a lagging longer expiry mimics nodeClientRenewed and would
@@ -1314,11 +1356,35 @@ func (s *InboundService) setRemoteTrafficLocked(nodeID int, snap *runtime.Traffi
 	if err := liftActivatedClientRecordExpiries(tx); err != nil {
 		logger.Warning("setRemoteTraffic: lift activated expiries failed:", err)
 	}
+	// SyncInbound merges node settings after the traffic row merge. Reassert the
+	// decision and limits from the authoritative pre-merge master row so a stale
+	// node disable cannot regenerate during that later lifecycle pass. Group quota
+	// depletion is evaluated immediately afterward and may still disable it.
+	for email, master := range staleNodeDisableMasters {
+		if err := tx.Model(xray.ClientTraffic{}).Where("email = ?", email).Updates(map[string]any{
+			"enable":      master.Enable,
+			"total":       master.Total,
+			"expiry_time": master.ExpiryTime,
+		}).Error; err != nil {
+			return false, err
+		}
+	}
+	if err := forkext.GroupQuotaApplyDeltas(tx, quotaDeltas); err != nil {
+		return false, err
+	}
+	if _, err := forkext.GroupQuotaDepletedEmails(tx); err != nil {
+		return false, err
+	}
 
 	if err := tx.Commit().Error; err != nil {
 		return false, err
 	}
 	committed = true
+	if len(quotaDeltas) > 0 {
+		// The transaction only records authoritative counters and quota state.
+		// Enforcement settings and runtime/node calls happen after commit.
+		_ = (&InboundService{}).reconcileGroupQuotaRuntime()
+	}
 
 	if lifecycleLifted && !dirty {
 		var already model.Node

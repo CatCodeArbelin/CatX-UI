@@ -18,6 +18,7 @@ import (
 
 	"github.com/mhsanaei/3x-ui/v3/internal/database"
 	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
+	"github.com/mhsanaei/3x-ui/v3/internal/forkext"
 	"github.com/mhsanaei/3x-ui/v3/internal/logger"
 	"github.com/mhsanaei/3x-ui/v3/internal/util/common"
 	"github.com/mhsanaei/3x-ui/v3/internal/util/random"
@@ -147,6 +148,15 @@ func (s *ClientService) Create(inboundSvc *InboundService, payload *ClientCreate
 		return false, err
 	}
 	normalizeClientTrafficReset(&client)
+	if client.Enable && strings.TrimSpace(client.Group) != "" {
+		depleted, err := forkext.GroupQuotaIsGroupDepleted(database.GetDB(), client.Group)
+		if err != nil {
+			return false, err
+		}
+		if depleted {
+			return false, common.NewError("client group quota is depleted")
+		}
+	}
 	if len(payload.InboundIds) == 0 {
 		return false, common.NewError("at least one inbound is required")
 	}
@@ -601,6 +611,15 @@ func (s *ClientService) Update(inboundSvc *InboundService, id int, updated model
 		return false, err
 	}
 	normalizeClientTrafficReset(&updated)
+	if updated.Enable {
+		blocked, err := forkext.GroupQuotaIsBlocked(database.GetDB(), existing.Email)
+		if err != nil {
+			return false, err
+		}
+		if blocked {
+			return false, common.NewError("client group quota is depleted")
+		}
+	}
 	if updated.SubID == "" {
 		updated.SubID = existing.SubID
 	}
@@ -782,10 +801,23 @@ func (s *ClientService) Update(inboundSvc *InboundService, id int, updated model
 	// That guard also meant clearing the group in the client editor never took
 	// effect. The editor always round-trips the field, so apply it here,
 	// including the empty string that removes the client from its group.
-	if err := database.GetDB().Model(&model.ClientRecord{}).
-		Where("id = ?", id).
-		UpdateColumn("group_name", updated.Group).Error; err != nil {
+	if err := database.GetDB().Transaction(func(tx *gorm.DB) error {
+		if err := forkext.GroupQuotaChangeMembership(tx, existing.Email, existing.Group, updated.Group); err != nil {
+			return err
+		}
+		return tx.Model(&model.ClientRecord{}).
+			Where("id = ?", id).
+			UpdateColumn("group_name", updated.Group).Error
+	}); err != nil {
 		return needRestart, err
+	}
+	if inboundSvc != nil && (updated.Group != existing.Group || updated.Enable) {
+		needRestart = inboundSvc.reconcileGroupQuotaRuntime() || needRestart
+	}
+	if updated.Enable != existing.Enable {
+		if err := forkext.GroupQuotaClearOwnership(database.GetDB(), existing.Email); err != nil {
+			return needRestart, err
+		}
 	}
 
 	// Same shape as the group write above: SyncInbound keeps a stored ad-tag
@@ -871,6 +903,9 @@ func (s *ClientService) Delete(inboundSvc *InboundService, id int, keepTraffic b
 	db := database.GetDB()
 	if err := db.Transaction(func(tx *gorm.DB) error {
 		if existing.Email != "" {
+			if err := forkext.GroupQuotaRemoveMembership(tx, existing.Email); err != nil {
+				return err
+			}
 			if err := adjustGroupBaselinesForRemovedTraffic(tx, []string{existing.Email}); err != nil {
 				return err
 			}
@@ -1112,11 +1147,19 @@ func (s *ClientService) DeleteByEmail(inboundSvc *InboundService, email string, 
 	if delErr != nil {
 		return needRestart, delErr
 	}
-	if !keepTraffic {
-		db := database.GetDB()
-		if err := db.Where("email = ?", email).Delete(&xray.ClientTraffic{}).Error; err != nil {
-			return needRestart, err
+	db := database.GetDB()
+	if err := db.Transaction(func(tx *gorm.DB) error {
+		if err := forkext.GroupQuotaRemoveMembership(tx, email); err != nil {
+			return err
 		}
+		if !keepTraffic {
+			return tx.Where("email = ?", email).Delete(&xray.ClientTraffic{}).Error
+		}
+		return nil
+	}); err != nil {
+		return needRestart, err
+	}
+	if !keepTraffic {
 		if err := clearGlobalTraffic(db, email); err != nil {
 			return needRestart, err
 		}

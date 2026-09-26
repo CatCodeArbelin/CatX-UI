@@ -476,7 +476,12 @@ export default function GroupsPage() {
       dataIndex: 'trafficUsed',
       key: 'trafficUsed',
       width: 160,
-      render: (bytes: number) => <span>{SizeFormatter.sizeFormat(bytes || 0)}</span>,
+      render: (_bytes: number, row: GroupSummary) => (
+        <span>
+          {SizeFormatter.sizeFormat(row.quotaEnabled ? row.usedBytes : row.trafficUsed || 0)}
+          {row.quotaEnabled ? ` / ${SizeFormatter.sizeFormat(row.quotaBytes)}` : ''}
+        </span>
+      ),
     },
   ];
 

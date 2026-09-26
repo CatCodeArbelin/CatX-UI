@@ -294,6 +294,51 @@ export const GroupSummarySchema = z.object({
     .number()
     .nullable()
     .transform((v) => v ?? 0),
+  quotaBytes: z
+    .number()
+    .optional()
+    .nullable()
+    .transform((v) => v ?? 0),
+  usedBytes: z
+    .number()
+    .optional()
+    .nullable()
+    .transform((v) => v ?? 0),
+  remainingBytes: z
+    .number()
+    .optional()
+    .nullable()
+    .transform((v) => v ?? 0),
+  quotaEnabled: z
+    .boolean()
+    .optional()
+    .nullable()
+    .transform((v) => v ?? false),
+  quotaDepleted: z
+    .boolean()
+    .optional()
+    .nullable()
+    .transform((v) => v ?? false),
+  activeMultiplierPpm: z
+    .number()
+    .optional()
+    .nullable()
+    .transform((v) => v ?? 1000000),
+  pendingMultiplierPpm: z
+    .number()
+    .optional()
+    .nullable()
+    .transform((v) => v ?? 1000000),
+  resetPeriod: z
+    .string()
+    .optional()
+    .nullable()
+    .transform((v) => v ?? 'never'),
+  resetDay: z
+    .number()
+    .optional()
+    .nullable()
+    .transform((v) => v ?? 1),
 });
 
 export const GroupSummaryListSchema = z
