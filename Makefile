@@ -24,7 +24,7 @@ gen: ## Regenerate Zod schemas + OpenAPI from Go sources
 
 .PHONY: gen-check
 gen-check: gen ## Fail if generated files are stale
-	git diff --exit-code -- frontend/src/generated frontend/public/openapi.json || (git diff -- frontend/src/generated frontend/public/openapi.json; echo "::error file=Makefile,title=generated-hash::generated=$$(sha256sum frontend/public/openapi.json | cut -d' ' -f1) tracked=$$(git show HEAD:frontend/public/openapi.json | sha256sum | cut -d' ' -f1)"; git diff --numstat -- frontend/src/generated frontend/public/openapi.json; exit 1)
+	git diff --exit-code -- frontend/src/generated frontend/public/openapi.json
 
 .PHONY: lint-go
 lint-go: dist-stub ## golangci-lint on Go sources
