@@ -57,7 +57,7 @@ export default function TrafficPolicyPanel({ email }: TrafficPolicyPanelProps) {
         undefined,
         { silent: true },
       )) as { success?: boolean; obj?: TrafficPolicyView };
-      const next = response.success ? response.obj ?? null : null;
+      const next = response.success ? (response.obj ?? null) : null;
       setView(next ?? EMPTY_POLICY);
       if (next) setDraft(next);
     } finally {
@@ -105,7 +105,12 @@ export default function TrafficPolicyPanel({ email }: TrafficPolicyPanelProps) {
   }
 
   if (!view) return null;
-  const tagColor = view.enforcement === 'unsupported' ? 'orange' : view.enforcement === 'degraded' ? 'red' : 'green';
+  const tagColor =
+    view.enforcement === 'unsupported'
+      ? 'orange'
+      : view.enforcement === 'degraded'
+        ? 'red'
+        : 'green';
   return (
     <>
       {contextHolder}
@@ -114,32 +119,87 @@ export default function TrafficPolicyPanel({ email }: TrafficPolicyPanelProps) {
         title={t('pages.inbounds.traffic')}
         loading={loading}
         style={{ marginTop: 16 }}
-        extra={<Button size="small" type="primary" onClick={() => void save()} loading={saving}>{t('save')}</Button>}
+        extra={
+          <Button size="small" type="primary" onClick={() => void save()} loading={saving}>
+            {t('save')}
+          </Button>
+        }
       >
         <Descriptions size="small" column={1}>
           <Descriptions.Item label={t('enabled')}>
-            <Switch checked={Boolean(draft.enabled)} onChange={(enabled) => setDraft((v) => ({ ...v, enabled }))} />
+            <Switch
+              checked={Boolean(draft.enabled)}
+              onChange={(enabled) => setDraft((v) => ({ ...v, enabled }))}
+            />
           </Descriptions.Item>
           <Descriptions.Item label={t('pages.inbounds.traffic')}>
             <Space wrap>
-              <InputNumber min={60} value={draft.windowSeconds} onChange={(windowSeconds) => setDraft((v) => ({ ...v, windowSeconds: windowSeconds ?? 3600 }))} addonAfter="s" />
-              <InputNumber min={0} value={draft.quotaBytes} onChange={(quotaBytes) => setDraft((v) => ({ ...v, quotaBytes: quotaBytes ?? 0 }))} addonAfter="bytes" />
+              <InputNumber
+                min={60}
+                value={draft.windowSeconds}
+                onChange={(windowSeconds) =>
+                  setDraft((v) => ({ ...v, windowSeconds: windowSeconds ?? 3600 }))
+                }
+                addonAfter="s"
+              />
+              <InputNumber
+                min={0}
+                value={draft.quotaBytes}
+                onChange={(quotaBytes) => setDraft((v) => ({ ...v, quotaBytes: quotaBytes ?? 0 }))}
+                addonAfter="bytes"
+              />
             </Space>
           </Descriptions.Item>
           <Descriptions.Item label={t('pages.clients.speed')}>
             <Space wrap>
-              <InputNumber min={0} value={draft.activeUploadBps} onChange={(activeUploadBps) => setDraft((v) => ({ ...v, activeUploadBps: activeUploadBps ?? 0 }))} addonAfter="↑ B/s" />
-              <InputNumber min={0} value={draft.activeDownloadBps} onChange={(activeDownloadBps) => setDraft((v) => ({ ...v, activeDownloadBps: activeDownloadBps ?? 0 }))} addonAfter="↓ B/s" />
+              <InputNumber
+                min={0}
+                value={draft.activeUploadBps}
+                onChange={(activeUploadBps) =>
+                  setDraft((v) => ({ ...v, activeUploadBps: activeUploadBps ?? 0 }))
+                }
+                addonAfter="↑ B/s"
+              />
+              <InputNumber
+                min={0}
+                value={draft.activeDownloadBps}
+                onChange={(activeDownloadBps) =>
+                  setDraft((v) => ({ ...v, activeDownloadBps: activeDownloadBps ?? 0 }))
+                }
+                addonAfter="↓ B/s"
+              />
             </Space>
           </Descriptions.Item>
           <Descriptions.Item label={t('pages.clients.speed')}>
             <Space wrap>
-              <InputNumber min={0} value={draft.throttleUploadBps} onChange={(throttleUploadBps) => setDraft((v) => ({ ...v, throttleUploadBps: throttleUploadBps ?? 0 }))} addonAfter="↑ B/s" />
-              <InputNumber min={0} value={draft.throttleDownloadBps} onChange={(throttleDownloadBps) => setDraft((v) => ({ ...v, throttleDownloadBps: throttleDownloadBps ?? 0 }))} addonAfter="↓ B/s" />
+              <InputNumber
+                min={0}
+                value={draft.throttleUploadBps}
+                onChange={(throttleUploadBps) =>
+                  setDraft((v) => ({ ...v, throttleUploadBps: throttleUploadBps ?? 0 }))
+                }
+                addonAfter="↑ B/s"
+              />
+              <InputNumber
+                min={0}
+                value={draft.throttleDownloadBps}
+                onChange={(throttleDownloadBps) =>
+                  setDraft((v) => ({ ...v, throttleDownloadBps: throttleDownloadBps ?? 0 }))
+                }
+                addonAfter="↓ B/s"
+              />
             </Space>
           </Descriptions.Item>
           <Descriptions.Item label={t('status')}>
-            <Tag color={view.lifecycle === 'throttled' ? 'orange' : view.lifecycle === 'disabled' ? 'red' : 'green'}>
+            <Tag
+              color={
+                view.lifecycle === 'throttled'
+                  ? 'orange'
+                  : view.lifecycle === 'disabled'
+                    ? 'red'
+                    : 'green'
+              }
+            >
               {view.lifecycle}
             </Tag>
             {view.reason ? <span className="hint">{view.reason}</span> : null}
@@ -149,13 +209,21 @@ export default function TrafficPolicyPanel({ email }: TrafficPolicyPanelProps) {
             {view.enforcementNote ? <span className="hint">{view.enforcementNote}</span> : null}
           </Descriptions.Item>
           <Descriptions.Item label={t('pages.inbounds.traffic')}>
-            {SizeFormatter.sizeFormat(view.usedBytes)} / {view.quotaBytes > 0 ? SizeFormatter.sizeFormat(view.quotaBytes) : '∞'}
+            {SizeFormatter.sizeFormat(view.usedBytes)} /{' '}
+            {view.quotaBytes > 0 ? SizeFormatter.sizeFormat(view.quotaBytes) : '∞'}
           </Descriptions.Item>
           <Descriptions.Item label={t('remaining')}>
             {view.quotaBytes > 0 ? SizeFormatter.sizeFormat(view.remainingBytes) : '∞'}
           </Descriptions.Item>
         </Descriptions>
-        <Button size="small" onClick={() => void reset()} loading={resetting} disabled={view.lifecycle !== 'throttled'}>{t('reset')}</Button>
+        <Button
+          size="small"
+          onClick={() => void reset()}
+          loading={resetting}
+          disabled={view.lifecycle !== 'throttled'}
+        >
+          {t('reset')}
+        </Button>
       </Card>
     </>
   );
