@@ -5,10 +5,11 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/mhsanaei/3x-ui/v3/internal/forkext/trafficcontrol"
-	"github.com/mhsanaei/3x-ui/v3/internal/xray"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+
+	"github.com/mhsanaei/3x-ui/v3/internal/forkext/trafficcontrol"
+	"github.com/mhsanaei/3x-ui/v3/internal/xray"
 )
 
 func TestFixedWindowAndSoftThrottleLifecycle(t *testing.T) {

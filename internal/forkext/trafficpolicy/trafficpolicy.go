@@ -9,11 +9,12 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/mhsanaei/3x-ui/v3/internal/forkext/trafficcontrol"
-	"github.com/mhsanaei/3x-ui/v3/internal/xray"
 	"github.com/robfig/cron/v3"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+
+	"github.com/mhsanaei/3x-ui/v3/internal/forkext/trafficcontrol"
+	"github.com/mhsanaei/3x-ui/v3/internal/xray"
 )
 
 const (
