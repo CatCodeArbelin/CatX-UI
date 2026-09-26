@@ -105,6 +105,7 @@ export default function TrafficPolicyPanel({ email }: TrafficPolicyPanelProps) {
   }
 
   if (!view) return null;
+  const enforcementBlocked = ['unsupported', 'degraded', 'disabled'].includes(view.enforcement);
   const tagColor =
     view.enforcement === 'unsupported'
       ? 'orange'
@@ -158,6 +159,7 @@ export default function TrafficPolicyPanel({ email }: TrafficPolicyPanelProps) {
                 onChange={(activeUploadBps) =>
                   setDraft((v) => ({ ...v, activeUploadBps: activeUploadBps ?? 0 }))
                 }
+                disabled={enforcementBlocked}
                 addonAfter="↑ B/s"
               />
               <InputNumber
@@ -166,6 +168,7 @@ export default function TrafficPolicyPanel({ email }: TrafficPolicyPanelProps) {
                 onChange={(activeDownloadBps) =>
                   setDraft((v) => ({ ...v, activeDownloadBps: activeDownloadBps ?? 0 }))
                 }
+                disabled={enforcementBlocked}
                 addonAfter="↓ B/s"
               />
             </Space>
@@ -178,6 +181,7 @@ export default function TrafficPolicyPanel({ email }: TrafficPolicyPanelProps) {
                 onChange={(throttleUploadBps) =>
                   setDraft((v) => ({ ...v, throttleUploadBps: throttleUploadBps ?? 0 }))
                 }
+                disabled={enforcementBlocked}
                 addonAfter="↑ B/s"
               />
               <InputNumber
@@ -186,6 +190,7 @@ export default function TrafficPolicyPanel({ email }: TrafficPolicyPanelProps) {
                 onChange={(throttleDownloadBps) =>
                   setDraft((v) => ({ ...v, throttleDownloadBps: throttleDownloadBps ?? 0 }))
                 }
+                disabled={enforcementBlocked}
                 addonAfter="↓ B/s"
               />
             </Space>

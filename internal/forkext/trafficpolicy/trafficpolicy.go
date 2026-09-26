@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -49,32 +50,74 @@ func (Policy) TableName() string { return "fork_traffic_policies" }
 // State stores a cumulative-counter checkpoint and lifecycle ownership. The
 // current usage is always derived as client_traffics - baseline.
 type State struct {
-	ID           uint   `gorm:"primaryKey" json:"id"`
-	ClientEmail  string `gorm:"uniqueIndex;not null" json:"clientEmail"`
-	WindowStart  int64  `gorm:"not null;default:0" json:"windowStart"`
-	WindowEnd    int64  `gorm:"not null;default:0" json:"windowEnd"`
-	BaselineUp   int64  `gorm:"not null;default:0" json:"-"`
-	BaselineDown int64  `gorm:"not null;default:0" json:"-"`
-	Lifecycle    string `gorm:"not null;default:active" json:"lifecycle"`
-	Owner        string `gorm:"not null;default:none" json:"owner"`
-	Reason       string `gorm:"not null;default:''" json:"reason"`
-	LastError    string `gorm:"not null;default:''" json:"lastError,omitempty"`
-	UpdatedAt    int64  `gorm:"not null;default:0" json:"updatedAt"`
+	ID                   uint   `gorm:"primaryKey" json:"id"`
+	ClientEmail          string `gorm:"uniqueIndex;not null" json:"clientEmail"`
+	WindowStart          int64  `gorm:"not null;default:0" json:"windowStart"`
+	WindowEnd            int64  `gorm:"not null;default:0" json:"windowEnd"`
+	BaselineUp           int64  `gorm:"not null;default:0" json:"-"`
+	BaselineDown         int64  `gorm:"not null;default:0" json:"-"`
+	Lifecycle            string `gorm:"not null;default:active" json:"lifecycle"`
+	Owner                string `gorm:"not null;default:none" json:"owner"`
+	Reason               string `gorm:"not null;default:''" json:"reason"`
+	LastError            string `gorm:"not null;default:''" json:"lastError,omitempty"`
+	EnforcementActive    bool   `gorm:"not null;default:false" json:"-"`
+	EnforcementNode      string `gorm:"not null;default:''" json:"-"`
+	EnforcementInterface string `gorm:"not null;default:''" json:"-"`
+	EnforcementMark      uint32 `gorm:"not null;default:0" json:"-"`
+	UpdatedAt            int64  `gorm:"not null;default:0" json:"updatedAt"`
 }
 
 func (State) TableName() string { return "fork_traffic_policy_states" }
 
 type View struct {
 	Policy
-	Lifecycle       string `json:"lifecycle"`
-	Owner           string `json:"owner"`
-	Reason          string `json:"reason"`
-	WindowStart     int64  `json:"windowStart"`
-	WindowEnd       int64  `json:"windowEnd"`
-	UsedBytes       int64  `json:"usedBytes"`
-	RemainingBytes  int64  `json:"remainingBytes"`
-	Enforcement     string `json:"enforcement"`
-	EnforcementNote string `json:"enforcementNote,omitempty"`
+	Lifecycle         string `json:"lifecycle"`
+	Owner             string `json:"owner"`
+	Reason            string `json:"reason"`
+	WindowStart       int64  `json:"windowStart"`
+	WindowEnd         int64  `json:"windowEnd"`
+	UsedBytes         int64  `json:"usedBytes"`
+	RemainingBytes    int64  `json:"remainingBytes"`
+	Enforcement       string `json:"enforcement"`
+	EnforcementNote   string `json:"enforcementNote,omitempty"`
+	EnforcementActive bool   `json:"-"`
+}
+
+// Attribution is the only identity accepted by the Stage B enforcement path.
+// A provider must prove that the identity is stable in the kernel datapath;
+// client email alone is never sufficient.
+type Attribution struct {
+	Supported bool
+	Stable    bool
+	NodeKey   string
+	Interface string
+	Mark      uint32
+	Selectors []string
+}
+
+type AttributionProvider interface {
+	Resolve(context.Context, string) (Attribution, error)
+}
+
+var attribution struct {
+	sync.RWMutex
+	provider AttributionProvider
+}
+
+// ConfigureAttributionProvider is intentionally not called by production
+// bootstrap today: no current datapath proves generic Xray-user identity.
+// Tests and a future explicitly approved provider may use this boundary.
+func ConfigureAttributionProvider(provider AttributionProvider) {
+	attribution.Lock()
+	attribution.provider = provider
+	attribution.Unlock()
+}
+
+func configuredAttributionProvider() AttributionProvider {
+	attribution.RLock()
+	provider := attribution.provider
+	attribution.RUnlock()
+	return provider
 }
 
 var service struct {
@@ -235,7 +278,7 @@ func effectiveView(tx *gorm.DB, email string) (View, error) {
 	if p.QuotaBytes > used {
 		remaining = p.QuotaBytes - used
 	}
-	v := View{Policy: p, Lifecycle: state.Lifecycle, Owner: state.Owner, Reason: state.Reason, WindowStart: state.WindowStart, WindowEnd: state.WindowEnd, UsedBytes: used, RemainingBytes: remaining}
+	v := View{Policy: p, Lifecycle: state.Lifecycle, Owner: state.Owner, Reason: state.Reason, WindowStart: state.WindowStart, WindowEnd: state.WindowEnd, UsedBytes: used, RemainingBytes: remaining, EnforcementActive: state.EnforcementActive}
 	if state.Lifecycle == StateDisabled {
 		v.Enforcement, v.EnforcementNote = StateDisabled, state.Reason
 	} else if !trafficcontrol.StatusView().UserAttribution {
@@ -311,7 +354,7 @@ func Reset(email string) error {
 	})
 }
 
-func Reconcile() error {
+func reconcileQuotaState() error {
 	db, enabled := getDB()
 	if !enabled {
 		return nil
@@ -335,6 +378,147 @@ func RegisterJobs(scheduler *cron.Cron) {
 		return
 	}
 	_, _ = scheduler.AddFunc("@every 30s", func() { _ = Reconcile() })
+}
+
+// desiredRules resolves every policy in one pass. The complete desired set is
+// sent to the WP-6A shaper so stale rules disappear on disable, deletion,
+// detach, capability loss, restart, and provider recovery.
+func desiredRules(ctx context.Context, provider AttributionProvider) ([]trafficcontrol.DesiredRule, int, bool, error) {
+	db, enabled := getDB()
+	if !enabled || provider == nil {
+		return nil, 0, false, nil
+	}
+	var policies []Policy
+	if err := db.Order("client_email ASC").Find(&policies).Error; err != nil {
+		return nil, 0, false, err
+	}
+	rules := make([]trafficcontrol.DesiredRule, 0, len(policies))
+	unsupported := 0
+	cleanup := false
+	var applied []State
+	if err := db.Where("enforcement_active = ?", true).Find(&applied).Error; err != nil {
+		return nil, 0, false, err
+	}
+	cleanup = len(applied) > 0
+	for _, policy := range policies {
+		if !policy.Enabled {
+			continue
+		}
+		view, err := effectiveView(db, policy.ClientEmail)
+		if err != nil {
+			unsupported++
+			continue
+		}
+		cleanup = cleanup || view.EnforcementActive
+		if view.Lifecycle == StateDisabled {
+			continue
+		}
+		identity, err := provider.Resolve(ctx, policy.ClientEmail)
+		if err != nil || !identity.Supported || !identity.Stable {
+			unsupported++
+			continue
+		}
+		rule, err := desiredRuleForAttribution(view, identity)
+		if err != nil {
+			unsupported++
+			continue
+		}
+		rules = append(rules, rule)
+	}
+	sort.Slice(rules, func(i, j int) bool {
+		if rules[i].NodeKey != rules[j].NodeKey {
+			return rules[i].NodeKey < rules[j].NodeKey
+		}
+		return rules[i].ClientKey < rules[j].ClientKey
+	})
+	return rules, unsupported, cleanup, nil
+}
+
+func clearAndPersistEnforcement(rules []trafficcontrol.DesiredRule) error {
+	db, enabled := getDB()
+	if !enabled || db == nil {
+		return nil
+	}
+	return db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&State{}).Where("enforcement_active = ?", true).Updates(map[string]any{
+			"enforcement_active": false, "enforcement_node": "", "enforcement_interface": "", "enforcement_mark": 0,
+		}).Error; err != nil {
+			return err
+		}
+		for _, rule := range rules {
+			if err := tx.Model(&State{}).Where("client_email = ?", rule.ClientKey).Updates(map[string]any{
+				"enforcement_active": true, "enforcement_node": rule.NodeKey, "enforcement_interface": rule.Interface, "enforcement_mark": rule.Mark,
+			}).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+func hasEnforcementState() bool {
+	db, enabled := getDB()
+	if !enabled || db == nil {
+		return false
+	}
+	var count int64
+	return db.Model(&State{}).Where("enforcement_active = ?", true).Count(&count).Error == nil && count > 0
+}
+
+// ReconcileEnforcement is the single Stage B producer-to-substrate path.
+// When provider is nil it is an exact no-op: production currently has no
+// proven generic Xray-user attribution provider.
+func ReconcileEnforcement(ctx context.Context, provider AttributionProvider, shaper trafficcontrol.Shaper) (trafficcontrol.Status, error) {
+	if provider == nil {
+		if hasEnforcementState() && shaper != nil {
+			status, err := shaper.Reconcile(ctx, nil)
+			if err != nil || status.State != trafficcontrol.State("ready") {
+				return status, err
+			}
+			return status, clearAndPersistEnforcement(nil)
+		}
+		return trafficcontrol.Status{Capabilities: trafficcontrol.Capabilities{State: StateUnsupported, Reason: "no production attribution provider is registered"}}, nil
+	}
+	if shaper == nil {
+		return trafficcontrol.Status{Capabilities: trafficcontrol.Capabilities{State: StateUnsupported, Reason: "traffic shaper unavailable"}}, trafficcontrol.ErrUnsupported
+	}
+	rules, unsupported, cleanup, err := desiredRules(ctx, provider)
+	if err != nil {
+		return trafficcontrol.Status{Capabilities: trafficcontrol.Capabilities{State: StateDegraded, Reason: "attribution resolution failed", UserAttribution: true}, LastError: err.Error()}, err
+	}
+	if len(rules) == 0 && !cleanup {
+		return trafficcontrol.Status{Capabilities: trafficcontrol.Capabilities{State: StateUnsupported, Reason: "no clients have proven stable attribution"}}, nil
+	}
+	status, err := shaper.Reconcile(ctx, rules)
+	if err != nil {
+		return status, err
+	}
+	if status.State != trafficcontrol.State("ready") {
+		return status, nil
+	}
+	if err := clearAndPersistEnforcement(rules); err != nil {
+		return status, err
+	}
+	if unsupported > 0 && len(rules) == 0 {
+		status.State, status.Reason = StateUnsupported, "no clients have proven stable attribution"
+	}
+	return status, nil
+}
+
+func Reconcile() error {
+	db, enabled := getDB()
+	if !enabled || db == nil {
+		return nil
+	}
+	if err := reconcileQuotaState(); err != nil {
+		return err
+	}
+	provider := configuredAttributionProvider()
+	if provider == nil {
+		return nil
+	}
+	_, err := ReconcileEnforcement(context.Background(), provider, trafficcontrol.GlobalShaper())
+	return err
 }
 
 func RegisterRoutes(api *gin.RouterGroup) {
@@ -384,14 +568,18 @@ func DesiredRule(view View, nodeKey, iface string, mark uint32, selectors []stri
 	if !trafficcontrol.StatusView().UserAttribution {
 		return trafficcontrol.DesiredRule{}, trafficcontrol.ErrUnsupported
 	}
+	return desiredRuleForAttribution(view, Attribution{Supported: true, Stable: true, NodeKey: nodeKey, Interface: iface, Mark: mark, Selectors: selectors})
+}
+
+func desiredRuleForAttribution(view View, identity Attribution) (trafficcontrol.DesiredRule, error) {
 	upload, download := view.ActiveUploadBps, view.ActiveDownloadBps
 	if view.Lifecycle == StateThrottled {
 		upload, download = view.ThrottleUploadBps, view.ThrottleDownloadBps
 	}
-	if !view.Enabled || upload == 0 || download == 0 || nodeKey == "" || iface == "" || mark == 0 {
+	if !view.Enabled || !identity.Supported || !identity.Stable || upload == 0 || download == 0 || identity.NodeKey == "" || identity.Interface == "" || identity.Mark == 0 || len(identity.Selectors) == 0 {
 		return trafficcontrol.DesiredRule{}, trafficcontrol.ErrUnsupported
 	}
-	return trafficcontrol.DesiredRule{NodeKey: nodeKey, ClientKey: view.ClientEmail, Interface: iface, Mark: mark, UploadRateBps: upload, DownloadRateBps: download, Selectors: selectors}, nil
+	return trafficcontrol.DesiredRule{NodeKey: identity.NodeKey, ClientKey: view.ClientEmail, Interface: identity.Interface, Mark: identity.Mark, UploadRateBps: upload, DownloadRateBps: download, Selectors: append([]string(nil), identity.Selectors...)}, nil
 }
 
 func DesiredRuleFor(view View) (trafficcontrol.DesiredRule, error) {
@@ -410,4 +598,30 @@ func ReconcileRemote(ctx context.Context, remote trafficcontrol.RemoteTransport,
 		return trafficcontrol.Status{}, err
 	}
 	return trafficcontrol.ReconcileRemote(ctx, remote, []trafficcontrol.DesiredRule{rule})
+}
+
+// ReconcileRemotePolicies uses the same complete desired set and the existing
+// authenticated runtime transport. An unsupported provider never makes a
+// remote mutation; an empty supported set is sent only to remove stale rules
+// owned by the remote traffic-control subsystem.
+func ReconcileRemotePolicies(ctx context.Context, remote trafficcontrol.RemoteTransport, provider AttributionProvider) (trafficcontrol.Status, error) {
+	if provider == nil {
+		if hasEnforcementState() {
+			status, err := trafficcontrol.ReconcileRemote(ctx, remote, nil)
+			if err == nil {
+				err = clearAndPersistEnforcement(nil)
+			}
+			return status, err
+		}
+		return trafficcontrol.Status{Capabilities: trafficcontrol.Capabilities{State: StateUnsupported, Reason: "no production attribution provider is registered"}}, nil
+	}
+	rules, _, _, err := desiredRules(ctx, provider)
+	if err != nil {
+		return trafficcontrol.Status{Capabilities: trafficcontrol.Capabilities{State: StateDegraded, Reason: "attribution resolution failed", UserAttribution: true}, LastError: err.Error()}, err
+	}
+	status, err := trafficcontrol.ReconcileRemote(ctx, remote, rules)
+	if err == nil && status.State == trafficcontrol.State("ready") {
+		err = clearAndPersistEnforcement(rules)
+	}
+	return status, err
 }

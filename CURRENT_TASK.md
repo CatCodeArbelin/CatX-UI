@@ -6,9 +6,9 @@
 
 ## Status
 
-WP-6A is DONE and merged into `develop`. WP-6B Stage A implementation is
-complete on the current feature branch; CI rerun is pending. Do not modify `main`, start
-WP-7A, or touch preview/demo data.
+WP-6A is DONE and merged into `develop`. WP-6B Stage A is green and WP-6B
+Stage B safe enforcement completion is authorized on the current feature
+branch. Do not modify `main`, start WP-7A, or touch preview/demo data.
 
 ## Authorized Stage A scope
 
@@ -34,6 +34,27 @@ Reuse authoritative `client_traffics` deltas, the existing WP-5B accounting
 transaction, the WP-6A `Shaper`/`DesiredRule` contract, and authenticated
 `runtime.Remote`. Do not add duplicate traffic counters, a second routing
 compiler, or a second node subsystem.
+
+## Authorized Stage B scope
+
+Complete only the capability-gated end-to-end enforcement path:
+
+- traffic policy/lifecycle state → attribution provider → `trafficcontrol.DesiredRule` → WP-6A `Shaper.Reconcile`;
+- the smallest explicit attribution-provider boundary;
+- production providers only when they prove stable kernel-visible identity;
+- cleanup of stale shaping state on disable, expiry, detach, delete, unsupported,
+  degraded, or lost attribution;
+- deterministic ACTIVE/THROTTLED reconciliation after restart and window reset;
+- existing authenticated remote runtime transport only;
+- fixed/tumbling windows only for this release;
+- API/UI capability gating and comprehensive end-to-end, rollback, and
+  feature-disabled compatibility tests.
+
+Generic Xray-user → kernel-mark enforcement remains explicitly not authorized.
+If no production-safe provider exists, the production provider set must remain
+empty and the system must prove explicit unsupported/no-op behavior. Do not
+invent generic marking, clone Xray routing, add counters, or add a node
+subsystem.
 
 ## Required workflow
 
@@ -69,4 +90,5 @@ compiler, or a second node subsystem.
 
 ## Stop condition
 
-Stop after safe WP-6B Stage A implementation, verification, and final report.
+Stop after safe WP-6B Stage B implementation, verification, final scope audit,
+and final report. Do not merge WP-6B or start WP-7A.

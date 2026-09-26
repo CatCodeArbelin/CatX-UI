@@ -12,6 +12,78 @@ import (
 	"github.com/mhsanaei/3x-ui/v3/internal/xray"
 )
 
+type testAttributionProvider struct {
+	identity Attribution
+}
+
+func (p testAttributionProvider) Resolve(context.Context, string) (Attribution, error) {
+	return p.identity, nil
+}
+
+type testShaper struct {
+	calls []trafficcontrol.DesiredRule
+}
+
+func (s *testShaper) Capabilities(context.Context) trafficcontrol.Capabilities {
+	return trafficcontrol.Capabilities{State: "ready", UserAttribution: true}
+}
+
+func (s *testShaper) ApplyClientLimit(context.Context, trafficcontrol.DesiredRule) error { return nil }
+
+func (s *testShaper) RemoveClientLimit(context.Context, string, string) error { return nil }
+
+func (s *testShaper) Reconcile(_ context.Context, rules []trafficcontrol.DesiredRule) (trafficcontrol.Status, error) {
+	s.calls = append([]trafficcontrol.DesiredRule(nil), rules...)
+	return trafficcontrol.Status{Capabilities: s.Capabilities(context.Background())}, nil
+}
+
+func TestStageBAttributionTransitionsAndCleanup(t *testing.T) {
+	db, err := gorm.Open(sqlite.Open("file:traffic-policy-stage-b?mode=memory&cache=shared"), &gorm.Config{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := db.AutoMigrate(&Policy{}, &State{}, &xray.ClientTraffic{}); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.Create(&xray.ClientTraffic{Email: "stage-b", Enable: true}).Error; err != nil {
+		t.Fatal(err)
+	}
+	if err := db.Create(&Policy{ClientEmail: "stage-b", Enabled: true, WindowSeconds: 3600, QuotaBytes: 100, ActiveUploadBps: 1000, ActiveDownloadBps: 2000, ThrottleUploadBps: 100, ThrottleDownloadBps: 200}).Error; err != nil {
+		t.Fatal(err)
+	}
+	Configure(db, true)
+	t.Cleanup(func() {
+		ConfigureAttributionProvider(nil)
+		Configure(nil, false)
+	})
+	if err := ApplyDeltas(db, []*xray.ClientTraffic{{Email: "stage-b"}}); err != nil {
+		t.Fatal(err)
+	}
+	provider := testAttributionProvider{identity: Attribution{Supported: true, Stable: true, NodeKey: "local", Interface: "eth0", Mark: 17, Selectors: []string{"192.0.2.17/32"}}}
+	shaper := &testShaper{}
+	freshShaper := &testShaper{}
+	if status, err := ReconcileEnforcement(context.Background(), testAttributionProvider{identity: Attribution{Supported: false}}, freshShaper); err != nil || len(freshShaper.calls) != 0 || status.State != StateUnsupported {
+		t.Fatalf("unsupported attribution must be an exact no-op: status=%+v calls=%+v err=%v", status, freshShaper.calls, err)
+	}
+	status, err := ReconcileEnforcement(context.Background(), provider, shaper)
+	if err != nil || len(shaper.calls) != 1 || shaper.calls[0].UploadRateBps != 1000 || status.State != "ready" {
+		t.Fatalf("active reconcile: status=%+v calls=%+v err=%v", status, shaper.calls, err)
+	}
+	if err := db.Model(&State{}).Where("client_email = ?", "stage-b").Updates(map[string]any{"lifecycle": StateThrottled, "owner": OwnerSoftQuota}).Error; err != nil {
+		t.Fatal(err)
+	}
+	if _, err := ReconcileEnforcement(context.Background(), provider, shaper); err != nil || shaper.calls[0].UploadRateBps != 100 {
+		t.Fatalf("throttled reconcile: calls=%+v err=%v", shaper.calls, err)
+	}
+	unsupported := testAttributionProvider{identity: Attribution{Supported: false}}
+	if status, err := ReconcileEnforcement(context.Background(), unsupported, shaper); err != nil || len(shaper.calls) != 0 || status.State != StateUnsupported {
+		t.Fatalf("unsupported cleanup: status=%+v calls=%+v err=%v", status, shaper.calls, err)
+	}
+	if status, err := ReconcileEnforcement(context.Background(), nil, shaper); err != nil || len(shaper.calls) != 0 || status.State != StateUnsupported {
+		t.Fatalf("empty production provider must be no-op: status=%+v calls=%+v err=%v", status, shaper.calls, err)
+	}
+}
+
 func TestFixedWindowAndSoftThrottleLifecycle(t *testing.T) {
 	db, err := gorm.Open(sqlite.Open("file:traffic-policy-test?mode=memory&cache=shared"), &gorm.Config{})
 	if err != nil {
