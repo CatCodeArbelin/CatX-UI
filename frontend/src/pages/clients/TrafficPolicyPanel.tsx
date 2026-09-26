@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Button, Card, Descriptions, InputNumber, Space, Switch, Tag, message } from 'antd';
 import { useTranslation } from 'react-i18next';
 
@@ -49,7 +49,7 @@ export default function TrafficPolicyPanel({ email }: TrafficPolicyPanelProps) {
   const [draft, setDraft] = useState<Partial<TrafficPolicyView>>({});
   const [messageApi, contextHolder] = message.useMessage();
 
-  async function load() {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       const response = (await HttpUtil.get(
@@ -63,11 +63,12 @@ export default function TrafficPolicyPanel({ email }: TrafficPolicyPanelProps) {
     } finally {
       setLoading(false);
     }
-  }
+  }, [email]);
 
   useEffect(() => {
-    void load();
-  }, [email]);
+    const timer = window.setTimeout(() => void load(), 0);
+    return () => window.clearTimeout(timer);
+  }, [load]);
 
   async function reset() {
     setResetting(true);
