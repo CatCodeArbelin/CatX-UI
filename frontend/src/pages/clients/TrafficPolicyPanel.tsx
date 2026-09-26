@@ -54,6 +54,8 @@ export default function TrafficPolicyPanel({ email }: TrafficPolicyPanelProps) {
     try {
       const response = (await HttpUtil.get(
         `/panel/api/traffic-control/clients/${encodeURIComponent(email)}/policy`,
+        undefined,
+        { silent: true },
       )) as { success?: boolean; obj?: TrafficPolicyView };
       const next = response.success ? response.obj ?? null : null;
       setView(next ?? EMPTY_POLICY);
