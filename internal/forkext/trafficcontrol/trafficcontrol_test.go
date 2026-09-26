@@ -140,6 +140,7 @@ func (r *fakeRemote) TrafficControlCapabilities(context.Context) (json.RawMessag
 	r.calls++
 	return r.capability, nil
 }
+
 func (r *fakeRemote) TrafficControlReconcile(context.Context, json.RawMessage) (json.RawMessage, error) {
 	r.calls++
 	return r.response, nil

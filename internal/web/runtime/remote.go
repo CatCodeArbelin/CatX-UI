@@ -650,7 +650,7 @@ func (r *Remote) TrafficControlCapabilities(ctx context.Context) (json.RawMessag
 	if err != nil {
 		return nil, err
 	}
-	return json.RawMessage(env.Obj), nil
+	return env.Obj, nil
 }
 
 func (r *Remote) TrafficControlReconcile(ctx context.Context, body json.RawMessage) (json.RawMessage, error) {
@@ -658,7 +658,7 @@ func (r *Remote) TrafficControlReconcile(ctx context.Context, body json.RawMessa
 	if err != nil {
 		return nil, err
 	}
-	return json.RawMessage(env.Obj), nil
+	return env.Obj, nil
 }
 
 // UpdatePanel asks the node to run its own official self-updater (update.sh)

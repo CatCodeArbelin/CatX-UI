@@ -348,10 +348,12 @@ func (b *Backend) execSimple(ctx context.Context, name string, args []string) er
 	_, err := b.exec.Run(ctx, name, args, nil)
 	return err
 }
+
 func (b *Backend) execSimpleInput(ctx context.Context, name string, args []string, input []byte) error {
 	_, err := b.exec.Run(ctx, name, args, input)
 	return err
 }
+
 func ifbName(iface string) string {
 	n := "catx-" + iface
 	if len(n) > 15 {
@@ -360,12 +362,14 @@ func ifbName(iface string) string {
 	}
 	return n
 }
+
 func rate(bps uint64) string {
 	if bps < 8 {
 		return "1bit"
 	}
 	return strconv.FormatUint((bps+7)/8, 10) + "bit"
 }
+
 func contains(values []string, target string) bool {
 	for _, v := range values {
 		if v == target {

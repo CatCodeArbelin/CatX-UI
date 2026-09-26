@@ -36,12 +36,14 @@ func Configure(enabled bool) {
 	service.status = Status{}
 	service.mu.Unlock()
 }
+
 func SetBackendForTests(b *Backend) {
 	service.mu.Lock()
 	service.backend = b
 	service.enabled = true
 	service.mu.Unlock()
 }
+
 func DetectCapabilities(ctx context.Context) Capabilities {
 	service.mu.RLock()
 	b, enabled := service.backend, service.enabled
@@ -51,6 +53,7 @@ func DetectCapabilities(ctx context.Context) Capabilities {
 	}
 	return b.Capabilities(ctx)
 }
+
 func Reconcile(ctx context.Context, rules []DesiredRule) (Status, error) {
 	service.mu.RLock()
 	b, enabled := service.backend, service.enabled
@@ -64,6 +67,7 @@ func Reconcile(ctx context.Context, rules []DesiredRule) (Status, error) {
 	service.mu.Unlock()
 	return status, err
 }
+
 func StatusView() Status {
 	service.mu.RLock()
 	status, initialized := service.status, service.status.State != ""
