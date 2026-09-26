@@ -3114,19 +3114,22 @@ export const sections: readonly Section[] = [
   {
     id: 'traffic-control',
     title: 'Traffic control',
-    description: 'Capability and reconciliation endpoints for the CatX shaping substrate. WP-6A does not define speed-limit policy.',
+    description:
+      'Capability and reconciliation endpoints for the CatX shaping substrate. WP-6A does not define speed-limit policy.',
     endpoints: [
       {
         method: 'GET',
         path: '/panel/api/traffic-control/status',
         summary: 'Return local shaping capability and current reconciliation status.',
-        response: '{ success, obj: { state, reason, interfaces, appliedInterfaces, generation, lastError } }',
+        response:
+          '{ success, obj: { state, reason, interfaces, appliedInterfaces, generation, lastError } }',
       },
       {
         method: 'GET',
         path: '/panel/api/traffic-control/capabilities',
         summary: 'Probe tc, nftables, IFB, explicit interfaces, and privilege capability.',
-        response: '{ success, obj: { state, platform, tc, nftables, conntrackMarks, ifb, netAdmin, reason } }',
+        response:
+          '{ success, obj: { state, platform, tc, nftables, conntrackMarks, ifb, netAdmin, reason } }',
       },
       {
         method: 'POST',
