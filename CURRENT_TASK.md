@@ -6,9 +6,10 @@
 
 ## Status
 
-WP-6A is DONE and merged into `develop`. WP-6B Stage A is green and WP-6B
-Stage B safe enforcement completion is authorized on the current feature
-branch. Do not modify `main`, start WP-7A, or touch preview/demo data.
+WP-6A is DONE and merged into `develop`. WP-6B Stage A and the supported,
+capability-gated Stage B scope are complete on the current feature branch.
+Generic Xray-user attribution/marking remains deferred. Do not modify `main`,
+start WP-7A, or touch preview/demo data.
 
 ## Authorized Stage A scope
 
@@ -90,5 +91,5 @@ subsystem.
 
 ## Stop condition
 
-Stop after safe WP-6B Stage B implementation, verification, final scope audit,
-and final report. Do not merge WP-6B or start WP-7A.
+WP-6B is complete for the supported/capability-gated scope after verification
+and final scope audit. Do not merge WP-6B or start WP-7A.
