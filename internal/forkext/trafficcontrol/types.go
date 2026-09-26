@@ -28,6 +28,9 @@ type Capabilities struct {
 	ConntrackMarks bool     `json:"conntrackMarks"`
 	IFB            bool     `json:"ifb"`
 	NetAdmin       bool     `json:"netAdmin"`
+	// UserAttribution is deliberately false until an Xray-native, semantics-
+	// preserving per-user socket-mark path is proven and enabled.
+	UserAttribution bool `json:"userAttribution"`
 }
 
 type Status struct {

@@ -56,7 +56,7 @@ func (s *InboundService) addTrafficLocked(inboundTraffics []*xray.Traffic, clien
 		if err := s.addClientTraffic(tx, clientTraffics); err != nil {
 			return err
 		}
-		return forkext.GroupQuotaApplyDeltas(tx, clientTraffics)
+		return forkext.ApplyTrafficDeltas(tx, clientTraffics)
 	}); err != nil {
 		return false, false, nil, nil, err
 	}

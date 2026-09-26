@@ -14,6 +14,7 @@ import (
 	"github.com/mhsanaei/3x-ui/v3/internal/eventbus"
 	"github.com/mhsanaei/3x-ui/v3/internal/forkext/groupquota"
 	"github.com/mhsanaei/3x-ui/v3/internal/forkext/trafficcontrol"
+	"github.com/mhsanaei/3x-ui/v3/internal/forkext/trafficpolicy"
 	"github.com/mhsanaei/3x-ui/v3/internal/policy"
 	"github.com/mhsanaei/3x-ui/v3/internal/policycompiler"
 	"github.com/mhsanaei/3x-ui/v3/internal/policysim"
@@ -34,6 +35,7 @@ func RegisterMigrations(db *gorm.DB) error {
 	setSettingsDB(db)
 	if db == nil {
 		groupquota.Configure(nil, false)
+		trafficpolicy.Configure(nil, false)
 		trafficcontrol.Configure(false)
 		analytics.Configure(analytics.NoopRepository{}, false)
 		policy.Configure(nil, false)
@@ -47,8 +49,12 @@ func RegisterMigrations(db *gorm.DB) error {
 		if err := groupquota.Migrate(db); err != nil {
 			return err
 		}
+		if err := trafficpolicy.Migrate(db); err != nil {
+			return err
+		}
 	}
 	groupquota.Configure(db, trafficControlEnabled)
+	trafficpolicy.Configure(db, trafficControlEnabled)
 	trafficcontrol.Configure(trafficControlEnabled)
 	analyticsEnabled, err := NewSettings(db).Enabled(FlagAnalytics)
 	if err != nil {
@@ -95,12 +101,14 @@ func RegisterRoutes(api *gin.RouterGroup) {
 	policysim.RegisterRoutes(api)
 	groupquota.RegisterRoutes(api)
 	trafficcontrol.RegisterRoutes(api)
+	trafficpolicy.RegisterRoutes(api)
 }
 
 // RegisterJobs is the fixed scheduler integration point for fork jobs.
 func RegisterJobs(_ context.Context, scheduler *cron.Cron) {
 	groupquota.RegisterJobs(scheduler)
 	trafficcontrol.RegisterJobs(scheduler)
+	trafficpolicy.RegisterJobs(scheduler)
 }
 
 func SetTrafficControlRestartCallback(fn func()) { groupquota.SetRestartCallback(fn) }
@@ -111,8 +119,15 @@ func RegisterEventSubscribers(_ *eventbus.Bus) {}
 
 // GroupQuotaApplyDeltas is the sole accounting handoff from upstream traffic
 // writes to the fork quota module.
+func ApplyTrafficDeltas(tx *gorm.DB, traffics []*xray.ClientTraffic) error {
+	if err := groupquota.ApplyClientDeltas(tx, traffics); err != nil {
+		return err
+	}
+	return trafficpolicy.ApplyDeltas(tx, traffics)
+}
+
 func GroupQuotaApplyDeltas(tx *gorm.DB, traffics []*xray.ClientTraffic) error {
-	return groupquota.ApplyClientDeltas(tx, traffics)
+	return ApplyTrafficDeltas(tx, traffics)
 }
 
 func GroupQuotaDepletedEmails(tx *gorm.DB) ([]string, error) {
@@ -159,7 +174,9 @@ func GroupQuotaRebaselineClient(tx *gorm.DB, email string, up, down int64) error
 	return groupquota.RebaselineClient(tx, email, up, down)
 }
 
-func MigrationModels() []any { return groupquota.Models() }
+func MigrationModels() []any {
+	return append(groupquota.Models(), trafficpolicy.Models()...)
+}
 
 // Start is the lifecycle integration point for fork-owned goroutines. The
 // returned closer is always safe to call in the no-op foundation state.

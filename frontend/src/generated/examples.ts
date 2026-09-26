@@ -938,6 +938,18 @@ export const EXAMPLES: Record<string, unknown> = {
     "tag": "inbound-51820",
     "up": 1048576
   },
+  "Policy": {
+    "activeDownloadBps": 0,
+    "activeUploadBps": 0,
+    "clientEmail": "",
+    "enabled": false,
+    "id": 0,
+    "quotaBytes": 0,
+    "throttleDownloadBps": 0,
+    "throttleUploadBps": 0,
+    "updatedAt": 0,
+    "windowSeconds": 0
+  },
   "ProbeResultUI": {
     "cpuPct": 12.5,
     "error": "",
@@ -1019,6 +1031,17 @@ export const EXAMPLES: Record<string, unknown> = {
     "key": "",
     "value": ""
   },
+  "State": {
+    "clientEmail": "",
+    "id": 0,
+    "lastError": "",
+    "lifecycle": "",
+    "owner": "",
+    "reason": "",
+    "updatedAt": 0,
+    "windowEnd": 0,
+    "windowStart": 0
+  },
   "SubBalancer": {
     "createdAt": 1710000000000,
     "enabled": true,
@@ -1064,5 +1087,26 @@ export const EXAMPLES: Record<string, unknown> = {
     "id": 0,
     "password": "",
     "username": ""
+  },
+  "View": {
+    "activeDownloadBps": 0,
+    "activeUploadBps": 0,
+    "clientEmail": "",
+    "enabled": false,
+    "enforcement": "",
+    "enforcementNote": "",
+    "id": 0,
+    "lifecycle": "",
+    "owner": "",
+    "quotaBytes": 0,
+    "reason": "",
+    "remainingBytes": 0,
+    "throttleDownloadBps": 0,
+    "throttleUploadBps": 0,
+    "updatedAt": 0,
+    "usedBytes": 0,
+    "windowEnd": 0,
+    "windowSeconds": 0,
+    "windowStart": 0
   }
 };
