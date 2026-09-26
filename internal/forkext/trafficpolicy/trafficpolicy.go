@@ -376,11 +376,25 @@ func RegisterRoutes(api *gin.RouterGroup) {
 	})
 }
 
-// DesiredRule intentionally returns no rule for generic Xray users. WP-6B
-// must not claim kernel enforcement until a proven attribution capability is
-// added without changing routing semantics.
-func DesiredRuleFor(_ View) (trafficcontrol.DesiredRule, error) {
-	return trafficcontrol.DesiredRule{}, trafficcontrol.ErrUnsupported
+// DesiredRule builds the WP-6A substrate state only after attribution has been
+// proven. The caller supplies the node/interface/mark allocated by the
+// substrate; this package never invents a routing or mark allocation path.
+func DesiredRule(view View, nodeKey, iface string, mark uint32, selectors []string) (trafficcontrol.DesiredRule, error) {
+	if !trafficcontrol.StatusView().Capabilities.UserAttribution {
+		return trafficcontrol.DesiredRule{}, trafficcontrol.ErrUnsupported
+	}
+	upload, download := view.ActiveUploadBps, view.ActiveDownloadBps
+	if view.Lifecycle == StateThrottled {
+		upload, download = view.ThrottleUploadBps, view.ThrottleDownloadBps
+	}
+	if !view.Enabled || upload == 0 || download == 0 || nodeKey == "" || iface == "" || mark == 0 {
+		return trafficcontrol.DesiredRule{}, trafficcontrol.ErrUnsupported
+	}
+	return trafficcontrol.DesiredRule{NodeKey: nodeKey, ClientKey: view.ClientEmail, Interface: iface, Mark: mark, UploadRateBps: upload, DownloadRateBps: download, Selectors: selectors}, nil
+}
+
+func DesiredRuleFor(view View) (trafficcontrol.DesiredRule, error) {
+	return DesiredRule(view, "", "", 0, nil)
 }
 
 // ReconcileRemote is the only Stage A remote enforcement adapter. It refuses
