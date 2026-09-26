@@ -1,6 +1,7 @@
 package trafficpolicy
 
 import (
+	"context"
 	"errors"
 	"testing"
 
@@ -70,7 +71,7 @@ func TestGenericUserMarkPathRemainsUnsupported(t *testing.T) {
 	if _, err := DesiredRuleFor(View{}); !errors.Is(err, trafficcontrol.ErrUnsupported) {
 		t.Fatalf("DesiredRuleFor error = %v", err)
 	}
-	if _, err := ReconcileRemote(nil, nil, View{}); !errors.Is(err, trafficcontrol.ErrUnsupported) {
+	if _, err := ReconcileRemote(context.TODO(), nil, View{}); !errors.Is(err, trafficcontrol.ErrUnsupported) {
 		t.Fatalf("ReconcileRemote error = %v", err)
 	}
 }
