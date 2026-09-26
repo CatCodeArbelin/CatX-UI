@@ -13,6 +13,7 @@ import (
 	"github.com/mhsanaei/3x-ui/v3/internal/analytics"
 	"github.com/mhsanaei/3x-ui/v3/internal/eventbus"
 	"github.com/mhsanaei/3x-ui/v3/internal/forkext/groupquota"
+	"github.com/mhsanaei/3x-ui/v3/internal/forkext/trafficcontrol"
 	"github.com/mhsanaei/3x-ui/v3/internal/policy"
 	"github.com/mhsanaei/3x-ui/v3/internal/policycompiler"
 	"github.com/mhsanaei/3x-ui/v3/internal/policysim"
@@ -33,6 +34,7 @@ func RegisterMigrations(db *gorm.DB) error {
 	setSettingsDB(db)
 	if db == nil {
 		groupquota.Configure(nil, false)
+		trafficcontrol.Configure(false)
 		analytics.Configure(analytics.NoopRepository{}, false)
 		policy.Configure(nil, false)
 		return nil
@@ -47,6 +49,7 @@ func RegisterMigrations(db *gorm.DB) error {
 		}
 	}
 	groupquota.Configure(db, trafficControlEnabled)
+	trafficcontrol.Configure(trafficControlEnabled)
 	analyticsEnabled, err := NewSettings(db).Enabled(FlagAnalytics)
 	if err != nil {
 		log.Printf("fork analytics disabled: cannot read feature flag: %v", err)
@@ -91,10 +94,14 @@ func RegisterRoutes(api *gin.RouterGroup) {
 	policy.RegisterRoutes(api)
 	policysim.RegisterRoutes(api)
 	groupquota.RegisterRoutes(api)
+	trafficcontrol.RegisterRoutes(api)
 }
 
 // RegisterJobs is the fixed scheduler integration point for fork jobs.
-func RegisterJobs(_ context.Context, scheduler *cron.Cron) { groupquota.RegisterJobs(scheduler) }
+func RegisterJobs(_ context.Context, scheduler *cron.Cron) {
+	groupquota.RegisterJobs(scheduler)
+	trafficcontrol.RegisterJobs(scheduler)
+}
 
 func SetTrafficControlRestartCallback(fn func()) { groupquota.SetRestartCallback(fn) }
 

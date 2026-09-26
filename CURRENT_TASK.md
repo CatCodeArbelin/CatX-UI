@@ -6,30 +6,34 @@
 
 ## Status
 
-WP-5B is DONE and merged into `develop`. WP-6A is authorized for
-implementation-readiness review on the current feature branch. Do not
-implement production code, do not modify `main`, and do not touch preview/demo
-data.
+WP-5B is DONE and merged into `develop`. WP-6A is authorized for full
+implementation on the current feature branch. Do not merge WP-6A, start WP-6B,
+modify `main`, or touch preview/demo data.
 
 ## Scope
 
-The package is the shaping core: capability detection, a shaping adapter, a
-Linux implementation, and reconciliation. This task is limited to an
-implementation-readiness review; production code is intentionally deferred.
+The package implements the shaping substrate, not WP-6B speed-limit policy.
+Implement capability detection, the Shaper contract, Linux tc/nft/IFB state,
+deterministic ownership/naming, mark allocation and collision detection, local
+reconciliation, the status API, restart/drift reconciliation, rollback, and
+unsupported-platform exact no-op behavior.
 
-The review must define Linux traffic-shaping primitives and ownership
-boundaries, per-client identity/marking, Xray and client/node integration,
-restart/config reconciliation, idempotent apply/remove, unsupported-platform
-no-op behavior, failure/rollback, local versus remote-node operation,
-interaction with WP-5B quota state, privilege requirements, concurrency, and
-the test strategy. Do not create a second traffic/accounting engine.
+Do not add generic Xray user-to-marked-outbound routing in WP-6A; actual Xray
+user-to-mark injection remains an explicit integration boundary for WP-6B.
+Linux uses CatX-owned tc/nft state, conntrack mark propagation, and IFB for
+reverse-path shaping. Never replace an incompatible or admin-owned qdisc.
+Remote shaping uses the existing authenticated runtime.Remote/CatX API
+architecture; no new agent and no SSH fallback. Do not add traffic counters or
+a shaping-policy table.
 
 ## Required workflow
 
 - Read the authorized documents and skills, inspect the actual current
-  integration points, and produce the readiness review only.
-- Do not implement production code, change schemas/API, or modify preview/demo
-  data.
+  integration points, and implement the scoped substrate with focused commits.
+- Add deterministic fake-executor coverage for apply, drift, and rollback;
+  add privileged Linux/network-namespace coverage when supported.
+- Run relevant tests and both canonical CI workflows; fix genuine failures.
+- Do not merge WP-6A, start WP-6B, modify `main`, or touch preview/demo data.
 - Keep the working tree clean at handoff.
 
 ## Authorized documents
@@ -57,4 +61,5 @@ the test strategy. Do not create a second traffic/accounting engine.
 
 ## Stop condition
 
-The WP-6A readiness review is complete. Do not implement production code.
+Stop on the green pushed WP-6A feature branch. Do not merge WP-6A or start
+WP-6B.

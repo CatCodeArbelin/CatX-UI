@@ -642,6 +642,25 @@ func (r *Remote) RestartXray(ctx context.Context) error {
 	return err
 }
 
+// TrafficControlCapabilities and TrafficControlReconcile are the narrow,
+// authenticated remote shaping boundary. The node endpoint is optional; old
+// nodes return 404 and are treated as unsupported by the fork module.
+func (r *Remote) TrafficControlCapabilities(ctx context.Context) (json.RawMessage, error) {
+	env, err := r.do(ctx, http.MethodGet, "panel/api/traffic-control/capabilities", nil)
+	if err != nil {
+		return nil, err
+	}
+	return json.RawMessage(env.Obj), nil
+}
+
+func (r *Remote) TrafficControlReconcile(ctx context.Context, body json.RawMessage) (json.RawMessage, error) {
+	env, err := r.do(ctx, http.MethodPost, "panel/api/traffic-control/reconcile", body)
+	if err != nil {
+		return nil, err
+	}
+	return json.RawMessage(env.Obj), nil
+}
+
 // UpdatePanel asks the node to run its own official self-updater (update.sh)
 // and restart onto the latest release. The node returns as soon as the job is
 // launched; the new version surfaces on the next heartbeat. When dev is true the
