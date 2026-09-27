@@ -66,6 +66,11 @@ jobs:
             git status --short | while IFS= read -r line; do
               echo "::error file=Makefile::working tree status: $line"
             done
+            grep -Eai 'fail|error|panic|cannot|not found|exited|timeout' "$RUNNER_TEMP/verify-fork.log" | tail -n 100 | while IFS= read -r line; do
+              line=${line//$'\r'/}
+              line=${line//$'\n'/ }
+              echo "::error file=Makefile::$line"
+            done
             tail -n 200 "$RUNNER_TEMP/verify-fork.log" | while IFS= read -r line; do
               line=${line//$'\r'/}
               line=${line//$'\n'/ }
