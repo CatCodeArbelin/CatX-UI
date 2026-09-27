@@ -40,6 +40,7 @@ export const forkNavigationItems: readonly ForkNavigationItem[] = [
   { key: 'audit', label: 'Audit', path: '/audit' },
   { key: 'webhooks', label: 'Webhooks', path: '/webhooks' },
 ];
+// Keep the fork contract registry as the single source for generated API verification.
 export const forkApiSections = [
   {
     id: 'risk-intelligence',
