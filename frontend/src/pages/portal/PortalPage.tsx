@@ -36,7 +36,10 @@ export default function PortalPage() {
     setClient(me.obj); setDevices(deviceResult.obj || []); setHosts(hostResult.obj || []); setTraffic(trafficResult.obj); setCsrf(csrfResult.obj || ''); setError('');
   }, [t]);
 
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    const timer = window.setTimeout(() => void load(), 0);
+    return () => window.clearTimeout(timer);
+  }, [load]);
 
   async function login() {
     const result = await HttpUtil.post<{ csrfToken: string }>(portalPath('/portal/auth'), { token }, { silent: true });
@@ -44,17 +47,17 @@ export default function PortalPage() {
     setCsrf(result.obj?.csrfToken || ''); await load();
   }
 
-  async function mutate(path: string, method: 'patch' | 'delete', body?: unknown) {
+  const mutate = useCallback(async (path: string, method: 'patch' | 'delete', body?: unknown) => {
     const options = { headers: { 'X-CSRF-Token': csrf }, silent: true };
     const result = method === 'patch' ? await HttpUtil.put(portalPath(path), body, options) : await HttpUtil.delete(portalPath(path), options);
     if (!result.success) setError(result.msg || t('fork.portal.actionFailed', 'Action failed.')); else await load();
-  }
+  }, [csrf, load, t]);
 
   const columns = useMemo<ColumnsType<Device>>(() => [
     { title: t('fork.portal.device', 'Device'), render: (_, row) => row.deviceName || row.deviceModel || row.deviceOs || '—' },
     { title: t('fork.portal.lastSeen', 'Last seen'), render: (_, row) => row.lastSeen ? new Date(row.lastSeen).toLocaleString() : '—' },
     { title: t('fork.portal.actions', 'Actions'), render: (_, row) => <Space><Button onClick={() => { const name = window.prompt(t('fork.portal.renamePrompt', 'New device name'), row.deviceName); if (name != null) void mutate(`/portal/devices/${row.id}`, 'patch', { deviceName: name }); }}>{t('rename', 'Rename')}</Button><Button danger onClick={() => void mutate(`/portal/devices/${row.id}`, 'delete')}>{t('delete', 'Revoke')}</Button></Space> },
-  ], [csrf, t]);
+  ], [mutate, t]);
 
   if (!client) return <Card style={{ maxWidth: 520, margin: '8rem auto' }}><Space direction="vertical" style={{ width: '100%' }}><Typography.Title level={2}>{t('fork.portal.title', 'Client portal')}</Typography.Title><Typography.Paragraph>{t('fork.portal.tokenHint', 'Use the portal access token provided by your administrator.')}</Typography.Paragraph><Input.Password value={token} onChange={(e) => setToken(e.target.value)} onPressEnter={() => void login()} placeholder={t('fork.portal.token', 'Portal access token')} /><Button type="primary" onClick={() => void login()}>{t('fork.portal.signIn', 'Sign in')}</Button>{error && <Alert type="error" message={error} />}</Space></Card>;
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Alert, Button, Card, Form, Input, InputNumber, Space, Switch, Table, Typography } from 'antd';
 import { HttpUtil } from '@/utils';
 import { useTranslation } from 'react-i18next';
@@ -13,7 +13,7 @@ export default function PortalAdminPage() {
   const [token, setToken] = useState('');
   const [error, setError] = useState('');
   const [enabled, setEnabled] = useState(false);
-  async function load() {
+  const load = useCallback(async () => {
     const [settings, c, g] = await Promise.all([
       HttpUtil.get<{ enabled: boolean }>('/panel/api/portal/settings', undefined, { silent: true }),
       HttpUtil.get<Credential[]>('/panel/api/portal/credentials', undefined, { silent: true }),
@@ -22,8 +22,11 @@ export default function PortalAdminPage() {
     if (settings.success) setEnabled(Boolean(settings.obj?.enabled));
     if (c.success) setCredentials(c.obj || []); else setError(c.msg);
     if (g.success) setGrants(g.obj || []); else setError(g.msg);
-  }
-  useEffect(() => { void load(); }, []);
+  }, []);
+  useEffect(() => {
+    const timer = window.setTimeout(() => void load(), 0);
+    return () => window.clearTimeout(timer);
+  }, [load]);
   async function issue(clientId: number) {
     const result = await HttpUtil.post<{ token: string }>('/panel/api/portal/credentials', { clientId });
     if (result.success && result.obj) setToken(result.obj.token); else setError(result.msg);
