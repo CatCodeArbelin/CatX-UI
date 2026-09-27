@@ -67,9 +67,13 @@ func requestID(c *gin.Context) string {
 // It deliberately never reads the request body or arbitrary headers.
 func Middleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		if !Enabled() {
+			c.Next()
+			return
+		}
 		id := requestID(c)
 		c.Next()
-		if !Enabled() || c.IsAborted() || c.Request.Method == http.MethodGet || c.Request.Method == http.MethodHead || c.Request.Method == http.MethodOptions {
+		if c.IsAborted() || c.Request.Method == http.MethodGet || c.Request.Method == http.MethodHead || c.Request.Method == http.MethodOptions {
 			return
 		}
 		status := c.Writer.Status()
