@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Alert, Button, Card, Descriptions, List, Space, Tag, Typography, message } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { HttpUtil } from '@/utils';
@@ -43,8 +43,7 @@ export default function RiskIntelligencePanel({ email }: { email: string }) {
   const [loading, setLoading] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
 
-  const load = async () => {
-    setLoading(true);
+  const load = useCallback(async () => {
     try {
       const result = await HttpUtil.get<{ success: boolean; obj: RiskSummary }>(
         `/panel/api/risk/clients/${encodeURIComponent(email)}`,
@@ -56,11 +55,11 @@ export default function RiskIntelligencePanel({ email }: { email: string }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [email]);
 
   useEffect(() => {
     void load();
-  }, [email]);
+  }, [load]);
 
   const acknowledge = async (id: number) => {
     await HttpUtil.post(`/panel/api/risk/clients/${encodeURIComponent(email)}/events/${id}/ack`);
