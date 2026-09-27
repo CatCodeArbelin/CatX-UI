@@ -9,6 +9,7 @@ type Device = { id: number; firstSeen: number; lastSeen: number; deviceName: str
 type Host = { id: number; inboundId: number; remark: string; address: string; port: number; security: string; sni?: string; hostHeader?: string; path?: string; alpn?: string[]; fingerprint?: string };
 type Traffic = { up: number; down: number; total: number; expiryTime: number };
 
+// Portal data is always fetched through the dedicated session namespace.
 function portalPath(path: string): string {
   const base = (window as Window & { X_UI_BASE_PATH?: string }).X_UI_BASE_PATH || '/';
   return `${base.replace(/\/+$/, '')}${path}`;
