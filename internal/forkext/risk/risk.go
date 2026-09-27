@@ -354,7 +354,7 @@ func SummaryFor(ctx context.Context, email string) (Summary, error) {
 		return Summary{Enabled: false, ClientEmail: email, State: StateInsufficient, Events: []Event{}, IPs: []IPHistory{}}, nil
 	}
 	_ = Recompute(ctx, email)
-	result := Summary{Enabled: true, ClientEmail: email, Events: []Event{}, IPs: []IPHistory{}}
+	result := Summary{Enabled: true, ClientEmail: email, State: StateInsufficient, Events: []Event{}, IPs: []IPHistory{}}
 	var score Score
 	db.WithContext(ctx).Where("client_email = ?", email).First(&score)
 	result.Score, result.Confidence, result.State, result.Evidence, result.CalculatedAt = score.Score, score.Confidence, score.State, score.Evidence, score.CalculatedAt
