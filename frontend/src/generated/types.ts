@@ -508,6 +508,15 @@ export interface ClientsSummary {
   total: number;
 }
 
+export interface CredentialView {
+  clientId: number;
+  createdAt: number;
+  enabled: boolean;
+  expiresAt: number;
+  id: number;
+  lastUsed: number;
+}
+
 export interface DeliveryPage {
   items: WebhookDelivery[];
   next?: string;
@@ -617,6 +626,16 @@ export interface Host {
   updatedAt: number;
   verifyPeerCertByName: string;
   vlessRoute: string;
+}
+
+export interface HostGrant {
+  createdAt: string;
+  enabled: boolean;
+  hostId: number;
+  id: number;
+  subjectId: number;
+  subjectType: string;
+  updatedAt: string;
 }
 
 export interface HostGroup {
@@ -752,6 +771,16 @@ export interface InboundTrafficSummary {
   id: number;
   total: number;
   up: number;
+}
+
+export interface IssuedToken {
+  clientId: number;
+  createdAt: number;
+  enabled: boolean;
+  expiresAt: number;
+  id: number;
+  lastUsed: number;
+  token: string;
 }
 
 export interface LogEntry {
@@ -931,6 +960,10 @@ export interface Policy {
   throttleUploadBps: number;
   updatedAt: number;
   windowSeconds: number;
+}
+
+export interface PortalSettings {
+  enabled: boolean;
 }
 
 export interface ProbeResultUI {

@@ -2177,6 +2177,40 @@
         ],
         "type": "object"
       },
+      "CredentialView": {
+        "properties": {
+          "clientId": {
+            "type": "integer"
+          },
+          "createdAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "expiresAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "lastUsed": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "clientId",
+          "createdAt",
+          "enabled",
+          "expiresAt",
+          "id",
+          "lastUsed"
+        ],
+        "type": "object"
+      },
       "DeliveryPage": {
         "properties": {
           "items": {
@@ -2630,6 +2664,43 @@
           "updatedAt",
           "verifyPeerCertByName",
           "vlessRoute"
+        ],
+        "type": "object"
+      },
+      "HostGrant": {
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "hostId": {
+            "type": "integer"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "subjectId": {
+            "type": "integer"
+          },
+          "subjectType": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "createdAt",
+          "enabled",
+          "hostId",
+          "id",
+          "subjectId",
+          "subjectType",
+          "updatedAt"
         ],
         "type": "object"
       },
@@ -3249,6 +3320,44 @@
           "id",
           "total",
           "up"
+        ],
+        "type": "object"
+      },
+      "IssuedToken": {
+        "properties": {
+          "clientId": {
+            "type": "integer"
+          },
+          "createdAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "expiresAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "lastUsed": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "token": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "clientId",
+          "createdAt",
+          "enabled",
+          "expiresAt",
+          "id",
+          "lastUsed",
+          "token"
         ],
         "type": "object"
       },
@@ -4071,6 +4180,17 @@
           "throttleUploadBps",
           "updatedAt",
           "windowSeconds"
+        ],
+        "type": "object"
+      },
+      "PortalSettings": {
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "enabled"
         ],
         "type": "object"
       },
@@ -5126,6 +5246,10 @@
     {
       "name": "Audit / Webhooks / Metrics",
       "description": "Durable metadata-only audit records, signed webhook delivery, and bounded Prometheus metrics."
+    },
+    {
+      "name": "Self-service portal",
+      "description": "Dedicated client portal sessions with metadata-only self-service access."
     }
   ],
   "paths": {
@@ -19482,6 +19606,497 @@
                       "type": "string"
                     },
                     "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/portal/auth": {
+      "post": {
+        "tags": [
+          "Self-service portal"
+        ],
+        "summary": "Establish a dedicated portal session from a one-time-issued portal token.",
+        "operationId": "post_portal_auth",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/portal/me": {
+      "get": {
+        "tags": [
+          "Self-service portal"
+        ],
+        "summary": "Read the authenticated client profile and subscription status.",
+        "operationId": "get_portal_me",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/portal/devices": {
+      "get": {
+        "tags": [
+          "Self-service portal"
+        ],
+        "summary": "List devices owned by the authenticated client.",
+        "operationId": "get_portal_devices",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/portal/devices/{id}": {
+      "put": {
+        "tags": [
+          "Self-service portal"
+        ],
+        "summary": "Rename an owned device.",
+        "operationId": "put_portal_devices_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Self-service portal"
+        ],
+        "summary": "Revoke an owned device.",
+        "operationId": "delete_portal_devices_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/portal/hosts": {
+      "get": {
+        "tags": [
+          "Self-service portal"
+        ],
+        "summary": "List sanitized visible connection hosts.",
+        "operationId": "get_portal_hosts",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/portal/traffic": {
+      "get": {
+        "tags": [
+          "Self-service portal"
+        ],
+        "summary": "Read own traffic, quota, and expiry status.",
+        "operationId": "get_portal_traffic",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/portal/access/rotate": {
+      "post": {
+        "tags": [
+          "Self-service portal"
+        ],
+        "summary": "Rotate own portal access and invalidate existing sessions.",
+        "operationId": "post_portal_access_rotate",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/portal/access/revoke": {
+      "post": {
+        "tags": [
+          "Self-service portal"
+        ],
+        "summary": "Revoke own portal access and invalidate existing sessions.",
+        "operationId": "post_portal_access_revoke",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/portal/credentials": {
+      "get": {
+        "tags": [
+          "Self-service portal"
+        ],
+        "summary": "Admin-only portal credential inventory.",
+        "operationId": "get_panel_api_portal_credentials",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/CredentialView"
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": [
+                    {
+                      "clientId": 0,
+                      "createdAt": 0,
+                      "enabled": false,
+                      "expiresAt": 0,
+                      "id": 0,
+                      "lastUsed": 0
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Self-service portal"
+        ],
+        "summary": "Admin-only one-time portal token issuance.",
+        "operationId": "post_panel_api_portal_credentials",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "$ref": "#/components/schemas/IssuedToken"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": {
+                    "clientId": 0,
+                    "createdAt": 0,
+                    "enabled": false,
+                    "expiresAt": 0,
+                    "id": 0,
+                    "lastUsed": 0,
+                    "token": ""
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/portal/host-grants": {
+      "get": {
+        "tags": [
+          "Self-service portal"
+        ],
+        "summary": "Admin-only host visibility grant inventory.",
+        "operationId": "get_panel_api_portal_host_grants",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/HostGrant"
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": [
+                    {
+                      "createdAt": "2025-01-01T00:00:00Z",
+                      "enabled": false,
+                      "hostId": 0,
+                      "id": 0,
+                      "subjectId": 0,
+                      "subjectType": "",
+                      "updatedAt": "2025-01-01T00:00:00Z"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Self-service portal"
+        ],
+        "summary": "Admin-only positive host visibility grant.",
+        "operationId": "post_panel_api_portal_host_grants",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HostGrant"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "$ref": "#/components/schemas/HostGrant"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": {
+                    "createdAt": "2025-01-01T00:00:00Z",
+                    "enabled": false,
+                    "hostId": 0,
+                    "id": 0,
+                    "subjectId": 0,
+                    "subjectType": "",
+                    "updatedAt": "2025-01-01T00:00:00Z"
                   }
                 }
               }

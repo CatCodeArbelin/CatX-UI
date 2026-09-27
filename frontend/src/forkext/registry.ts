@@ -8,6 +8,14 @@ export interface ForkNavigationItem {
 
 export const forkRoutes: readonly RouteObject[] = [
   {
+    path: '/portal-access',
+    lazy: async () => ({ Component: (await import('../pages/portal/PortalAdminPage')).default }),
+  },
+  {
+    path: '/fleet',
+    lazy: async () => ({ Component: (await import('../pages/fleet/FleetPage')).default }),
+  },
+  {
     path: '/activity',
     lazy: async () => ({ Component: (await import('../pages/activity/ActivityPage')).default }),
   },
@@ -25,6 +33,8 @@ export const forkRoutes: readonly RouteObject[] = [
   },
 ];
 export const forkNavigationItems: readonly ForkNavigationItem[] = [
+  { key: 'portal-access', label: 'Portal access', path: '/portal-access' },
+  { key: 'fleet', label: 'Fleet', path: '/fleet' },
   { key: 'client-activity', label: 'Client activity', path: '/activity' },
   { key: 'policy-engine', label: 'Policy engine', path: '/policies' },
   { key: 'audit', label: 'Audit', path: '/audit' },
@@ -166,6 +176,26 @@ export const forkApiSections = [
         path: '/panel/api/fork/metrics',
         summary: 'Prometheus metrics with fixed bounded labels.',
       },
+    ],
+  },
+  {
+    id: 'self-service-portal',
+    title: 'Self-service portal',
+    description: 'Dedicated client portal sessions with metadata-only self-service access.',
+    endpoints: [
+      { method: 'POST', path: '/portal/auth', summary: 'Establish a dedicated portal session from a one-time-issued portal token.' },
+      { method: 'GET', path: '/portal/me', summary: 'Read the authenticated client profile and subscription status.' },
+      { method: 'GET', path: '/portal/devices', summary: 'List devices owned by the authenticated client.' },
+      { method: 'PUT', path: '/portal/devices/:id', summary: 'Rename an owned device.' },
+      { method: 'DELETE', path: '/portal/devices/:id', summary: 'Revoke an owned device.' },
+      { method: 'GET', path: '/portal/hosts', summary: 'List sanitized visible connection hosts.' },
+      { method: 'GET', path: '/portal/traffic', summary: 'Read own traffic, quota, and expiry status.' },
+      { method: 'POST', path: '/portal/access/rotate', summary: 'Rotate own portal access and invalidate existing sessions.' },
+      { method: 'POST', path: '/portal/access/revoke', summary: 'Revoke own portal access and invalidate existing sessions.' },
+      { method: 'GET', path: '/panel/api/portal/credentials', summary: 'Admin-only portal credential inventory.', responseSchema: 'CredentialView', responseSchemaArray: true },
+      { method: 'POST', path: '/panel/api/portal/credentials', summary: 'Admin-only one-time portal token issuance.', requestSchema: { type: 'object' }, responseSchema: 'IssuedToken' },
+      { method: 'GET', path: '/panel/api/portal/host-grants', summary: 'Admin-only host visibility grant inventory.', responseSchema: 'HostGrant', responseSchemaArray: true },
+      { method: 'POST', path: '/panel/api/portal/host-grants', summary: 'Admin-only positive host visibility grant.', requestSchema: { $ref: '#/components/schemas/HostGrant' }, responseSchema: 'HostGrant' },
     ],
   },
 ] satisfies import('../pages/api-docs/endpoints').Section[];

@@ -537,6 +537,16 @@ export const ClientsSummarySchema = z.object({
 });
 export type ClientsSummary = z.infer<typeof ClientsSummarySchema>;
 
+export const CredentialViewSchema = z.object({
+  clientId: z.number().int(),
+  createdAt: z.number().int(),
+  enabled: z.boolean(),
+  expiresAt: z.number().int(),
+  id: z.number().int(),
+  lastUsed: z.number().int(),
+});
+export type CredentialView = z.infer<typeof CredentialViewSchema>;
+
 export const DeliveryPageSchema = z.object({
   items: z.array(z.lazy(() => WebhookDeliverySchema)),
   next: z.string().optional(),
@@ -660,6 +670,17 @@ export const HostSchema = z.object({
   vlessRoute: z.string(),
 });
 export type Host = z.infer<typeof HostSchema>;
+
+export const HostGrantSchema = z.object({
+  createdAt: z.string(),
+  enabled: z.boolean(),
+  hostId: z.number().int(),
+  id: z.number().int(),
+  subjectId: z.number().int(),
+  subjectType: z.string(),
+  updatedAt: z.string(),
+});
+export type HostGrant = z.infer<typeof HostGrantSchema>;
 
 export const HostGroupSchema = z.object({
   allowInsecure: z.boolean(),
@@ -803,6 +824,17 @@ export const InboundTrafficSummarySchema = z.object({
   up: z.number().int(),
 });
 export type InboundTrafficSummary = z.infer<typeof InboundTrafficSummarySchema>;
+
+export const IssuedTokenSchema = z.object({
+  clientId: z.number().int(),
+  createdAt: z.number().int(),
+  enabled: z.boolean(),
+  expiresAt: z.number().int(),
+  id: z.number().int(),
+  lastUsed: z.number().int(),
+  token: z.string(),
+});
+export type IssuedToken = z.infer<typeof IssuedTokenSchema>;
 
 export const LogEntrySchema = z.object({
   DateTime: z.string(),
@@ -994,6 +1026,11 @@ export const PolicySchema = z.object({
   windowSeconds: z.number().int(),
 });
 export type Policy = z.infer<typeof PolicySchema>;
+
+export const PortalSettingsSchema = z.object({
+  enabled: z.boolean(),
+});
+export type PortalSettings = z.infer<typeof PortalSettingsSchema>;
 
 export const ProbeResultUISchema = z.object({
   cpuPct: z.number(),
