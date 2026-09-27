@@ -40,10 +40,10 @@ func loadMasterKey() ([]byte, error) {
 	if _, err := io.ReadFull(rand.Reader, key); err != nil {
 		return nil, fmt.Errorf("generate audit master key: %w", err)
 	}
-	if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
+	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
 		return nil, fmt.Errorf("create audit key directory: %w", err)
 	}
-	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0600)
+	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600)
 	if errors.Is(err, os.ErrExist) {
 		return loadMasterKey()
 	}
