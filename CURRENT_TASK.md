@@ -2,84 +2,64 @@
 
 ## Work Package
 
-`WP-8A — Audit / Webhooks / Metrics`
+`WP-8B — Self-service / Host Visibility / Fleet UI`
 
 ## Status
 
-WP-7A is DONE, merged into `develop`, and its feature branch was deleted after
-the canonical CI runs reported green. Do not modify `main` or preview/demo data.
+WP-8A is DONE: merged into `develop` at `0a6dab0f`, pushed, and its feature
+branch was deleted after Fork verification `36347039861` and Release CatX-UI
+`36347039863` reported green. Do not modify `main` or preview/demo data.
 
-The WP-8A readiness review is approved. WP-8A is authorized for full
-implementation on this feature branch. Do not merge WP-8A or start WP-8B.
+WP-8B is active on this feature branch. This phase is implementation-readiness
+only. Do not implement production code until the readiness decision is accepted.
 
-## Fixed decisions
+## Readiness decisions
 
-- Durable audit storage is authoritative. The existing event bus is
-  notification/wake-up only and is never durable audit storage.
-- Do not create a second event system.
-- Use authoritative controller/service transaction boundaries. If an action
-  already has a DB transaction, write the audit row and webhook outbox in it;
-  otherwise write a success audit only after the authoritative action succeeds.
-- Generate an internal UUID request ID server-side. Never trust an incoming
-  request ID as identity.
-- Webhook v1 destinations are public HTTPS only. Reject loopback, private,
-  link-local, multicast, and other non-public destinations at configuration and
-  after DNS resolution on every delivery. Do not follow redirects.
-- Webhooks are at-least-once with stable event/delivery IDs, HMAC-SHA256,
-  bounded timeout, exponential backoff, leases, crash recovery, and dead
-  letters.
-- Encrypt webhook secrets at rest with AES-GCM. Reuse an existing cryptographic
-  installation key only when one actually exists; otherwise use a fork-owned
-  random master-key file outside the DB with 0600 permissions. Never expose a
-  secret after creation.
-- Add official `prometheus/client_golang` support. Metrics use fixed bounded
-  labels only; never email, IP, domain, request/session ID, URL, or arbitrary
-  node/client IDs.
-- Default retention: audit events 180 days, successful webhook deliveries 30
-  days, dead letters 90 days.
-- Database-level backup/restore includes WP-8A tables. Normal config/export
-  APIs exclude audit history and webhook secret material.
-- Feature-disabled behavior is an exact or near-exact no-op.
-
-## Authorized implementation scope
-
-Implement end-to-end:
-
-1. Fork-owned audit persistence, sanitizer/allowlist, and request correlation.
-2. Audit authoritative privileged mutations and security/destructive actions.
-3. Durable webhook endpoints, transactional outbox, worker, retries, dead
-   letters, and manual replay.
-4. SSRF, DNS-rebinding, redirect, size, and timeout protections.
-5. Prometheus endpoint and bounded metrics.
-6. Protected audit/webhook APIs.
-7. Audit and Webhooks UI with masked secrets, filters, pagination, detail, and
-   dead-letter/replay views.
-8. Retention and deletion.
-9. OpenAPI/generated types/i18n.
-10. SQLite/PostgreSQL migrations.
-11. API-token/node-sync/monitor route authorization updates.
-12. Transaction, replay, concurrency, race, redaction, SSRF, signing,
-    crash-recovery, metrics-cardinality, API/UI, and feature-disabled tests.
-
-Do not persist passwords, tokens, cookies, Authorization headers, bodies,
-decrypted content, arbitrary request payloads, or webhook response bodies.
+- Add a fork-owned self-service authentication/session boundary that resolves to
+  existing normalized client identity; do not create a second client, device,
+  host, group, node, or runtime model.
+- Keep self-service routes and DTOs separate from admin routes and responses.
+  Enforce client ownership and group visibility server-side on every request;
+  UI filtering is never authorization.
+- Reuse `ClientRecord`, `ClientHwid`, `ClientGroup`, `ClientInbound`, `Host`,
+  `Node`, node traffic/IP observations, and local/remote runtime status through
+  narrow read/write services and adapters.
+- Default visibility is the authenticated client's own profile, assigned
+  devices/HWIDs, assigned inbounds/hosts, safe traffic counters, and
+  capability-filtered connection status. Group/fleet visibility is explicit,
+  administrator-granted, and metadata-minimized.
+- Self-service mutations are limited to safe profile/device actions approved by
+  the product contract. Credential/subscription reset, device reset, and other
+  sensitive actions require confirmation, cooldown/rate limits, and WP-8A audit;
+  no node control, inbound policy changes, host CRUD, group membership changes,
+  runtime commands, or admin settings.
+- Host visibility is an allowlisted projection from existing host/inbound/node
+  associations. Never expose admin-only host fields, node credentials, private
+  addresses, raw runtime configuration, or unrelated client data.
+- Fleet UI extends the existing admin dashboard with capability-aware local and
+  remote node cards, sync freshness, health, traffic, and client/group rollups.
+  It uses existing runtime synchronization and must show stale/unknown state
+  rather than inventing online truth.
+- Tokens/sessions are opaque, revocable, short-lived where practical, scoped,
+  hashed at rest, protected against fixation/replay, and never placed in URLs or
+  logged. Apply CSRF/origin protections appropriate to the chosen transport,
+  bounded login/device-reset attempts, and per-account/IP rate limits.
+- Persisted schema changes are not presumed. Prefer existing models and a
+  fork-owned namespaced settings/token/session store only if an actual gap is
+  proven; any migration must cover SQLite, PostgreSQL, indexes, retention, and
+  rollback.
+- Use existing OpenAPI generation, frontend generated types, upstream i18n,
+  and the WP-8A audit registration hook. Feature-off behavior remains upstream
+  compatible.
 
 ## Required workflow
 
-- Use focused commits and keep the working tree clean.
-- Run relevant tests after each implementation stage.
-- Run `make verify` and `make verify-fork`.
-- Push the feature branch and run canonical CI.
-- Inspect exact failures and fix genuine defects until Fork verification and
-  Release CatX-UI are green.
-- Perform a final WP-8A scope and security audit.
-- Do not merge WP-8A, start WP-8B, modify `main`, or touch preview/demo data.
-
-## Required final report
-
-Report final SHA, commits, schema, audited action coverage, webhook
-security/delivery model, secret storage, metrics, retention/backup behavior,
-API/UI, tests, both CI run IDs, remaining limitations, and clean-tree state.
+- Keep the working tree clean and use focused commits.
+- Before implementation, document exact integration points, upstream-touch
+  budget, threat model, API/UI contracts, and migration necessity.
+- Implement only after readiness is accepted, then run relevant tests,
+  `make verify`, `make verify-fork`, and the full security/concurrency matrix.
+- Do not merge into `main`.
 
 ## Authorized documents
 
@@ -90,12 +70,7 @@ API/UI, tests, both CI run IDs, remaining limitations, and clean-tree state.
 - `docs/15_DEFINITION_OF_DONE.md`
 - `docs/19_REPOSITORY_MAP.md`
 
-## Authorized skills
-
-- `skills/feature-implementer/SKILL.md`
-- `skills/security-privacy-review/SKILL.md`
-
 ## Stop condition
 
-Stop on the fully green, pushed WP-8A feature branch after the final scope and
-security audit. Do not merge WP-8A or begin WP-8B.
+Stop after the WP-8B readiness review and report whether Luna Medium can safely
+implement it. Do not implement production code in this readiness phase.
