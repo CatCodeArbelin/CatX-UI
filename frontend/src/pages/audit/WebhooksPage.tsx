@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Alert, Button, Card, Form, Input, Modal, Space, Table, Tag, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { HttpUtil } from '@/utils';
@@ -20,7 +20,7 @@ export default function WebhooksPage() {
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
   const [error, setError] = useState('');
   const [form] = Form.useForm();
-  const load = async () => {
+  const load = useCallback(async () => {
     const [endpointResult, deliveryResult] = await Promise.all([
       HttpUtil.get<Endpoint[]>('/panel/api/fork/audit/webhooks', undefined, { silent: true }),
       HttpUtil.get<{ items: Delivery[] }>(
@@ -37,10 +37,11 @@ export default function WebhooksPage() {
           deliveryResult.msg ||
           t('fork.webhooks.error', 'Webhook data could not be loaded.'),
       );
-  };
+  }, [t]);
   useEffect(() => {
-    void load();
-  }, []);
+    const timer = window.setTimeout(() => void load(), 0);
+    return () => window.clearTimeout(timer);
+  }, [load]);
   const create = async (value: {
     name: string;
     url: string;
