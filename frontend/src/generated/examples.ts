@@ -526,6 +526,18 @@ export const EXAMPLES: Record<string, unknown> = {
     "onlineCount": 1,
     "total": 2000
   },
+  "Event": {
+    "acknowledgedAt": 0,
+    "clientEmail": "",
+    "confidence": 0,
+    "evidence": "",
+    "id": 0,
+    "kind": "",
+    "observedAt": 0,
+    "scoreContribution": 0,
+    "sourceNode": "",
+    "state": ""
+  },
   "FallbackParentInfo": {
     "masterId": 0,
     "path": ""
@@ -684,6 +696,20 @@ export const EXAMPLES: Record<string, unknown> = {
     "limit": 2,
     "registered": 1,
     "remaining": 1
+  },
+  "IPHistory": {
+    "asn": 0,
+    "clientEmail": "",
+    "country": "",
+    "id": 0,
+    "ingestedAt": 0,
+    "ip": "",
+    "metadataConfidence": 0,
+    "metadataSource": "",
+    "metadataState": "",
+    "nodeGuid": "",
+    "observedAt": 0,
+    "source": ""
   },
   "Inbound": {
     "clientStats": [
@@ -987,6 +1013,20 @@ export const EXAMPLES: Record<string, unknown> = {
     "tlsVersion": "1.3",
     "x25519": true
   },
+  "RetentionSettings": {
+    "eventDays": 0,
+    "ipDays": 0
+  },
+  "Score": {
+    "calculatedAt": 0,
+    "clientEmail": "",
+    "confidence": 0,
+    "evidence": 0,
+    "id": 0,
+    "score": 0,
+    "state": "",
+    "version": 0
+  },
   "ServerSettings": {
     "contentPaddingAddition": "",
     "disableCookies": false,
@@ -1055,6 +1095,53 @@ export const EXAMPLES: Record<string, unknown> = {
     "sortOrder": 1,
     "strategy": "random",
     "updatedAt": 1710000000000
+  },
+  "Summary": {
+    "calculatedAt": 0,
+    "clientEmail": "",
+    "confidence": 0,
+    "enabled": false,
+    "events": [
+      {
+        "acknowledgedAt": 0,
+        "clientEmail": "",
+        "confidence": 0,
+        "evidence": "",
+        "id": 0,
+        "kind": "",
+        "observedAt": 0,
+        "scoreContribution": 0,
+        "sourceNode": "",
+        "state": ""
+      }
+    ],
+    "evidence": 0,
+    "ipHistory": [
+      {
+        "asn": 0,
+        "clientEmail": "",
+        "country": "",
+        "id": 0,
+        "ingestedAt": 0,
+        "ip": "",
+        "metadataConfidence": 0,
+        "metadataSource": "",
+        "metadataState": "",
+        "nodeGuid": "",
+        "observedAt": 0,
+        "source": ""
+      }
+    ],
+    "score": 0,
+    "state": ""
+  },
+  "Suppression": {
+    "clientEmail": "",
+    "createdAt": 0,
+    "expiresAt": 0,
+    "id": 0,
+    "kind": "",
+    "reason": ""
   },
   "Traffic": {
     "Down": 2097152,

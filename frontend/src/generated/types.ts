@@ -482,6 +482,19 @@ export interface ClientsSummary {
   total: number;
 }
 
+export interface Event {
+  acknowledgedAt?: number;
+  clientEmail: string;
+  confidence: number;
+  evidence: string;
+  id: number;
+  kind: string;
+  observedAt: number;
+  scoreContribution: number;
+  sourceNode?: string;
+  state: string;
+}
+
 export interface FallbackParentInfo {
   masterId: number;
   path?: string;
@@ -610,6 +623,21 @@ export interface HwidSlotStatus {
   limit: number;
   registered: number;
   remaining: number;
+}
+
+export interface IPHistory {
+  asn?: number;
+  clientEmail: string;
+  country?: string;
+  id: number;
+  ingestedAt: number;
+  ip: string;
+  metadataConfidence: number;
+  metadataSource?: string;
+  metadataState: string;
+  nodeGuid?: string;
+  observedAt: number;
+  source: string;
 }
 
 export interface Inbound {
@@ -906,6 +934,22 @@ export interface RealityScanResult {
   x25519: boolean;
 }
 
+export interface RetentionSettings {
+  eventDays: number;
+  ipDays: number;
+}
+
+export interface Score {
+  calculatedAt: number;
+  clientEmail: string;
+  confidence: number;
+  evidence: number;
+  id: number;
+  score: number;
+  state: string;
+  version: number;
+}
+
 export interface ServerSettings {
   contentPaddingAddition?: string;
   disableCookies: boolean;
@@ -974,6 +1018,27 @@ export interface SubBalancer {
   sortOrder: number;
   strategy: string;
   updatedAt: number;
+}
+
+export interface Summary {
+  calculatedAt: number;
+  clientEmail: string;
+  confidence: number;
+  enabled: boolean;
+  events: Event[];
+  evidence: number;
+  ipHistory: IPHistory[];
+  score: number;
+  state: string;
+}
+
+export interface Suppression {
+  clientEmail: string;
+  createdAt: number;
+  expiresAt: number;
+  id: number;
+  kind: string;
+  reason?: string;
 }
 
 export interface Traffic {

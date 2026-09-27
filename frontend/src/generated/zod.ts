@@ -509,6 +509,20 @@ export const ClientsSummarySchema = z.object({
 });
 export type ClientsSummary = z.infer<typeof ClientsSummarySchema>;
 
+export const EventSchema = z.object({
+  acknowledgedAt: z.number().int().optional(),
+  clientEmail: z.string(),
+  confidence: z.number(),
+  evidence: z.string(),
+  id: z.number().int(),
+  kind: z.string(),
+  observedAt: z.number().int(),
+  scoreContribution: z.number().int(),
+  sourceNode: z.string().optional(),
+  state: z.string(),
+});
+export type Event = z.infer<typeof EventSchema>;
+
 export const FallbackParentInfoSchema = z.object({
   masterId: z.number().int(),
   path: z.string().optional(),
@@ -650,6 +664,22 @@ export const HwidSlotStatusSchema = z.object({
   remaining: z.number().int(),
 });
 export type HwidSlotStatus = z.infer<typeof HwidSlotStatusSchema>;
+
+export const IPHistorySchema = z.object({
+  asn: z.number().int().optional(),
+  clientEmail: z.string(),
+  country: z.string().optional(),
+  id: z.number().int(),
+  ingestedAt: z.number().int(),
+  ip: z.string(),
+  metadataConfidence: z.number(),
+  metadataSource: z.string().optional(),
+  metadataState: z.string(),
+  nodeGuid: z.string().optional(),
+  observedAt: z.number().int(),
+  source: z.string(),
+});
+export type IPHistory = z.infer<typeof IPHistorySchema>;
 
 export const InboundSchema = z.object({
   clientStats: z.array(z.lazy(() => ClientTrafficSchema)),
@@ -964,6 +994,24 @@ export const RealityScanResultSchema = z.object({
 });
 export type RealityScanResult = z.infer<typeof RealityScanResultSchema>;
 
+export const RetentionSettingsSchema = z.object({
+  eventDays: z.number().int(),
+  ipDays: z.number().int(),
+});
+export type RetentionSettings = z.infer<typeof RetentionSettingsSchema>;
+
+export const ScoreSchema = z.object({
+  calculatedAt: z.number().int(),
+  clientEmail: z.string(),
+  confidence: z.number(),
+  evidence: z.number().int(),
+  id: z.number().int(),
+  score: z.number().int(),
+  state: z.string(),
+  version: z.number().int(),
+});
+export type Score = z.infer<typeof ScoreSchema>;
+
 export const ServerSettingsSchema = z.object({
   contentPaddingAddition: z.string().optional(),
   disableCookies: z.boolean(),
@@ -1037,6 +1085,29 @@ export const SubBalancerSchema = z.object({
   updatedAt: z.number().int(),
 });
 export type SubBalancer = z.infer<typeof SubBalancerSchema>;
+
+export const SummarySchema = z.object({
+  calculatedAt: z.number().int(),
+  clientEmail: z.string(),
+  confidence: z.number(),
+  enabled: z.boolean(),
+  events: z.array(z.lazy(() => EventSchema)),
+  evidence: z.number().int(),
+  ipHistory: z.array(z.lazy(() => IPHistorySchema)),
+  score: z.number().int(),
+  state: z.string(),
+});
+export type Summary = z.infer<typeof SummarySchema>;
+
+export const SuppressionSchema = z.object({
+  clientEmail: z.string(),
+  createdAt: z.number().int(),
+  expiresAt: z.number().int(),
+  id: z.number().int(),
+  kind: z.string(),
+  reason: z.string().optional(),
+});
+export type Suppression = z.infer<typeof SuppressionSchema>;
 
 export const TrafficSchema = z.object({
   Down: z.number().int(),
