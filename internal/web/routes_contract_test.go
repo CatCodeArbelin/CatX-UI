@@ -53,10 +53,10 @@ func registeredContractRoutes(t *testing.T) map[string]bool {
 	// disabled. Exercise the documented fork surface in its enabled state so
 	// this contract test does not mistake the feature-off no-op for stale API
 	// documentation.
-	if err := forkext.NewSettings(database.Load()).Set(forkext.FlagAudit, true); err != nil {
+	if err := forkext.NewSettings(database.GetDB()).Set(forkext.FlagAudit, true); err != nil {
 		t.Fatalf("enable audit for route contract: %v", err)
 	}
-	audit.Configure(database.Load(), true)
+	audit.Configure(database.GetDB(), true)
 	t.Cleanup(func() { audit.Configure(nil, false) })
 
 	previous := global.GetWebServer()
