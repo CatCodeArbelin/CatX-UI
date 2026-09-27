@@ -2,6 +2,7 @@ package controller
 
 import (
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
@@ -42,6 +43,7 @@ func (a *APIController) checkAPIAuth(c *gin.Context) {
 	if c.Request.TLS != nil && len(c.Request.TLS.VerifiedChains) > 0 {
 		if u, err := a.userService.GetFirstUser(); err == nil {
 			session.SetAPIAuthUser(c, u)
+			setAuditActor(c, u.Id, u.Username, "mtls")
 		}
 		c.Set("api_authed", true)
 		c.Set("api_token_scope", model.ApiScopeNodeSync)
@@ -54,9 +56,11 @@ func (a *APIController) checkAPIAuth(c *gin.Context) {
 		if row, ok := a.apiTokenService.MatchToken(tok); ok {
 			if u, err := a.userService.GetFirstUser(); err == nil {
 				session.SetAPIAuthUser(c, u)
+				setAuditActor(c, u.Id, u.Username, "api-token")
 			}
 			c.Set("api_authed", true)
 			c.Set("api_token_scope", row.Scope)
+			c.Set("catx_token_id", strconv.Itoa(row.Id))
 			c.Next()
 			return
 		}
@@ -73,12 +77,24 @@ func (a *APIController) checkAPIAuth(c *gin.Context) {
 		}
 		return
 	}
+	if user := session.GetLoginUser(c); user != nil {
+		c.Set("catx_actor_id", strconv.Itoa(user.Id))
+		c.Set("catx_actor_name", user.Username)
+		c.Set("catx_auth_method", "session")
+	}
 	c.Next()
+}
+
+func setAuditActor(c *gin.Context, id int, name, method string) {
+	c.Set("catx_actor_id", strconv.Itoa(id))
+	c.Set("catx_actor_name", name)
+	c.Set("catx_auth_method", method)
 }
 
 // monitorScopeAllow exposes only status/metrics routes without sensitive data.
 // Keys are route patterns relative to /panel/api.
 var monitorScopeAllow = map[string]struct{}{
+	"/fork/metrics":                               {},
 	"/server/status":                              {},
 	"/server/cpuHistory/:bucket":                  {},
 	"/server/history/:metric/:bucket":             {},
@@ -181,6 +197,7 @@ func (a *APIController) initRouter(g *gin.RouterGroup) {
 	// advertise support, before CSRF/handlers read the body.
 	api.Use(middleware.ConfigEnvelopeMiddleware())
 	api.Use(middleware.CSRFMiddleware())
+	forkext.RegisterMiddleware(api)
 
 	api.GET("/openapi.json", ServeOpenAPISpec)
 

@@ -5,6 +5,7 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/mhsanaei/3x-ui/v3/internal/forkext"
 	"github.com/mhsanaei/3x-ui/v3/internal/logger"
 	"github.com/mhsanaei/3x-ui/v3/internal/web/middleware"
 	"github.com/mhsanaei/3x-ui/v3/internal/web/service"
@@ -88,6 +89,7 @@ func (a *IndexController) login(c *gin.Context) {
 			Status:   tgbot.LoginFail,
 			Reason:   reason,
 		})
+		_ = forkext.RecordLogin(c.Request.Context(), form.Username, remoteIP, "failure", reason, 0)
 		pureJsonMsg(c, http.StatusOK, false, I18nWeb(c, "pages.login.toasts.wrongUsernameOrPassword"))
 		return
 	}
@@ -108,6 +110,7 @@ func (a *IndexController) login(c *gin.Context) {
 			Status:   tgbot.LoginFail,
 			Reason:   reason,
 		})
+		_ = forkext.RecordLogin(c.Request.Context(), form.Username, remoteIP, "failure", reason, 0)
 		pureJsonMsg(c, http.StatusOK, false, I18nWeb(c, "pages.login.toasts.wrongUsernameOrPassword"))
 		return
 	}
@@ -120,6 +123,7 @@ func (a *IndexController) login(c *gin.Context) {
 		Time:     timeStr,
 		Status:   tgbot.LoginSuccess,
 	})
+	_ = forkext.RecordLogin(c.Request.Context(), form.Username, remoteIP, "success", "", user.Id)
 
 	if err := session.SetLoginUser(c, user); err != nil {
 		logger.Warning("Unable to save session:", err)
@@ -140,6 +144,7 @@ func (a *IndexController) logout(c *gin.Context) {
 	user := session.GetLoginUser(c)
 	if user != nil {
 		logger.Infof("logged out successfully: username=%q", user.Username)
+		_ = forkext.RecordLogin(c.Request.Context(), user.Username, getRemoteIp(c), "success", "logout", user.Id)
 	}
 	if err := session.ClearSession(c); err != nil {
 		logger.Warning("Unable to clear session on logout:", err)

@@ -2,77 +2,84 @@
 
 ## Work Package
 
-`WP-7A — Risk Intelligence`
+`WP-8A — Audit / Webhooks / Metrics`
 
 ## Status
 
-WP-6B is DONE and merged into `develop`. Its generic Xray-user to
-kernel-attribution limitation remains documented and deferred. Do not modify
-`main`, reopen WP-6B, or touch preview/demo data.
+WP-7A is DONE, merged into `develop`, and its feature branch was deleted after
+the canonical CI runs reported green. Do not modify `main` or preview/demo data.
 
-WP-7A readiness review is approved. WP-7A is authorized for full
-implementation on this feature branch. Do not start WP-8A.
+The WP-8A readiness review is approved. WP-8A is authorized for full
+implementation on this feature branch. Do not merge WP-8A or start WP-8B.
 
 ## Fixed decisions
 
-- Extend the existing `CheckClientIpJob` / node IP attribution write path with
-  durable fork-owned IP history. Do not create another collector.
-- Reuse existing analytics sessions, DNS observations, destination evidence,
-  node attribution, clients/groups, and `analytics.IPMetadataProvider`.
-- ASN/country enrichment is optional. Missing or stale provider data must
-  produce unknown/degraded confidence, never guessed values.
-- Do not implement geographic impossible-travel speed without reliable
-  coordinates. Use only defensible overlapping session/country/ASN divergence
-  signals.
-- Risk is informational only: no automatic ban, disable, throttle, or routing
-  mutation.
-- Scores are 0–100 with separately exposed confidence and evidence.
-- A single IP change, VPN/mobile/CGNAT/datacenter/Tor classification, new ASN,
-  or DNS anomaly alone must not create a high-risk conclusion.
-- Durable IP history defaults to 30 days; risk events default to 90 days.
-  Both are configurable and independently deletable.
-- The event bus may notify but is not durable storage.
+- Durable audit storage is authoritative. The existing event bus is
+  notification/wake-up only and is never durable audit storage.
+- Do not create a second event system.
+- Use authoritative controller/service transaction boundaries. If an action
+  already has a DB transaction, write the audit row and webhook outbox in it;
+  otherwise write a success audit only after the authoritative action succeeds.
+- Generate an internal UUID request ID server-side. Never trust an incoming
+  request ID as identity.
+- Webhook v1 destinations are public HTTPS only. Reject loopback, private,
+  link-local, multicast, and other non-public destinations at configuration and
+  after DNS resolution on every delivery. Do not follow redirects.
+- Webhooks are at-least-once with stable event/delivery IDs, HMAC-SHA256,
+  bounded timeout, exponential backoff, leases, crash recovery, and dead
+  letters.
+- Encrypt webhook secrets at rest with AES-GCM. Reuse an existing cryptographic
+  installation key only when one actually exists; otherwise use a fork-owned
+  random master-key file outside the DB with 0600 permissions. Never expose a
+  secret after creation.
+- Add official `prometheus/client_golang` support. Metrics use fixed bounded
+  labels only; never email, IP, domain, request/session ID, URL, or arbitrary
+  node/client IDs.
+- Default retention: audit events 180 days, successful webhook deliveries 30
+  days, dead letters 90 days.
+- Database-level backup/restore includes WP-8A tables. Normal config/export
+  APIs exclude audit history and webhook secret material.
+- Feature-disabled behavior is an exact or near-exact no-op.
 
 ## Authorized implementation scope
 
 Implement end-to-end:
 
-- fork-owned IP history, risk event, risk score, and suppression/
-  acknowledgement persistence;
-- deterministic dedupe and replay-safe ingestion;
-- simultaneous multi-IP/node/country session heuristics;
-- repeated ASN/country divergence;
-- source-IP churn correlated with active sessions;
-- bounded DNS anomaly heuristics using existing DNS data;
-- confidence, decay, stale/degraded, and insufficient-evidence states;
-- client risk summary/timeline APIs;
-- acknowledgement/suppression APIs with expiry;
-- client Risk Intelligence UI with evidence and source-node attribution;
-- retention/deletion;
-- OpenAPI, generated types, and i18n;
-- remote-node delay/restart/clock-skew handling;
-- comprehensive SQLite/PostgreSQL, concurrency, replay, false-positive, API,
-  UI, and feature-disabled tests.
+1. Fork-owned audit persistence, sanitizer/allowlist, and request correlation.
+2. Audit authoritative privileged mutations and security/destructive actions.
+3. Durable webhook endpoints, transactional outbox, worker, retries, dead
+   letters, and manual replay.
+4. SSRF, DNS-rebinding, redirect, size, and timeout protections.
+5. Prometheus endpoint and bounded metrics.
+6. Protected audit/webhook APIs.
+7. Audit and Webhooks UI with masked secrets, filters, pagination, detail, and
+   dead-letter/replay views.
+8. Retention and deletion.
+9. OpenAPI/generated types/i18n.
+10. SQLite/PostgreSQL migrations.
+11. API-token/node-sync/monitor route authorization updates.
+12. Transaction, replay, concurrency, race, redaction, SSRF, signing,
+    crash-recovery, metrics-cardinality, API/UI, and feature-disabled tests.
 
-Keep all heuristics deterministic and explainable. Store metadata only. Do not
-create a second analytics/session/IP collection pipeline. Do not auto-ban
-users. Do not modify `main` or preview/demo data.
+Do not persist passwords, tokens, cookies, Authorization headers, bodies,
+decrypted content, arbitrary request payloads, or webhook response bodies.
 
 ## Required workflow
 
 - Use focused commits and keep the working tree clean.
-- Inspect exact test failures and fix genuine defects only.
 - Run relevant tests after each implementation stage.
 - Run `make verify` and `make verify-fork`.
 - Push the feature branch and run canonical CI.
-- Do not merge WP-7A or start WP-8A.
-- Finish with a final WP-7A scope audit.
+- Inspect exact failures and fix genuine defects until Fork verification and
+  Release CatX-UI are green.
+- Perform a final WP-8A scope and security audit.
+- Do not merge WP-8A, start WP-8B, modify `main`, or touch preview/demo data.
 
 ## Required final report
 
-Report commits, schema, ingestion hook, heuristics, confidence/scoring model,
-retention/privacy, API/UI, tests, CI run IDs, remaining limitations, and tree
-state.
+Report final SHA, commits, schema, audited action coverage, webhook
+security/delivery model, secret storage, metrics, retention/backup behavior,
+API/UI, tests, both CI run IDs, remaining limitations, and clean-tree state.
 
 ## Authorized documents
 
@@ -88,25 +95,7 @@ state.
 - `skills/feature-implementer/SKILL.md`
 - `skills/security-privacy-review/SKILL.md`
 
-## Hard constraints
-
-- reuse existing analytics/session/DNS/IP data and event/lifecycle hooks;
-- the existing `CheckClientIpJob` / node attribution path is the sole IP
-  ingestion boundary;
-- no parallel collector, duplicate counters, or second node subsystem;
-- no TLS MITM or decrypted payload/body/cookie/credential storage;
-- no IP-only account-sharing proof;
-- no automatic bans, disables, throttles, or routing changes;
-- every persisted change requires explicit SQLite/PostgreSQL migration, index
-  review, retention review, and deletion behavior;
-- remote data must be source-labelled, deduplicated, replay-safe, and tolerant
-  of clock skew, delay, restart, and partial loss;
-- event bus notifications are best-effort only and never the event ledger;
-- feature-disabled behavior remains as close as possible to upstream;
-- generic Xray-user kernel attribution remains unsupported/deferred;
-- keep the tree clean and do not modify `main`.
-
 ## Stop condition
 
-Stop on the fully green, pushed feature branch after the final scope audit.
-Do not merge WP-7A or begin WP-8A.
+Stop on the fully green, pushed WP-8A feature branch after the final scope and
+security audit. Do not merge WP-8A or begin WP-8B.

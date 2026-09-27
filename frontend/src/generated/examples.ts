@@ -344,6 +344,30 @@ export const EXAMPLES: Record<string, unknown> = {
     "scope": "admin",
     "token": "new-token-string"
   },
+  "AuditEvent": {
+    "actorId": "",
+    "actorName": "",
+    "actorType": "",
+    "authMethod": "",
+    "createdAt": "2025-01-01T00:00:00Z",
+    "eventType": "",
+    "id": "",
+    "metadata": "",
+    "nodeId": "",
+    "nodeScope": "",
+    "outcome": "",
+    "requestId": "",
+    "sourceIp": "",
+    "statusCode": 0,
+    "targetRef": "",
+    "targetType": "",
+    "tokenId": ""
+  },
+  "AuditRetentionSettings": {
+    "auditDays": 0,
+    "deadLetterDays": 0,
+    "deliveryDays": 0
+  },
   "Client": {
     "adTag": "0123456789abcdef0123456789abcdef",
     "allowedIPs": [
@@ -526,6 +550,22 @@ export const EXAMPLES: Record<string, unknown> = {
     "onlineCount": 1,
     "total": 2000
   },
+  "DeliveryPage": {
+    "items": [
+      {
+        "attempt": 0,
+        "createdAt": "2025-01-01T00:00:00Z",
+        "deliveredAt": null,
+        "endpointId": "",
+        "eventId": "",
+        "id": "",
+        "lastError": "",
+        "nextAttemptAt": "2025-01-01T00:00:00Z",
+        "status": ""
+      }
+    ],
+    "next": ""
+  },
   "Event": {
     "acknowledgedAt": 0,
     "clientEmail": "",
@@ -537,6 +577,30 @@ export const EXAMPLES: Record<string, unknown> = {
     "scoreContribution": 0,
     "sourceNode": "",
     "state": ""
+  },
+  "EventPage": {
+    "items": [
+      {
+        "actorId": "",
+        "actorName": "",
+        "actorType": "",
+        "authMethod": "",
+        "createdAt": "2025-01-01T00:00:00Z",
+        "eventType": "",
+        "id": "",
+        "metadata": "",
+        "nodeId": "",
+        "nodeScope": "",
+        "outcome": "",
+        "requestId": "",
+        "sourceIp": "",
+        "statusCode": 0,
+        "targetRef": "",
+        "targetType": "",
+        "tokenId": ""
+      }
+    ],
+    "next": ""
   },
   "FallbackParentInfo": {
     "masterId": 0,
@@ -1013,6 +1077,11 @@ export const EXAMPLES: Record<string, unknown> = {
     "tlsVersion": "1.3",
     "x25519": true
   },
+  "RetentionRequest": {
+    "auditDays": 0,
+    "deadLetterDays": 0,
+    "deliveryDays": 0
+  },
   "RetentionSettings": {
     "eventDays": 0,
     "ipDays": 0
@@ -1195,5 +1264,33 @@ export const EXAMPLES: Record<string, unknown> = {
     "windowEnd": 0,
     "windowSeconds": 0,
     "windowStart": 0
+  },
+  "WebhookDelivery": {
+    "attempt": 0,
+    "createdAt": "2025-01-01T00:00:00Z",
+    "deliveredAt": null,
+    "endpointId": "",
+    "eventId": "",
+    "id": "",
+    "lastError": "",
+    "nextAttemptAt": "2025-01-01T00:00:00Z",
+    "status": ""
+  },
+  "WebhookEndpoint": {
+    "createdAt": "2025-01-01T00:00:00Z",
+    "enabled": false,
+    "eventTypes": "",
+    "id": "",
+    "name": "",
+    "updatedAt": "2025-01-01T00:00:00Z",
+    "url": ""
+  },
+  "WebhookEndpointRequest": {
+    "eventTypes": [
+      ""
+    ],
+    "name": "",
+    "secret": "",
+    "url": ""
   }
 };

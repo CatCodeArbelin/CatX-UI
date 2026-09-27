@@ -2571,5 +2571,23 @@
     "restartXray": "Restart Xray Service",
     "restartXraySuccess": "Xray has been successfully relaunched",
     "settings": "Settings"
+  },
+  "fork": {
+    "audit": {
+      "title": "Audit",
+      "summary": "Authoritative metadata-only security and privileged-action history.",
+      "empty": "No audit events",
+      "filter": "Filter",
+      "details": "Details"
+    },
+    "webhooks": {
+      "title": "Webhooks",
+      "summary": "Public HTTPS destinations receive signed, at-least-once audit events.",
+      "create": "Create",
+      "delete": "Delete",
+      "replay": "Replay",
+      "destinations": "Destinations",
+      "deliveries": "Deliveries and dead letters"
+    }
   }
 }
