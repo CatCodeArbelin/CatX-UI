@@ -341,6 +341,32 @@ export interface ApiTokenView {
   token?: string;
 }
 
+export interface AuditEvent {
+  actorId?: string;
+  actorName?: string;
+  actorType: string;
+  authMethod?: string;
+  createdAt: string;
+  eventType: string;
+  id: string;
+  metadata?: string;
+  nodeId?: string;
+  nodeScope?: string;
+  outcome: string;
+  requestId: string;
+  sourceIp?: string;
+  statusCode?: number;
+  targetRef?: string;
+  targetType?: string;
+  tokenId?: string;
+}
+
+export interface AuditRetentionSettings {
+  auditDays: number;
+  deadLetterDays: number;
+  deliveryDays: number;
+}
+
 export interface Client {
   adTag?: string;
   allowedIPs?: string[];
@@ -482,6 +508,11 @@ export interface ClientsSummary {
   total: number;
 }
 
+export interface DeliveryPage {
+  items: WebhookDelivery[];
+  next?: string;
+}
+
 export interface Event {
   acknowledgedAt?: number;
   clientEmail: string;
@@ -493,6 +524,11 @@ export interface Event {
   scoreContribution: number;
   sourceNode?: string;
   state: string;
+}
+
+export interface EventPage {
+  items: AuditEvent[];
+  next?: string;
 }
 
 export interface FallbackParentInfo {
@@ -934,6 +970,12 @@ export interface RealityScanResult {
   x25519: boolean;
 }
 
+export interface RetentionRequest {
+  auditDays: number;
+  deadLetterDays: number;
+  deliveryDays: number;
+}
+
 export interface RetentionSettings {
   eventDays: number;
   ipDays: number;
@@ -1095,5 +1137,34 @@ export interface View {
   windowEnd: number;
   windowSeconds: number;
   windowStart: number;
+}
+
+export interface WebhookDelivery {
+  attempt: number;
+  createdAt: string;
+  deliveredAt?: string | null;
+  endpointId: string;
+  eventId: string;
+  id: string;
+  lastError?: string;
+  nextAttemptAt: string;
+  status: string;
+}
+
+export interface WebhookEndpoint {
+  createdAt: string;
+  enabled: boolean;
+  eventTypes: string;
+  id: string;
+  name: string;
+  updatedAt: string;
+  url: string;
+}
+
+export interface WebhookEndpointRequest {
+  eventTypes: string[];
+  name: string;
+  secret: string;
+  url: string;
 }
 

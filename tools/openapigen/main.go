@@ -123,6 +123,10 @@ func run(root, outDir string) error {
 			StructAllow: setOf("IPHistory", "Event", "Score", "Suppression", "Summary", "RetentionSettings"),
 		},
 		{
+			Path:        resolveRel(root, "internal/forkext/audit"),
+			StructAllow: setOf("AuditEvent", "WebhookEndpoint", "WebhookDelivery", "EventPage", "DeliveryPage", "AuditRetentionSettings", "WebhookEndpointRequest", "RetentionRequest"),
+		},
+		{
 			Path:        resolveRel(root, "internal/amneziawg"),
 			StructAllow: setOf("ServerSettings"),
 		},

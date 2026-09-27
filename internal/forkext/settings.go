@@ -20,6 +20,9 @@ const (
 	FlagPolicies        Flag = "policies.enabled"
 	FlagTrafficControl  Flag = "traffic_control.enabled"
 	FlagSecurityAnomaly Flag = "security_anomaly.enabled"
+	FlagAudit           Flag = "audit.enabled"
+	FlagWebhooks        Flag = "webhooks.enabled"
+	FlagMetrics         Flag = "metrics.enabled"
 )
 
 var allFlags = [...]Flag{
@@ -28,6 +31,9 @@ var allFlags = [...]Flag{
 	FlagPolicies,
 	FlagTrafficControl,
 	FlagSecurityAnomaly,
+	FlagAudit,
+	FlagWebhooks,
+	FlagMetrics,
 }
 
 func settingKey(flag Flag) string {

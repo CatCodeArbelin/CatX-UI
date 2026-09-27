@@ -1431,6 +1431,91 @@
         ],
         "type": "object"
       },
+      "AuditEvent": {
+        "description": "AuditEvent is the authoritative, metadata-only record of a privileged\noperation. Payloads are never accepted by this model.",
+        "properties": {
+          "actorId": {
+            "type": "string"
+          },
+          "actorName": {
+            "type": "string"
+          },
+          "actorType": {
+            "type": "string"
+          },
+          "authMethod": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "eventType": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "metadata": {
+            "type": "string"
+          },
+          "nodeId": {
+            "type": "string"
+          },
+          "nodeScope": {
+            "type": "string"
+          },
+          "outcome": {
+            "type": "string"
+          },
+          "requestId": {
+            "type": "string"
+          },
+          "sourceIp": {
+            "type": "string"
+          },
+          "statusCode": {
+            "type": "integer"
+          },
+          "targetRef": {
+            "type": "string"
+          },
+          "targetType": {
+            "type": "string"
+          },
+          "tokenId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "actorType",
+          "createdAt",
+          "eventType",
+          "id",
+          "outcome",
+          "requestId"
+        ],
+        "type": "object"
+      },
+      "AuditRetentionSettings": {
+        "properties": {
+          "auditDays": {
+            "type": "integer"
+          },
+          "deadLetterDays": {
+            "type": "integer"
+          },
+          "deliveryDays": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "auditDays",
+          "deadLetterDays",
+          "deliveryDays"
+        ],
+        "type": "object"
+      },
       "Client": {
         "description": "Client represents a client configuration for Xray inbounds with traffic limits and settings.",
         "properties": {
@@ -2092,6 +2177,23 @@
         ],
         "type": "object"
       },
+      "DeliveryPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/WebhookDelivery"
+            },
+            "type": "array"
+          },
+          "next": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
+      },
       "Event": {
         "properties": {
           "acknowledgedAt": {
@@ -2136,6 +2238,23 @@
           "observedAt",
           "scoreContribution",
           "state"
+        ],
+        "type": "object"
+      },
+      "EventPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AuditEvent"
+            },
+            "type": "array"
+          },
+          "next": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "items"
         ],
         "type": "object"
       },
@@ -4127,6 +4246,25 @@
         ],
         "type": "object"
       },
+      "RetentionRequest": {
+        "properties": {
+          "auditDays": {
+            "type": "integer"
+          },
+          "deadLetterDays": {
+            "type": "integer"
+          },
+          "deliveryDays": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "auditDays",
+          "deadLetterDays",
+          "deliveryDays"
+        ],
+        "type": "object"
+      },
       "RetentionSettings": {
         "properties": {
           "eventDays": {
@@ -4766,6 +4904,114 @@
         ],
         "type": "object"
       },
+      "WebhookDelivery": {
+        "properties": {
+          "attempt": {
+            "type": "integer"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "deliveredAt": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "endpointId": {
+            "type": "string"
+          },
+          "eventId": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "lastError": {
+            "type": "string"
+          },
+          "nextAttemptAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "attempt",
+          "createdAt",
+          "endpointId",
+          "eventId",
+          "id",
+          "nextAttemptAt",
+          "status"
+        ],
+        "type": "object"
+      },
+      "WebhookEndpoint": {
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "eventTypes": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "createdAt",
+          "enabled",
+          "eventTypes",
+          "id",
+          "name",
+          "updatedAt",
+          "url"
+        ],
+        "type": "object"
+      },
+      "WebhookEndpointRequest": {
+        "properties": {
+          "eventTypes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "name": {
+            "type": "string"
+          },
+          "secret": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "eventTypes",
+          "name",
+          "secret",
+          "url"
+        ],
+        "type": "object"
+      },
       "WebSocketEnvelope": {
         "type": "object",
         "required": [
@@ -4876,6 +5122,10 @@
     {
       "name": "Risk intelligence",
       "description": "Metadata-only, explainable risk signals. Informational only; no automatic enforcement is performed."
+    },
+    {
+      "name": "Audit / Webhooks / Metrics",
+      "description": "Durable metadata-only audit records, signed webhook delivery, and bounded Prometheus metrics."
     }
   ],
   "paths": {
@@ -18644,6 +18894,489 @@
                   "obj": {
                     "eventDays": 0,
                     "ipDays": 0
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/fork/audit/events": {
+      "get": {
+        "tags": [
+          "Audit / Webhooks / Metrics"
+        ],
+        "summary": "List durable audit events.",
+        "operationId": "get_panel_api_fork_audit_events",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "$ref": "#/components/schemas/EventPage"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": {
+                    "items": [
+                      {
+                        "actorId": "",
+                        "actorName": "",
+                        "actorType": "",
+                        "authMethod": "",
+                        "createdAt": "2025-01-01T00:00:00Z",
+                        "eventType": "",
+                        "id": "",
+                        "metadata": "",
+                        "nodeId": "",
+                        "nodeScope": "",
+                        "outcome": "",
+                        "requestId": "",
+                        "sourceIp": "",
+                        "statusCode": 0,
+                        "targetRef": "",
+                        "targetType": "",
+                        "tokenId": ""
+                      }
+                    ],
+                    "next": ""
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Audit / Webhooks / Metrics"
+        ],
+        "summary": "Delete audit events before a timestamp.",
+        "operationId": "delete_panel_api_fork_audit_events",
+        "parameters": [
+          {
+            "name": "before",
+            "in": "query",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/fork/audit/events/{id}": {
+      "get": {
+        "tags": [
+          "Audit / Webhooks / Metrics"
+        ],
+        "summary": "Read one sanitized audit event.",
+        "operationId": "get_panel_api_fork_audit_events_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "$ref": "#/components/schemas/AuditEvent"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": {
+                    "actorId": "",
+                    "actorName": "",
+                    "actorType": "",
+                    "authMethod": "",
+                    "createdAt": "2025-01-01T00:00:00Z",
+                    "eventType": "",
+                    "id": "",
+                    "metadata": "",
+                    "nodeId": "",
+                    "nodeScope": "",
+                    "outcome": "",
+                    "requestId": "",
+                    "sourceIp": "",
+                    "statusCode": 0,
+                    "targetRef": "",
+                    "targetType": "",
+                    "tokenId": ""
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/fork/audit/webhooks": {
+      "get": {
+        "tags": [
+          "Audit / Webhooks / Metrics"
+        ],
+        "summary": "List webhook destinations without secrets.",
+        "operationId": "get_panel_api_fork_audit_webhooks",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/WebhookEndpoint"
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": [
+                    {
+                      "createdAt": "2025-01-01T00:00:00Z",
+                      "enabled": false,
+                      "eventTypes": "",
+                      "id": "",
+                      "name": "",
+                      "updatedAt": "2025-01-01T00:00:00Z",
+                      "url": ""
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Audit / Webhooks / Metrics"
+        ],
+        "summary": "Create a public HTTPS webhook destination.",
+        "operationId": "post_panel_api_fork_audit_webhooks",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebhookEndpointRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "$ref": "#/components/schemas/WebhookEndpoint"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": {
+                    "createdAt": "2025-01-01T00:00:00Z",
+                    "enabled": false,
+                    "eventTypes": "",
+                    "id": "",
+                    "name": "",
+                    "updatedAt": "2025-01-01T00:00:00Z",
+                    "url": ""
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/fork/audit/webhooks/{id}": {
+      "delete": {
+        "tags": [
+          "Audit / Webhooks / Metrics"
+        ],
+        "summary": "Delete a webhook destination.",
+        "operationId": "delete_panel_api_fork_audit_webhooks_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/fork/audit/webhooks/deliveries": {
+      "get": {
+        "tags": [
+          "Audit / Webhooks / Metrics"
+        ],
+        "summary": "List webhook delivery attempts.",
+        "operationId": "get_panel_api_fork_audit_webhooks_deliveries",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "$ref": "#/components/schemas/DeliveryPage"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": {
+                    "items": [
+                      {
+                        "attempt": 0,
+                        "createdAt": "2025-01-01T00:00:00Z",
+                        "deliveredAt": null,
+                        "endpointId": "",
+                        "eventId": "",
+                        "id": "",
+                        "lastError": "",
+                        "nextAttemptAt": "2025-01-01T00:00:00Z",
+                        "status": ""
+                      }
+                    ],
+                    "next": ""
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/fork/audit/webhooks/deliveries/{id}/replay": {
+      "post": {
+        "tags": [
+          "Audit / Webhooks / Metrics"
+        ],
+        "summary": "Replay a delivery with a new delivery ID.",
+        "operationId": "post_panel_api_fork_audit_webhooks_deliveries_id_replay",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "$ref": "#/components/schemas/WebhookDelivery"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": {
+                    "attempt": 0,
+                    "createdAt": "2025-01-01T00:00:00Z",
+                    "deliveredAt": null,
+                    "endpointId": "",
+                    "eventId": "",
+                    "id": "",
+                    "lastError": "",
+                    "nextAttemptAt": "2025-01-01T00:00:00Z",
+                    "status": ""
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/fork/audit/retention": {
+      "get": {
+        "tags": [
+          "Audit / Webhooks / Metrics"
+        ],
+        "summary": "Read audit and webhook retention.",
+        "operationId": "get_panel_api_fork_audit_retention",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "$ref": "#/components/schemas/AuditRetentionSettings"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": {
+                    "auditDays": 0,
+                    "deadLetterDays": 0,
+                    "deliveryDays": 0
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/fork/metrics": {
+      "get": {
+        "tags": [
+          "Audit / Webhooks / Metrics"
+        ],
+        "summary": "Prometheus metrics with fixed bounded labels.",
+        "operationId": "get_panel_api_fork_metrics",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
                   }
                 }
               }

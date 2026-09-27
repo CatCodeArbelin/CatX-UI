@@ -41,6 +41,7 @@ import { activateOnKey } from '@/utils/a11y';
 import { useInboundOptions } from '@/api/queries/useInboundOptions';
 import { useAllSettings } from '@/api/queries/useAllSettings';
 import { useTheme } from '@/hooks/useTheme';
+import { forkNavigationItems } from '@/forkext/registry';
 import type { ClientRecord, InboundOption } from '@/schemas/client';
 import { commandPaletteStore, useCommandPalette } from './useCommandPalette';
 import './CommandPalette.css';
@@ -418,6 +419,12 @@ export default function CommandPalette() {
         keywords: ['api', 'api docs', 'swagger', 'rest api', 'endpoints'],
         icon: <ApiOutlined />,
       },
+      ...forkNavigationItems.map((item) => ({
+        path: item.path,
+        title: item.label,
+        keywords: [item.label.toLowerCase(), 'fork'],
+        icon: <FileTextOutlined />,
+      })),
     ];
 
     pages

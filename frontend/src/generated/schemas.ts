@@ -1405,6 +1405,91 @@ export const SCHEMAS: Record<string, unknown> = {
     ],
     "type": "object"
   },
+  "AuditEvent": {
+    "description": "AuditEvent is the authoritative, metadata-only record of a privileged\noperation. Payloads are never accepted by this model.",
+    "properties": {
+      "actorId": {
+        "type": "string"
+      },
+      "actorName": {
+        "type": "string"
+      },
+      "actorType": {
+        "type": "string"
+      },
+      "authMethod": {
+        "type": "string"
+      },
+      "createdAt": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "eventType": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "metadata": {
+        "type": "string"
+      },
+      "nodeId": {
+        "type": "string"
+      },
+      "nodeScope": {
+        "type": "string"
+      },
+      "outcome": {
+        "type": "string"
+      },
+      "requestId": {
+        "type": "string"
+      },
+      "sourceIp": {
+        "type": "string"
+      },
+      "statusCode": {
+        "type": "integer"
+      },
+      "targetRef": {
+        "type": "string"
+      },
+      "targetType": {
+        "type": "string"
+      },
+      "tokenId": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "actorType",
+      "createdAt",
+      "eventType",
+      "id",
+      "outcome",
+      "requestId"
+    ],
+    "type": "object"
+  },
+  "AuditRetentionSettings": {
+    "properties": {
+      "auditDays": {
+        "type": "integer"
+      },
+      "deadLetterDays": {
+        "type": "integer"
+      },
+      "deliveryDays": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "auditDays",
+      "deadLetterDays",
+      "deliveryDays"
+    ],
+    "type": "object"
+  },
   "Client": {
     "description": "Client represents a client configuration for Xray inbounds with traffic limits and settings.",
     "properties": {
@@ -2066,6 +2151,23 @@ export const SCHEMAS: Record<string, unknown> = {
     ],
     "type": "object"
   },
+  "DeliveryPage": {
+    "properties": {
+      "items": {
+        "items": {
+          "$ref": "#/components/schemas/WebhookDelivery"
+        },
+        "type": "array"
+      },
+      "next": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "items"
+    ],
+    "type": "object"
+  },
   "Event": {
     "properties": {
       "acknowledgedAt": {
@@ -2110,6 +2212,23 @@ export const SCHEMAS: Record<string, unknown> = {
       "observedAt",
       "scoreContribution",
       "state"
+    ],
+    "type": "object"
+  },
+  "EventPage": {
+    "properties": {
+      "items": {
+        "items": {
+          "$ref": "#/components/schemas/AuditEvent"
+        },
+        "type": "array"
+      },
+      "next": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "items"
     ],
     "type": "object"
   },
@@ -4101,6 +4220,25 @@ export const SCHEMAS: Record<string, unknown> = {
     ],
     "type": "object"
   },
+  "RetentionRequest": {
+    "properties": {
+      "auditDays": {
+        "type": "integer"
+      },
+      "deadLetterDays": {
+        "type": "integer"
+      },
+      "deliveryDays": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "auditDays",
+      "deadLetterDays",
+      "deliveryDays"
+    ],
+    "type": "object"
+  },
   "RetentionSettings": {
     "properties": {
       "eventDays": {
@@ -4737,6 +4875,114 @@ export const SCHEMAS: Record<string, unknown> = {
       "windowEnd",
       "windowSeconds",
       "windowStart"
+    ],
+    "type": "object"
+  },
+  "WebhookDelivery": {
+    "properties": {
+      "attempt": {
+        "type": "integer"
+      },
+      "createdAt": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "deliveredAt": {
+        "format": "date-time",
+        "nullable": true,
+        "type": "string"
+      },
+      "endpointId": {
+        "type": "string"
+      },
+      "eventId": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "lastError": {
+        "type": "string"
+      },
+      "nextAttemptAt": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "status": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "attempt",
+      "createdAt",
+      "endpointId",
+      "eventId",
+      "id",
+      "nextAttemptAt",
+      "status"
+    ],
+    "type": "object"
+  },
+  "WebhookEndpoint": {
+    "properties": {
+      "createdAt": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "enabled": {
+        "type": "boolean"
+      },
+      "eventTypes": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "updatedAt": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "url": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "createdAt",
+      "enabled",
+      "eventTypes",
+      "id",
+      "name",
+      "updatedAt",
+      "url"
+    ],
+    "type": "object"
+  },
+  "WebhookEndpointRequest": {
+    "properties": {
+      "eventTypes": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "name": {
+        "type": "string"
+      },
+      "secret": {
+        "type": "string"
+      },
+      "url": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "eventTypes",
+      "name",
+      "secret",
+      "url"
     ],
     "type": "object"
   }

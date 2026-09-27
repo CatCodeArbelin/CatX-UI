@@ -15,10 +15,20 @@ export const forkRoutes: readonly RouteObject[] = [
     path: '/policies',
     lazy: async () => ({ Component: (await import('../pages/policy/PolicyPage')).default }),
   },
+  {
+    path: '/audit',
+    lazy: async () => ({ Component: (await import('../pages/audit/AuditPage')).default }),
+  },
+  {
+    path: '/webhooks',
+    lazy: async () => ({ Component: (await import('../pages/audit/WebhooksPage')).default }),
+  },
 ];
 export const forkNavigationItems: readonly ForkNavigationItem[] = [
   { key: 'client-activity', label: 'Client activity', path: '/activity' },
   { key: 'policy-engine', label: 'Policy engine', path: '/policies' },
+  { key: 'audit', label: 'Audit', path: '/audit' },
+  { key: 'webhooks', label: 'Webhooks', path: '/webhooks' },
 ];
 export const forkApiSections = [
   {
@@ -74,6 +84,74 @@ export const forkApiSections = [
         summary: 'Update independent risk retention settings.',
         requestSchema: { $ref: '#/components/schemas/RetentionSettings' },
         responseSchema: 'RetentionSettings',
+      },
+    ],
+  },
+  {
+    id: 'audit-webhooks-metrics',
+    title: 'Audit / Webhooks / Metrics',
+    description:
+      'Durable metadata-only audit records, signed webhook delivery, and bounded Prometheus metrics.',
+    endpoints: [
+      {
+        method: 'GET',
+        path: '/panel/api/fork/audit/events',
+        summary: 'List durable audit events.',
+        responseSchema: 'EventPage',
+      },
+      {
+        method: 'GET',
+        path: '/panel/api/fork/audit/events/:id',
+        summary: 'Read one sanitized audit event.',
+        responseSchema: 'AuditEvent',
+      },
+      {
+        method: 'DELETE',
+        path: '/panel/api/fork/audit/events',
+        summary: 'Delete audit events before a timestamp.',
+        params: [{ name: 'before', in: 'query', type: 'string' }],
+      },
+      {
+        method: 'GET',
+        path: '/panel/api/fork/audit/webhooks',
+        summary: 'List webhook destinations without secrets.',
+        responseSchema: 'WebhookEndpoint',
+        responseSchemaArray: true,
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/fork/audit/webhooks',
+        summary: 'Create a public HTTPS webhook destination.',
+        requestSchema: { $ref: '#/components/schemas/WebhookEndpointRequest' },
+        responseSchema: 'WebhookEndpoint',
+      },
+      {
+        method: 'DELETE',
+        path: '/panel/api/fork/audit/webhooks/:id',
+        summary: 'Delete a webhook destination.',
+      },
+      {
+        method: 'GET',
+        path: '/panel/api/fork/audit/webhooks/deliveries',
+        summary: 'List webhook delivery attempts.',
+        responseSchema: 'DeliveryPage',
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/fork/audit/webhooks/deliveries/:id/replay',
+        summary: 'Replay a delivery with a new delivery ID.',
+        responseSchema: 'WebhookDelivery',
+      },
+      {
+        method: 'GET',
+        path: '/panel/api/fork/audit/retention',
+        summary: 'Read audit and webhook retention.',
+        responseSchema: 'AuditRetentionSettings',
+      },
+      {
+        method: 'GET',
+        path: '/panel/api/fork/metrics',
+        summary: 'Prometheus metrics with fixed bounded labels.',
       },
     ],
   },

@@ -360,6 +360,34 @@ export const ApiTokenViewSchema = z.object({
 });
 export type ApiTokenView = z.infer<typeof ApiTokenViewSchema>;
 
+export const AuditEventSchema = z.object({
+  actorId: z.string().optional(),
+  actorName: z.string().optional(),
+  actorType: z.string(),
+  authMethod: z.string().optional(),
+  createdAt: z.string(),
+  eventType: z.string(),
+  id: z.string(),
+  metadata: z.string().optional(),
+  nodeId: z.string().optional(),
+  nodeScope: z.string().optional(),
+  outcome: z.string(),
+  requestId: z.string(),
+  sourceIp: z.string().optional(),
+  statusCode: z.number().int().optional(),
+  targetRef: z.string().optional(),
+  targetType: z.string().optional(),
+  tokenId: z.string().optional(),
+});
+export type AuditEvent = z.infer<typeof AuditEventSchema>;
+
+export const AuditRetentionSettingsSchema = z.object({
+  auditDays: z.number().int(),
+  deadLetterDays: z.number().int(),
+  deliveryDays: z.number().int(),
+});
+export type AuditRetentionSettings = z.infer<typeof AuditRetentionSettingsSchema>;
+
 export const ClientSchema = z.object({
   adTag: z.string().optional(),
   allowedIPs: z.array(z.string()).optional(),
@@ -509,6 +537,12 @@ export const ClientsSummarySchema = z.object({
 });
 export type ClientsSummary = z.infer<typeof ClientsSummarySchema>;
 
+export const DeliveryPageSchema = z.object({
+  items: z.array(z.lazy(() => WebhookDeliverySchema)),
+  next: z.string().optional(),
+});
+export type DeliveryPage = z.infer<typeof DeliveryPageSchema>;
+
 export const EventSchema = z.object({
   acknowledgedAt: z.number().int().optional(),
   clientEmail: z.string(),
@@ -522,6 +556,12 @@ export const EventSchema = z.object({
   state: z.string(),
 });
 export type Event = z.infer<typeof EventSchema>;
+
+export const EventPageSchema = z.object({
+  items: z.array(z.lazy(() => AuditEventSchema)),
+  next: z.string().optional(),
+});
+export type EventPage = z.infer<typeof EventPageSchema>;
 
 export const FallbackParentInfoSchema = z.object({
   masterId: z.number().int(),
@@ -994,6 +1034,13 @@ export const RealityScanResultSchema = z.object({
 });
 export type RealityScanResult = z.infer<typeof RealityScanResultSchema>;
 
+export const RetentionRequestSchema = z.object({
+  auditDays: z.number().int(),
+  deadLetterDays: z.number().int(),
+  deliveryDays: z.number().int(),
+});
+export type RetentionRequest = z.infer<typeof RetentionRequestSchema>;
+
 export const RetentionSettingsSchema = z.object({
   eventDays: z.number().int(),
   ipDays: z.number().int(),
@@ -1169,4 +1216,36 @@ export const ViewSchema = z.object({
   windowStart: z.number().int(),
 });
 export type View = z.infer<typeof ViewSchema>;
+
+export const WebhookDeliverySchema = z.object({
+  attempt: z.number().int(),
+  createdAt: z.string(),
+  deliveredAt: z.string().nullable().optional(),
+  endpointId: z.string(),
+  eventId: z.string(),
+  id: z.string(),
+  lastError: z.string().optional(),
+  nextAttemptAt: z.string(),
+  status: z.string(),
+});
+export type WebhookDelivery = z.infer<typeof WebhookDeliverySchema>;
+
+export const WebhookEndpointSchema = z.object({
+  createdAt: z.string(),
+  enabled: z.boolean(),
+  eventTypes: z.string(),
+  id: z.string(),
+  name: z.string(),
+  updatedAt: z.string(),
+  url: z.string(),
+});
+export type WebhookEndpoint = z.infer<typeof WebhookEndpointSchema>;
+
+export const WebhookEndpointRequestSchema = z.object({
+  eventTypes: z.array(z.string()),
+  name: z.string(),
+  secret: z.string(),
+  url: z.string(),
+});
+export type WebhookEndpointRequest = z.infer<typeof WebhookEndpointRequestSchema>;
 

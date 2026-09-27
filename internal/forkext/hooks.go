@@ -13,6 +13,7 @@ import (
 	"github.com/mhsanaei/3x-ui/v3/internal/analytics"
 	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
 	"github.com/mhsanaei/3x-ui/v3/internal/eventbus"
+	"github.com/mhsanaei/3x-ui/v3/internal/forkext/audit"
 	"github.com/mhsanaei/3x-ui/v3/internal/forkext/groupquota"
 	"github.com/mhsanaei/3x-ui/v3/internal/forkext/risk"
 	"github.com/mhsanaei/3x-ui/v3/internal/forkext/trafficcontrol"
@@ -36,6 +37,7 @@ func Install() {}
 func RegisterMigrations(db *gorm.DB) error {
 	setSettingsDB(db)
 	if db == nil {
+		audit.Configure(nil, false)
 		groupquota.Configure(nil, false)
 		trafficpolicy.Configure(nil, false)
 		trafficcontrol.Configure(false)
@@ -44,6 +46,15 @@ func RegisterMigrations(db *gorm.DB) error {
 		risk.Configure(nil, false)
 		return nil
 	}
+	auditEnabled, _ := NewSettings(db).Enabled(FlagAudit)
+	webhooksEnabled, _ := NewSettings(db).Enabled(FlagWebhooks)
+	if auditEnabled {
+		if err := audit.Migrate(db); err != nil {
+			return err
+		}
+	}
+	_ = webhooksEnabled // retained as an explicit flag for future delivery-only disablement
+	audit.Configure(db, auditEnabled)
 	trafficControlEnabled, err := NewSettings(db).Enabled(FlagTrafficControl)
 	if err != nil {
 		trafficControlEnabled = false
@@ -109,6 +120,7 @@ func RegisterMigrations(db *gorm.DB) error {
 // RegisterRoutes is the protected API integration point for fork endpoints.
 // An empty registration preserves the upstream route set exactly.
 func RegisterRoutes(api *gin.RouterGroup) {
+	audit.RegisterRoutes(api)
 	analytics.RegisterActivityRoutes(api)
 	registerAnalyticsSettingsRoutes(api)
 	policy.RegisterRoutes(api)
@@ -119,8 +131,17 @@ func RegisterRoutes(api *gin.RouterGroup) {
 	risk.RegisterRoutes(api)
 }
 
+// RegisterMiddleware installs request correlation and post-success auditing
+// before upstream routes are registered.
+func RegisterMiddleware(api *gin.RouterGroup) {
+	if api != nil {
+		api.Use(audit.Middleware())
+	}
+}
+
 // RegisterJobs is the fixed scheduler integration point for fork jobs.
 func RegisterJobs(_ context.Context, scheduler *cron.Cron) {
+	audit.RegisterJobs(scheduler)
 	groupquota.RegisterJobs(scheduler)
 	trafficcontrol.RegisterJobs(scheduler)
 	trafficpolicy.RegisterJobs(scheduler)
@@ -136,9 +157,13 @@ func RecordClientIPHistory(ctx context.Context, nodeGuid string, observations ma
 	return risk.RecordIPHistory(ctx, nodeGuid, observations, source)
 }
 
+func RecordLogin(ctx context.Context, username, sourceIP, outcome, reason string, userID int) error {
+	return audit.RecordLogin(ctx, username, sourceIP, outcome, reason, userID)
+}
+
 // RegisterEventSubscribers is the fixed event-bus integration point for fork
 // subscribers.
-func RegisterEventSubscribers(_ *eventbus.Bus) {}
+func RegisterEventSubscribers(bus *eventbus.Bus) { audit.RegisterEventSubscribers(bus) }
 
 // GroupQuotaApplyDeltas is the sole accounting handoff from upstream traffic
 // writes to the fork quota module.
@@ -203,10 +228,21 @@ func MigrationModels() []any {
 
 // Start is the lifecycle integration point for fork-owned goroutines. The
 // returned closer is always safe to call in the no-op foundation state.
-func Start(ctx context.Context) (func(), error) { return analytics.Start(ctx) }
+func Start(ctx context.Context) (func(), error) {
+	closer, err := analytics.Start(ctx)
+	if err != nil {
+		return nil, err
+	}
+	auditCloser, err := audit.Start(ctx)
+	if err != nil {
+		closer()
+		return nil, err
+	}
+	return func() { auditCloser(); closer() }, nil
+}
 
 // Stop is the matching lifecycle shutdown hook.
-func Stop() {}
+func Stop() { audit.Stop() }
 
 // DecorateXrayConfig is called after upstream has assembled the complete
 // candidate configuration. Returning the same pointer is the exact no-op
