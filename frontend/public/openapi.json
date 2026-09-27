@@ -20004,6 +20004,160 @@
         }
       }
     },
+    "/panel/api/portal/credentials/{clientId}/rotate": {
+      "post": {
+        "tags": [
+          "Self-service portal"
+        ],
+        "summary": "Admin-only portal token rotation.",
+        "operationId": "post_panel_api_portal_credentials_clientId_rotate",
+        "parameters": [
+          {
+            "name": "clientId",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "$ref": "#/components/schemas/IssuedToken"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": {
+                    "clientId": 0,
+                    "createdAt": 0,
+                    "enabled": false,
+                    "expiresAt": 0,
+                    "id": 0,
+                    "lastUsed": 0,
+                    "token": ""
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/portal/credentials/{clientId}/revoke": {
+      "post": {
+        "tags": [
+          "Self-service portal"
+        ],
+        "summary": "Admin-only portal token revocation.",
+        "operationId": "post_panel_api_portal_credentials_clientId_revoke",
+        "parameters": [
+          {
+            "name": "clientId",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/portal/settings": {
+      "get": {
+        "tags": [
+          "Self-service portal"
+        ],
+        "summary": "Read the admin-only portal feature setting.",
+        "operationId": "get_panel_api_portal_settings",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Self-service portal"
+        ],
+        "summary": "Update the admin-only portal feature setting.",
+        "operationId": "post_panel_api_portal_settings",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/panel/api/portal/host-grants": {
       "get": {
         "tags": [
@@ -20097,6 +20251,47 @@
                     "subjectId": 0,
                     "subjectType": "",
                     "updatedAt": "2025-01-01T00:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/portal/host-grants/{id}": {
+      "delete": {
+        "tags": [
+          "Self-service portal"
+        ],
+        "summary": "Admin-only host visibility grant deletion.",
+        "operationId": "delete_panel_api_portal_host_grants_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
                   }
                 }
               }

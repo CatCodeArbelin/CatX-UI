@@ -231,6 +231,27 @@ export const forkApiSections = [
         responseSchema: 'IssuedToken',
       },
       {
+        method: 'POST',
+        path: '/panel/api/portal/credentials/:clientId/rotate',
+        summary: 'Admin-only portal token rotation.',
+        responseSchema: 'IssuedToken',
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/portal/credentials/:clientId/revoke',
+        summary: 'Admin-only portal token revocation.',
+      },
+      {
+        method: 'GET',
+        path: '/panel/api/portal/settings',
+        summary: 'Read the admin-only portal feature setting.',
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/portal/settings',
+        summary: 'Update the admin-only portal feature setting.',
+      },
+      {
         method: 'GET',
         path: '/panel/api/portal/host-grants',
         summary: 'Admin-only host visibility grant inventory.',
@@ -243,6 +264,11 @@ export const forkApiSections = [
         summary: 'Admin-only positive host visibility grant.',
         requestSchema: { $ref: '#/components/schemas/HostGrant' },
         responseSchema: 'HostGrant',
+      },
+      {
+        method: 'DELETE',
+        path: '/panel/api/portal/host-grants/:id',
+        summary: 'Admin-only host visibility grant deletion.',
       },
     ],
   },
