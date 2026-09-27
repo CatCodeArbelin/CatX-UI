@@ -15,11 +15,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mhsanaei/3x-ui/v3/internal/eventbus"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/robfig/cron/v3"
 	"gorm.io/gorm"
+
+	"github.com/mhsanaei/3x-ui/v3/internal/eventbus"
 )
 
 const (
