@@ -10,56 +10,81 @@ WP-8A is DONE: merged into `develop` at `0a6dab0f`, pushed, and its feature
 branch was deleted after Fork verification `36347039861` and Release CatX-UI
 `36347039863` reported green. Do not modify `main` or preview/demo data.
 
-WP-8B is active on this feature branch. This phase is implementation-readiness
-only. Do not implement production code until the readiness decision is accepted.
+WP-8B readiness review is APPROVED. Full implementation is authorized on this
+feature branch. Do not merge WP-8B, start WP-8C, modify `main`, or touch
+preview/demo data.
 
-## Readiness decisions
+## Fixed decisions
 
-- Add a fork-owned self-service authentication/session boundary that resolves to
-  existing normalized client identity; do not create a second client, device,
-  host, group, node, or runtime model.
-- Keep self-service routes and DTOs separate from admin routes and responses.
-  Enforce client ownership and group visibility server-side on every request;
-  UI filtering is never authorization.
-- Reuse `ClientRecord`, `ClientHwid`, `ClientGroup`, `ClientInbound`, `Host`,
-  `Node`, node traffic/IP observations, and local/remote runtime status through
-  narrow read/write services and adapters.
-- Default visibility is the authenticated client's own profile, assigned
-  devices/HWIDs, assigned inbounds/hosts, safe traffic counters, and
-  capability-filtered connection status. Group/fleet visibility is explicit,
-  administrator-granted, and metadata-minimized.
-- Self-service mutations are limited to safe profile/device actions approved by
-  the product contract. Credential/subscription reset, device reset, and other
-  sensitive actions require confirmation, cooldown/rate limits, and WP-8A audit;
-  no node control, inbound policy changes, host CRUD, group membership changes,
-  runtime commands, or admin settings.
-- Host visibility is an allowlisted projection from existing host/inbound/node
-  associations. Never expose admin-only host fields, node credentials, private
-  addresses, raw runtime configuration, or unrelated client data.
-- Fleet UI extends the existing admin dashboard with capability-aware local and
-  remote node cards, sync freshness, health, traffic, and client/group rollups.
-  It uses existing runtime synchronization and must show stale/unknown state
-  rather than inventing online truth.
-- Tokens/sessions are opaque, revocable, short-lived where practical, scoped,
-  hashed at rest, protected against fixation/replay, and never placed in URLs or
-  logged. Apply CSRF/origin protections appropriate to the chosen transport,
-  bounded login/device-reset attempts, and per-account/IP rate limits.
-- Persisted schema changes are not presumed. Prefer existing models and a
-  fork-owned namespaced settings/token/session store only if an actual gap is
-  proven; any migration must cover SQLite, PostgreSQL, indexes, retention, and
-  rollback.
-- Use existing OpenAPI generation, frontend generated types, upstream i18n,
-  and the WP-8A audit registration hook. Feature-off behavior remains upstream
-  compatible.
+- Self-service authentication is completely separate from admin, API, node,
+  and monitor authentication.
+- Subscription credentials and subscription URLs are never portal credentials.
+- Administrators create cryptographically random 256-bit portal access tokens.
+  The token is shown exactly once at creation/rotation and only its hash is
+  persisted. The token is used only to establish a dedicated portal session.
+- Portal sessions use a separate cookie/session namespace with HttpOnly,
+  Secure, SameSite, fixation prevention, CSRF/origin protection, and server-
+  side client identity resolution.
+- Token rotation/revocation increments credential version and immediately
+  invalidates all existing portal sessions.
+- Self-service v1 permits only: own profile/subscription status; own assigned
+  inbounds and sanitized connection/host information; own traffic, quota and
+  expiry; own HWID/device listing; rename own device; revoke own device through
+  an existing ownership-safe authoritative service; and rotate/revoke own
+  portal access.
+- Self-service cannot reset subscription/client credentials, edit policies or
+  inbounds, CRUD hosts, change groups, control nodes/runtime, delete arbitrary
+  history, or access admin settings.
+- Fleet dashboard is admin-only. Self-service users never receive node/fleet
+  health or runtime state.
+- Default host projection is existing
+  `ClientRecord → ClientInbound → Inbound → enabled/non-hidden Host`, exposing
+  only connection-required allowlisted fields. Never expose private node
+  addresses, credentials, certificate material/pins, raw TLS/runtime config, or
+  admin metadata.
+- Explicit positive visibility grants may map client/group subjects to existing
+  hosts. Client groups and host groups are never implicitly equivalent.
+- Extend WP-8A audit actors with `actor_type = client_portal`, stable
+  `ClientRecord` identity, and a sanitized display snapshot only. Never store or
+  emit portal token material.
+- Prefer existing models/services. Do not create duplicate client, device,
+  host, group, node, or runtime models.
+- Feature-disabled behavior must remain no-op/upstream-compatible.
+
+## Authorized implementation scope
+
+1. Portal credential persistence and explicit migrations.
+2. Explicit client/group-to-existing-host visibility grants where required.
+3. Dedicated portal authentication/session middleware.
+4. Rate limits for login, rotation, and device mutation.
+5. `/portal/me`, devices, hosts, traffic/status, and safe mutation APIs.
+6. Ownership-safe adapters over existing models/services.
+7. Admin portal-access management.
+8. Admin host-visibility grant management.
+9. Admin fleet dashboard extensions using existing node/runtime/heartbeat data.
+10. Portal frontend pages.
+11. OpenAPI/generated types/i18n.
+12. WP-8A audit integration.
+13. SQLite/PostgreSQL migration and upgrade coverage.
+14. Comprehensive auth-isolation, replay/revoke/rotation, CSRF, rate-limit,
+    host-field leakage, client isolation, HWID, stale/remote node, audit,
+    concurrency, and feature-disabled tests.
+
+Do not persist passwords, portal tokens, subscription credentials, cookies,
+Authorization headers, request bodies, decrypted content, or webhook response
+bodies.
 
 ## Required workflow
 
 - Keep the working tree clean and use focused commits.
-- Before implementation, document exact integration points, upstream-touch
-  budget, threat model, API/UI contracts, and migration necessity.
-- Implement only after readiness is accepted, then run relevant tests,
-  `make verify`, `make verify-fork`, and the full security/concurrency matrix.
-- Do not merge into `main`.
+- Preserve upstream architecture and minimize upstream touch points.
+- Run relevant tests after each implementation stage.
+- Run `make verify`, `make verify-fork`, and `go test -race ./...` where
+  applicable.
+- Push this feature branch and run canonical Fork verification and Release
+  CatX-UI CI. Fix exact failures until both are green.
+- Perform a final WP-8B scope and security audit.
+- Stop on the fully green pushed branch. Do not merge WP-8B or start WP-8C.
 
 ## Authorized documents
 
@@ -69,8 +94,3 @@ only. Do not implement production code until the readiness decision is accepted.
 - `docs/08_FRONTEND_UX.md`
 - `docs/15_DEFINITION_OF_DONE.md`
 - `docs/19_REPOSITORY_MAP.md`
-
-## Stop condition
-
-Stop after the WP-8B readiness review and report whether Luna Medium can safely
-implement it. Do not implement production code in this readiness phase.
