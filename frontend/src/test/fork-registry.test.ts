@@ -20,6 +20,6 @@ describe('fork registries', () => {
     expect(forkApiSections[1].id).toBe('audit-webhooks-metrics');
     expect(forkApiSections[1].endpoints).toHaveLength(12);
     expect(forkApiSections[2].id).toBe('self-service-portal');
-    expect(forkApiSections[2].endpoints).toHaveLength(17);
+    expect(forkApiSections[2].endpoints).toHaveLength(18);
   });
 });
