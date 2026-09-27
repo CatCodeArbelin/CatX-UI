@@ -14,11 +14,12 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/mhsanaei/3x-ui/v3/internal/analytics"
-	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
 	"github.com/robfig/cron/v3"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+
+	"github.com/mhsanaei/3x-ui/v3/internal/analytics"
+	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
 )
 
 var state struct {

@@ -5,10 +5,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mhsanaei/3x-ui/v3/internal/analytics"
-	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+
+	"github.com/mhsanaei/3x-ui/v3/internal/analytics"
+	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
 )
 
 func riskDB(t *testing.T) *gorm.DB {
