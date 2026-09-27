@@ -11,7 +11,7 @@ describe('fork registries', () => {
       { key: 'audit', label: 'Audit', path: '/audit' },
       { key: 'webhooks', label: 'Webhooks', path: '/webhooks' },
     ]);
-    expect(forkApiSections).toHaveLength(2);
+    expect(forkApiSections).toHaveLength(3);
     expect(forkApiSections[0].id).toBe('risk-intelligence');
     expect(forkApiSections[0].endpoints).toHaveLength(7);
     expect(
@@ -19,5 +19,7 @@ describe('fork registries', () => {
     ).toContain('GET /panel/api/risk/clients/:email');
     expect(forkApiSections[1].id).toBe('audit-webhooks-metrics');
     expect(forkApiSections[1].endpoints).toHaveLength(12);
+    expect(forkApiSections[2].id).toBe('self-service-portal');
+    expect(forkApiSections[2].endpoints).toHaveLength(17);
   });
 });
