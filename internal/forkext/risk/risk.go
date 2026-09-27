@@ -400,6 +400,7 @@ func DeleteHistory(ctx context.Context, email string) error {
 	}
 	return db.WithContext(ctx).Where("client_email = ?", email).Delete(&IPHistory{}).Error
 }
+
 func DeleteEvents(ctx context.Context, email string) error {
 	db, ok := enabledDB()
 	if !ok {
@@ -407,6 +408,7 @@ func DeleteEvents(ctx context.Context, email string) error {
 	}
 	return db.WithContext(ctx).Where("client_email = ?", email).Delete(&Event{}).Error
 }
+
 func Acknowledge(ctx context.Context, email string, id uint) error {
 	db, ok := enabledDB()
 	if !ok {
@@ -414,6 +416,7 @@ func Acknowledge(ctx context.Context, email string, id uint) error {
 	}
 	return db.WithContext(ctx).Model(&Event{}).Where("id = ? AND client_email = ?", id, email).Update("acknowledged_at", time.Now().UnixMilli()).Error
 }
+
 func Suppress(ctx context.Context, email string, kind string, expiresAt int64, reason string) error {
 	db, ok := enabledDB()
 	if !ok {
