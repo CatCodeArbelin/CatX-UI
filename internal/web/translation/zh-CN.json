@@ -802,6 +802,11 @@
       "addClient": "添加客户端",
       "qrCode": "二维码",
       "clientInfo": "客户端信息",
+      "risk": {
+        "title": "Risk Intelligence", "score": "Risk score", "confidence": "Confidence", "state": "State", "evidence": "Evidence", "timeline": "Explainable signal timeline", "ipHistory": "Recent source IP history", "noEvents": "No risk events", "noIpHistory": "No IP history", "insufficient": "There is not enough corroborating metadata to draw a high-risk conclusion.", "unknown": "unknown", "unknownSource": "unknown source node", "noEvidence": "evidence details unavailable",
+        "signals": { "concurrent_ips": "Concurrent source IPs", "concurrent_nodes": "Concurrent source nodes", "country_divergence": "Country divergence", "asn_divergence": "ASN divergence", "ip_churn": "Source IP churn", "dns_anomaly": "DNS anomaly" },
+        "acknowledge": "Acknowledge", "acknowledged": "Acknowledged", "states": { "healthy": "Informational", "degraded": "Degraded evidence", "stale": "Stale data", "insufficient_evidence": "Insufficient evidence" }
+      },
       "editClient": "编辑客户端",
       "client": "客户端",
       "enabled": "已启用",
