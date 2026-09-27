@@ -11,8 +11,10 @@ import (
 	"time"
 
 	"github.com/mhsanaei/3x-ui/v3/internal/analytics"
+	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
 	"github.com/mhsanaei/3x-ui/v3/internal/eventbus"
 	"github.com/mhsanaei/3x-ui/v3/internal/forkext/groupquota"
+	"github.com/mhsanaei/3x-ui/v3/internal/forkext/risk"
 	"github.com/mhsanaei/3x-ui/v3/internal/forkext/trafficcontrol"
 	"github.com/mhsanaei/3x-ui/v3/internal/forkext/trafficpolicy"
 	"github.com/mhsanaei/3x-ui/v3/internal/policy"
@@ -39,6 +41,7 @@ func RegisterMigrations(db *gorm.DB) error {
 		trafficcontrol.Configure(false)
 		analytics.Configure(analytics.NoopRepository{}, false)
 		policy.Configure(nil, false)
+		risk.Configure(nil, false)
 		return nil
 	}
 	trafficControlEnabled, err := NewSettings(db).Enabled(FlagTrafficControl)
@@ -89,6 +92,17 @@ func RegisterMigrations(db *gorm.DB) error {
 		dnsEnabled = false
 	}
 	analytics.SetEvidenceEnabled(analyticsEnabled && dnsEnabled)
+	securityEnabled, err := NewSettings(db).Enabled(FlagSecurityAnomaly)
+	if err != nil {
+		securityEnabled = false
+	}
+	if securityEnabled && analyticsEnabled {
+		if err := risk.Migrate(db); err != nil {
+			log.Printf("fork risk migration skipped after error: %v", err)
+			securityEnabled = false
+		}
+	}
+	risk.Configure(db, securityEnabled && analyticsEnabled)
 	return nil
 }
 
@@ -102,6 +116,7 @@ func RegisterRoutes(api *gin.RouterGroup) {
 	groupquota.RegisterRoutes(api)
 	trafficcontrol.RegisterRoutes(api)
 	trafficpolicy.RegisterRoutes(api)
+	risk.RegisterRoutes(api)
 }
 
 // RegisterJobs is the fixed scheduler integration point for fork jobs.
@@ -109,9 +124,17 @@ func RegisterJobs(_ context.Context, scheduler *cron.Cron) {
 	groupquota.RegisterJobs(scheduler)
 	trafficcontrol.RegisterJobs(scheduler)
 	trafficpolicy.RegisterJobs(scheduler)
+	risk.RegisterJobs(scheduler)
 }
 
 func SetTrafficControlRestartCallback(fn func()) { groupquota.SetRestartCallback(fn) }
+
+// RecordClientIPHistory is the single fork handoff used by the existing
+// CheckClientIpJob and node attribution merge path. It never collects data on
+// its own and is a no-op when security analytics is disabled.
+func RecordClientIPHistory(ctx context.Context, nodeGuid string, observations map[string][]model.ClientIpEntry, source string) error {
+	return risk.RecordIPHistory(ctx, nodeGuid, observations, source)
+}
 
 // RegisterEventSubscribers is the fixed event-bus integration point for fork
 // subscribers.

@@ -14,6 +14,7 @@ import (
 
 	"github.com/mhsanaei/3x-ui/v3/internal/database"
 	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
+	"github.com/mhsanaei/3x-ui/v3/internal/forkext"
 	"github.com/mhsanaei/3x-ui/v3/internal/logger"
 	"github.com/mhsanaei/3x-ui/v3/internal/web/service"
 	"github.com/mhsanaei/3x-ui/v3/internal/xray"
@@ -407,6 +408,9 @@ func (j *CheckClientIpJob) recordLocalAttribution(attribution map[string][]model
 	}
 	if err := (&service.InboundService{}).RecordLocalClientIps(guid, attribution); err != nil {
 		logger.Debug("[LimitIP] record local ip attribution failed:", err)
+	}
+	if err := forkext.RecordClientIPHistory(context.Background(), guid, attribution, "check_client_ip"); err != nil {
+		logger.Debug("[LimitIP] record risk IP history failed:", err)
 	}
 }
 

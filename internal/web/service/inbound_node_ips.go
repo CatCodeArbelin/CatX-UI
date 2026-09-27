@@ -1,12 +1,14 @@
 package service
 
 import (
+	"context"
 	"encoding/json"
 	"sort"
 	"time"
 
 	"github.com/mhsanaei/3x-ui/v3/internal/database"
 	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
+	"github.com/mhsanaei/3x-ui/v3/internal/forkext"
 
 	"gorm.io/gorm/clause"
 )
@@ -145,6 +147,7 @@ func (s *InboundService) MergeClientIpsByGuid(node *model.Node, trees map[string
 		if err := upsertNodeClientIps(guid, perEmail); err != nil {
 			return err
 		}
+		_ = forkext.RecordClientIPHistory(context.Background(), guid, perEmail, "node_attribution")
 	}
 	return nil
 }
