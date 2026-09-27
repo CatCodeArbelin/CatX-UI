@@ -139,6 +139,18 @@ func RegisterRoutes(api *gin.RouterGroup) {
 	risk.RegisterRoutes(api)
 }
 
+// RegisterPortalRoutes installs the separate client portal surface at the
+// application root without sharing the admin session namespace.
+func RegisterPortalRoutes(g *gin.RouterGroup, secret []byte, basePath string, secure bool) {
+	portal.RegisterPortalRoutes(g, secret, basePath, secure)
+}
+
+// SetDeviceRevoker wires the portal to the existing ownership-safe client
+// device service without importing web/service into the fork package.
+func SetDeviceRevoker(fn func(email string, deviceID int) error) {
+	portal.SetDeviceRevoker(fn)
+}
+
 // RegisterMiddleware installs request correlation and post-success auditing
 // before upstream routes are registered.
 func RegisterMiddleware(api *gin.RouterGroup) {
