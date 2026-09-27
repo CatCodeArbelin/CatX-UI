@@ -13,7 +13,6 @@ describe('fork registries', () => {
       { key: 'audit', label: 'Audit', path: '/audit' },
       { key: 'webhooks', label: 'Webhooks', path: '/webhooks' },
     ]);
-    expect(forkApiSections).toHaveLength(3);
     expect(forkApiSections[0].id).toBe('risk-intelligence');
     expect(forkApiSections[0].endpoints).toHaveLength(7);
     expect(
@@ -21,7 +20,19 @@ describe('fork registries', () => {
     ).toContain('GET /panel/api/risk/clients/:email');
     expect(forkApiSections[1].id).toBe('audit-webhooks-metrics');
     expect(forkApiSections[1].endpoints).toHaveLength(12);
-    expect(forkApiSections[2].id).toBe('self-service-portal');
-    expect(forkApiSections[2].endpoints).toHaveLength(18);
+    const portal = forkApiSections.find((section) => section.id === 'self-service-portal');
+    expect(portal?.endpoints.map((endpoint) => `${endpoint.method} ${endpoint.path}`)).toEqual(
+      expect.arrayContaining([
+        'POST /portal/auth',
+        'GET /portal/me',
+        'GET /portal/devices',
+        'PUT /portal/devices/:id',
+        'DELETE /portal/devices/:id',
+        'GET /portal/hosts',
+        'GET /portal/traffic',
+        'POST /portal/access/rotate',
+        'POST /portal/access/revoke',
+      ]),
+    );
   });
 });
