@@ -50,6 +50,7 @@ func Configure(db *gorm.DB, on bool) {
 	configured.db, configured.on = db, on && db != nil
 	configured.mu.Unlock()
 }
+
 func db() (*gorm.DB, bool) {
 	configured.mu.RLock()
 	defer configured.mu.RUnlock()
@@ -208,6 +209,7 @@ func DeleteGrant(id uint) error {
 	}
 	return db.Delete(&HostGrant{}, id).Error
 }
+
 func ListGrants() ([]HostGrant, error) {
 	db, on := db()
 	if !on {

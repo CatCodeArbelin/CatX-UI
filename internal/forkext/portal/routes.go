@@ -68,6 +68,7 @@ func adminSettings(c *gin.Context) {
 	_, on := db()
 	c.JSON(http.StatusOK, gin.H{"success": true, "obj": PortalSettings{Enabled: on}})
 }
+
 func adminSetSettings(c *gin.Context) {
 	var req PortalSettings
 	if c.ShouldBindJSON(&req) != nil {
@@ -86,6 +87,7 @@ func adminSetSettings(c *gin.Context) {
 	Configure(d, req.Enabled)
 	c.JSON(http.StatusOK, gin.H{"success": true, "obj": PortalSettings{Enabled: req.Enabled}})
 }
+
 func setFlag(d *gorm.DB, enabled bool) error {
 	var row model.Setting
 	err := d.Where("key = ?", "fork.self_service.enabled").First(&row).Error
@@ -124,6 +126,7 @@ func adminIssue(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"success": true, "obj": row})
 }
+
 func adminRotate(c *gin.Context) {
 	id, err := parseClientID(c)
 	if err != nil {
@@ -141,6 +144,7 @@ func adminRotate(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"success": true, "obj": row})
 }
+
 func adminRevoke(c *gin.Context) {
 	id, err := parseClientID(c)
 	if err != nil || Revoke(id) != nil {
@@ -149,6 +153,7 @@ func adminRevoke(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"success": true})
 }
+
 func adminGrants(c *gin.Context) {
 	rows, err := ListGrants()
 	if err != nil {
@@ -157,6 +162,7 @@ func adminGrants(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"success": true, "obj": rows})
 }
+
 func adminGrant(c *gin.Context) {
 	var req HostGrant
 	if c.ShouldBindJSON(&req) != nil {
@@ -170,6 +176,7 @@ func adminGrant(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"success": true, "obj": row})
 }
+
 func adminDeleteGrant(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil || DeleteGrant(uint(id)) != nil {
@@ -184,10 +191,12 @@ func portalClient(c *gin.Context) *model.ClientRecord {
 	client, _ := v.(*model.ClientRecord)
 	return client
 }
+
 func me(c *gin.Context) {
 	client := portalClient(c)
 	c.JSON(http.StatusOK, gin.H{"success": true, "obj": clientView(client)})
 }
+
 func clientView(client *model.ClientRecord) gin.H {
 	return gin.H{"id": client.Id, "email": client.Email, "group": client.Group, "enabled": client.Enable, "totalGB": client.TotalGB, "expiryTime": client.ExpiryTime, "limitHwid": client.LimitHwid}
 }
@@ -215,6 +224,7 @@ func devices(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"success": true, "obj": out})
 }
+
 func renameDevice(c *gin.Context) {
 	client := portalClient(c)
 	db, _ := db()
@@ -238,6 +248,7 @@ func renameDevice(c *gin.Context) {
 	AuditPortalMutation(c, "portal.device.rename", client)
 	c.JSON(http.StatusOK, gin.H{"success": true})
 }
+
 func revokeDevice(c *gin.Context) {
 	client := portalClient(c)
 	id, err := strconv.Atoi(c.Param("id"))
@@ -306,6 +317,7 @@ func hosts(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"success": true, "obj": out})
 }
+
 func traffic(c *gin.Context) {
 	client := portalClient(c)
 	db, _ := db()
@@ -321,6 +333,7 @@ func traffic(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"success": true, "obj": gin.H{"up": row.Up, "down": row.Down, "total": row.Total, "expiryTime": client.ExpiryTime}})
 }
+
 func rotateSelf(c *gin.Context) {
 	client := portalClient(c)
 	row, err := Issue(client.Id, 0)
@@ -333,6 +346,7 @@ func rotateSelf(c *gin.Context) {
 	AuditPortalMutation(c, "portal.access.rotate", client)
 	c.JSON(http.StatusOK, gin.H{"success": true, "obj": row})
 }
+
 func revokeSelf(c *gin.Context) {
 	client := portalClient(c)
 	if err := Revoke(client.Id); err != nil {
@@ -344,6 +358,7 @@ func revokeSelf(c *gin.Context) {
 	AuditPortalMutation(c, "portal.access.revoke", client)
 	c.JSON(http.StatusOK, gin.H{"success": true})
 }
+
 func logout(c *gin.Context) {
 	s := portalSession(c)
 	s.Clear()
