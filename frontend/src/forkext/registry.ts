@@ -24,7 +24,7 @@ export const forkApiSections = [
   {
     id: 'risk-intelligence',
     title: 'Risk intelligence',
-    description: 'Metadata-only, explainable risk signals. No automatic enforcement is performed.',
+    description: 'Metadata-only, explainable risk signals. Informational only; no automatic enforcement is performed.',
     endpoints: [
       {
         method: 'GET',
