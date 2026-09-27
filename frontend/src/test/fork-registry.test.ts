@@ -9,6 +9,7 @@ describe('fork registries', () => {
       { key: 'client-activity', label: 'Client activity', path: '/activity' },
       { key: 'policy-engine', label: 'Policy engine', path: '/policies' },
     ]);
-    expect(forkApiSections).toEqual([]);
+    expect(forkApiSections).toHaveLength(1);
+    expect(forkApiSections[0].id).toBe('risk-intelligence');
   });
 });

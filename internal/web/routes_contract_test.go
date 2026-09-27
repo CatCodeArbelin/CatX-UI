@@ -73,16 +73,24 @@ func registeredContractRoutes(t *testing.T) map[string]bool {
 
 func documentedContractRoutes(t *testing.T) map[string]bool {
 	t.Helper()
-	source, err := os.ReadFile(filepath.Join("..", "..", "frontend", "src", "pages", "api-docs", "endpoints.ts"))
-	if err != nil {
-		t.Fatalf("read endpoints.ts: %v", err)
+	paths := []string{
+		filepath.Join("..", "..", "frontend", "src", "pages", "api-docs", "endpoints.ts"),
+		filepath.Join("..", "..", "frontend", "src", "forkext", "registry.ts"),
 	}
-	text := string(source)
+	var sources []string
+	for _, path := range paths {
+		source, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatalf("read %s: %v", path, err)
+		}
+		sources = append(sources, string(source))
+	}
+	text := strings.Join(sources, "\n")
 	methodRe := regexp.MustCompile(`method:\s*'(GET|POST|PUT|DELETE|PATCH|HEAD|WS)'`)
 	pathRe := regexp.MustCompile(`path:\s*'([^']+)'`)
 	methods := methodRe.FindAllStringSubmatchIndex(text, -1)
 	if declared := strings.Count(text, "method: '"); len(methods) != declared {
-		t.Fatalf("parsed %d method fields but endpoints.ts declares %d — the parser regex no longer matches the file shape", len(methods), declared)
+		t.Fatalf("parsed %d method fields but API registries declare %d — the parser regex no longer matches the file shape", len(methods), declared)
 	}
 	docs := make(map[string]bool)
 	for i, m := range methods {
@@ -92,7 +100,7 @@ func documentedContractRoutes(t *testing.T) map[string]bool {
 		}
 		pathMatch := pathRe.FindStringSubmatch(text[m[1]:segmentEnd])
 		if pathMatch == nil {
-			t.Fatalf("entry %d in endpoints.ts has a method but no path before the next entry — the parser cannot pair it", i)
+			t.Fatalf("entry %d in API registries has a method but no path before the next entry — the parser cannot pair it", i)
 		}
 		method := text[m[2]:m[3]]
 		if strings.HasPrefix(pathMatch[1], "/{") || !strings.HasPrefix(pathMatch[1], "/") {
@@ -101,7 +109,7 @@ func documentedContractRoutes(t *testing.T) map[string]bool {
 		docs[method+" "+pathMatch[1]] = true
 	}
 	if len(docs) == 0 {
-		t.Fatal("no entries parsed from endpoints.ts; the parser regex is broken")
+		t.Fatal("no entries parsed from API registries; the parser regex is broken")
 	}
 	return docs
 }
