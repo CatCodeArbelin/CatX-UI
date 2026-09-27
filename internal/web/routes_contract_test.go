@@ -13,6 +13,8 @@ import (
 	"github.com/robfig/cron/v3"
 
 	"github.com/mhsanaei/3x-ui/v3/internal/database"
+	"github.com/mhsanaei/3x-ui/v3/internal/forkext"
+	"github.com/mhsanaei/3x-ui/v3/internal/forkext/audit"
 	"github.com/mhsanaei/3x-ui/v3/internal/web/global"
 )
 
@@ -47,6 +49,15 @@ func registeredContractRoutes(t *testing.T) map[string]bool {
 		t.Fatalf("init db: %v", err)
 	}
 	t.Cleanup(func() { _ = database.CloseDB() })
+	// The fork audit routes are intentionally absent while the feature is
+	// disabled. Exercise the documented fork surface in its enabled state so
+	// this contract test does not mistake the feature-off no-op for stale API
+	// documentation.
+	if err := forkext.NewSettings(database.Load()).Set(forkext.FlagAudit, true); err != nil {
+		t.Fatalf("enable audit for route contract: %v", err)
+	}
+	audit.Configure(database.Load(), true)
+	t.Cleanup(func() { audit.Configure(nil, false) })
 
 	previous := global.GetWebServer()
 	s := NewServer()

@@ -131,6 +131,12 @@ export const forkApiSections = [
         summary: 'Delete a webhook destination.',
       },
       {
+        method: 'POST',
+        path: '/panel/api/fork/audit/webhooks/:id/replay',
+        summary: 'Queue the latest audit event for delivery to a destination.',
+        responseSchema: 'WebhookDelivery',
+      },
+      {
         method: 'GET',
         path: '/panel/api/fork/audit/webhooks/deliveries',
         summary: 'List webhook delivery attempts.',
@@ -146,6 +152,13 @@ export const forkApiSections = [
         method: 'GET',
         path: '/panel/api/fork/audit/retention',
         summary: 'Read audit and webhook retention.',
+        responseSchema: 'AuditRetentionSettings',
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/fork/audit/retention',
+        summary: 'Update audit and webhook retention.',
+        requestSchema: { $ref: '#/components/schemas/AuditRetentionSettings' },
         responseSchema: 'AuditRetentionSettings',
       },
       {
