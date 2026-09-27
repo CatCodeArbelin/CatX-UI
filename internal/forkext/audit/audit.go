@@ -100,6 +100,17 @@ func Middleware() gin.HandlerFunc {
 }
 
 func actor(c *gin.Context) (string, string, string, string) {
+	if portal, ok := c.Get("catx_portal_actor"); ok {
+		if isPortal, ok := portal.(bool); ok && isPortal {
+			id, _ := c.Get("catx_actor_id")
+			name, _ := c.Get("catx_actor_name")
+			method, _ := c.Get("catx_auth_method")
+			actorID, _ := id.(string)
+			actorName, _ := name.(string)
+			auth, _ := method.(string)
+			return "client_portal", actorID, actorName, auth
+		}
+	}
 	if id, ok := c.Get("catx_actor_id"); ok {
 		actorID, _ := id.(string)
 		name, _ := c.Get("catx_actor_name")

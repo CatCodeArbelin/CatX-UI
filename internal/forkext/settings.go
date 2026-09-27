@@ -23,6 +23,7 @@ const (
 	FlagAudit           Flag = "audit.enabled"
 	FlagWebhooks        Flag = "webhooks.enabled"
 	FlagMetrics         Flag = "metrics.enabled"
+	FlagSelfService     Flag = "self_service.enabled"
 )
 
 var allFlags = [...]Flag{
@@ -34,6 +35,7 @@ var allFlags = [...]Flag{
 	FlagAudit,
 	FlagWebhooks,
 	FlagMetrics,
+	FlagSelfService,
 }
 
 func settingKey(flag Flag) string {
