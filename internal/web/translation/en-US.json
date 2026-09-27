@@ -2575,14 +2575,14 @@
   "fork": {
     "audit": {
       "title": "Audit",
-      "description": "Authoritative metadata-only security and privileged-action history.",
+      "summary": "Authoritative metadata-only security and privileged-action history.",
       "empty": "No audit events",
       "filter": "Filter",
       "details": "Details"
     },
     "webhooks": {
       "title": "Webhooks",
-      "description": "Public HTTPS destinations receive signed, at-least-once audit events.",
+      "summary": "Public HTTPS destinations receive signed, at-least-once audit events.",
       "create": "Create",
       "delete": "Delete",
       "replay": "Replay",

@@ -73,7 +73,7 @@ export default function AuditPage() {
       <Space direction="vertical" style={{ width: '100%' }} size="large">
         <div>
           <Typography.Title level={2}>{t('fork.audit.title')}</Typography.Title>
-          <Typography.Text type="secondary">{t('fork.audit.description')}</Typography.Text>
+          <Typography.Text type="secondary">{t('fork.audit.summary')}</Typography.Text>
         </div>
         <Space>
           <Input

@@ -107,7 +107,7 @@ export default function WebhooksPage() {
     <Space direction="vertical" style={{ width: '100%' }} size="large">
       <Card>
         <Typography.Title level={2}>{t('fork.webhooks.title')}</Typography.Title>
-        <Typography.Text type="secondary">{t('fork.webhooks.description')}</Typography.Text>
+        <Typography.Text type="secondary">{t('fork.webhooks.summary')}</Typography.Text>
         <Form
           form={form}
           layout="vertical"
