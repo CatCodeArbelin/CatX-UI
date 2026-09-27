@@ -19207,6 +19207,63 @@
         }
       }
     },
+    "/panel/api/fork/audit/webhooks/{id}/replay": {
+      "post": {
+        "tags": [
+          "Audit / Webhooks / Metrics"
+        ],
+        "summary": "Queue the latest audit event for delivery to a destination.",
+        "operationId": "post_panel_api_fork_audit_webhooks_id_replay",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "$ref": "#/components/schemas/WebhookDelivery"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": {
+                    "attempt": 0,
+                    "createdAt": "2025-01-01T00:00:00Z",
+                    "deliveredAt": null,
+                    "endpointId": "",
+                    "eventId": "",
+                    "id": "",
+                    "lastError": "",
+                    "nextAttemptAt": "2025-01-01T00:00:00Z",
+                    "status": ""
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/panel/api/fork/audit/webhooks/deliveries": {
       "get": {
         "tags": [
@@ -19322,6 +19379,54 @@
         ],
         "summary": "Read audit and webhook retention.",
         "operationId": "get_panel_api_fork_audit_retention",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "$ref": "#/components/schemas/AuditRetentionSettings"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": {
+                    "auditDays": 0,
+                    "deadLetterDays": 0,
+                    "deliveryDays": 0
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Audit / Webhooks / Metrics"
+        ],
+        "summary": "Update audit and webhook retention.",
+        "operationId": "post_panel_api_fork_audit_retention",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuditRetentionSettings"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Successful response",
