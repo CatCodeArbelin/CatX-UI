@@ -18,6 +18,6 @@ describe('fork registries', () => {
       forkApiSections[0].endpoints.map((endpoint) => `${endpoint.method} ${endpoint.path}`),
     ).toContain('GET /panel/api/risk/clients/:email');
     expect(forkApiSections[1].id).toBe('audit-webhooks-metrics');
-    expect(forkApiSections[1].endpoints).toHaveLength(10);
+    expect(forkApiSections[1].endpoints).toHaveLength(12);
   });
 });
