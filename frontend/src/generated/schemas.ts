@@ -2066,6 +2066,53 @@ export const SCHEMAS: Record<string, unknown> = {
     ],
     "type": "object"
   },
+  "Event": {
+    "properties": {
+      "acknowledgedAt": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "clientEmail": {
+        "type": "string"
+      },
+      "confidence": {
+        "type": "number"
+      },
+      "evidence": {
+        "type": "string"
+      },
+      "id": {
+        "type": "integer"
+      },
+      "kind": {
+        "type": "string"
+      },
+      "observedAt": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "scoreContribution": {
+        "type": "integer"
+      },
+      "sourceNode": {
+        "type": "string"
+      },
+      "state": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "clientEmail",
+      "confidence",
+      "evidence",
+      "id",
+      "kind",
+      "observedAt",
+      "scoreContribution",
+      "state"
+    ],
+    "type": "object"
+  },
   "FallbackParentInfo": {
     "description": "FallbackParentInfo carries everything the frontend needs to rewrite a\nchild inbound's client link: where to connect (the master's address\nand port) and which path matched on the master's fallbacks array.\nThe frontend already has the master inbound in its dbInbounds list,\nso we only ship identifiers + the match path here.",
     "properties": {
@@ -2640,6 +2687,60 @@ export const SCHEMAS: Record<string, unknown> = {
       "limit",
       "registered",
       "remaining"
+    ],
+    "type": "object"
+  },
+  "IPHistory": {
+    "description": "IPHistory is the durable fork-owned extension of the existing IP\nobservation path. It contains metadata only and never payload data.",
+    "properties": {
+      "asn": {
+        "type": "integer"
+      },
+      "clientEmail": {
+        "type": "string"
+      },
+      "country": {
+        "type": "string"
+      },
+      "id": {
+        "type": "integer"
+      },
+      "ingestedAt": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "ip": {
+        "type": "string"
+      },
+      "metadataConfidence": {
+        "type": "number"
+      },
+      "metadataSource": {
+        "type": "string"
+      },
+      "metadataState": {
+        "type": "string"
+      },
+      "nodeGuid": {
+        "type": "string"
+      },
+      "observedAt": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "source": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "clientEmail",
+      "id",
+      "ingestedAt",
+      "ip",
+      "metadataConfidence",
+      "metadataState",
+      "observedAt",
+      "source"
     ],
     "type": "object"
   },
@@ -4000,6 +4101,61 @@ export const SCHEMAS: Record<string, unknown> = {
     ],
     "type": "object"
   },
+  "RetentionSettings": {
+    "properties": {
+      "eventDays": {
+        "type": "integer"
+      },
+      "ipDays": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "eventDays",
+      "ipDays"
+    ],
+    "type": "object"
+  },
+  "Score": {
+    "properties": {
+      "calculatedAt": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "clientEmail": {
+        "type": "string"
+      },
+      "confidence": {
+        "type": "number"
+      },
+      "evidence": {
+        "type": "integer"
+      },
+      "id": {
+        "type": "integer"
+      },
+      "score": {
+        "type": "integer"
+      },
+      "state": {
+        "type": "string"
+      },
+      "version": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "calculatedAt",
+      "clientEmail",
+      "confidence",
+      "evidence",
+      "id",
+      "score",
+      "state",
+      "version"
+    ],
+    "type": "object"
+  },
   "ServerSettings": {
     "description": "ServerSettings is the \"server\" block of an AmneziaWG inbound's Settings\nJSON: the interface-level configuration shared by every client/peer. The\nlisten port is deliberately not duplicated here — it lives on the inbound\nrow itself (Inbound.Port), like every other protocol.",
     "properties": {
@@ -4279,6 +4435,88 @@ export const SCHEMAS: Record<string, unknown> = {
       "sortOrder",
       "strategy",
       "updatedAt"
+    ],
+    "type": "object"
+  },
+  "Summary": {
+    "properties": {
+      "calculatedAt": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "clientEmail": {
+        "type": "string"
+      },
+      "confidence": {
+        "type": "number"
+      },
+      "enabled": {
+        "type": "boolean"
+      },
+      "events": {
+        "items": {
+          "$ref": "#/components/schemas/Event"
+        },
+        "type": "array"
+      },
+      "evidence": {
+        "type": "integer"
+      },
+      "ipHistory": {
+        "items": {
+          "$ref": "#/components/schemas/IPHistory"
+        },
+        "type": "array"
+      },
+      "score": {
+        "type": "integer"
+      },
+      "state": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "calculatedAt",
+      "clientEmail",
+      "confidence",
+      "enabled",
+      "events",
+      "evidence",
+      "ipHistory",
+      "score",
+      "state"
+    ],
+    "type": "object"
+  },
+  "Suppression": {
+    "properties": {
+      "clientEmail": {
+        "type": "string"
+      },
+      "createdAt": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "expiresAt": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "id": {
+        "type": "integer"
+      },
+      "kind": {
+        "type": "string"
+      },
+      "reason": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "clientEmail",
+      "createdAt",
+      "expiresAt",
+      "id",
+      "kind"
     ],
     "type": "object"
   },

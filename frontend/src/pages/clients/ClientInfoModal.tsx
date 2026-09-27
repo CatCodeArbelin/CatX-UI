@@ -21,6 +21,7 @@ import { QrPanel } from '@/pages/inbounds/qr';
 import ClientHwidListModal from '@/components/clients/ClientHwidList';
 import ConfigBlock from '@/components/clients/ConfigBlock';
 import TrafficPolicyPanel from './TrafficPolicyPanel';
+import RiskIntelligencePanel from './RiskIntelligencePanel';
 import {
   buildWireguardClientConfig,
   findWireguardInbounds,
@@ -569,6 +570,7 @@ export default function ClientInfoModal({
             </table>
 
             <TrafficPolicyPanel email={client.email} />
+            <RiskIntelligencePanel email={client.email} />
 
             {showSubscription && subLink && (
               <>

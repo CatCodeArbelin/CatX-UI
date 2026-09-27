@@ -2092,6 +2092,53 @@
         ],
         "type": "object"
       },
+      "Event": {
+        "properties": {
+          "acknowledgedAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "clientEmail": {
+            "type": "string"
+          },
+          "confidence": {
+            "type": "number"
+          },
+          "evidence": {
+            "type": "string"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "observedAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "scoreContribution": {
+            "type": "integer"
+          },
+          "sourceNode": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "clientEmail",
+          "confidence",
+          "evidence",
+          "id",
+          "kind",
+          "observedAt",
+          "scoreContribution",
+          "state"
+        ],
+        "type": "object"
+      },
       "FallbackParentInfo": {
         "description": "FallbackParentInfo carries everything the frontend needs to rewrite a\nchild inbound's client link: where to connect (the master's address\nand port) and which path matched on the master's fallbacks array.\nThe frontend already has the master inbound in its dbInbounds list,\nso we only ship identifiers + the match path here.",
         "properties": {
@@ -2666,6 +2713,60 @@
           "limit",
           "registered",
           "remaining"
+        ],
+        "type": "object"
+      },
+      "IPHistory": {
+        "description": "IPHistory is the durable fork-owned extension of the existing IP\nobservation path. It contains metadata only and never payload data.",
+        "properties": {
+          "asn": {
+            "type": "integer"
+          },
+          "clientEmail": {
+            "type": "string"
+          },
+          "country": {
+            "type": "string"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "ingestedAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "ip": {
+            "type": "string"
+          },
+          "metadataConfidence": {
+            "type": "number"
+          },
+          "metadataSource": {
+            "type": "string"
+          },
+          "metadataState": {
+            "type": "string"
+          },
+          "nodeGuid": {
+            "type": "string"
+          },
+          "observedAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "source": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "clientEmail",
+          "id",
+          "ingestedAt",
+          "ip",
+          "metadataConfidence",
+          "metadataState",
+          "observedAt",
+          "source"
         ],
         "type": "object"
       },
@@ -4026,6 +4127,61 @@
         ],
         "type": "object"
       },
+      "RetentionSettings": {
+        "properties": {
+          "eventDays": {
+            "type": "integer"
+          },
+          "ipDays": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "eventDays",
+          "ipDays"
+        ],
+        "type": "object"
+      },
+      "Score": {
+        "properties": {
+          "calculatedAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "clientEmail": {
+            "type": "string"
+          },
+          "confidence": {
+            "type": "number"
+          },
+          "evidence": {
+            "type": "integer"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "score": {
+            "type": "integer"
+          },
+          "state": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "calculatedAt",
+          "clientEmail",
+          "confidence",
+          "evidence",
+          "id",
+          "score",
+          "state",
+          "version"
+        ],
+        "type": "object"
+      },
       "ServerSettings": {
         "description": "ServerSettings is the \"server\" block of an AmneziaWG inbound's Settings\nJSON: the interface-level configuration shared by every client/peer. The\nlisten port is deliberately not duplicated here — it lives on the inbound\nrow itself (Inbound.Port), like every other protocol.",
         "properties": {
@@ -4305,6 +4461,88 @@
           "sortOrder",
           "strategy",
           "updatedAt"
+        ],
+        "type": "object"
+      },
+      "Summary": {
+        "properties": {
+          "calculatedAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "clientEmail": {
+            "type": "string"
+          },
+          "confidence": {
+            "type": "number"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/Event"
+            },
+            "type": "array"
+          },
+          "evidence": {
+            "type": "integer"
+          },
+          "ipHistory": {
+            "items": {
+              "$ref": "#/components/schemas/IPHistory"
+            },
+            "type": "array"
+          },
+          "score": {
+            "type": "integer"
+          },
+          "state": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "calculatedAt",
+          "clientEmail",
+          "confidence",
+          "enabled",
+          "events",
+          "evidence",
+          "ipHistory",
+          "score",
+          "state"
+        ],
+        "type": "object"
+      },
+      "Suppression": {
+        "properties": {
+          "clientEmail": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "expiresAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "clientEmail",
+          "createdAt",
+          "expiresAt",
+          "id",
+          "kind"
         ],
         "type": "object"
       },
@@ -4634,6 +4872,10 @@
     {
       "name": "Traffic control",
       "description": "Capability and reconciliation endpoints for the CatX shaping substrate. WP-6A does not define speed-limit policy."
+    },
+    {
+      "name": "Risk intelligence",
+      "description": "Metadata-only, explainable risk signals. Informational only; no automatic enforcement is performed."
     }
   ],
   "paths": {
@@ -18034,6 +18276,374 @@
                       "type": "string"
                     },
                     "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/risk/clients/{email}": {
+      "get": {
+        "tags": [
+          "Risk intelligence"
+        ],
+        "summary": "Return the client risk score, evidence timeline, and source IP history.",
+        "operationId": "get_panel_api_risk_clients_email",
+        "parameters": [
+          {
+            "name": "email",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "$ref": "#/components/schemas/Summary"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": {
+                    "calculatedAt": 0,
+                    "clientEmail": "",
+                    "confidence": 0,
+                    "enabled": false,
+                    "events": [
+                      {
+                        "acknowledgedAt": 0,
+                        "clientEmail": "",
+                        "confidence": 0,
+                        "evidence": "",
+                        "id": 0,
+                        "kind": "",
+                        "observedAt": 0,
+                        "scoreContribution": 0,
+                        "sourceNode": "",
+                        "state": ""
+                      }
+                    ],
+                    "evidence": 0,
+                    "ipHistory": [
+                      {
+                        "asn": 0,
+                        "clientEmail": "",
+                        "country": "",
+                        "id": 0,
+                        "ingestedAt": 0,
+                        "ip": "",
+                        "metadataConfidence": 0,
+                        "metadataSource": "",
+                        "metadataState": "",
+                        "nodeGuid": "",
+                        "observedAt": 0,
+                        "source": ""
+                      }
+                    ],
+                    "score": 0,
+                    "state": ""
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/risk/clients/{email}/events/{id}/ack": {
+      "post": {
+        "tags": [
+          "Risk intelligence"
+        ],
+        "summary": "Acknowledge a risk event.",
+        "operationId": "post_panel_api_risk_clients_email_events_id_ack",
+        "parameters": [
+          {
+            "name": "email",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/risk/clients/{email}/suppress": {
+      "post": {
+        "tags": [
+          "Risk intelligence"
+        ],
+        "summary": "Create an expiring informational signal suppression.",
+        "operationId": "post_panel_api_risk_clients_email_suppress",
+        "parameters": [
+          {
+            "name": "email",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string"
+                  },
+                  "expiresAt": {
+                    "type": "integer"
+                  },
+                  "reason": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/risk/clients/{email}/ip-history": {
+      "delete": {
+        "tags": [
+          "Risk intelligence"
+        ],
+        "summary": "Delete the client IP history without deleting upstream accounting.",
+        "operationId": "delete_panel_api_risk_clients_email_ip_history",
+        "parameters": [
+          {
+            "name": "email",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/risk/clients/{email}/events": {
+      "delete": {
+        "tags": [
+          "Risk intelligence"
+        ],
+        "summary": "Delete the client risk event history.",
+        "operationId": "delete_panel_api_risk_clients_email_events",
+        "parameters": [
+          {
+            "name": "email",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/risk/settings": {
+      "get": {
+        "tags": [
+          "Risk intelligence"
+        ],
+        "summary": "Read independent risk retention settings.",
+        "operationId": "get_panel_api_risk_settings",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "$ref": "#/components/schemas/RetentionSettings"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": {
+                    "eventDays": 0,
+                    "ipDays": 0
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Risk intelligence"
+        ],
+        "summary": "Update independent risk retention settings.",
+        "operationId": "post_panel_api_risk_settings",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RetentionSettings"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "$ref": "#/components/schemas/RetentionSettings"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": {
+                    "eventDays": 0,
+                    "ipDays": 0
                   }
                 }
               }

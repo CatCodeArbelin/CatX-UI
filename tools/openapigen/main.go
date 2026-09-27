@@ -119,6 +119,10 @@ func run(root, outDir string) error {
 			StructAllow: setOf("Policy", "State", "View"),
 		},
 		{
+			Path:        resolveRel(root, "internal/forkext/risk"),
+			StructAllow: setOf("IPHistory", "Event", "Score", "Suppression", "Summary", "RetentionSettings"),
+		},
+		{
 			Path:        resolveRel(root, "internal/amneziawg"),
 			StructAllow: setOf("ServerSettings"),
 		},
