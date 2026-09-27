@@ -7,58 +7,79 @@
 ## Status
 
 WP-7A is DONE, merged into `develop`, and its feature branch was deleted after
-the canonical CI runs reported green. Do not modify `main`.
+the canonical CI runs reported green. Do not modify `main` or preview/demo data.
 
-WP-8A is authorized for implementation-readiness review only. Do not implement
-production code in this task.
+The WP-8A readiness review is approved. WP-8A is authorized for full
+implementation on this feature branch. Do not merge WP-8A or start WP-8B.
 
-## Review objective
+## Fixed decisions
 
-Define a low-divergence, fork-owned design for:
+- Durable audit storage is authoritative. The existing event bus is
+  notification/wake-up only and is never durable audit storage.
+- Do not create a second event system.
+- Use authoritative controller/service transaction boundaries. If an action
+  already has a DB transaction, write the audit row and webhook outbox in it;
+  otherwise write a success audit only after the authoritative action succeeds.
+- Generate an internal UUID request ID server-side. Never trust an incoming
+  request ID as identity.
+- Webhook v1 destinations are public HTTPS only. Reject loopback, private,
+  link-local, multicast, and other non-public destinations at configuration and
+  after DNS resolution on every delivery. Do not follow redirects.
+- Webhooks are at-least-once with stable event/delivery IDs, HMAC-SHA256,
+  bounded timeout, exponential backoff, leases, crash recovery, and dead
+  letters.
+- Encrypt webhook secrets at rest with AES-GCM. Reuse an existing cryptographic
+  installation key only when one actually exists; otherwise use a fork-owned
+  random master-key file outside the DB with 0600 permissions. Never expose a
+  secret after creation.
+- Add official `prometheus/client_golang` support. Metrics use fixed bounded
+  labels only; never email, IP, domain, request/session ID, URL, or arbitrary
+  node/client IDs.
+- Default retention: audit events 180 days, successful webhook deliveries 30
+  days, dead letters 90 days.
+- Database-level backup/restore includes WP-8A tables. Normal config/export
+  APIs exclude audit history and webhook secret material.
+- Feature-disabled behavior is an exact or near-exact no-op.
 
-- durable audit logging;
-- webhook delivery;
-- Prometheus metrics;
-- API/UI exposure and administration.
+## Authorized implementation scope
 
-The review must resolve the audit event model, existing actions/events to audit,
-actor/target/node/request correlation, secret and sensitive-payload redaction,
-retention/pagination/filtering/deletion, webhook signing/retry/backoff/timeout/
-dedupe/idempotency/dead-letter behavior, event-bus reuse without treating it as
-durable storage, bounded Prometheus labels, local/remote node attribution, API,
-UI, migrations, rollback, concurrency, security, and the complete test matrix.
+Implement end-to-end:
 
-## Hard constraints
+1. Fork-owned audit persistence, sanitizer/allowlist, and request correlation.
+2. Audit authoritative privileged mutations and security/destructive actions.
+3. Durable webhook endpoints, transactional outbox, worker, retries, dead
+   letters, and manual replay.
+4. SSRF, DNS-rebinding, redirect, size, and timeout protections.
+5. Prometheus endpoint and bounded metrics.
+6. Protected audit/webhook APIs.
+7. Audit and Webhooks UI with masked secrets, filters, pagination, detail, and
+   dead-letter/replay views.
+8. Retention and deletion.
+9. OpenAPI/generated types/i18n.
+10. SQLite/PostgreSQL migrations.
+11. API-token/node-sync/monitor route authorization updates.
+12. Transaction, replay, concurrency, race, redaction, SSRF, signing,
+    crash-recovery, metrics-cardinality, API/UI, and feature-disabled tests.
 
-- Reuse the existing event bus for notifications only; do not create a second
-  event system and do not use the bus as the durable audit ledger.
-- Do not log credentials, tokens, cookies, Authorization headers, passwords,
-  decrypted content, or HTTP bodies.
-- Do not expose unbounded Prometheus labels such as raw IP, domain, client
-  email, or session ID.
-- Preserve upstream architecture and behavior with minimal integration points;
-  prefer fork-owned modules, registries, adapters, and lifecycle hooks.
-- Every persisted change requires explicit SQLite/PostgreSQL migration, index,
-  retention, deletion, upgrade, and rollback review.
-- Feature-disabled behavior must remain as close as possible to upstream.
-- Do not modify `main`, preview/demo data, or unrelated upstream code.
-- Keep the tree clean. This task must not implement production code.
+Do not persist passwords, tokens, cookies, Authorization headers, bodies,
+decrypted content, arbitrary request payloads, or webhook response bodies.
 
-## Required report
+## Required workflow
 
-Report only:
+- Use focused commits and keep the working tree clean.
+- Run relevant tests after each implementation stage.
+- Run `make verify` and `make verify-fork`.
+- Push the feature branch and run canonical CI.
+- Inspect exact failures and fix genuine defects until Fork verification and
+  Release CatX-UI are green.
+- Perform a final WP-8A scope and security audit.
+- Do not merge WP-8A, start WP-8B, modify `main`, or touch preview/demo data.
 
-- proposed architecture;
-- audit event model;
-- webhook delivery model;
-- metrics model;
-- data sources/hooks reused;
-- schema/API/UI changes;
-- privacy/security;
-- retention;
-- test matrix;
-- blockers;
-- whether Luna Medium can safely implement WP-8A.
+## Required final report
+
+Report final SHA, commits, schema, audited action coverage, webhook
+security/delivery model, secret storage, metrics, retention/backup behavior,
+API/UI, tests, both CI run IDs, remaining limitations, and clean-tree state.
 
 ## Authorized documents
 
@@ -71,8 +92,10 @@ Report only:
 
 ## Authorized skills
 
+- `skills/feature-implementer/SKILL.md`
 - `skills/security-privacy-review/SKILL.md`
 
 ## Stop condition
 
-Stop after the readiness review. Do not implement, merge, or modify `main`.
+Stop on the fully green, pushed WP-8A feature branch after the final scope and
+security audit. Do not merge WP-8A or begin WP-8B.
