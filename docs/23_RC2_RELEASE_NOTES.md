@@ -55,3 +55,17 @@ tracked durably. A timeout after POST is ambiguous until the node's correlated
   services and capabilities available to the canonical CI runner.
 - No public RC should be announced until the exact final commit has passed the
   full verification and staging matrix.
+
+## RC-3 prerelease semantics
+
+The first public RC is v0.1.0-rc.1. It is an explicit RC-channel release,
+not a stable release and not dev-latest. Stable clients continue to query only
+the GitHub releases/latest stable pointer and reject prerelease metadata, so
+they do not receive the RC automatically. RC clients resolve the exact
+checked-in RC tag. The rolling dev channel remains opt-in and unchanged.
+
+The tagged RC publication must set prerelease=true and latest=false. Release
+metadata records the channel, exact release version/tag, publication flags,
+build commit, and CatX repository identity. The normal checksum, candidate
+identity, transactional snapshot/rollback, and post-restore health checks
+apply unchanged to the RC path.

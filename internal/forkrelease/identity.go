@@ -19,6 +19,9 @@ var identityEnv string
 //go:embed fork_version
 var forkVersion string
 
+//go:embed rc_version
+var rcVersion string
+
 //go:embed upstream_version
 var upstreamVersion string
 
@@ -67,6 +70,10 @@ func ForkVersion() string {
 	return strings.TrimSpace(forkVersion)
 }
 
+func RCVersion() string {
+	return strings.TrimSpace(rcVersion)
+}
+
 func UpstreamBaseVersion() string {
 	return strings.TrimSpace(upstreamVersion)
 }
@@ -74,6 +81,8 @@ func UpstreamBaseVersion() string {
 func (i Identity) RepositorySlug() string {
 	return i.ReleaseOwner + "/" + i.ReleaseRepository
 }
+
+func (i Identity) RCReleaseTag() string { return "v" + RCVersion() }
 
 func (i Identity) APIRepositoryURL() string {
 	return "https://api.github.com/repos/" + i.RepositorySlug()

@@ -130,26 +130,27 @@ func (s *PanelService) RestartPanel(delay time.Duration) error {
 	return nil
 }
 
-// GetUpdateInfo checks GitHub for the latest 3x-ui release. When the dev channel
-// is enabled on a dev build it compares commits against the rolling dev release;
-// otherwise it compares versions against the latest stable tag.
+// GetUpdateInfo checks the explicitly selected CatX release channel. The dev
+// setting may opt into dev-latest, while an RC binary remains on the exact RC
+// channel; stable binaries continue to query only the stable release.
 func (s *PanelService) GetUpdateInfo() (*PanelUpdateInfo, error) {
-	if devChannelActive() {
+	channel := updateChannel()
+	if channel == forkrelease.ChannelDev {
 		return getDevUpdateInfo()
 	}
-	latest, err := fetchLatestPanelVersion()
+	release, err := fetchPanelRelease(channel)
 	if err != nil {
 		return nil, err
 	}
-	current := config.GetForkVersion()
+	current := config.GetPanelVersion()
 	return &PanelUpdateInfo{
-		Channel:             string(forkrelease.ChannelStable),
+		Channel:             string(channel),
 		CurrentVersion:      current,
-		LatestVersion:       latest,
+		LatestVersion:       release.TagName,
 		UpstreamBaseVersion: config.GetUpstreamBaseVersion(),
 		BundledXrayVersion:  config.GetBundledXrayVersion(),
 		ReleaseRepository:   forkrelease.Current.RepositorySlug(),
-		UpdateAvailable:     isNewerVersion(latest, current),
+		UpdateAvailable:     isNewerVersion(release.TagName, current),
 	}, nil
 }
 
@@ -161,6 +162,13 @@ func (s *PanelService) GetUpdateInfo() (*PanelUpdateInfo, error) {
 func devChannelActive() bool {
 	enabled, err := (&service.SettingService{}).GetDevChannelEnable()
 	return err == nil && enabled
+}
+
+func updateChannel() forkrelease.Channel {
+	if devChannelActive() {
+		return forkrelease.ChannelDev
+	}
+	return config.GetReleaseChannel()
 }
 
 // getDevUpdateInfo compares the running commit against the commit recorded in the
@@ -192,14 +200,24 @@ func getDevUpdateInfo() (*PanelUpdateInfo, error) {
 // setting. Returns the run ID to pass to GetUpdateStatus so the caller can
 // tell this run's result apart from a stale one.
 func (s *PanelService) StartUpdate() (int64, error) {
-	return s.startUpdate(devChannelActive())
+	return s.startUpdate(updateChannel())
 }
 
 // StartUpdateChannel runs the updater against an explicitly chosen channel,
 // overriding the local dev-channel setting. Used by the master node updater so
 // a node can be moved to the dev channel from the central panel.
 func (s *PanelService) StartUpdateChannel(dev bool) (int64, error) {
-	return s.startUpdate(dev)
+	channel := forkrelease.ChannelStable
+	if dev {
+		channel = forkrelease.ChannelDev
+	}
+	return s.startUpdate(channel)
+}
+
+// StartUpdateRelease runs the updater against an explicitly chosen release
+// channel. RC is never selected implicitly by a stable caller.
+func (s *PanelService) StartUpdateRelease(channel forkrelease.Channel) (int64, error) {
+	return s.startUpdate(channel)
 }
 
 // GetUpdateStatus reports the outcome of the most recently launched panel
@@ -223,7 +241,7 @@ func (s *PanelService) GetUpdateStatus() *PanelUpdateStatus {
 	return &status
 }
 
-func (s *PanelService) startUpdate(useDev bool) (int64, error) {
+func (s *PanelService) startUpdate(channel forkrelease.Channel) (int64, error) {
 	runID := time.Now().UnixNano()
 	if !acquireUpdateSlot(runID) {
 		return 0, fmt.Errorf("a panel update is already in progress")
@@ -244,10 +262,6 @@ func (s *PanelService) startUpdate(useDev bool) (int64, error) {
 		return 0, fmt.Errorf("bash is required to run the panel updater: %w", err)
 	}
 
-	channel := forkrelease.ChannelStable
-	if useDev {
-		channel = forkrelease.ChannelDev
-	}
 	release, err := fetchPanelRelease(channel)
 	if err != nil {
 		return 0, fmt.Errorf("resolve CatX-UI %s release: %w", channel, err)
@@ -420,18 +434,7 @@ func downloadPanelUpdater(release *forkrelease.Release) (string, error) {
 	return path, nil
 }
 
-func fetchLatestPanelVersion() (string, error) {
-	release, err := fetchPanelRelease(forkrelease.ChannelStable)
-	if err != nil {
-		return "", err
-	}
-	if release.TagName == "" {
-		return "", fmt.Errorf("latest panel release tag is empty")
-	}
-	return release.TagName, nil
-}
-
-// fetchPanelRelease resolves only CatX-UI-owned stable/dev release metadata and
+// fetchPanelRelease resolves only CatX-UI-owned stable/RC/dev release metadata and
 // rejects release identities outside the fork repository.
 func fetchPanelRelease(channel forkrelease.Channel) (*forkrelease.Release, error) {
 	provider := newPanelReleaseProvider(10 * time.Second)
@@ -507,46 +510,13 @@ func resolveUpdateFolders() (string, string) {
 func isNewerVersion(latest string, current string) bool {
 	cmp, ok := compareVersionStrings(latest, current)
 	if !ok {
-		return normalizeVersionTag(latest) != normalizeVersionTag(current)
+		return false
 	}
 	return cmp > 0
 }
 
 func compareVersionStrings(a string, b string) (int, bool) {
-	aParts, okA := parseVersionParts(a)
-	bParts, okB := parseVersionParts(b)
-	if !okA || !okB {
-		return 0, false
-	}
-	for i := range len(aParts) {
-		if aParts[i] > bParts[i] {
-			return 1, true
-		}
-		if aParts[i] < bParts[i] {
-			return -1, true
-		}
-	}
-	return 0, true
-}
-
-func parseVersionParts(version string) ([3]int, bool) {
-	var result [3]int
-	parts := strings.Split(normalizeVersionTag(version), ".")
-	if len(parts) != 3 {
-		return result, false
-	}
-	for i, part := range parts {
-		n, err := strconv.Atoi(part)
-		if err != nil {
-			return result, false
-		}
-		result[i] = n
-	}
-	return result, true
-}
-
-func normalizeVersionTag(version string) string {
-	return strings.TrimPrefix(strings.TrimSpace(version), "v")
+	return forkrelease.CompareVersionStrings(a, b)
 }
 
 func shellQuote(value string) string {

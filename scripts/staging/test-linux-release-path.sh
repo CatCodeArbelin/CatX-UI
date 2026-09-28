@@ -7,13 +7,14 @@ set -euo pipefail
 # environment that operators use.
 
 usage() {
-    echo "usage: $0 ARTIFACT_DIR LEGACY_DIR" >&2
+    echo "usage: $0 ARTIFACT_DIR LEGACY_DIR [RELEASE_TAG]" >&2
     exit 2
 }
-[[ $# -eq 2 && -d "$1" && -d "$2" ]] || usage
+[[ ($# -eq 2 || $# -eq 3) && -d "$1" && -d "$2" ]] || usage
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 artifacts=$(cd "$1" && pwd)
 legacy=$(cd "$2" && pwd)
+release_tag=${3:-dev-latest}
 
 command -v docker >/dev/null 2>&1 || {
     echo "linux release-path qualification requires Docker" >&2
@@ -24,6 +25,7 @@ docker run --rm \
     -v "$repo_root:/repo:ro" \
     -v "$artifacts:/assets:ro" \
     -v "$legacy:/legacy:ro" \
+    -e CATX_STAGING_RELEASE_TAG="$release_tag" \
     -e DEBIAN_FRONTEND=noninteractive \
     debian:bookworm-slim bash -euo pipefail -c '
         apt-get update -qq
@@ -35,12 +37,13 @@ docker run --rm \
             }
         done
 
-        mkdir -p /srv/release/CatCodeArbelin/CatX-UI/releases/download/dev-latest
-        cp -a /assets/. /srv/release/CatCodeArbelin/CatX-UI/releases/download/dev-latest/
-        test -f /srv/release/CatCodeArbelin/CatX-UI/releases/download/dev-latest/catx-ui-install.sh || { find /assets -maxdepth 2 -type f -print >&2; exit 1; }
-        test -f /srv/release/CatCodeArbelin/CatX-UI/releases/download/dev-latest/catx-ui-update.sh
-        install_script=$(cat /srv/release/CatCodeArbelin/CatX-UI/releases/download/dev-latest/catx-ui-install.sh)
-        update_script=$(cat /srv/release/CatCodeArbelin/CatX-UI/releases/download/dev-latest/catx-ui-update.sh)
+        release_tag=${CATX_STAGING_RELEASE_TAG:-dev-latest}
+        mkdir -p "/srv/release/CatCodeArbelin/CatX-UI/releases/download/$release_tag"
+        cp -a /assets/. "/srv/release/CatCodeArbelin/CatX-UI/releases/download/$release_tag/"
+        test -f "/srv/release/CatCodeArbelin/CatX-UI/releases/download/$release_tag/catx-ui-install.sh" || { find /assets -maxdepth 2 -type f -print >&2; exit 1; }
+        test -f "/srv/release/CatCodeArbelin/CatX-UI/releases/download/$release_tag/catx-ui-update.sh"
+        install_script=$(cat "/srv/release/CatCodeArbelin/CatX-UI/releases/download/$release_tag/catx-ui-install.sh")
+        update_script=$(cat "/srv/release/CatCodeArbelin/CatX-UI/releases/download/$release_tag/catx-ui-update.sh")
         # The service manager is deliberately a disposable shim.  The panel
         # itself is started and health-probed below; the shim lets the real
         # updater execute its service lifecycle in a container without PID 1
@@ -99,7 +102,7 @@ EOF
         printf "%s\n" "$install_script" >/tmp/staging-install.sh
         chmod 700 /tmp/staging-install.sh
         set +e
-        bash /tmp/staging-install.sh dev-latest < /dev/null >/tmp/install.log 2>&1
+        bash /tmp/staging-install.sh "$release_tag" < /dev/null >/tmp/install.log 2>&1
         install_rc=$?
         set -e
         echo "staging: installer exit code $install_rc" >&2
@@ -190,7 +193,7 @@ EOF
             printf "%s\n" "$update_script" >/tmp/staging-update.sh
             chmod 700 /tmp/staging-update.sh
             set +e
-            XUI_UPDATE_RUN_ID="$run_id" XUI_UPDATE_TAG=dev-latest bash /tmp/staging-update.sh >/tmp/update-$label.log 2>&1 < /dev/null
+            XUI_UPDATE_RUN_ID="$run_id" XUI_UPDATE_TAG="$release_tag" bash /tmp/staging-update.sh >/tmp/update-$label.log 2>&1 < /dev/null
             update_rc=$?
             set -e
             if [[ "$update_rc" -ne 0 ]]; then
@@ -199,6 +202,14 @@ EOF
             fi
             jq -e --arg run "$run_id" ".runId == \$run and .state == \"success\" and (.runId | type == \"string\") and .exitCode == 0 and .rolledBack == false and .rollbackHealthy == false" /etc/x-ui/update-status.json >/dev/null
             grep -Fq "product=CatX-UI" <(/usr/local/x-ui/x-ui release-info)
+            if [[ "$release_tag" == v0.1.0-rc.1 ]]; then
+                grep -Fxq "channel=rc" <(/usr/local/x-ui/x-ui release-info)
+                grep -Fxq "release_version=0.1.0-rc.1" <(/usr/local/x-ui/x-ui release-info)
+            elif [[ "$release_tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+                grep -Fxq "channel=stable" <(/usr/local/x-ui/x-ui release-info)
+            else
+                grep -Fxq "channel=dev" <(/usr/local/x-ui/x-ui release-info)
+            fi
             test "$(sqlite3 /etc/x-ui/x-ui.db "SELECT value FROM catx_rc2_fixture WHERE key = \"synthetic-client\";")" = fixture-value
             /usr/local/x-ui/x-ui migrate >/dev/null
             # Two clean restarts are required after migration/update.
@@ -214,10 +225,10 @@ EOF
         # Corruption is rejected before the known-good installation is
         # replaced.  This is an actual updater invocation, not a unit mock.
         before_version=$(/usr/local/x-ui/x-ui release-info)
-        printf corruption >> /srv/release/CatCodeArbelin/CatX-UI/releases/download/dev-latest/catx-ui-linux-amd64.tar.gz
-        sha256sum /srv/release/CatCodeArbelin/CatX-UI/releases/download/dev-latest/catx-ui-linux-amd64.tar.gz > /srv/release/CatCodeArbelin/CatX-UI/releases/download/dev-latest/catx-ui-linux-amd64.tar.gz.sha256
+        printf corruption >> "/srv/release/CatCodeArbelin/CatX-UI/releases/download/$release_tag/catx-ui-linux-amd64.tar.gz"
+        sha256sum "/srv/release/CatCodeArbelin/CatX-UI/releases/download/$release_tag/catx-ui-linux-amd64.tar.gz" > "/srv/release/CatCodeArbelin/CatX-UI/releases/download/$release_tag/catx-ui-linux-amd64.tar.gz.sha256"
         set +e
-        XUI_UPDATE_RUN_ID=900719925474099312347 XUI_UPDATE_TAG=dev-latest bash /tmp/staging-update.sh >/tmp/update-corrupt.log 2>&1 < /dev/null
+        XUI_UPDATE_RUN_ID=900719925474099312347 XUI_UPDATE_TAG="$release_tag" bash /tmp/staging-update.sh >/tmp/update-corrupt.log 2>&1 < /dev/null
         corrupt_rc=$?
         set -e
         test "$corrupt_rc" -ne 0

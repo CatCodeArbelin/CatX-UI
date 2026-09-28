@@ -8,6 +8,7 @@ readonly CATX_RELEASE_REPOSITORY="CatX-UI"
 readonly CATX_RELEASE_SLUG="${CATX_RELEASE_OWNER}/${CATX_RELEASE_REPOSITORY}"
 readonly CATX_ASSET_PREFIX="catx-ui"
 readonly CATX_DEV_RELEASE_TAG="dev-latest"
+readonly CATX_RC_VERSION="0.1.0-rc.1"
 CATX_RELEASE_WEB="https://github.com/${CATX_RELEASE_SLUG}"
 if [[ "${CATX_TEST_RELEASE_MODE:-0}" == 1 && "${CI:-}" == true ]]; then
     : "${CATX_TEST_RELEASE_BASE_URL:?CATX_TEST_RELEASE_BASE_URL is required in test mode}"
@@ -39,8 +40,21 @@ _catx_audit() {
         "${catx_transaction_tag:-unknown}" "$outcome" "$catx_rollback_healthy" "$detail" >> "$audit_file"
 }
 
+_catx_tag_channel() {
+    local tag="$1"
+    if [[ "$tag" == "${CATX_DEV_RELEASE_TAG}" ]]; then
+        printf 'dev\n'
+    elif [[ "$tag" == "v${CATX_RC_VERSION}" ]]; then
+        printf 'rc\n'
+    elif [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        printf 'stable\n'
+    else
+        return 1
+    fi
+}
+
 _catx_validate_tag() {
-    [[ "$1" == "${CATX_DEV_RELEASE_TAG}" || "$1" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+    _catx_tag_channel "$1" >/dev/null
 }
 
 _catx_resolve_tag() {
@@ -134,12 +148,24 @@ _catx_validate_candidate() {
     identity=$("$candidate/x-ui" release-info 2> /dev/null) || return 1
     grep -Fxq "product=CatX-UI" <<< "$identity" || return 1
     grep -Fxq "repository=${CATX_RELEASE_SLUG}" <<< "$identity" || return 1
-    if [[ "$tag" == "${CATX_DEV_RELEASE_TAG}" ]]; then
+    case "$(_catx_tag_channel "$tag")" in
+    dev)
         grep -Fxq "channel=dev" <<< "$identity" || return 1
-    else
+        ;;
+    rc)
+        grep -Fxq "channel=rc" <<< "$identity" || return 1
+        grep -Fxq "fork_version=${CATX_RC_VERSION%%-*}" <<< "$identity" || return 1
+        grep -Fxq "release_version=${CATX_RC_VERSION}" <<< "$identity" || return 1
+        ;;
+    stable)
         grep -Fxq "channel=stable" <<< "$identity" || return 1
         grep -Fxq "fork_version=${tag#v}" <<< "$identity" || return 1
-    fi
+        grep -Fxq "release_version=${tag#v}" <<< "$identity" || return 1
+        ;;
+    *)
+        return 1
+        ;;
+    esac
 }
 
 _catx_stop_service() {

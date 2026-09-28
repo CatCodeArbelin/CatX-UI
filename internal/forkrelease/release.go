@@ -19,6 +19,7 @@ type Channel string
 
 const (
 	ChannelStable Channel = "stable"
+	ChannelRC     Channel = "rc"
 	ChannelDev    Channel = "dev"
 )
 
@@ -66,6 +67,8 @@ func (p Provider) releaseURL(channel Channel) (string, error) {
 	switch channel {
 	case ChannelStable:
 		return strings.TrimRight(p.APIBaseURL, "/") + "/releases/latest", nil
+	case ChannelRC:
+		return strings.TrimRight(p.APIBaseURL, "/") + "/releases/tags/" + url.PathEscape(p.Identity.RCReleaseTag()), nil
 	case ChannelDev:
 		return strings.TrimRight(p.APIBaseURL, "/") + "/releases/tags/" + url.PathEscape(p.Identity.DevReleaseTag), nil
 	default:
@@ -122,6 +125,19 @@ func (p Provider) ValidateRelease(release *Release, channel Channel) error {
 		}
 		if !stableTagPattern.MatchString(release.TagName) {
 			return fmt.Errorf("stable release tag %q is not vMAJOR.MINOR.PATCH", release.TagName)
+		}
+		if _, err := ParseReleaseTag(release.TagName); err != nil {
+			return fmt.Errorf("stable release tag %q is malformed: %w", release.TagName, err)
+		}
+	case ChannelRC:
+		if !release.Prerelease {
+			return fmt.Errorf("RC channel requires prerelease %q", release.TagName)
+		}
+		if release.TagName != p.Identity.RCReleaseTag() {
+			return fmt.Errorf("RC release tag %q does not match %q", release.TagName, p.Identity.RCReleaseTag())
+		}
+		if _, err := ParseReleaseTag(release.TagName); err != nil {
+			return fmt.Errorf("RC release tag %q is malformed: %w", release.TagName, err)
 		}
 	case ChannelDev:
 		if release.TagName != p.Identity.DevReleaseTag {

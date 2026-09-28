@@ -75,6 +75,11 @@ func TestProviderEnforcesChannels(t *testing.T) {
 	if err := p.ValidateRelease(stable, ChannelStable); err == nil {
 		t.Fatal("stable channel accepted a prerelease")
 	}
+	stable.TagName = p.Identity.RCReleaseTag()
+	stable.HTMLURL = p.WebBaseURL + "/releases/tag/" + stable.TagName
+	if err := p.ValidateRelease(stable, ChannelStable); err == nil {
+		t.Fatal("stable channel accepted the explicit RC tag")
+	}
 
 	dev := &Release{APIURL: p.APIBaseURL + "/releases/2", HTMLURL: p.WebBaseURL + "/releases/tag/" + Current.DevReleaseTag, TagName: Current.DevReleaseTag, Prerelease: true}
 	if err := p.ValidateRelease(dev, ChannelDev); err != nil {
@@ -83,6 +88,38 @@ func TestProviderEnforcesChannels(t *testing.T) {
 	dev.TagName = "nightly"
 	if err := p.ValidateRelease(dev, ChannelDev); err == nil {
 		t.Fatal("dev channel accepted an unexpected rolling tag")
+	}
+
+	rc := &Release{APIURL: p.APIBaseURL + "/releases/3", HTMLURL: p.WebBaseURL + "/releases/tag/" + p.Identity.RCReleaseTag(), TagName: p.Identity.RCReleaseTag(), Prerelease: true}
+	if err := p.ValidateRelease(rc, ChannelRC); err != nil {
+		t.Fatalf("RC release rejected: %v", err)
+	}
+	rc.Prerelease = false
+	if err := p.ValidateRelease(rc, ChannelRC); err == nil {
+		t.Fatal("RC channel accepted a non-prerelease release")
+	}
+	rc.Prerelease = true
+	rc.TagName = "v0.1.0-rc.2"
+	if err := p.ValidateRelease(rc, ChannelRC); err == nil {
+		t.Fatal("RC channel accepted an unapproved RC tag")
+	}
+}
+
+func TestProviderUsesSeparateStableAndRCEndpoints(t *testing.T) {
+	p := NewProvider(http.DefaultClient)
+	stableURL, err := p.releaseURL(ChannelStable)
+	if err != nil {
+		t.Fatalf("stable release URL: %v", err)
+	}
+	if !strings.HasSuffix(stableURL, "/releases/latest") {
+		t.Fatalf("stable release URL = %q, want releases/latest", stableURL)
+	}
+	rcURL, err := p.releaseURL(ChannelRC)
+	if err != nil {
+		t.Fatalf("RC release URL: %v", err)
+	}
+	if !strings.HasSuffix(rcURL, "/releases/tags/v0.1.0-rc.1") {
+		t.Fatalf("RC release URL = %q, want exact RC tag", rcURL)
 	}
 }
 

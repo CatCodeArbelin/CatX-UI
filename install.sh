@@ -13,6 +13,7 @@ readonly CATX_RELEASE_REPOSITORY="CatX-UI"
 readonly CATX_RELEASE_SLUG="${CATX_RELEASE_OWNER}/${CATX_RELEASE_REPOSITORY}"
 readonly CATX_ASSET_PREFIX="catx-ui"
 readonly CATX_DEV_RELEASE_TAG="dev-latest"
+readonly CATX_RC_VERSION="0.1.0-rc.1"
 CATX_RELEASE_WEB="https://github.com/${CATX_RELEASE_SLUG}"
 CATX_RELEASE_API="https://api.github.com/repos/${CATX_RELEASE_SLUG}"
 # Hermetic staging only. Production keeps the immutable CatX endpoints unless
@@ -1479,6 +1480,19 @@ resolve_latest_tag() {
     echo "$tag"
 }
 
+catx_tag_channel() {
+    local tag="$1"
+    if [[ "$tag" == "${CATX_DEV_RELEASE_TAG}" ]]; then
+        echo dev
+    elif [[ "$tag" == "v${CATX_RC_VERSION}" ]]; then
+        echo rc
+    elif [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        echo stable
+    else
+        return 1
+    fi
+}
+
 # Every CatX-UI release payload requires a same-release checksum sidecar.
 verify_release_checksum() {
     local url="$1" file="$2" sums="$2.sha256" code expected actual recorded_name
@@ -1539,6 +1553,9 @@ install_x-ui() {
         if [[ "$tag_version" == "dev" || "$tag_version" == "${CATX_DEV_RELEASE_TAG}" ]]; then
             tag_version="${CATX_DEV_RELEASE_TAG}"
             echo -e "${yellow}Installing the rolling CatX-UI dev build. This is a per-commit pre-release, not a stable version.${plain}"
+        elif [[ "$tag_version" == "v${CATX_RC_VERSION}" || "$tag_version" == "${CATX_RC_VERSION}" ]]; then
+            tag_version="v${tag_version#v}"
+            echo -e "${yellow}Installing the CatX-UI prerelease ${tag_version}. This is not a stable release.${plain}"
         else
             tag_version="v${tag_version#v}"
             if [[ ! "$tag_version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
@@ -1645,18 +1662,34 @@ install_x-ui() {
         echo -e "${red}Candidate identity is not ${CATX_RELEASE_SLUG}${plain}"
         exit 1
     }
-    if [[ "${tag_version}" =~ ^v ]]; then
+    case "$(catx_tag_channel "${tag_version}")" in
+    stable)
         grep -Fxq "channel=stable" <<< "${identity}" &&
-            grep -Fxq "fork_version=${tag_version#v}" <<< "${identity}" || {
+            grep -Fxq "fork_version=${tag_version#v}" <<< "${identity}" &&
+            grep -Fxq "release_version=${tag_version#v}" <<< "${identity}" || {
             echo -e "${red}Candidate version does not match release tag ${tag_version}${plain}"
             exit 1
         }
-    else
+        ;;
+    rc)
+        grep -Fxq "channel=rc" <<< "${identity}" &&
+            grep -Fxq "fork_version=${CATX_RC_VERSION%%-*}" <<< "${identity}" &&
+            grep -Fxq "release_version=${CATX_RC_VERSION}" <<< "${identity}" || {
+            echo -e "${red}Candidate prerelease identity does not match release tag ${tag_version}${plain}"
+            exit 1
+        }
+        ;;
+    dev)
         grep -Fxq "channel=dev" <<< "${identity}" || {
             echo -e "${red}Rolling candidate is not a dev-channel build${plain}"
             exit 1
         }
-    fi
+        ;;
+    *)
+        echo -e "${red}Invalid CatX-UI release tag: ${tag_version}${plain}"
+        exit 1
+        ;;
+    esac
     cp -f x-ui.sh "${xui_script_temp}" || exit 1
 
     # Check the system's architecture and rename the file accordingly.

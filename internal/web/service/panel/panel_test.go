@@ -42,6 +42,23 @@ func TestCompareVersionStringsRejectsUnexpectedFormats(t *testing.T) {
 	}
 }
 
+func TestCompareVersionStringsUsesPrereleaseOrder(t *testing.T) {
+	cases := []struct {
+		latest  string
+		current string
+		want    bool
+	}{
+		{"0.1.0-rc.2", "0.1.0-rc.1", true},
+		{"0.1.0", "0.1.0-rc.2", true},
+		{"0.1.0-rc.1", "0.1.0-rc.2", false},
+	}
+	for _, tc := range cases {
+		if got := isNewerVersion(tc.latest, tc.current); got != tc.want {
+			t.Fatalf("isNewerVersion(%q, %q) = %v, want %v", tc.latest, tc.current, got, tc.want)
+		}
+	}
+}
+
 func TestShellQuote(t *testing.T) {
 	if got := shellQuote("/usr/bin/curl"); got != "'/usr/bin/curl'" {
 		t.Fatalf("unexpected quote result: %s", got)

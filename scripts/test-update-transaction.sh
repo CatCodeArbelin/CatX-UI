@@ -26,6 +26,19 @@ assert_file() {
 
 arch() { echo amd64; }
 
+for valid_tag in "${CATX_DEV_RELEASE_TAG}" "v0.1.0" "v${CATX_RC_VERSION}"; do
+    _catx_validate_tag "$valid_tag" || {
+        echo "FAIL: valid CatX tag rejected: $valid_tag" >&2
+        failures=$((failures + 1))
+    }
+done
+for invalid_tag in "v0.1.0-rc" "v0.1.0-rc.01" "v0.1.0-beta.1" "v0.1.0-rc.1+build"; do
+    if _catx_validate_tag "$invalid_tag"; then
+        echo "FAIL: malformed or unapproved CatX tag accepted: $invalid_tag" >&2
+        failures=$((failures + 1))
+    fi
+done
+
 archive_root=$(mktemp -d)
 mkdir -p "$archive_root/safe/x-ui"
 printf 'payload\n' > "$archive_root/safe/x-ui/x-ui"
@@ -53,6 +66,11 @@ rm -rf "$archive_root"
 
 make_binary() {
     local path="$1" version="$2"
+    local release_channel=stable release_version=0.1.0
+    if [[ "$version" == rc ]]; then
+        release_channel=rc
+        release_version=0.1.0-rc.1
+    fi
     cat > "$path" <<EOF
 #!/usr/bin/env bash
 case "\${1:-}" in
@@ -62,7 +80,7 @@ case "\${1:-}" in
         exit 0
         ;;
     release-info)
-        printf 'product=CatX-UI\nrepository=CatCodeArbelin/CatX-UI\nfork_version=0.1.0\nupstream_base_version=3.8.5\nbundled_xray_version=26.9.9\nchannel=stable\nbuild_commit=\n'
+        printf 'product=CatX-UI\nrepository=CatCodeArbelin/CatX-UI\nfork_version=0.1.0\nrelease_version=${release_version}\nupstream_base_version=3.8.5\nbundled_xray_version=26.9.9\nchannel=${release_channel}\nbuild_commit=\n'
         ;;
 esac
 EOF
@@ -108,6 +126,14 @@ setup_case() {
 teardown_case() {
     rm -rf "$CASE_ROOT"
 }
+
+setup_case
+make_binary "$CANDIDATE/x-ui" rc
+if ! _catx_validate_candidate "$CANDIDATE" "v${CATX_RC_VERSION}"; then
+    echo "FAIL: RC candidate identity was rejected" >&2
+    failures=$((failures + 1))
+fi
+teardown_case
 
 _catx_stop_service() {
     [[ "${CATX_TEST_STOP_FAIL:-0}" != 1 ]]
