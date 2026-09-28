@@ -82,6 +82,9 @@ EOF
             done
             echo "health probe failed for $url" >&2
             cat /tmp/release-server.log >&2 || true
+            if [[ -f /tmp/x-ui.log ]]; then
+                grep -Ei "error|fatal|panic|listen|failed" /tmp/x-ui.log | tail -n 80 >&2 || true
+            fi
             return 1
         }
 
