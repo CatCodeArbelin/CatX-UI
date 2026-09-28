@@ -72,7 +72,34 @@ jobs:
             fi
           }
           status=0
-          run_gate "Upstream verification" verify || status=$?
+          run_gate "Generated contract check" gen-check || status=$?
+          if [ "$status" -eq 0 ]; then
+            run_gate "Go lint" lint-go || status=$?
+          fi
+          if [ "$status" -eq 0 ]; then
+            run_gate "Frontend lint" lint-fe || status=$?
+          fi
+          if [ "$status" -eq 0 ]; then
+            run_gate "Frontend format check" format-check || status=$?
+          fi
+          if [ "$status" -eq 0 ]; then
+            run_gate "Frontend typecheck" typecheck || status=$?
+          fi
+          if [ "$status" -eq 0 ]; then
+            run_gate "MSW worker check" msw-worker-check || status=$?
+          fi
+          if [ "$status" -eq 0 ]; then
+            run_gate "Go tests" test-go || status=$?
+          fi
+          if [ "$status" -eq 0 ]; then
+            run_gate "Frontend tests" test-fe || status=$?
+          fi
+          if [ "$status" -eq 0 ]; then
+            run_gate "Application build" build || status=$?
+          fi
+          if [ "$status" -eq 0 ]; then
+            run_gate "Storybook build" build-storybook || status=$?
+          fi
           if [ "$status" -eq 0 ]; then
             run_gate "Fork Go verification" test-fork-go || status=$?
           fi
