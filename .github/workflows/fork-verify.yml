@@ -64,10 +64,13 @@ jobs:
           set -e
           if [ "$status" -ne 0 ]; then
             echo "::error file=Makefile,title=verify-fork failure::make verify-fork exited with status $status"
-            status_line=$(git status --short | tr '\n' ';')
-            diff_line=$(git diff --numstat -- frontend/src/generated frontend/public/openapi.json | tr '\n' ';')
-            echo "::error file=Makefile::status=$status_line diff=$diff_line"
-            log_tail=$(tail -n 40 "$RUNNER_TEMP/verify-fork.log" | tr '\n' ';')
-            echo "::error file=Makefile::log-tail=$log_tail"
+            git status --short | while IFS= read -r line; do
+              echo "::error file=Makefile::working tree status: $line"
+            done
+            tail -n 30 "$RUNNER_TEMP/verify-fork.log" | while IFS= read -r line; do
+              line=${line//$'\r'/}
+              line=${line//$'\n'/ }
+              echo "::error file=Makefile::$line"
+            done
             exit "$status"
           fi

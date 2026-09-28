@@ -16,9 +16,9 @@ describe('fork registries', () => {
     ]);
     const risk = forkApiSections.find((section) => section.id === 'risk-intelligence');
     expect(risk?.endpoints).toHaveLength(7);
-    expect(
-      risk?.endpoints.map((endpoint) => `${endpoint.method} ${endpoint.path}`),
-    ).toContain('GET /panel/api/risk/clients/:email');
+    expect(risk?.endpoints.map((endpoint) => `${endpoint.method} ${endpoint.path}`)).toContain(
+      'GET /panel/api/risk/clients/:email',
+    );
     const audit = forkApiSections.find((section) => section.id === 'audit-webhooks-metrics');
     expect(audit?.endpoints).toHaveLength(12);
     const fleet = forkApiSections.find((section) => section.id === 'fleet-updates');
