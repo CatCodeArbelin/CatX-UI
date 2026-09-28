@@ -36,8 +36,10 @@ docker run --rm \
         done
 
         mkdir -p /srv/release/CatCodeArbelin/CatX-UI/releases/download/dev-latest
-        cp /assets/* /srv/release/CatCodeArbelin/CatX-UI/releases/download/dev-latest/
         release_dir=/srv/release/CatCodeArbelin/CatX-UI/releases/download/dev-latest
+        cp -a /assets/. "$release_dir/"
+        test -f "$release_dir/catx-ui-install.sh" || { find /assets -maxdepth 2 -type f -print >&2; exit 1; }
+        test -f "$release_dir/catx-ui-update.sh"
         # The service manager is deliberately a disposable shim.  The panel
         # itself is started and health-probed below; the shim lets the real
         # updater execute its service lifecycle in a container without PID 1
