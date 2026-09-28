@@ -40,9 +40,10 @@ docker run --rm \
         for required_file in /repo/install.sh /repo/update.sh /repo/scripts/catx-update-transaction.sh; do
             test -f "$required_file" || { echo "repository fixture is missing: $required_file" >&2; exit 1; }
         done
-        cp /repo/install.sh /repo/update.sh /repo/scripts/catx-update-transaction.sh /tmp/
-        test -f /tmp/install.sh
-        test -f /tmp/update.sh
+        mkdir -p /usr/local/lib/catx-staging
+        cp /repo/install.sh /repo/update.sh /repo/scripts/catx-update-transaction.sh /usr/local/lib/catx-staging/
+        test -f /usr/local/lib/catx-staging/install.sh
+        test -f /usr/local/lib/catx-staging/update.sh
 
         # The service manager is deliberately a disposable shim.  The panel
         # itself is started and health-probed below; the shim lets the real
@@ -94,7 +95,7 @@ EOF
         export XUI_DB_FOLDER=/etc/x-ui XUI_UPDATE_STATUS_FILE=/etc/x-ui/update-status.json
 
         # A. Fresh install through the supported installer path.
-        bash /tmp/install.sh dev-latest < /dev/null
+        bash /usr/local/lib/catx-staging/install.sh dev-latest < /dev/null
         test -x /usr/local/x-ui/x-ui
         /usr/local/x-ui/x-ui setting -show | grep -q "hasDefaultCredential: false"
         /usr/local/x-ui/x-ui setting -username staging-admin -password staging-password -port 28080 -listenIP 127.0.0.1
@@ -133,7 +134,7 @@ EOF
                 *) echo "unexpected legacy label: $label" >&2; exit 1 ;;
             esac
             set +e
-            XUI_UPDATE_RUN_ID="$run_id" XUI_UPDATE_TAG=dev-latest bash /tmp/update.sh >/tmp/update-$label.log 2>&1
+            XUI_UPDATE_RUN_ID="$run_id" XUI_UPDATE_TAG=dev-latest bash /usr/local/lib/catx-staging/update.sh >/tmp/update-$label.log 2>&1
             update_rc=$?
             set -e
             if [[ "$update_rc" -ne 0 ]]; then
@@ -160,7 +161,7 @@ EOF
         printf corruption >> /srv/release/CatCodeArbelin/CatX-UI/releases/download/dev-latest/catx-ui-linux-amd64.tar.gz
         sha256sum /srv/release/CatCodeArbelin/CatX-UI/releases/download/dev-latest/catx-ui-linux-amd64.tar.gz > /srv/release/CatCodeArbelin/CatX-UI/releases/download/dev-latest/catx-ui-linux-amd64.tar.gz.sha256
         set +e
-        XUI_UPDATE_RUN_ID=900719925474099312347 XUI_UPDATE_TAG=dev-latest bash /tmp/update.sh >/tmp/update-corrupt.log 2>&1
+        XUI_UPDATE_RUN_ID=900719925474099312347 XUI_UPDATE_TAG=dev-latest bash /usr/local/lib/catx-staging/update.sh >/tmp/update-corrupt.log 2>&1
         corrupt_rc=$?
         set -e
         test "$corrupt_rc" -ne 0
