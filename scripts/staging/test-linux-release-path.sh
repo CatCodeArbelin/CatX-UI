@@ -105,7 +105,6 @@ EOF
             exit "$install_rc"
         fi
         echo "staging: install completed"
-        cat /tmp/install.log >&2 || true
         echo "staging: XUI_MAIN_FOLDER=${XUI_MAIN_FOLDER:-<unset>}" >&2
         ls -lad /usr/local /usr/local/x-ui /usr/local/x-ui/x-ui 2>/dev/null >&2 || true
         find /usr/local -maxdepth 3 -iname "x-ui*" -print 2>/dev/null >&2 || true
