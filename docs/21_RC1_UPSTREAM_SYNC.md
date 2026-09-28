@@ -33,6 +33,10 @@ RC-1 merges the exact upstream commit
   derived artifacts. They were regenerated after resolving the merged Go
   schemas and endpoint registries, rather than preserving a stale side of the
   conflict.
+- RC-1 push validation: broadened Fork verification to `feature/*` and the
+  release build workflow to `feature/rc1-*`. Release publication remains
+  restricted to the existing main/tag conditions, so RC validation does not
+  publish or update production artifacts.
 
 ## Invariants checked during resolution
 

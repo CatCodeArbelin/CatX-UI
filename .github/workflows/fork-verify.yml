@@ -15,7 +15,7 @@ on:
       - ".github/workflows/**"
   push:
     branches:
-      - "feature/wp-*"
+      - "feature/*"
     paths:
       - "**.go"
       - "**.sh"
