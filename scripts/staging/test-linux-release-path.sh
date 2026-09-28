@@ -100,6 +100,8 @@ EOF
             exit "$install_rc"
         fi
         echo "staging: install completed"
+        cat /tmp/install.log >&2 || true
+        find /usr/local/x-ui /etc/x-ui -maxdepth 2 -print 2>/dev/null >&2 || true
         test -x /usr/local/x-ui/x-ui || { echo "installed panel binary is missing" >&2; find /usr/local/x-ui -maxdepth 2 -type f -print >&2 || true; exit 1; }
         setting_output=$(/usr/local/x-ui/x-ui setting -show 2>&1) || { echo "$setting_output" >&2; exit 1; }
         echo "$setting_output" | grep -q "hasDefaultCredential: false" || { echo "default credential state was not cleared" >&2; echo "$setting_output" >&2; exit 1; }
