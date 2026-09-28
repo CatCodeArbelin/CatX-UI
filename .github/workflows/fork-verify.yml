@@ -67,10 +67,7 @@ jobs:
             status_line=$(git status --short | tr '\n' ';')
             diff_line=$(git diff --numstat -- frontend/src/generated frontend/public/openapi.json | tr '\n' ';')
             echo "::error file=Makefile::status=$status_line diff=$diff_line"
-            grep -E -i 'FAIL|error|failed|fatal|exit status|not found|cannot|panic' "$RUNNER_TEMP/verify-fork.log" | tail -n 40 | while IFS= read -r line; do
-              line=${line//$'\r'/}
-              line=${line//$'\n'/ }
-              echo "::error file=Makefile::$line"
-            done
+            log_tail=$(tail -n 40 "$RUNNER_TEMP/verify-fork.log" | tr '\n' ';')
+            echo "::error file=Makefile::log-tail=$log_tail"
             exit "$status"
           fi
