@@ -478,10 +478,13 @@ func (s *Service) dispatchAllowed(c *Campaign, ts []Target, index int) bool {
 			}
 		}
 	}
-	active, succeeded, readyOrdinal := 0, 0, 0
+	active, succeeded, readyOrdinal, unknown := 0, 0, 0, 0
 	for i := range ts {
 		if activeTarget(ts[i].State) {
 			active++
+		}
+		if ts[i].State == StateUnknown {
+			unknown++
 		}
 		if ts[i].State == StateSucceeded {
 			succeeded++
@@ -489,6 +492,9 @@ func (s *Service) dispatchAllowed(c *Campaign, ts []Target, index int) bool {
 		if ts[i].State == StateReady && i <= index {
 			readyOrdinal++
 		}
+	}
+	if unknown > 0 {
+		return false
 	}
 	if active >= c.MaxParallel {
 		return false
