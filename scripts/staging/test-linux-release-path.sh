@@ -150,6 +150,11 @@ EOF
         echo "staging: initial panel settings applied"
         XUI_PORT=28080 /usr/local/x-ui/x-ui run >/tmp/x-ui.log 2>&1 &
         panel_pid=$!
+        sleep 2
+        if ! kill -0 "$panel_pid" 2>/dev/null; then
+            echo "staging: panel process exited before health probe" >&2
+            tail -n 80 /tmp/x-ui.log >&2 || true
+        fi
         trap "kill $panel_pid 2>/dev/null || true; kill $server_pid 2>/dev/null || true" EXIT
         wait_http http://127.0.0.1:28080/
         curl -fsS http://127.0.0.1:28080/login >/dev/null
