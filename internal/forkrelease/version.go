@@ -137,7 +137,7 @@ func validPrereleaseIdentifier(value string) bool {
 		return false
 	}
 	for _, char := range value {
-		if !(char >= '0' && char <= '9') && !(char >= 'A' && char <= 'Z') && !(char >= 'a' && char <= 'z') && char != '-' {
+		if (char < '0' || char > '9') && (char < 'A' || char > 'Z') && (char < 'a' || char > 'z') && char != '-' {
 			return false
 		}
 	}
