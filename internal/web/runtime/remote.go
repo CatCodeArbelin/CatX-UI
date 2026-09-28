@@ -661,10 +661,56 @@ func (r *Remote) TrafficControlReconcile(ctx context.Context, body json.RawMessa
 	return env.Obj, nil
 }
 
-// UpdatePanel asks the node to run its own official self-updater (update.sh)
-// and restart onto the latest release. The node returns as soon as the job is
-// launched; the new version surfaces on the next heartbeat. When dev is true the
-// node is moved to the rolling dev channel instead of the latest stable release.
+type PanelUpdateStart struct {
+	RunID string `json:"runId"`
+}
+
+type PanelUpdateStatus struct {
+	RunID           string `json:"runId"`
+	State           string `json:"state"`
+	ExitCode        int    `json:"exitCode"`
+	FinishedAt      int64  `json:"finishedAt"`
+	RolledBack      bool   `json:"rolledBack"`
+	RollbackHealthy bool   `json:"rollbackHealthy"`
+}
+
+// StartUpdate asks the node to run its authoritative update.sh updater and
+// returns its exact run ID. The ID is the only safe correlation key for later
+// status reads.
+func (r *Remote) StartUpdate(ctx context.Context, dev bool) (PanelUpdateStart, error) {
+	var body any
+	if dev {
+		body = url.Values{"dev": {"true"}}
+	}
+	env, err := r.do(ctx, http.MethodPost, "panel/api/server/updatePanel", body)
+	if err != nil {
+		return PanelUpdateStart{}, err
+	}
+	var start PanelUpdateStart
+	if err := json.Unmarshal(env.Obj, &start); err != nil {
+		return PanelUpdateStart{}, fmt.Errorf("decode panel update start: %w", err)
+	}
+	if strings.TrimSpace(start.RunID) == "" {
+		return PanelUpdateStart{}, errors.New("node returned empty panel update run ID")
+	}
+	return start, nil
+}
+
+// GetUpdateStatus reads the node-local update.sh evidence file through the
+// authenticated panel API. Callers must compare RunID before accepting it.
+func (r *Remote) GetUpdateStatus(ctx context.Context) (PanelUpdateStatus, error) {
+	env, err := r.do(ctx, http.MethodGet, "panel/api/server/getUpdateStatus", nil)
+	if err != nil {
+		return PanelUpdateStatus{}, err
+	}
+	var status PanelUpdateStatus
+	if err := json.Unmarshal(env.Obj, &status); err != nil {
+		return PanelUpdateStatus{}, fmt.Errorf("decode panel update status: %w", err)
+	}
+	return status, nil
+}
+
+// UpdatePanel preserves the upstream-compatible fire-and-forget API.
 func (r *Remote) UpdatePanel(ctx context.Context, dev bool) error {
 	var body any
 	if dev {

@@ -1516,6 +1516,91 @@
         ],
         "type": "object"
       },
+      "Campaign": {
+        "properties": {
+          "batchSize": {
+            "type": "integer"
+          },
+          "canaryCount": {
+            "type": "integer"
+          },
+          "channel": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "dryRun": {
+            "type": "boolean"
+          },
+          "error": {
+            "type": "string"
+          },
+          "healthTimeoutSecs": {
+            "type": "integer"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "maxParallel": {
+            "type": "integer"
+          },
+          "mutationAuthorized": {
+            "type": "boolean"
+          },
+          "name": {
+            "type": "string"
+          },
+          "releaseApiUrl": {
+            "type": "string"
+          },
+          "releaseHtmlUrl": {
+            "type": "string"
+          },
+          "releaseTag": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "soakSeconds": {
+            "type": "integer"
+          },
+          "state": {
+            "type": "string"
+          },
+          "stopOnFailure": {
+            "type": "boolean"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "batchSize",
+          "canaryCount",
+          "channel",
+          "createdAt",
+          "dryRun",
+          "healthTimeoutSecs",
+          "id",
+          "maxParallel",
+          "mutationAuthorized",
+          "name",
+          "releaseApiUrl",
+          "releaseHtmlUrl",
+          "releaseTag",
+          "revision",
+          "soakSeconds",
+          "state",
+          "stopOnFailure",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
       "Client": {
         "description": "Client represents a client configuration for Xray inbounds with traffic limits and settings.",
         "properties": {
@@ -3779,6 +3864,62 @@
         ],
         "type": "object"
       },
+      "NodeSnapshot": {
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "guid": {
+            "type": "string"
+          },
+          "iD": {
+            "type": "integer"
+          },
+          "lastHeartbeat": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "panelVersion": {
+            "type": "string"
+          },
+          "port": {
+            "type": "integer"
+          },
+          "scheme": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "transitive": {
+            "type": "boolean"
+          },
+          "xrayState": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "address",
+          "enabled",
+          "guid",
+          "iD",
+          "lastHeartbeat",
+          "name",
+          "panelVersion",
+          "port",
+          "scheme",
+          "status",
+          "transitive",
+          "xrayState"
+        ],
+        "type": "object"
+      },
       "NodeView": {
         "description": "NodeView is the browser/API read contract for nodes. Credentials are\nwrite-only: responses expose only whether a node has a token configured.",
         "properties": {
@@ -4128,6 +4269,152 @@
         ],
         "type": "object"
       },
+      "Plan": {
+        "properties": {
+          "batchSize": {
+            "type": "integer"
+          },
+          "canaryCount": {
+            "type": "integer"
+          },
+          "channel": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "dryRun": {
+            "type": "boolean"
+          },
+          "error": {
+            "type": "string"
+          },
+          "healthTimeoutSecs": {
+            "type": "integer"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "maxParallel": {
+            "type": "integer"
+          },
+          "mutationAuthorized": {
+            "type": "boolean"
+          },
+          "name": {
+            "type": "string"
+          },
+          "releaseApiUrl": {
+            "type": "string"
+          },
+          "releaseHtmlUrl": {
+            "type": "string"
+          },
+          "releaseTag": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "soakSeconds": {
+            "type": "integer"
+          },
+          "state": {
+            "type": "string"
+          },
+          "stopOnFailure": {
+            "type": "boolean"
+          },
+          "targets": {
+            "items": {
+              "$ref": "#/components/schemas/Target"
+            },
+            "type": "array"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "batchSize",
+          "canaryCount",
+          "channel",
+          "createdAt",
+          "dryRun",
+          "healthTimeoutSecs",
+          "id",
+          "maxParallel",
+          "mutationAuthorized",
+          "name",
+          "releaseApiUrl",
+          "releaseHtmlUrl",
+          "releaseTag",
+          "revision",
+          "soakSeconds",
+          "state",
+          "stopOnFailure",
+          "targets",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "PlanRequest": {
+        "properties": {
+          "batchSize": {
+            "type": "integer"
+          },
+          "canaryCount": {
+            "type": "integer"
+          },
+          "channel": {
+            "type": "string"
+          },
+          "confirmProduction": {
+            "type": "boolean"
+          },
+          "dryRun": {
+            "type": "boolean"
+          },
+          "healthTimeoutSecs": {
+            "type": "integer"
+          },
+          "maxParallel": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "nodeIds": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array"
+          },
+          "soakSeconds": {
+            "type": "integer"
+          },
+          "stopOnFailure": {
+            "nullable": true,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "batchSize",
+          "canaryCount",
+          "channel",
+          "confirmProduction",
+          "dryRun",
+          "healthTimeoutSecs",
+          "maxParallel",
+          "name",
+          "nodeIds",
+          "soakSeconds"
+        ],
+        "type": "object"
+      },
       "Policy": {
         "description": "Policy contains desired policy only. Traffic bytes remain authoritative in\nxray.ClientTraffic; this table never accumulates a second traffic counter.",
         "properties": {
@@ -4363,6 +4650,33 @@
           "tls13",
           "tlsVersion",
           "x25519"
+        ],
+        "type": "object"
+      },
+      "ReleaseSnapshot": {
+        "properties": {
+          "apiUrl": {
+            "type": "string"
+          },
+          "channel": {
+            "type": "string"
+          },
+          "checksumVerified": {
+            "type": "boolean"
+          },
+          "htmlUrl": {
+            "type": "string"
+          },
+          "tag": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "apiUrl",
+          "channel",
+          "checksumVerified",
+          "htmlUrl",
+          "tag"
         ],
         "type": "object"
       },
@@ -4804,6 +5118,110 @@
         ],
         "type": "object"
       },
+      "Target": {
+        "properties": {
+          "attempts": {
+            "type": "integer"
+          },
+          "blockedReason": {
+            "type": "string"
+          },
+          "campaignId": {
+            "type": "integer"
+          },
+          "dispatchAt": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "dispatchEvidence": {
+            "type": "string"
+          },
+          "dispatchKey": {
+            "type": "string"
+          },
+          "dispatchStatus": {
+            "type": "string"
+          },
+          "error": {
+            "type": "string"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "initialVersion": {
+            "type": "string"
+          },
+          "nodeGuid": {
+            "type": "string"
+          },
+          "nodeId": {
+            "type": "integer"
+          },
+          "nodeName": {
+            "type": "string"
+          },
+          "observedStatus": {
+            "type": "string"
+          },
+          "observedVersion": {
+            "type": "string"
+          },
+          "observedXray": {
+            "type": "string"
+          },
+          "rollbackHealthy": {
+            "type": "boolean"
+          },
+          "rolledBack": {
+            "type": "boolean"
+          },
+          "runId": {
+            "type": "string"
+          },
+          "soakStartedAt": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "updateExitCode": {
+            "nullable": true,
+            "type": "integer"
+          },
+          "updateFinishedAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "updateState": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "attempts",
+          "campaignId",
+          "dispatchKey",
+          "id",
+          "initialVersion",
+          "nodeGuid",
+          "nodeId",
+          "nodeName",
+          "observedStatus",
+          "observedVersion",
+          "observedXray",
+          "rollbackHealthy",
+          "rolledBack",
+          "state",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
       "Traffic": {
         "description": "Traffic represents network traffic statistics for Xray connections.\nIt tracks upload and download bytes for inbound or outbound traffic.",
         "properties": {
@@ -5238,6 +5656,10 @@
     {
       "name": "Traffic control",
       "description": "Capability and reconciliation endpoints for the CatX shaping substrate. WP-6A does not define speed-limit policy."
+    },
+    {
+      "name": "Fleet updates",
+      "description": "Protected Stage A update campaign planning and reconciliation; production dispatch is disabled."
     },
     {
       "name": "Risk intelligence",
@@ -18650,6 +19072,447 @@
                       "type": "string"
                     },
                     "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/fleet-updates/campaigns": {
+      "post": {
+        "tags": [
+          "Fleet updates"
+        ],
+        "summary": "Create a dry-run update campaign plan.",
+        "operationId": "post_panel_api_fleet_updates_campaigns",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "$ref": "#/components/schemas/Plan"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": {
+                    "batchSize": 0,
+                    "canaryCount": 0,
+                    "channel": "",
+                    "createdAt": "2025-01-01T00:00:00Z",
+                    "dryRun": false,
+                    "error": "",
+                    "healthTimeoutSecs": 0,
+                    "id": 0,
+                    "maxParallel": 0,
+                    "mutationAuthorized": false,
+                    "name": "",
+                    "releaseApiUrl": "",
+                    "releaseHtmlUrl": "",
+                    "releaseTag": "",
+                    "revision": 0,
+                    "soakSeconds": 0,
+                    "state": "",
+                    "stopOnFailure": false,
+                    "targets": [
+                      {
+                        "attempts": 0,
+                        "blockedReason": "",
+                        "campaignId": 0,
+                        "dispatchAt": null,
+                        "dispatchEvidence": "",
+                        "dispatchKey": "",
+                        "dispatchStatus": "",
+                        "error": "",
+                        "id": 0,
+                        "initialVersion": "",
+                        "nodeGuid": "",
+                        "nodeId": 0,
+                        "nodeName": "",
+                        "observedStatus": "",
+                        "observedVersion": "",
+                        "observedXray": "",
+                        "rollbackHealthy": false,
+                        "rolledBack": false,
+                        "runId": "",
+                        "soakStartedAt": null,
+                        "state": "",
+                        "updateExitCode": null,
+                        "updateFinishedAt": 0,
+                        "updateState": "",
+                        "updatedAt": "2025-01-01T00:00:00Z"
+                      }
+                    ],
+                    "updatedAt": "2025-01-01T00:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Fleet updates"
+        ],
+        "summary": "List update campaigns.",
+        "operationId": "get_panel_api_fleet_updates_campaigns",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Campaign"
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": [
+                    {
+                      "batchSize": 0,
+                      "canaryCount": 0,
+                      "channel": "",
+                      "createdAt": "2025-01-01T00:00:00Z",
+                      "dryRun": false,
+                      "error": "",
+                      "healthTimeoutSecs": 0,
+                      "id": 0,
+                      "maxParallel": 0,
+                      "mutationAuthorized": false,
+                      "name": "",
+                      "releaseApiUrl": "",
+                      "releaseHtmlUrl": "",
+                      "releaseTag": "",
+                      "revision": 0,
+                      "soakSeconds": 0,
+                      "state": "",
+                      "stopOnFailure": false,
+                      "updatedAt": "2025-01-01T00:00:00Z"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/fleet-updates/campaigns/{id}": {
+      "get": {
+        "tags": [
+          "Fleet updates"
+        ],
+        "summary": "Read a campaign and immutable target snapshot.",
+        "operationId": "get_panel_api_fleet_updates_campaigns_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "$ref": "#/components/schemas/Plan"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": {
+                    "batchSize": 0,
+                    "canaryCount": 0,
+                    "channel": "",
+                    "createdAt": "2025-01-01T00:00:00Z",
+                    "dryRun": false,
+                    "error": "",
+                    "healthTimeoutSecs": 0,
+                    "id": 0,
+                    "maxParallel": 0,
+                    "mutationAuthorized": false,
+                    "name": "",
+                    "releaseApiUrl": "",
+                    "releaseHtmlUrl": "",
+                    "releaseTag": "",
+                    "revision": 0,
+                    "soakSeconds": 0,
+                    "state": "",
+                    "stopOnFailure": false,
+                    "targets": [
+                      {
+                        "attempts": 0,
+                        "blockedReason": "",
+                        "campaignId": 0,
+                        "dispatchAt": null,
+                        "dispatchEvidence": "",
+                        "dispatchKey": "",
+                        "dispatchStatus": "",
+                        "error": "",
+                        "id": 0,
+                        "initialVersion": "",
+                        "nodeGuid": "",
+                        "nodeId": 0,
+                        "nodeName": "",
+                        "observedStatus": "",
+                        "observedVersion": "",
+                        "observedXray": "",
+                        "rollbackHealthy": false,
+                        "rolledBack": false,
+                        "runId": "",
+                        "soakStartedAt": null,
+                        "state": "",
+                        "updateExitCode": null,
+                        "updateFinishedAt": 0,
+                        "updateState": "",
+                        "updatedAt": "2025-01-01T00:00:00Z"
+                      }
+                    ],
+                    "updatedAt": "2025-01-01T00:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/fleet-updates/campaigns/{id}/reconcile": {
+      "post": {
+        "tags": [
+          "Fleet updates"
+        ],
+        "summary": "Reconcile a campaign safely.",
+        "operationId": "post_panel_api_fleet_updates_campaigns_id_reconcile",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "$ref": "#/components/schemas/Campaign"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": {
+                    "batchSize": 0,
+                    "canaryCount": 0,
+                    "channel": "",
+                    "createdAt": "2025-01-01T00:00:00Z",
+                    "dryRun": false,
+                    "error": "",
+                    "healthTimeoutSecs": 0,
+                    "id": 0,
+                    "maxParallel": 0,
+                    "mutationAuthorized": false,
+                    "name": "",
+                    "releaseApiUrl": "",
+                    "releaseHtmlUrl": "",
+                    "releaseTag": "",
+                    "revision": 0,
+                    "soakSeconds": 0,
+                    "state": "",
+                    "stopOnFailure": false,
+                    "updatedAt": "2025-01-01T00:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/fleet-updates/campaigns/{id}/abort": {
+      "post": {
+        "tags": [
+          "Fleet updates"
+        ],
+        "summary": "Abort a campaign.",
+        "operationId": "post_panel_api_fleet_updates_campaigns_id_abort",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "$ref": "#/components/schemas/Campaign"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": {
+                    "batchSize": 0,
+                    "canaryCount": 0,
+                    "channel": "",
+                    "createdAt": "2025-01-01T00:00:00Z",
+                    "dryRun": false,
+                    "error": "",
+                    "healthTimeoutSecs": 0,
+                    "id": 0,
+                    "maxParallel": 0,
+                    "mutationAuthorized": false,
+                    "name": "",
+                    "releaseApiUrl": "",
+                    "releaseHtmlUrl": "",
+                    "releaseTag": "",
+                    "revision": 0,
+                    "soakSeconds": 0,
+                    "state": "",
+                    "stopOnFailure": false,
+                    "updatedAt": "2025-01-01T00:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/fleet-updates/campaigns/{id}/retry": {
+      "post": {
+        "tags": [
+          "Fleet updates"
+        ],
+        "summary": "Retry failed or unknown targets.",
+        "operationId": "post_panel_api_fleet_updates_campaigns_id_retry",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "$ref": "#/components/schemas/Campaign"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": {
+                    "batchSize": 0,
+                    "canaryCount": 0,
+                    "channel": "",
+                    "createdAt": "2025-01-01T00:00:00Z",
+                    "dryRun": false,
+                    "error": "",
+                    "healthTimeoutSecs": 0,
+                    "id": 0,
+                    "maxParallel": 0,
+                    "mutationAuthorized": false,
+                    "name": "",
+                    "releaseApiUrl": "",
+                    "releaseHtmlUrl": "",
+                    "releaseTag": "",
+                    "revision": 0,
+                    "soakSeconds": 0,
+                    "state": "",
+                    "stopOnFailure": false,
+                    "updatedAt": "2025-01-01T00:00:00Z"
                   }
                 }
               }

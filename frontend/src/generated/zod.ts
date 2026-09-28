@@ -388,6 +388,29 @@ export const AuditRetentionSettingsSchema = z.object({
 });
 export type AuditRetentionSettings = z.infer<typeof AuditRetentionSettingsSchema>;
 
+export const CampaignSchema = z.object({
+  batchSize: z.number().int(),
+  canaryCount: z.number().int(),
+  channel: z.string(),
+  createdAt: z.string(),
+  dryRun: z.boolean(),
+  error: z.string().optional(),
+  healthTimeoutSecs: z.number().int(),
+  id: z.number().int(),
+  maxParallel: z.number().int(),
+  mutationAuthorized: z.boolean(),
+  name: z.string(),
+  releaseApiUrl: z.string(),
+  releaseHtmlUrl: z.string(),
+  releaseTag: z.string(),
+  revision: z.number().int(),
+  soakSeconds: z.number().int(),
+  state: z.string(),
+  stopOnFailure: z.boolean(),
+  updatedAt: z.string(),
+});
+export type Campaign = z.infer<typeof CampaignSchema>;
+
 export const ClientSchema = z.object({
   adTag: z.string().optional(),
   allowedIPs: z.array(z.string()).optional(),
@@ -935,6 +958,22 @@ export const NodeMutationRequestSchema = z.object({
 });
 export type NodeMutationRequest = z.infer<typeof NodeMutationRequestSchema>;
 
+export const NodeSnapshotSchema = z.object({
+  address: z.string(),
+  enabled: z.boolean(),
+  guid: z.string(),
+  iD: z.number().int(),
+  lastHeartbeat: z.number().int(),
+  name: z.string(),
+  panelVersion: z.string(),
+  port: z.number().int(),
+  scheme: z.string(),
+  status: z.string(),
+  transitive: z.boolean(),
+  xrayState: z.string(),
+});
+export type NodeSnapshot = z.infer<typeof NodeSnapshotSchema>;
+
 export const NodeViewSchema = z.object({
   activeCount: z.number().int(),
   address: z.string(),
@@ -1013,6 +1052,45 @@ export const PeerActivitySchema = z.object({
 });
 export type PeerActivity = z.infer<typeof PeerActivitySchema>;
 
+export const PlanSchema = z.object({
+  batchSize: z.number().int(),
+  canaryCount: z.number().int(),
+  channel: z.string(),
+  createdAt: z.string(),
+  dryRun: z.boolean(),
+  error: z.string().optional(),
+  healthTimeoutSecs: z.number().int(),
+  id: z.number().int(),
+  maxParallel: z.number().int(),
+  mutationAuthorized: z.boolean(),
+  name: z.string(),
+  releaseApiUrl: z.string(),
+  releaseHtmlUrl: z.string(),
+  releaseTag: z.string(),
+  revision: z.number().int(),
+  soakSeconds: z.number().int(),
+  state: z.string(),
+  stopOnFailure: z.boolean(),
+  targets: z.array(z.lazy(() => TargetSchema)),
+  updatedAt: z.string(),
+});
+export type Plan = z.infer<typeof PlanSchema>;
+
+export const PlanRequestSchema = z.object({
+  batchSize: z.number().int(),
+  canaryCount: z.number().int(),
+  channel: z.string(),
+  confirmProduction: z.boolean(),
+  dryRun: z.boolean(),
+  healthTimeoutSecs: z.number().int(),
+  maxParallel: z.number().int(),
+  name: z.string(),
+  nodeIds: z.array(z.number().int()),
+  soakSeconds: z.number().int(),
+  stopOnFailure: z.boolean().nullable().optional(),
+});
+export type PlanRequest = z.infer<typeof PlanRequestSchema>;
+
 export const PolicySchema = z.object({
   activeDownloadBps: z.number().int(),
   activeUploadBps: z.number().int(),
@@ -1070,6 +1148,15 @@ export const RealityScanResultSchema = z.object({
   x25519: z.boolean(),
 });
 export type RealityScanResult = z.infer<typeof RealityScanResultSchema>;
+
+export const ReleaseSnapshotSchema = z.object({
+  apiUrl: z.string(),
+  channel: z.string(),
+  checksumVerified: z.boolean(),
+  htmlUrl: z.string(),
+  tag: z.string(),
+});
+export type ReleaseSnapshot = z.infer<typeof ReleaseSnapshotSchema>;
 
 export const RetentionRequestSchema = z.object({
   auditDays: z.number().int(),
@@ -1192,6 +1279,35 @@ export const SuppressionSchema = z.object({
   reason: z.string().optional(),
 });
 export type Suppression = z.infer<typeof SuppressionSchema>;
+
+export const TargetSchema = z.object({
+  attempts: z.number().int(),
+  blockedReason: z.string().optional(),
+  campaignId: z.number().int(),
+  dispatchAt: z.string().nullable().optional(),
+  dispatchEvidence: z.string().optional(),
+  dispatchKey: z.string(),
+  dispatchStatus: z.string().optional(),
+  error: z.string().optional(),
+  id: z.number().int(),
+  initialVersion: z.string(),
+  nodeGuid: z.string(),
+  nodeId: z.number().int(),
+  nodeName: z.string(),
+  observedStatus: z.string(),
+  observedVersion: z.string(),
+  observedXray: z.string(),
+  rollbackHealthy: z.boolean(),
+  rolledBack: z.boolean(),
+  runId: z.string().optional(),
+  soakStartedAt: z.string().nullable().optional(),
+  state: z.string(),
+  updateExitCode: z.number().int().nullable().optional(),
+  updateFinishedAt: z.number().int().optional(),
+  updateState: z.string().optional(),
+  updatedAt: z.string(),
+});
+export type Target = z.infer<typeof TargetSchema>;
 
 export const TrafficSchema = z.object({
   Down: z.number().int(),

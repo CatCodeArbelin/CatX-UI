@@ -14,6 +14,7 @@ import (
 	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
 	"github.com/mhsanaei/3x-ui/v3/internal/eventbus"
 	"github.com/mhsanaei/3x-ui/v3/internal/forkext/audit"
+	"github.com/mhsanaei/3x-ui/v3/internal/forkext/fleetupdate"
 	"github.com/mhsanaei/3x-ui/v3/internal/forkext/groupquota"
 	"github.com/mhsanaei/3x-ui/v3/internal/forkext/portal"
 	"github.com/mhsanaei/3x-ui/v3/internal/forkext/risk"
@@ -39,6 +40,7 @@ func RegisterMigrations(db *gorm.DB) error {
 	setSettingsDB(db)
 	if db == nil {
 		portal.Configure(nil, false)
+		fleetupdate.Configure(nil, false)
 		audit.Configure(nil, false)
 		groupquota.Configure(nil, false)
 		trafficpolicy.Configure(nil, false)
@@ -53,6 +55,12 @@ func RegisterMigrations(db *gorm.DB) error {
 		return err
 	}
 	portal.Configure(db, portalEnabled)
+	fleetEnabled, _ := NewSettings(db).Enabled(FlagFleetUpdates)
+	fleetupdate.Configure(db, fleetEnabled)
+	fleetMutationEnabled, _ := NewSettings(db).Enabled(FlagFleetMutation)
+	if s := fleetupdate.Current(); s != nil {
+		s.SetMutationEnabled(fleetMutationEnabled)
+	}
 	auditEnabled, _ := NewSettings(db).Enabled(FlagAudit)
 	webhooksEnabled, _ := NewSettings(db).Enabled(FlagWebhooks)
 	if auditEnabled {
@@ -136,6 +144,7 @@ func RegisterRoutes(api *gin.RouterGroup) {
 	groupquota.RegisterRoutes(api)
 	trafficcontrol.RegisterRoutes(api)
 	trafficpolicy.RegisterRoutes(api)
+	fleetupdate.RegisterRoutes(api)
 	risk.RegisterRoutes(api)
 }
 
@@ -166,6 +175,7 @@ func RegisterJobs(_ context.Context, scheduler *cron.Cron) {
 	trafficcontrol.RegisterJobs(scheduler)
 	trafficpolicy.RegisterJobs(scheduler)
 	risk.RegisterJobs(scheduler)
+	fleetupdate.RegisterJobs(scheduler)
 }
 
 func SetTrafficControlRestartCallback(fn func()) { groupquota.SetRestartCallback(fn) }
@@ -243,7 +253,7 @@ func GroupQuotaRebaselineClient(tx *gorm.DB, email string, up, down int64) error
 }
 
 func MigrationModels() []any {
-	return append(append(groupquota.Models(), trafficpolicy.Models()...), &portal.Credential{}, &portal.HostGrant{})
+	return append(append(append(groupquota.Models(), trafficpolicy.Models()...), &portal.Credential{}, &portal.HostGrant{}), &fleetupdate.Campaign{}, &fleetupdate.Target{})
 }
 
 // Start is the lifecycle integration point for fork-owned goroutines. The

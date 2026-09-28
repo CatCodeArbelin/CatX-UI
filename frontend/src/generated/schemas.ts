@@ -1490,6 +1490,91 @@ export const SCHEMAS: Record<string, unknown> = {
     ],
     "type": "object"
   },
+  "Campaign": {
+    "properties": {
+      "batchSize": {
+        "type": "integer"
+      },
+      "canaryCount": {
+        "type": "integer"
+      },
+      "channel": {
+        "type": "string"
+      },
+      "createdAt": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "dryRun": {
+        "type": "boolean"
+      },
+      "error": {
+        "type": "string"
+      },
+      "healthTimeoutSecs": {
+        "type": "integer"
+      },
+      "id": {
+        "type": "integer"
+      },
+      "maxParallel": {
+        "type": "integer"
+      },
+      "mutationAuthorized": {
+        "type": "boolean"
+      },
+      "name": {
+        "type": "string"
+      },
+      "releaseApiUrl": {
+        "type": "string"
+      },
+      "releaseHtmlUrl": {
+        "type": "string"
+      },
+      "releaseTag": {
+        "type": "string"
+      },
+      "revision": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "soakSeconds": {
+        "type": "integer"
+      },
+      "state": {
+        "type": "string"
+      },
+      "stopOnFailure": {
+        "type": "boolean"
+      },
+      "updatedAt": {
+        "format": "date-time",
+        "type": "string"
+      }
+    },
+    "required": [
+      "batchSize",
+      "canaryCount",
+      "channel",
+      "createdAt",
+      "dryRun",
+      "healthTimeoutSecs",
+      "id",
+      "maxParallel",
+      "mutationAuthorized",
+      "name",
+      "releaseApiUrl",
+      "releaseHtmlUrl",
+      "releaseTag",
+      "revision",
+      "soakSeconds",
+      "state",
+      "stopOnFailure",
+      "updatedAt"
+    ],
+    "type": "object"
+  },
   "Client": {
     "description": "Client represents a client configuration for Xray inbounds with traffic limits and settings.",
     "properties": {
@@ -3753,6 +3838,62 @@ export const SCHEMAS: Record<string, unknown> = {
     ],
     "type": "object"
   },
+  "NodeSnapshot": {
+    "properties": {
+      "address": {
+        "type": "string"
+      },
+      "enabled": {
+        "type": "boolean"
+      },
+      "guid": {
+        "type": "string"
+      },
+      "iD": {
+        "type": "integer"
+      },
+      "lastHeartbeat": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "name": {
+        "type": "string"
+      },
+      "panelVersion": {
+        "type": "string"
+      },
+      "port": {
+        "type": "integer"
+      },
+      "scheme": {
+        "type": "string"
+      },
+      "status": {
+        "type": "string"
+      },
+      "transitive": {
+        "type": "boolean"
+      },
+      "xrayState": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "address",
+      "enabled",
+      "guid",
+      "iD",
+      "lastHeartbeat",
+      "name",
+      "panelVersion",
+      "port",
+      "scheme",
+      "status",
+      "transitive",
+      "xrayState"
+    ],
+    "type": "object"
+  },
   "NodeView": {
     "description": "NodeView is the browser/API read contract for nodes. Credentials are\nwrite-only: responses expose only whether a node has a token configured.",
     "properties": {
@@ -4102,6 +4243,152 @@ export const SCHEMAS: Record<string, unknown> = {
     ],
     "type": "object"
   },
+  "Plan": {
+    "properties": {
+      "batchSize": {
+        "type": "integer"
+      },
+      "canaryCount": {
+        "type": "integer"
+      },
+      "channel": {
+        "type": "string"
+      },
+      "createdAt": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "dryRun": {
+        "type": "boolean"
+      },
+      "error": {
+        "type": "string"
+      },
+      "healthTimeoutSecs": {
+        "type": "integer"
+      },
+      "id": {
+        "type": "integer"
+      },
+      "maxParallel": {
+        "type": "integer"
+      },
+      "mutationAuthorized": {
+        "type": "boolean"
+      },
+      "name": {
+        "type": "string"
+      },
+      "releaseApiUrl": {
+        "type": "string"
+      },
+      "releaseHtmlUrl": {
+        "type": "string"
+      },
+      "releaseTag": {
+        "type": "string"
+      },
+      "revision": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "soakSeconds": {
+        "type": "integer"
+      },
+      "state": {
+        "type": "string"
+      },
+      "stopOnFailure": {
+        "type": "boolean"
+      },
+      "targets": {
+        "items": {
+          "$ref": "#/components/schemas/Target"
+        },
+        "type": "array"
+      },
+      "updatedAt": {
+        "format": "date-time",
+        "type": "string"
+      }
+    },
+    "required": [
+      "batchSize",
+      "canaryCount",
+      "channel",
+      "createdAt",
+      "dryRun",
+      "healthTimeoutSecs",
+      "id",
+      "maxParallel",
+      "mutationAuthorized",
+      "name",
+      "releaseApiUrl",
+      "releaseHtmlUrl",
+      "releaseTag",
+      "revision",
+      "soakSeconds",
+      "state",
+      "stopOnFailure",
+      "targets",
+      "updatedAt"
+    ],
+    "type": "object"
+  },
+  "PlanRequest": {
+    "properties": {
+      "batchSize": {
+        "type": "integer"
+      },
+      "canaryCount": {
+        "type": "integer"
+      },
+      "channel": {
+        "type": "string"
+      },
+      "confirmProduction": {
+        "type": "boolean"
+      },
+      "dryRun": {
+        "type": "boolean"
+      },
+      "healthTimeoutSecs": {
+        "type": "integer"
+      },
+      "maxParallel": {
+        "type": "integer"
+      },
+      "name": {
+        "type": "string"
+      },
+      "nodeIds": {
+        "items": {
+          "type": "integer"
+        },
+        "type": "array"
+      },
+      "soakSeconds": {
+        "type": "integer"
+      },
+      "stopOnFailure": {
+        "nullable": true,
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "batchSize",
+      "canaryCount",
+      "channel",
+      "confirmProduction",
+      "dryRun",
+      "healthTimeoutSecs",
+      "maxParallel",
+      "name",
+      "nodeIds",
+      "soakSeconds"
+    ],
+    "type": "object"
+  },
   "Policy": {
     "description": "Policy contains desired policy only. Traffic bytes remain authoritative in\nxray.ClientTraffic; this table never accumulates a second traffic counter.",
     "properties": {
@@ -4337,6 +4624,33 @@ export const SCHEMAS: Record<string, unknown> = {
       "tls13",
       "tlsVersion",
       "x25519"
+    ],
+    "type": "object"
+  },
+  "ReleaseSnapshot": {
+    "properties": {
+      "apiUrl": {
+        "type": "string"
+      },
+      "channel": {
+        "type": "string"
+      },
+      "checksumVerified": {
+        "type": "boolean"
+      },
+      "htmlUrl": {
+        "type": "string"
+      },
+      "tag": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "apiUrl",
+      "channel",
+      "checksumVerified",
+      "htmlUrl",
+      "tag"
     ],
     "type": "object"
   },
@@ -4775,6 +5089,110 @@ export const SCHEMAS: Record<string, unknown> = {
       "expiresAt",
       "id",
       "kind"
+    ],
+    "type": "object"
+  },
+  "Target": {
+    "properties": {
+      "attempts": {
+        "type": "integer"
+      },
+      "blockedReason": {
+        "type": "string"
+      },
+      "campaignId": {
+        "type": "integer"
+      },
+      "dispatchAt": {
+        "format": "date-time",
+        "nullable": true,
+        "type": "string"
+      },
+      "dispatchEvidence": {
+        "type": "string"
+      },
+      "dispatchKey": {
+        "type": "string"
+      },
+      "dispatchStatus": {
+        "type": "string"
+      },
+      "error": {
+        "type": "string"
+      },
+      "id": {
+        "type": "integer"
+      },
+      "initialVersion": {
+        "type": "string"
+      },
+      "nodeGuid": {
+        "type": "string"
+      },
+      "nodeId": {
+        "type": "integer"
+      },
+      "nodeName": {
+        "type": "string"
+      },
+      "observedStatus": {
+        "type": "string"
+      },
+      "observedVersion": {
+        "type": "string"
+      },
+      "observedXray": {
+        "type": "string"
+      },
+      "rollbackHealthy": {
+        "type": "boolean"
+      },
+      "rolledBack": {
+        "type": "boolean"
+      },
+      "runId": {
+        "type": "string"
+      },
+      "soakStartedAt": {
+        "format": "date-time",
+        "nullable": true,
+        "type": "string"
+      },
+      "state": {
+        "type": "string"
+      },
+      "updateExitCode": {
+        "nullable": true,
+        "type": "integer"
+      },
+      "updateFinishedAt": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "updateState": {
+        "type": "string"
+      },
+      "updatedAt": {
+        "format": "date-time",
+        "type": "string"
+      }
+    },
+    "required": [
+      "attempts",
+      "campaignId",
+      "dispatchKey",
+      "id",
+      "initialVersion",
+      "nodeGuid",
+      "nodeId",
+      "nodeName",
+      "observedStatus",
+      "observedVersion",
+      "observedXray",
+      "rollbackHealthy",
+      "rolledBack",
+      "state",
+      "updatedAt"
     ],
     "type": "object"
   },

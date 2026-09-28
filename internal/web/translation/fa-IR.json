@@ -2547,6 +2547,28 @@
     "settings": "تنظیمات"
   },
   "fork": {
+    "fleetUpdate": {
+      "title": "Fleet updates",
+      "name": "Campaign name",
+      "stable": "Stable",
+      "dev": "Development",
+      "canary": "Canary count",
+      "batch": "Batch size",
+      "parallel": "Max parallel",
+      "plan": "Plan dry run",
+      "campaigns": "Campaigns",
+      "reconcile": "Reconcile",
+      "retry": "Retry",
+      "abort": "Abort",
+      "dryRun": "Dry run (no mutation)",
+      "confirmProduction": "Confirm production update",
+      "runId": "Run ID",
+      "dispatch": "Dispatch",
+      "result": "Update result",
+      "rollback": "Rollback",
+      "soak": "Soak",
+      "failure": "Failure"
+    },
     "audit": {
       "title": "Audit",
       "summary": "Authoritative metadata-only security and privileged-action history.",

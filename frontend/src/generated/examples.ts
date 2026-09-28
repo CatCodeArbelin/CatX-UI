@@ -368,6 +368,27 @@ export const EXAMPLES: Record<string, unknown> = {
     "deadLetterDays": 0,
     "deliveryDays": 0
   },
+  "Campaign": {
+    "batchSize": 0,
+    "canaryCount": 0,
+    "channel": "",
+    "createdAt": "2025-01-01T00:00:00Z",
+    "dryRun": false,
+    "error": "",
+    "healthTimeoutSecs": 0,
+    "id": 0,
+    "maxParallel": 0,
+    "mutationAuthorized": false,
+    "name": "",
+    "releaseApiUrl": "",
+    "releaseHtmlUrl": "",
+    "releaseTag": "",
+    "revision": 0,
+    "soakSeconds": 0,
+    "state": "",
+    "stopOnFailure": false,
+    "updatedAt": "2025-01-01T00:00:00Z"
+  },
   "Client": {
     "adTag": "0123456789abcdef0123456789abcdef",
     "allowedIPs": [
@@ -982,6 +1003,20 @@ export const EXAMPLES: Record<string, unknown> = {
     "scheme": "http",
     "tlsVerifyMode": "verify"
   },
+  "NodeSnapshot": {
+    "address": "",
+    "enabled": false,
+    "guid": "",
+    "iD": 0,
+    "lastHeartbeat": 0,
+    "name": "",
+    "panelVersion": "",
+    "port": 0,
+    "scheme": "",
+    "status": "",
+    "transitive": false,
+    "xrayState": ""
+  },
   "NodeView": {
     "activeCount": 20,
     "address": "node.example.com",
@@ -1054,6 +1089,71 @@ export const EXAMPLES: Record<string, unknown> = {
     "tag": "inbound-51820",
     "up": 1048576
   },
+  "Plan": {
+    "batchSize": 0,
+    "canaryCount": 0,
+    "channel": "",
+    "createdAt": "2025-01-01T00:00:00Z",
+    "dryRun": false,
+    "error": "",
+    "healthTimeoutSecs": 0,
+    "id": 0,
+    "maxParallel": 0,
+    "mutationAuthorized": false,
+    "name": "",
+    "releaseApiUrl": "",
+    "releaseHtmlUrl": "",
+    "releaseTag": "",
+    "revision": 0,
+    "soakSeconds": 0,
+    "state": "",
+    "stopOnFailure": false,
+    "targets": [
+      {
+        "attempts": 0,
+        "blockedReason": "",
+        "campaignId": 0,
+        "dispatchAt": null,
+        "dispatchEvidence": "",
+        "dispatchKey": "",
+        "dispatchStatus": "",
+        "error": "",
+        "id": 0,
+        "initialVersion": "",
+        "nodeGuid": "",
+        "nodeId": 0,
+        "nodeName": "",
+        "observedStatus": "",
+        "observedVersion": "",
+        "observedXray": "",
+        "rollbackHealthy": false,
+        "rolledBack": false,
+        "runId": "",
+        "soakStartedAt": null,
+        "state": "",
+        "updateExitCode": null,
+        "updateFinishedAt": 0,
+        "updateState": "",
+        "updatedAt": "2025-01-01T00:00:00Z"
+      }
+    ],
+    "updatedAt": "2025-01-01T00:00:00Z"
+  },
+  "PlanRequest": {
+    "batchSize": 0,
+    "canaryCount": 0,
+    "channel": "",
+    "confirmProduction": false,
+    "dryRun": false,
+    "healthTimeoutSecs": 0,
+    "maxParallel": 0,
+    "name": "",
+    "nodeIds": [
+      0
+    ],
+    "soakSeconds": 0,
+    "stopOnFailure": null
+  },
   "Policy": {
     "activeDownloadBps": 0,
     "activeUploadBps": 0,
@@ -1105,6 +1205,13 @@ export const EXAMPLES: Record<string, unknown> = {
     "tls13": true,
     "tlsVersion": "1.3",
     "x25519": true
+  },
+  "ReleaseSnapshot": {
+    "apiUrl": "",
+    "channel": "",
+    "checksumVerified": false,
+    "htmlUrl": "",
+    "tag": ""
   },
   "RetentionRequest": {
     "auditDays": 0,
@@ -1240,6 +1347,33 @@ export const EXAMPLES: Record<string, unknown> = {
     "id": 0,
     "kind": "",
     "reason": ""
+  },
+  "Target": {
+    "attempts": 0,
+    "blockedReason": "",
+    "campaignId": 0,
+    "dispatchAt": null,
+    "dispatchEvidence": "",
+    "dispatchKey": "",
+    "dispatchStatus": "",
+    "error": "",
+    "id": 0,
+    "initialVersion": "",
+    "nodeGuid": "",
+    "nodeId": 0,
+    "nodeName": "",
+    "observedStatus": "",
+    "observedVersion": "",
+    "observedXray": "",
+    "rollbackHealthy": false,
+    "rolledBack": false,
+    "runId": "",
+    "soakStartedAt": null,
+    "state": "",
+    "updateExitCode": null,
+    "updateFinishedAt": 0,
+    "updateState": "",
+    "updatedAt": "2025-01-01T00:00:00Z"
   },
   "Traffic": {
     "Down": 2097152,
