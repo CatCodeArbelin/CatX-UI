@@ -2,7 +2,7 @@
 
 ## Work Package
 
-`WP-8B — Self-service / Host Visibility / Fleet UI`
+`WP-8C — Multi-node Update Orchestration`
 
 ## Status
 
@@ -10,9 +10,29 @@ WP-8A is DONE: merged into `develop` at `0a6dab0f`, pushed, and its feature
 branch was deleted after Fork verification `36347039861` and Release CatX-UI
 `36347039863` reported green. Do not modify `main` or preview/demo data.
 
-WP-8B readiness review is APPROVED. Full implementation is authorized on this
-feature branch. Do not merge WP-8B, start WP-8C, modify `main`, or touch
+WP-8B is DONE: final head `fa030309d2628f764cff477896627e57adeed65f` passed
+Fork verification `36357830273` and Release CatX-UI `36357830282`, was merged
+into `develop` at `d9b09764`, pushed, and its feature branch was deleted.
+WP-8C Stage A is authorized on `feature/wp-8c-multi-node-update-orchestration`.
+Do not merge WP-8C, enable production fleet mutation, modify `main`, or touch
 preview/demo data.
+
+Stage A is orchestration foundation only. It may plan, preflight, reconcile,
+and exercise a fake executor, but production reconciliation must not call
+`runtime.Remote.UpdatePanel` yet. Do not use SSH, create another node agent,
+bypass `runtime.Remote`, or update transitive/read-only nodes.
+
+Required Stage A behavior includes persistent campaigns and immutable target
+snapshots; stable/dev release resolution and checksum-trust preflight;
+dry-run planning; direct-node eligibility and explicit blocked reasons;
+deterministic campaign states; canary/batch/parallel/health/soak/stop-on-
+failure controls; durable leases and duplicate-dispatch protection;
+restart/crash recovery, abort/retry/reconcile, concurrent-campaign exclusion;
+WP-8A audit events; protected APIs; Fleet Update UI; OpenAPI/generated types;
+i18n; SQLite/PostgreSQL migration coverage; and feature-disabled no-op
+behavior. Health convergence requires fresh heartbeat, `PanelVersion`, and
+node/Xray health. Rollback is reported only from explicit node evidence; node-
+local rollback remains the existing single-node updater responsibility.
 
 ## Fixed decisions
 

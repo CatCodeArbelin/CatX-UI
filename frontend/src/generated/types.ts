@@ -367,6 +367,27 @@ export interface AuditRetentionSettings {
   deliveryDays: number;
 }
 
+export interface Campaign {
+  batchSize: number;
+  canaryCount: number;
+  channel: string;
+  createdAt: string;
+  dryRun: boolean;
+  error?: string;
+  healthTimeoutSecs: number;
+  id: number;
+  maxParallel: number;
+  name: string;
+  releaseApiUrl: string;
+  releaseHtmlUrl: string;
+  releaseTag: string;
+  revision: number;
+  soakSeconds: number;
+  state: string;
+  stopOnFailure: boolean;
+  updatedAt: string;
+}
+
 export interface Client {
   adTag?: string;
   allowedIPs?: string[];
@@ -875,6 +896,21 @@ export interface NodeMutationRequest {
   tlsVerifyMode: string;
 }
 
+export interface NodeSnapshot {
+  address: string;
+  enabled: boolean;
+  guid: string;
+  iD: number;
+  lastHeartbeat: number;
+  name: string;
+  panelVersion: string;
+  port: number;
+  scheme: string;
+  status: string;
+  transitive: boolean;
+  xrayState: string;
+}
+
 export interface NodeView {
   activeCount: number;
   address: string;
@@ -949,6 +985,41 @@ export interface PeerActivity {
   up: number;
 }
 
+export interface Plan {
+  batchSize: number;
+  canaryCount: number;
+  channel: string;
+  createdAt: string;
+  dryRun: boolean;
+  error?: string;
+  healthTimeoutSecs: number;
+  id: number;
+  maxParallel: number;
+  name: string;
+  releaseApiUrl: string;
+  releaseHtmlUrl: string;
+  releaseTag: string;
+  revision: number;
+  soakSeconds: number;
+  state: string;
+  stopOnFailure: boolean;
+  targets: Target[];
+  updatedAt: string;
+}
+
+export interface PlanRequest {
+  batchSize: number;
+  canaryCount: number;
+  channel: string;
+  dryRun: boolean;
+  healthTimeoutSecs: number;
+  maxParallel: number;
+  name: string;
+  nodeIds: number[];
+  soakSeconds: number;
+  stopOnFailure?: boolean | null;
+}
+
 export interface Policy {
   activeDownloadBps: number;
   activeUploadBps: number;
@@ -1001,6 +1072,14 @@ export interface RealityScanResult {
   tls13: boolean;
   tlsVersion: string;
   x25519: boolean;
+}
+
+export interface ReleaseSnapshot {
+  apiUrl: string;
+  channel: string;
+  checksumVerified: boolean;
+  htmlUrl: string;
+  tag: string;
 }
 
 export interface RetentionRequest {
@@ -1114,6 +1193,26 @@ export interface Suppression {
   id: number;
   kind: string;
   reason?: string;
+}
+
+export interface Target {
+  attempts: number;
+  blockedReason?: string;
+  campaignId: number;
+  dispatchAt?: string | null;
+  dispatchEvidence?: string;
+  dispatchKey: string;
+  error?: string;
+  id: number;
+  initialVersion: string;
+  nodeGuid: string;
+  nodeId: number;
+  nodeName: string;
+  observedStatus: string;
+  observedVersion: string;
+  observedXray: string;
+  state: string;
+  updatedAt: string;
 }
 
 export interface Traffic {

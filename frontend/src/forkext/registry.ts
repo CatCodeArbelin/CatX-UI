@@ -8,6 +8,10 @@ export interface ForkNavigationItem {
 
 export const forkRoutes: readonly RouteObject[] = [
   {
+    path: '/fleet-updates',
+    lazy: async () => ({ Component: (await import('../pages/fleet/FleetUpdatePage')).default }),
+  },
+  {
     path: '/portal-access',
     lazy: async () => ({ Component: (await import('../pages/portal/PortalAdminPage')).default }),
   },
@@ -33,6 +37,7 @@ export const forkRoutes: readonly RouteObject[] = [
   },
 ];
 export const forkNavigationItems: readonly ForkNavigationItem[] = [
+  { key: 'fleet-updates', label: 'Fleet updates', path: '/fleet-updates' },
   { key: 'portal-access', label: 'Portal access', path: '/portal-access' },
   { key: 'fleet', label: 'Fleet', path: '/fleet' },
   { key: 'client-activity', label: 'Client activity', path: '/activity' },
@@ -42,6 +47,51 @@ export const forkNavigationItems: readonly ForkNavigationItem[] = [
 ];
 // Keep the fork contract registry as the single source for generated API verification.
 export const forkApiSections = [
+  {
+    id: 'fleet-updates',
+    title: 'Fleet updates',
+    description:
+      'Protected Stage A update campaign planning and reconciliation; production dispatch is disabled.',
+    endpoints: [
+      {
+        method: 'POST',
+        path: '/panel/api/fleet-updates/campaigns',
+        summary: 'Create a dry-run update campaign plan.',
+        responseSchema: 'Plan',
+      },
+      {
+        method: 'GET',
+        path: '/panel/api/fleet-updates/campaigns',
+        summary: 'List update campaigns.',
+        responseSchema: 'Campaign',
+        responseSchemaArray: true,
+      },
+      {
+        method: 'GET',
+        path: '/panel/api/fleet-updates/campaigns/:id',
+        summary: 'Read a campaign and immutable target snapshot.',
+        responseSchema: 'Plan',
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/fleet-updates/campaigns/:id/reconcile',
+        summary: 'Reconcile a campaign safely.',
+        responseSchema: 'Campaign',
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/fleet-updates/campaigns/:id/abort',
+        summary: 'Abort a campaign.',
+        responseSchema: 'Campaign',
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/fleet-updates/campaigns/:id/retry',
+        summary: 'Retry failed or unknown targets.',
+        responseSchema: 'Campaign',
+      },
+    ],
+  },
   {
     id: 'risk-intelligence',
     title: 'Risk intelligence',

@@ -131,6 +131,10 @@ func run(root, outDir string) error {
 			StructAllow: setOf("CredentialView", "IssuedToken", "HostGrant", "PortalSettings"),
 		},
 		{
+			Path:        resolveRel(root, "internal/forkext/fleetupdate"),
+			StructAllow: setOf("Campaign", "Target", "ReleaseSnapshot", "NodeSnapshot", "PlanRequest", "Plan"),
+		},
+		{
 			Path:        resolveRel(root, "internal/amneziawg"),
 			StructAllow: setOf("ServerSettings"),
 		},
