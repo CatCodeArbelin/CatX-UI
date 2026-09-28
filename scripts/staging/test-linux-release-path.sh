@@ -105,10 +105,6 @@ EOF
             exit "$install_rc"
         fi
         echo "staging: install completed"
-        echo "staging: XUI_MAIN_FOLDER=${XUI_MAIN_FOLDER:-<unset>}" >&2
-        ls -lad /usr/local /usr/local/x-ui /usr/local/x-ui/x-ui 2>/dev/null >&2 || true
-        find /usr/local -maxdepth 3 -iname "x-ui*" -print 2>/dev/null >&2 || true
-        find /usr/local/x-ui /etc/x-ui -maxdepth 2 -print 2>/dev/null >&2 || true
         echo "staging: binary-check exists=$(test -e /usr/local/x-ui/x-ui && echo yes || echo no) executable=$(test -x /usr/local/x-ui/x-ui && echo yes || echo no)" >&2
         if [[ ! -e /usr/local/x-ui/x-ui ]]; then
             echo "staging: binary path absent" >&2
