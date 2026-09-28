@@ -100,12 +100,14 @@ EOF
         install_rc=$?
         set -e
         echo "staging: installer exit code $install_rc" >&2
+        set +e
         if [[ "$install_rc" -ne 0 ]]; then
             cat /tmp/install.log >&2 || true
             exit "$install_rc"
         fi
         echo "staging: install completed" >&2
         echo "staging: binary-check exists=$(test -e /usr/local/x-ui/x-ui && echo yes || echo no) executable=$(test -x /usr/local/x-ui/x-ui && echo yes || echo no)" >&2
+        set -e
         if [[ ! -e /usr/local/x-ui/x-ui ]]; then
             echo "staging: binary path absent" >&2
             find /usr/local -maxdepth 4 -type f -print >&2 || true
