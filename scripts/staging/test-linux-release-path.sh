@@ -25,7 +25,7 @@ docker run --rm \
     -v "$artifacts:/assets:ro" \
     -v "$legacy:/legacy:ro" \
     -e DEBIAN_FRONTEND=noninteractive \
-    ubuntu:24.04 bash -euo pipefail -c '
+    debian:bookworm-slim bash -euo pipefail -c '
         apt-get update -qq
         apt-get install -y -qq --no-install-recommends ca-certificates curl jq openssl python3 sqlite3 tar procps > /dev/null || true
         for required in curl jq openssl python3 sqlite3 tar sha256sum; do

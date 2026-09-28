@@ -24,7 +24,7 @@ validated from the workflow output rather than inferred from a local build.
 
 ## Staging topology
 
-The Linux rehearsal uses disposable Ubuntu 24.04 containers, a local synthetic
+The Linux rehearsal uses disposable Debian Bookworm containers, a local synthetic
 release server, one panel process, and two synthetic legacy panel binaries:
 
 - production baseline: `7ef22f94c950ff09f0870e2295fa65ad5968742c`;
