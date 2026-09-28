@@ -2774,7 +2774,7 @@
       "save": "Save settings"
     },
       "title": "Client activity & DNS intelligence",
-      "description": "Metadata-only observations for one existing panel client.",
+      "subtitle": "Metadata-only observations for one existing panel client.",
       "client": "Client email",
       "enter": "Enter a client email to view activity.",
       "disabled": "Analytics is disabled. Enable analytics to collect and view activity.",
@@ -2830,7 +2830,7 @@
       "service": "Service",
       "exampleService": "Example service",
       "name": "Name",
-      "description": "Description",
+      "summary": "Description",
       "enabled": "Enabled",
       "policyJson": "Policy JSON",
       "capabilities": "WP-4B capabilities",

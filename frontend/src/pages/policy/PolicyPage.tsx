@@ -727,7 +727,7 @@ export default function PolicyPage() {
             >
               <Input />
             </Form.Item>
-            <Form.Item name="description" label={t('fork.policy.labels.description')}>
+            <Form.Item name="description" label={t('fork.policy.labels.summary')}>
               <Input.TextArea rows={2} />
             </Form.Item>
             <Space>

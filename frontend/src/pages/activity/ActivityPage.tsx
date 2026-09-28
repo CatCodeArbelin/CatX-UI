@@ -306,7 +306,7 @@ export default function ActivityPage() {
             <div>
               <Typography.Title level={2}>{t('fork.activity.title')}</Typography.Title>
               <Typography.Paragraph type="secondary">
-                {t('fork.activity.description')}
+                {t('fork.activity.subtitle')}
               </Typography.Paragraph>
               <Alert type="info" showIcon message={t('fork.activity.privacy')} />
             </div>
