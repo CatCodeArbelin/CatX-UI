@@ -313,6 +313,12 @@ func (s *Service) Reconcile(ctx context.Context, id uint, owner string) error {
 		if t.State == StateReady && !s.dispatchAllowed(&c, ts, i) {
 			continue
 		}
+		// An ambiguous dispatch without a persisted correlation key cannot
+		// safely consume any later node status. Keep it unknown until an
+		// explicit recovery action supplies a new, authoritative run ID.
+		if t.State == StateUnknown && strings.TrimSpace(t.RunID) == "" {
+			continue
+		}
 		leaseWasExpired := leaseExpired(t.LeaseUntil)
 		if !s.acquireTarget(t, owner) {
 			continue
