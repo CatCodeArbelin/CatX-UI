@@ -87,6 +87,8 @@ EOF
 
         export CI=true CATX_TEST_RELEASE_MODE=1 CATX_TEST_RELEASE_BASE_URL="$base"
         export XUI_NONINTERACTIVE=1 XUI_SSL_MODE=none XUI_ENABLE_FAIL2BAN=false
+        export XUI_USERNAME=staging-admin XUI_PASSWORD=staging-password
+        export XUI_WEB_BASE_PATH=staging XUI_PANEL_PORT=28080 XUI_SERVER_IP=127.0.0.1
         export XUI_MAIN_FOLDER=/usr/local/x-ui XUI_SERVICE=/etc/systemd/system
         export XUI_DB_FOLDER=/etc/x-ui XUI_UPDATE_STATUS_FILE=/etc/x-ui/update-status.json
 
@@ -94,7 +96,7 @@ EOF
         printf "%s\n" "$install_script" >/tmp/staging-install.sh
         chmod 700 /tmp/staging-install.sh
         set +e
-        bash -x /tmp/staging-install.sh dev-latest < /dev/null >/tmp/install.log 2>&1
+        bash /tmp/staging-install.sh dev-latest < /dev/null >/tmp/install.log 2>&1
         install_rc=$?
         set -e
         echo "staging: installer exit code $install_rc" >&2
