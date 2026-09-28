@@ -553,6 +553,9 @@ jobs:
               echo '### Linux staging qualification output'
               tail -n 240 "$RUNNER_TEMP/linux-staging.log"
             } >> "$GITHUB_STEP_SUMMARY"
+            while IFS= read -r line; do
+              echo "::error title=Linux staging diagnostic::$line"
+            done < <(tail -n 120 "$RUNNER_TEMP/linux-staging.log")
           fi
           exit "$status"
 
@@ -598,6 +601,9 @@ jobs:
               echo '### PostgreSQL staging qualification output'
               tail -n 240 "$RUNNER_TEMP/postgres-staging.log"
             } >> "$GITHUB_STEP_SUMMARY"
+            while IFS= read -r line; do
+              echo "::error title=PostgreSQL staging diagnostic::$line"
+            done < <(tail -n 120 "$RUNNER_TEMP/postgres-staging.log")
           fi
           exit "$status"
 

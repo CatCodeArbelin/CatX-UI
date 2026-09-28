@@ -72,6 +72,9 @@ jobs:
                 echo "### $label output"
                 tail -n 240 "$RUNNER_TEMP/$target.log"
               } >> "$GITHUB_STEP_SUMMARY"
+              while IFS= read -r line; do
+                echo "::error title=$label diagnostic::$line"
+              done < <(tail -n 120 "$RUNNER_TEMP/$target.log")
               return "$status"
             fi
           }
