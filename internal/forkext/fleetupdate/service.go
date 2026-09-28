@@ -54,7 +54,11 @@ type Service struct {
 	resolver        ReleaseResolver
 	executor        UpdateExecutor
 	mutationEnabled bool
-	mu              sync.Mutex
+	// planMu serializes the short database section that snapshots node
+	// eligibility and creates a campaign. Reconcile uses durable campaign
+	// leases instead, so network-bound executor calls never hold a service
+	// mutex.
+	planMu sync.Mutex
 }
 
 var configured struct {
@@ -179,6 +183,8 @@ func (s *Service) Plan(ctx context.Context, req PlanRequest) (Plan, error) {
 	if err != nil {
 		return Plan{}, err
 	}
+	s.planMu.Lock()
+	defer s.planMu.Unlock()
 	q := s.db.WithContext(ctx).Model(&model.Node{}).Where("id > 0")
 	if len(req.NodeIDs) > 0 {
 		q = q.Where("id IN ?", req.NodeIDs)
@@ -280,6 +286,25 @@ func (s *Service) acquireTarget(t *Target, owner string) bool {
 	return result.Error == nil && result.RowsAffected == 1
 }
 
+func (s *Service) acquireCampaign(ctx context.Context, id uint, owner string) bool {
+	now := time.Now()
+	until := now.Add(30 * time.Second)
+	result := s.db.WithContext(ctx).Model(&Campaign{}).Where(
+		"id = ? AND state NOT IN ? AND (lease_until IS NULL OR lease_until < ?)",
+		id,
+		[]string{StateSucceeded, StateFailed, StateAborted},
+		now,
+	).Updates(map[string]any{"lease_owner": owner, "lease_until": until})
+	return result.Error == nil && result.RowsAffected == 1
+}
+
+func (s *Service) releaseCampaign(ctx context.Context, id uint, owner string) {
+	_ = s.db.WithContext(ctx).Model(&Campaign{}).Where("id = ? AND lease_owner = ?", id, owner).Updates(map[string]any{
+		"lease_owner": "",
+		"lease_until": nil,
+	})
+}
+
 func (s *Service) Reconcile(ctx context.Context, id uint, owner string) error {
 	if !s.Enabled() {
 		return ErrDisabled
@@ -287,8 +312,7 @@ func (s *Service) Reconcile(ctx context.Context, id uint, owner string) error {
 	if owner == "" {
 		owner = "fleet-worker"
 	}
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	leaseOwner := fmt.Sprintf("%s-%d", owner, time.Now().UnixNano())
 	var c Campaign
 	if err := s.db.WithContext(ctx).First(&c, id).Error; err != nil {
 		return err
@@ -296,10 +320,20 @@ func (s *Service) Reconcile(ctx context.Context, id uint, owner string) error {
 	if c.State == StateAborted || c.State == StateSucceeded || c.State == StateFailed {
 		return nil
 	}
+	if !s.acquireCampaign(ctx, id, leaseOwner) {
+		return nil
+	}
+	defer s.releaseCampaign(context.Background(), id, leaseOwner)
+	if err := s.db.WithContext(ctx).First(&c, id).Error; err != nil {
+		return err
+	}
 	if c.DryRun || !c.MutationAuthorized {
 		c.State = StateReady
 		c.Revision++
-		return s.db.WithContext(ctx).Save(&c).Error
+		return s.db.WithContext(ctx).Model(&Campaign{}).Where("id = ? AND lease_owner = ?", id, leaseOwner).Updates(map[string]any{
+			"state":    c.State,
+			"revision": c.Revision,
+		}).Error
 	}
 	var ts []Target
 	if err := s.db.WithContext(ctx).Where("campaign_id = ?", id).Order("id asc").Find(&ts).Error; err != nil {
@@ -461,11 +495,14 @@ func (s *Service) Reconcile(ctx context.Context, id uint, owner string) error {
 	} else {
 		c.State = StateReady
 	}
-	c.LeaseOwner = ""
-	c.LeaseUntil = time.Time{}
 	c.Revision++
-	s.db.WithContext(ctx).Save(&c)
-	return nil
+	return s.db.WithContext(ctx).Model(&Campaign{}).Where("id = ? AND lease_owner = ?", id, leaseOwner).Updates(map[string]any{
+		"state":       c.State,
+		"error":       c.Error,
+		"revision":    c.Revision,
+		"lease_owner": "",
+		"lease_until": nil,
+	}).Error
 }
 
 func activeTarget(state string) bool {

@@ -37,6 +37,10 @@ RC-1 merges the exact upstream commit
   release build workflow to `feature/rc1-*`. Release publication remains
   restricted to the existing main/tag conditions, so RC validation does not
   publish or update production artifacts.
+- Concurrency hardening: reconciliation now uses the existing durable
+  campaign lease fields for cross-process ownership; only the short planning
+  snapshot is serialized in memory. Network-bound node executor calls no
+  longer run while holding a service-wide mutex.
 
 ## Invariants checked during resolution
 
