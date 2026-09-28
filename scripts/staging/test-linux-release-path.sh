@@ -95,6 +95,7 @@ EOF
         bash -x -c "$install_script" -- dev-latest < /dev/null >/tmp/install.log 2>&1
         install_rc=$?
         set -e
+        echo "staging: installer exit code $install_rc" >&2
         if [[ "$install_rc" -ne 0 ]]; then
             cat /tmp/install.log >&2 || true
             exit "$install_rc"
