@@ -14,14 +14,16 @@ type PreflightResult struct {
 	Supported bool
 	Reason    string
 }
-type DispatchResult struct{ Evidence string }
-type ConvergenceResult struct {
-	FreshHeartbeat   bool
-	PanelVersion     string
-	NodeStatus       string
-	XrayState        string
-	RollbackEvidence string
-}
+type (
+	DispatchResult    struct{ Evidence string }
+	ConvergenceResult struct {
+		FreshHeartbeat   bool
+		PanelVersion     string
+		NodeStatus       string
+		XrayState        string
+		RollbackEvidence string
+	}
+)
 
 type UpdateExecutor interface {
 	Preflight(context.Context, NodeSnapshot, ReleaseSnapshot) (PreflightResult, error)
@@ -36,9 +38,11 @@ type DisabledExecutor struct{}
 func (DisabledExecutor) Preflight(context.Context, NodeSnapshot, ReleaseSnapshot) (PreflightResult, error) {
 	return PreflightResult{Supported: true}, nil
 }
+
 func (DisabledExecutor) Dispatch(context.Context, NodeSnapshot, ReleaseSnapshot) (DispatchResult, error) {
 	return DispatchResult{}, ErrMutationDisabled
 }
+
 func (DisabledExecutor) Reconcile(_ context.Context, node NodeSnapshot, release ReleaseSnapshot) (ConvergenceResult, error) {
 	return ConvergenceResult{FreshHeartbeat: node.LastHeartbeat > 0, PanelVersion: node.PanelVersion, NodeStatus: node.Status, XrayState: node.XrayState}, nil
 }
@@ -55,6 +59,7 @@ type FakeExecutor struct {
 func (f *FakeExecutor) Preflight(context.Context, NodeSnapshot, ReleaseSnapshot) (PreflightResult, error) {
 	return PreflightResult{Supported: true}, nil
 }
+
 func (f *FakeExecutor) Dispatch(_ context.Context, n NodeSnapshot, _ ReleaseSnapshot) (DispatchResult, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
@@ -64,6 +69,7 @@ func (f *FakeExecutor) Dispatch(_ context.Context, n NodeSnapshot, _ ReleaseSnap
 	}
 	return DispatchResult{Evidence: fmt.Sprintf("fake-dispatch-node-%d", n.ID)}, nil
 }
+
 func (f *FakeExecutor) Reconcile(_ context.Context, n NodeSnapshot, _ ReleaseSnapshot) (ConvergenceResult, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()

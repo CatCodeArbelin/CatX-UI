@@ -15,8 +15,10 @@ import (
 	"gorm.io/gorm"
 )
 
-var ErrDisabled = errors.New("fleet updates are disabled")
-var ErrCampaignNotFound = gorm.ErrRecordNotFound
+var (
+	ErrDisabled         = errors.New("fleet updates are disabled")
+	ErrCampaignNotFound = gorm.ErrRecordNotFound
+)
 
 type ReleaseResolver interface {
 	Resolve(context.Context, string) (ReleaseSnapshot, error)
@@ -63,21 +65,25 @@ func Configure(db *gorm.DB, enabled bool) {
 	configured.service = New(db, enabled)
 	configured.Unlock()
 }
+
 func Current() *Service { configured.RLock(); defer configured.RUnlock(); return configured.service }
 
 func New(db *gorm.DB, enabled bool) *Service {
 	return &Service{db: db, enabled: enabled, resolver: ProviderResolver{Provider: forkrelease.NewProvider(nil)}, executor: DisabledExecutor{}}
 }
+
 func (s *Service) SetResolver(r ReleaseResolver) {
 	if r != nil {
 		s.resolver = r
 	}
 }
+
 func (s *Service) SetExecutor(e UpdateExecutor) {
 	if e != nil {
 		s.executor = e
 	}
 }
+
 func SetExecutor(e UpdateExecutor) {
 	if s := Current(); s != nil && e != nil {
 		s.SetExecutor(e)
@@ -92,6 +98,7 @@ func normalizeChannel(c string) string {
 	}
 	return string(forkrelease.ChannelStable)
 }
+
 func defaults(r *PlanRequest) {
 	if r.Name == "" {
 		r.Name = "Fleet update"
@@ -118,6 +125,7 @@ func defaults(r *PlanRequest) {
 func nodeSnapshot(n model.Node) NodeSnapshot {
 	return NodeSnapshot{ID: n.Id, Guid: n.Guid, Name: n.Name, Address: n.Address, Port: n.Port, Scheme: n.Scheme, Enabled: n.Enable, Status: n.Status, LastHeartbeat: n.LastHeartbeat, PanelVersion: n.PanelVersion, XrayState: n.XrayState}
 }
+
 func fresh(n NodeSnapshot) bool {
 	return n.LastHeartbeat > 0 && time.Since(time.Unix(n.LastHeartbeat, 0)) <= 30*time.Second
 }
@@ -125,6 +133,7 @@ func normalizedVersion(v string) string { return strings.TrimPrefix(strings.Trim
 func sameVersion(a, b string) bool {
 	return normalizedVersion(a) != "" && normalizedVersion(a) == normalizedVersion(b)
 }
+
 func eligibility(n NodeSnapshot, release ReleaseSnapshot) string {
 	if n.ID <= 0 || n.Transitive {
 		return ReasonTransitive
@@ -166,8 +175,6 @@ func (s *Service) Plan(ctx context.Context, req PlanRequest) (Plan, error) {
 	var nodes []model.Node
 	if err := q.Order("id asc").Find(&nodes).Error; err != nil {
 		return Plan{}, err
-	}
-	if len(req.NodeIDs) > 0 && len(nodes) != len(uniqueInts(req.NodeIDs)) { /* missing nodes become durable deleted targets below */
 	}
 	c := Campaign{Name: req.Name, Channel: req.Channel, ReleaseTag: release.Tag, ReleaseAPIURL: release.APIURL, ReleaseHTMLURL: release.HTMLURL, DryRun: req.DryRun, CanaryCount: req.CanaryCount, BatchSize: req.BatchSize, MaxParallel: req.MaxParallel, HealthTimeoutSecs: req.HealthTimeoutSecs, SoakSeconds: req.SoakSeconds, StopOnFailure: *req.StopOnFailure, State: StatePreflight, Revision: 1}
 	if err := s.db.WithContext(ctx).Create(&c).Error; err != nil {
@@ -221,6 +228,7 @@ func uniqueInts(in []int) []int {
 	sort.Ints(out)
 	return out
 }
+
 func (s *Service) concurrentNode(id int) bool {
 	var n int64
 	s.db.Model(&Target{}).Where("node_id = ? AND state NOT IN ?", id, []string{StateSucceeded, StateFailed, StateAborted, StateBlocked}).Count(&n)
@@ -241,6 +249,7 @@ func (s *Service) Get(ctx context.Context, id uint) (Plan, error) {
 	}
 	return Plan{Campaign: c, Targets: ts}, nil
 }
+
 func (s *Service) List(ctx context.Context) ([]Campaign, error) {
 	if !s.Enabled() {
 		return nil, ErrDisabled
@@ -253,11 +262,13 @@ func (s *Service) List(ctx context.Context) ([]Campaign, error) {
 func terminal(state string) bool {
 	return state == StateSucceeded || state == StateFailed || state == StateAborted || state == StateBlocked
 }
+
 func (s *Service) acquireTarget(t *Target, owner string) bool {
 	until := time.Now().Add(30 * time.Second)
 	result := s.db.Model(&Target{}).Where("id = ? AND (lease_until IS NULL OR lease_until < ? OR lease_owner = ?)", t.ID, time.Now(), owner).Updates(map[string]any{"lease_owner": owner, "lease_until": until})
 	return result.Error == nil && result.RowsAffected == 1
 }
+
 func (s *Service) Reconcile(ctx context.Context, id uint, owner string) error {
 	if !s.Enabled() {
 		return ErrDisabled
@@ -419,11 +430,13 @@ func (s *Service) dispatchAllowed(c *Campaign, ts []Target, index int) bool {
 	}
 	return readyOrdinal <= window
 }
+
 func (s *Service) saveTarget(t *Target) error {
 	t.LeaseOwner = ""
 	t.LeaseUntil = time.Time{}
 	return s.db.Save(t).Error
 }
+
 func (s *Service) Abort(ctx context.Context, id uint) error {
 	if !s.Enabled() {
 		return ErrDisabled
@@ -446,6 +459,7 @@ func (s *Service) Abort(ctx context.Context, id uint) error {
 	}
 	return err
 }
+
 func (s *Service) Retry(ctx context.Context, id uint) error {
 	if !s.Enabled() {
 		return ErrDisabled
@@ -468,6 +482,7 @@ func (s *Service) Retry(ctx context.Context, id uint) error {
 	}
 	return err
 }
+
 func auditCampaign(ctx context.Context, event string, c *Campaign, outcome string) {
 	_ = audit.Record(ctx, &audit.AuditEvent{EventType: event, Outcome: outcome, ActorType: "user", TargetType: "update_campaign", TargetRef: fmt.Sprint(c.ID), Metadata: "{}"})
 }

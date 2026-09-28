@@ -19,6 +19,7 @@ func RegisterRoutes(api *gin.RouterGroup) {
 	g.POST("/campaigns/:id/abort", abort)
 	g.POST("/campaigns/:id/retry", retry)
 }
+
 func svc(c *gin.Context) (*Service, bool) {
 	s := Current()
 	if s == nil || !s.Enabled() {
@@ -27,10 +28,12 @@ func svc(c *gin.Context) (*Service, bool) {
 	}
 	return s, true
 }
+
 func id(c *gin.Context) (uint, error) {
 	v, e := strconv.ParseUint(c.Param("id"), 10, 32)
 	return uint(v), e
 }
+
 func create(c *gin.Context) {
 	s, ok := svc(c)
 	if !ok {
@@ -48,6 +51,7 @@ func create(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"success": true, "obj": p})
 }
+
 func list(c *gin.Context) {
 	s, ok := svc(c)
 	if !ok {
@@ -60,6 +64,7 @@ func list(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"success": true, "obj": v})
 }
+
 func get(c *gin.Context) {
 	s, ok := svc(c)
 	if !ok {
@@ -77,6 +82,7 @@ func get(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"success": true, "obj": v})
 }
+
 func reconcile(c *gin.Context) {
 	s, ok := svc(c)
 	if !ok {
@@ -93,6 +99,7 @@ func reconcile(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"success": true})
 }
+
 func abort(c *gin.Context) {
 	s, ok := svc(c)
 	if !ok {
@@ -109,6 +116,7 @@ func abort(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"success": true})
 }
+
 func retry(c *gin.Context) {
 	s, ok := svc(c)
 	if !ok {

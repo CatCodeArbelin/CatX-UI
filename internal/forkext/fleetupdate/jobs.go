@@ -23,6 +23,7 @@ func (reconcileJob) Run() {
 		}
 	}
 }
+
 func RegisterJobs(scheduler *cron.Cron) {
 	if scheduler != nil {
 		_, _ = scheduler.AddJob("@every 10s", reconcileJob{})

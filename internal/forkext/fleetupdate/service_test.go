@@ -2,6 +2,7 @@ package fleetupdate
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -37,6 +38,7 @@ func testService(t *testing.T) (*Service, *FakeExecutor) {
 	s.SetExecutor(f)
 	return s, f
 }
+
 func TestPlanSnapshotsAndBlocks(t *testing.T) {
 	s, _ := testService(t)
 	p, err := s.Plan(context.Background(), PlanRequest{Channel: "stable", NodeIDs: []int{1, 2}, DryRun: true})
@@ -50,6 +52,7 @@ func TestPlanSnapshotsAndBlocks(t *testing.T) {
 		t.Fatal("missing immutable version")
 	}
 }
+
 func TestCanaryBatchAndParallelism(t *testing.T) {
 	s, f := testService(t)
 	p, err := s.Plan(context.Background(), PlanRequest{NodeIDs: []int{1, 2, 3, 4}, CanaryCount: 1, BatchSize: 2, MaxParallel: 2})
@@ -63,13 +66,15 @@ func TestCanaryBatchAndParallelism(t *testing.T) {
 		t.Fatalf("canary dispatches=%v", f.Dispatches)
 	}
 }
+
 func TestFeatureDisabledIsNoop(t *testing.T) {
 	s, _ := testService(t)
 	s.enabled = false
-	if _, err := s.Plan(context.Background(), PlanRequest{}); err != ErrDisabled {
+	if _, err := s.Plan(context.Background(), PlanRequest{}); !errors.Is(err, ErrDisabled) {
 		t.Fatalf("err=%v", err)
 	}
 }
+
 func TestAbortAndRetry(t *testing.T) {
 	s, _ := testService(t)
 	p, err := s.Plan(context.Background(), PlanRequest{NodeIDs: []int{1}})
