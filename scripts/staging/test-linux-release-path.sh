@@ -103,6 +103,7 @@ EOF
         cat /tmp/install.log >&2 || true
         find /usr/local/x-ui /etc/x-ui -maxdepth 2 -print 2>/dev/null >&2 || true
         test -x /usr/local/x-ui/x-ui || { echo "installed panel binary is missing" >&2; find /usr/local/x-ui -maxdepth 2 -type f -print >&2 || true; exit 1; }
+        echo "staging: panel binary present"
         set +e
         setting_output=$(/usr/local/x-ui/x-ui setting -show 2>&1)
         setting_rc=$?
@@ -112,7 +113,13 @@ EOF
             echo "$setting_output" >&2
             exit "$setting_rc"
         fi
-        echo "$setting_output" | grep -q "hasDefaultCredential: false" || { echo "default credential state was not cleared" >&2; echo "$setting_output" >&2; exit 1; }
+        default_credential=$(echo "$setting_output" | sed -n 's/^hasDefaultCredential: //p')
+        echo "staging: setting inspection rc=$setting_rc defaultCredential=$default_credential"
+        if [[ "$default_credential" != "false" ]]; then
+            echo "default credential state was not cleared" >&2
+            echo "$setting_output" >&2
+            exit 1
+        fi
         set +e
         setting_apply_output=$(/usr/local/x-ui/x-ui setting -username staging-admin -password staging-password -port 28080 -listenIP 127.0.0.1 2>&1)
         setting_apply_rc=$?
@@ -122,6 +129,7 @@ EOF
             echo "$setting_apply_output" >&2
             exit "$setting_apply_rc"
         fi
+        echo "staging: initial panel settings applied"
         XUI_PORT=28080 /usr/local/x-ui/x-ui run >/tmp/x-ui.log 2>&1 &
         panel_pid=$!
         trap "kill $panel_pid 2>/dev/null || true; kill $server_pid 2>/dev/null || true" EXIT
