@@ -26,3 +26,15 @@ func TestCorrelatePanelUpdateStatusPreservesRollbackEvidence(t *testing.T) {
 		t.Fatalf("convergence = %+v, want failed update with healthy rollback evidence", got)
 	}
 }
+
+func TestCorrelatePanelUpdateStatusRejectsNonzeroSuccessEvidence(t *testing.T) {
+	got, err := correlatePanelUpdateStatus("run-1", runtime.PanelUpdateStatus{
+		RunID: "run-1", State: "success", ExitCode: 7,
+	})
+	if err != nil {
+		t.Fatalf("correlate: %v", err)
+	}
+	if got.UpdateEvidence {
+		t.Fatalf("convergence = %+v, want no success evidence for nonzero exit", got)
+	}
+}

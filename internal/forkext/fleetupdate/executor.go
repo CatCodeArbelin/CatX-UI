@@ -94,13 +94,16 @@ func (f *FakeExecutor) Reconcile(_ context.Context, n NodeSnapshot, _ ReleaseSna
 			r.UpdateState = "success"
 			r.UpdateEvidence = true
 		}
+		if r.RunID == "" {
+			r.RunID = n.ExpectedRunID
+		}
 		return r, nil
 	}
-	return ConvergenceResult{}, nil
+	return ConvergenceResult{RunID: n.ExpectedRunID}, nil
 }
 
 func healthyConvergence(c ConvergenceResult, release ReleaseSnapshot) bool {
-	if !c.UpdateEvidence || c.UpdateState != "success" {
+	if !c.UpdateEvidence || c.UpdateState != "success" || c.ExitCode != 0 || c.RolledBack {
 		return false
 	}
 	if !c.FreshHeartbeat || !sameVersion(c.PanelVersion, release.Tag) {

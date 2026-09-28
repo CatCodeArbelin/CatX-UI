@@ -78,7 +78,7 @@ func correlatePanelUpdateStatus(expected string, status runtime.PanelUpdateStatu
 		RunID:       status.RunID,
 		UpdateState: status.State, ExitCode: status.ExitCode, FinishedAt: status.FinishedAt,
 		RolledBack: status.RolledBack, RollbackHealthy: status.RollbackHealthy,
-		UpdateEvidence: status.State == "success",
+		UpdateEvidence: status.State == "success" && status.ExitCode == 0 && !status.RolledBack,
 	}, nil
 }
 

@@ -401,6 +401,12 @@ func (s *Service) Reconcile(ctx context.Context, id uint, owner string) error {
 				t.Error = e.Error()
 				t.State = StateUnknown
 			} else {
+				if strings.TrimSpace(t.RunID) == "" || conv.RunID != t.RunID {
+					t.State = StateUnknown
+					t.Error = ErrStaleStatus.Error()
+					_ = s.saveTarget(t)
+					continue
+				}
 				t.ObservedVersion = conv.PanelVersion
 				t.ObservedStatus = conv.NodeStatus
 				t.ObservedXray = conv.XrayState
