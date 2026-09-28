@@ -2151,6 +2151,40 @@ export const SCHEMAS: Record<string, unknown> = {
     ],
     "type": "object"
   },
+  "CredentialView": {
+    "properties": {
+      "clientId": {
+        "type": "integer"
+      },
+      "createdAt": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "enabled": {
+        "type": "boolean"
+      },
+      "expiresAt": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "id": {
+        "type": "integer"
+      },
+      "lastUsed": {
+        "format": "int64",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "clientId",
+      "createdAt",
+      "enabled",
+      "expiresAt",
+      "id",
+      "lastUsed"
+    ],
+    "type": "object"
+  },
   "DeliveryPage": {
     "properties": {
       "items": {
@@ -2604,6 +2638,43 @@ export const SCHEMAS: Record<string, unknown> = {
       "updatedAt",
       "verifyPeerCertByName",
       "vlessRoute"
+    ],
+    "type": "object"
+  },
+  "HostGrant": {
+    "properties": {
+      "createdAt": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "enabled": {
+        "type": "boolean"
+      },
+      "hostId": {
+        "type": "integer"
+      },
+      "id": {
+        "type": "integer"
+      },
+      "subjectId": {
+        "type": "integer"
+      },
+      "subjectType": {
+        "type": "string"
+      },
+      "updatedAt": {
+        "format": "date-time",
+        "type": "string"
+      }
+    },
+    "required": [
+      "createdAt",
+      "enabled",
+      "hostId",
+      "id",
+      "subjectId",
+      "subjectType",
+      "updatedAt"
     ],
     "type": "object"
   },
@@ -3223,6 +3294,44 @@ export const SCHEMAS: Record<string, unknown> = {
       "id",
       "total",
       "up"
+    ],
+    "type": "object"
+  },
+  "IssuedToken": {
+    "properties": {
+      "clientId": {
+        "type": "integer"
+      },
+      "createdAt": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "enabled": {
+        "type": "boolean"
+      },
+      "expiresAt": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "id": {
+        "type": "integer"
+      },
+      "lastUsed": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "token": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "clientId",
+      "createdAt",
+      "enabled",
+      "expiresAt",
+      "id",
+      "lastUsed",
+      "token"
     ],
     "type": "object"
   },
@@ -4045,6 +4154,17 @@ export const SCHEMAS: Record<string, unknown> = {
       "throttleUploadBps",
       "updatedAt",
       "windowSeconds"
+    ],
+    "type": "object"
+  },
+  "PortalSettings": {
+    "properties": {
+      "enabled": {
+        "type": "boolean"
+      }
+    },
+    "required": [
+      "enabled"
     ],
     "type": "object"
   },

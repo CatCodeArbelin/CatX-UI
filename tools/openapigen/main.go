@@ -127,6 +127,10 @@ func run(root, outDir string) error {
 			StructAllow: setOf("AuditEvent", "WebhookEndpoint", "WebhookDelivery", "EventPage", "DeliveryPage", "AuditRetentionSettings", "WebhookEndpointRequest", "RetentionRequest"),
 		},
 		{
+			Path:        resolveRel(root, "internal/forkext/portal"),
+			StructAllow: setOf("CredentialView", "IssuedToken", "HostGrant", "PortalSettings"),
+		},
+		{
 			Path:        resolveRel(root, "internal/amneziawg"),
 			StructAllow: setOf("ServerSettings"),
 		},

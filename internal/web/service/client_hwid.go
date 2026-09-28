@@ -54,6 +54,7 @@ type ClientHwidInfo struct {
 	DeviceOS    string `json:"deviceOs"`
 	OsVersion   string `json:"osVersion"`
 	DeviceModel string `json:"deviceModel"`
+	DeviceName  string `json:"deviceName"`
 	Fingerprint string `json:"fingerprint"`
 }
 
@@ -243,6 +244,7 @@ func (s *ClientService) ListClientHwids(email string) ([]ClientHwidInfo, error) 
 			DeviceOS:    r.DeviceOS,
 			OsVersion:   r.OsVersion,
 			DeviceModel: r.DeviceModel,
+			DeviceName:  r.DeviceName,
 			Fingerprint: shortHwidFingerprint(r.HwidHash),
 		})
 	}

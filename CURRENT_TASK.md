@@ -2,84 +2,89 @@
 
 ## Work Package
 
-`WP-8A — Audit / Webhooks / Metrics`
+`WP-8B — Self-service / Host Visibility / Fleet UI`
 
 ## Status
 
-WP-7A is DONE, merged into `develop`, and its feature branch was deleted after
-the canonical CI runs reported green. Do not modify `main` or preview/demo data.
+WP-8A is DONE: merged into `develop` at `0a6dab0f`, pushed, and its feature
+branch was deleted after Fork verification `36347039861` and Release CatX-UI
+`36347039863` reported green. Do not modify `main` or preview/demo data.
 
-The WP-8A readiness review is approved. WP-8A is authorized for full
-implementation on this feature branch. Do not merge WP-8A or start WP-8B.
+WP-8B readiness review is APPROVED. Full implementation is authorized on this
+feature branch. Do not merge WP-8B, start WP-8C, modify `main`, or touch
+preview/demo data.
 
 ## Fixed decisions
 
-- Durable audit storage is authoritative. The existing event bus is
-  notification/wake-up only and is never durable audit storage.
-- Do not create a second event system.
-- Use authoritative controller/service transaction boundaries. If an action
-  already has a DB transaction, write the audit row and webhook outbox in it;
-  otherwise write a success audit only after the authoritative action succeeds.
-- Generate an internal UUID request ID server-side. Never trust an incoming
-  request ID as identity.
-- Webhook v1 destinations are public HTTPS only. Reject loopback, private,
-  link-local, multicast, and other non-public destinations at configuration and
-  after DNS resolution on every delivery. Do not follow redirects.
-- Webhooks are at-least-once with stable event/delivery IDs, HMAC-SHA256,
-  bounded timeout, exponential backoff, leases, crash recovery, and dead
-  letters.
-- Encrypt webhook secrets at rest with AES-GCM. Reuse an existing cryptographic
-  installation key only when one actually exists; otherwise use a fork-owned
-  random master-key file outside the DB with 0600 permissions. Never expose a
-  secret after creation.
-- Add official `prometheus/client_golang` support. Metrics use fixed bounded
-  labels only; never email, IP, domain, request/session ID, URL, or arbitrary
-  node/client IDs.
-- Default retention: audit events 180 days, successful webhook deliveries 30
-  days, dead letters 90 days.
-- Database-level backup/restore includes WP-8A tables. Normal config/export
-  APIs exclude audit history and webhook secret material.
-- Feature-disabled behavior is an exact or near-exact no-op.
+- Self-service authentication is completely separate from admin, API, node,
+  and monitor authentication.
+- Subscription credentials and subscription URLs are never portal credentials.
+- Administrators create cryptographically random 256-bit portal access tokens.
+  The token is shown exactly once at creation/rotation and only its hash is
+  persisted. The token is used only to establish a dedicated portal session.
+- Portal sessions use a separate cookie/session namespace with HttpOnly,
+  Secure, SameSite, fixation prevention, CSRF/origin protection, and server-
+  side client identity resolution.
+- Token rotation/revocation increments credential version and immediately
+  invalidates all existing portal sessions.
+- Self-service v1 permits only: own profile/subscription status; own assigned
+  inbounds and sanitized connection/host information; own traffic, quota and
+  expiry; own HWID/device listing; rename own device; revoke own device through
+  an existing ownership-safe authoritative service; and rotate/revoke own
+  portal access.
+- Self-service cannot reset subscription/client credentials, edit policies or
+  inbounds, CRUD hosts, change groups, control nodes/runtime, delete arbitrary
+  history, or access admin settings.
+- Fleet dashboard is admin-only. Self-service users never receive node/fleet
+  health or runtime state.
+- Default host projection is existing
+  `ClientRecord → ClientInbound → Inbound → enabled/non-hidden Host`, exposing
+  only connection-required allowlisted fields. Never expose private node
+  addresses, credentials, certificate material/pins, raw TLS/runtime config, or
+  admin metadata.
+- Explicit positive visibility grants may map client/group subjects to existing
+  hosts. Client groups and host groups are never implicitly equivalent.
+- Extend WP-8A audit actors with `actor_type = client_portal`, stable
+  `ClientRecord` identity, and a sanitized display snapshot only. Never store or
+  emit portal token material.
+- Prefer existing models/services. Do not create duplicate client, device,
+  host, group, node, or runtime models.
+- Feature-disabled behavior must remain no-op/upstream-compatible.
 
 ## Authorized implementation scope
 
-Implement end-to-end:
+1. Portal credential persistence and explicit migrations.
+2. Explicit client/group-to-existing-host visibility grants where required.
+3. Dedicated portal authentication/session middleware.
+4. Rate limits for login, rotation, and device mutation.
+5. `/portal/me`, devices, hosts, traffic/status, and safe mutation APIs.
+6. Ownership-safe adapters over existing models/services.
+7. Admin portal-access management.
+8. Admin host-visibility grant management.
+9. Admin fleet dashboard extensions using existing node/runtime/heartbeat data.
+10. Portal frontend pages.
+11. OpenAPI/generated types/i18n.
+12. WP-8A audit integration.
+13. SQLite/PostgreSQL migration and upgrade coverage.
+14. Comprehensive auth-isolation, replay/revoke/rotation, CSRF, rate-limit,
+    host-field leakage, client isolation, HWID, stale/remote node, audit,
+    concurrency, and feature-disabled tests.
 
-1. Fork-owned audit persistence, sanitizer/allowlist, and request correlation.
-2. Audit authoritative privileged mutations and security/destructive actions.
-3. Durable webhook endpoints, transactional outbox, worker, retries, dead
-   letters, and manual replay.
-4. SSRF, DNS-rebinding, redirect, size, and timeout protections.
-5. Prometheus endpoint and bounded metrics.
-6. Protected audit/webhook APIs.
-7. Audit and Webhooks UI with masked secrets, filters, pagination, detail, and
-   dead-letter/replay views.
-8. Retention and deletion.
-9. OpenAPI/generated types/i18n.
-10. SQLite/PostgreSQL migrations.
-11. API-token/node-sync/monitor route authorization updates.
-12. Transaction, replay, concurrency, race, redaction, SSRF, signing,
-    crash-recovery, metrics-cardinality, API/UI, and feature-disabled tests.
-
-Do not persist passwords, tokens, cookies, Authorization headers, bodies,
-decrypted content, arbitrary request payloads, or webhook response bodies.
+Do not persist passwords, portal tokens, subscription credentials, cookies,
+Authorization headers, request bodies, decrypted content, or webhook response
+bodies.
 
 ## Required workflow
 
-- Use focused commits and keep the working tree clean.
+- Keep the working tree clean and use focused commits.
+- Preserve upstream architecture and minimize upstream touch points.
 - Run relevant tests after each implementation stage.
-- Run `make verify` and `make verify-fork`.
-- Push the feature branch and run canonical CI.
-- Inspect exact failures and fix genuine defects until Fork verification and
-  Release CatX-UI are green.
-- Perform a final WP-8A scope and security audit.
-- Do not merge WP-8A, start WP-8B, modify `main`, or touch preview/demo data.
-
-## Required final report
-
-Report final SHA, commits, schema, audited action coverage, webhook
-security/delivery model, secret storage, metrics, retention/backup behavior,
-API/UI, tests, both CI run IDs, remaining limitations, and clean-tree state.
+- Run `make verify`, `make verify-fork`, and `go test -race ./...` where
+  applicable.
+- Push this feature branch and run canonical Fork verification and Release
+  CatX-UI CI. Fix exact failures until both are green.
+- Perform a final WP-8B scope and security audit.
+- Stop on the fully green pushed branch. Do not merge WP-8B or start WP-8C.
 
 ## Authorized documents
 
@@ -89,13 +94,3 @@ API/UI, tests, both CI run IDs, remaining limitations, and clean-tree state.
 - `docs/08_FRONTEND_UX.md`
 - `docs/15_DEFINITION_OF_DONE.md`
 - `docs/19_REPOSITORY_MAP.md`
-
-## Authorized skills
-
-- `skills/feature-implementer/SKILL.md`
-- `skills/security-privacy-review/SKILL.md`
-
-## Stop condition
-
-Stop on the fully green, pushed WP-8A feature branch after the final scope and
-security audit. Do not merge WP-8A or begin WP-8B.

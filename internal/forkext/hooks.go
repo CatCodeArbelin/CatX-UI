@@ -15,6 +15,7 @@ import (
 	"github.com/mhsanaei/3x-ui/v3/internal/eventbus"
 	"github.com/mhsanaei/3x-ui/v3/internal/forkext/audit"
 	"github.com/mhsanaei/3x-ui/v3/internal/forkext/groupquota"
+	"github.com/mhsanaei/3x-ui/v3/internal/forkext/portal"
 	"github.com/mhsanaei/3x-ui/v3/internal/forkext/risk"
 	"github.com/mhsanaei/3x-ui/v3/internal/forkext/trafficcontrol"
 	"github.com/mhsanaei/3x-ui/v3/internal/forkext/trafficpolicy"
@@ -37,6 +38,7 @@ func Install() {}
 func RegisterMigrations(db *gorm.DB) error {
 	setSettingsDB(db)
 	if db == nil {
+		portal.Configure(nil, false)
 		audit.Configure(nil, false)
 		groupquota.Configure(nil, false)
 		trafficpolicy.Configure(nil, false)
@@ -46,6 +48,11 @@ func RegisterMigrations(db *gorm.DB) error {
 		risk.Configure(nil, false)
 		return nil
 	}
+	portalEnabled, _ := NewSettings(db).Enabled(FlagSelfService)
+	if err := portal.Migrate(db); err != nil {
+		return err
+	}
+	portal.Configure(db, portalEnabled)
 	auditEnabled, _ := NewSettings(db).Enabled(FlagAudit)
 	webhooksEnabled, _ := NewSettings(db).Enabled(FlagWebhooks)
 	if auditEnabled {
@@ -120,6 +127,7 @@ func RegisterMigrations(db *gorm.DB) error {
 // RegisterRoutes is the protected API integration point for fork endpoints.
 // An empty registration preserves the upstream route set exactly.
 func RegisterRoutes(api *gin.RouterGroup) {
+	portal.RegisterAdminRoutes(api)
 	audit.RegisterRoutes(api)
 	analytics.RegisterActivityRoutes(api)
 	registerAnalyticsSettingsRoutes(api)
@@ -129,6 +137,18 @@ func RegisterRoutes(api *gin.RouterGroup) {
 	trafficcontrol.RegisterRoutes(api)
 	trafficpolicy.RegisterRoutes(api)
 	risk.RegisterRoutes(api)
+}
+
+// RegisterPortalRoutes installs the separate client portal surface at the
+// application root without sharing the admin session namespace.
+func RegisterPortalRoutes(g *gin.RouterGroup, secret []byte, basePath string, secure bool) {
+	portal.RegisterPortalRoutes(g, secret, basePath, secure)
+}
+
+// SetDeviceRevoker wires the portal to the existing ownership-safe client
+// device service without importing web/service into the fork package.
+func SetDeviceRevoker(fn func(email string, deviceID int) error) {
+	portal.SetDeviceRevoker(fn)
 }
 
 // RegisterMiddleware installs request correlation and post-success auditing
@@ -223,7 +243,7 @@ func GroupQuotaRebaselineClient(tx *gorm.DB, email string, up, down int64) error
 }
 
 func MigrationModels() []any {
-	return append(groupquota.Models(), trafficpolicy.Models()...)
+	return append(append(groupquota.Models(), trafficpolicy.Models()...), &portal.Credential{}, &portal.HostGrant{})
 }
 
 // Start is the lifecycle integration point for fork-owned goroutines. The

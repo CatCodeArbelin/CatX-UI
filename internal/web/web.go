@@ -250,6 +250,9 @@ func (s *Server) initRouter() (*gin.Engine, error) {
 	// cutover: every HTML route reads from internal/web/dist/ instead of
 	// rendering a legacy template.
 	controller.SetDistFS(distFS)
+	forkext.SetDeviceRevoker(func(email string, deviceID int) error {
+		return (&service.ClientService{}).DeleteClientHwid(email, deviceID)
+	})
 
 	g := engine.Group(basePath)
 	g.GET("/manifest.webmanifest", controller.ServePWAManifest)
@@ -260,6 +263,7 @@ func (s *Server) initRouter() (*gin.Engine, error) {
 	s.index = controller.NewIndexController(g)
 	s.panel = controller.NewXUIController(g)
 	s.api = controller.NewAPIController(g)
+	forkext.RegisterPortalRoutes(g, secret, basePath, directHTTPS)
 
 	// Initialize WebSocket hub
 	s.wsHub = websocket.NewHub()

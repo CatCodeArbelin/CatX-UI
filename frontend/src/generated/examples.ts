@@ -550,6 +550,14 @@ export const EXAMPLES: Record<string, unknown> = {
     "onlineCount": 1,
     "total": 2000
   },
+  "CredentialView": {
+    "clientId": 0,
+    "createdAt": 0,
+    "enabled": false,
+    "expiresAt": 0,
+    "id": 0,
+    "lastUsed": 0
+  },
   "DeliveryPage": {
     "items": [
       {
@@ -706,6 +714,15 @@ export const EXAMPLES: Record<string, unknown> = {
     "updatedAt": 0,
     "verifyPeerCertByName": "",
     "vlessRoute": "443"
+  },
+  "HostGrant": {
+    "createdAt": "2025-01-01T00:00:00Z",
+    "enabled": false,
+    "hostId": 0,
+    "id": 0,
+    "subjectId": 0,
+    "subjectType": "",
+    "updatedAt": "2025-01-01T00:00:00Z"
   },
   "HostGroup": {
     "allowInsecure": false,
@@ -866,6 +883,15 @@ export const EXAMPLES: Record<string, unknown> = {
     "id": 1,
     "total": 10737418240,
     "up": 1048576
+  },
+  "IssuedToken": {
+    "clientId": 0,
+    "createdAt": 0,
+    "enabled": false,
+    "expiresAt": 0,
+    "id": 0,
+    "lastUsed": 0,
+    "token": ""
   },
   "LogEntry": {
     "DateTime": "2025-01-01T12:00:00Z",
@@ -1039,6 +1065,9 @@ export const EXAMPLES: Record<string, unknown> = {
     "throttleUploadBps": 0,
     "updatedAt": 0,
     "windowSeconds": 0
+  },
+  "PortalSettings": {
+    "enabled": false
   },
   "ProbeResultUI": {
     "cpuPct": 12.5,
