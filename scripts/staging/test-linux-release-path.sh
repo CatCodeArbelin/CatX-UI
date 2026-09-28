@@ -91,7 +91,7 @@ EOF
         export XUI_DB_FOLDER=/etc/x-ui XUI_UPDATE_STATUS_FILE=/etc/x-ui/update-status.json
 
         # A. Fresh install through the supported installer path.
-        printf '%s\n' "$install_script" | bash -s -- dev-latest
+        printf "%s\n" "$install_script" | bash -s -- dev-latest
         test -x /usr/local/x-ui/x-ui
         /usr/local/x-ui/x-ui setting -show | grep -q "hasDefaultCredential: false"
         /usr/local/x-ui/x-ui setting -username staging-admin -password staging-password -port 28080 -listenIP 127.0.0.1
@@ -120,8 +120,8 @@ EOF
             cp /assets/catx-ui-update.sh /usr/local/x-ui/update.sh
             cp /repo/x-ui.service.debian /usr/local/x-ui/x-ui.service.debian
             chmod +x /usr/local/x-ui/x-ui /usr/local/x-ui/x-ui.sh /usr/local/x-ui/update.sh
-            legacy_sha=$(sha256sum /usr/local/x-ui/x-ui | awk '{print $1}')
-            candidate_sha=$(tar -xOzf /assets/catx-ui-linux-amd64.tar.gz x-ui/x-ui | sha256sum | awk '{print $1}')
+            legacy_sha=$(sha256sum /usr/local/x-ui/x-ui | cut -d " " -f1)
+            candidate_sha=$(tar -xOzf /assets/catx-ui-linux-amd64.tar.gz x-ui/x-ui | sha256sum | cut -d " " -f1)
             test "$legacy_sha" != "$candidate_sha"
 
             case "$label" in
@@ -130,7 +130,7 @@ EOF
                 *) echo "unexpected legacy label: $label" >&2; exit 1 ;;
             esac
             set +e
-            printf '%s\n' "$update_script" | XUI_UPDATE_RUN_ID="$run_id" XUI_UPDATE_TAG=dev-latest bash -s -- >/tmp/update-$label.log 2>&1
+            printf "%s\n" "$update_script" | XUI_UPDATE_RUN_ID="$run_id" XUI_UPDATE_TAG=dev-latest bash -s -- >/tmp/update-$label.log 2>&1
             update_rc=$?
             set -e
             if [[ "$update_rc" -ne 0 ]]; then
@@ -157,7 +157,7 @@ EOF
         printf corruption >> /srv/release/CatCodeArbelin/CatX-UI/releases/download/dev-latest/catx-ui-linux-amd64.tar.gz
         sha256sum /srv/release/CatCodeArbelin/CatX-UI/releases/download/dev-latest/catx-ui-linux-amd64.tar.gz > /srv/release/CatCodeArbelin/CatX-UI/releases/download/dev-latest/catx-ui-linux-amd64.tar.gz.sha256
         set +e
-        printf '%s\n' "$update_script" | XUI_UPDATE_RUN_ID=900719925474099312347 XUI_UPDATE_TAG=dev-latest bash -s -- >/tmp/update-corrupt.log 2>&1
+        printf "%s\n" "$update_script" | XUI_UPDATE_RUN_ID=900719925474099312347 XUI_UPDATE_TAG=dev-latest bash -s -- >/tmp/update-corrupt.log 2>&1
         corrupt_rc=$?
         set -e
         test "$corrupt_rc" -ne 0
