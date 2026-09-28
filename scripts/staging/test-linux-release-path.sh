@@ -104,7 +104,7 @@ EOF
             cat /tmp/install.log >&2 || true
             exit "$install_rc"
         fi
-        echo "staging: install completed"
+        echo "staging: install completed" >&2
         echo "staging: binary-check exists=$(test -e /usr/local/x-ui/x-ui && echo yes || echo no) executable=$(test -x /usr/local/x-ui/x-ui && echo yes || echo no)" >&2
         if [[ ! -e /usr/local/x-ui/x-ui ]]; then
             echo "staging: binary path absent" >&2
