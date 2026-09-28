@@ -2,21 +2,20 @@
 
 ## Work Package
 
-`WP-8C — Multi-node Update Orchestration — Stage B: DONE`
+`RC-1 — Upstream Sync & Release Candidate Hardening`
 
 ## Authorization and guardrails
 
-Stage A is complete at `3fec93b4903c569f57379687b3acbd37802bd06b`. Its
-canonical Fork verification is `36367011305` and Release CatX-UI workflow is
-`36367011335`. Do not merge Stage A or this branch, modify `main`, or touch
-preview/demo data.
+CatX-UI production baseline is `7ef22f94c950ff09f0870e2295fa65ad5968742c`.
+The current base is `develop` after completed WP-8C. Upstream is
+`MHSanaei/3x-ui`; merge exact commit
+`17d7dd46b512d0a9c22921a6094f30c672e436c9` without rebasing. No release tag,
+`main` update, or production update is authorized.
 
-Stage B was authorized to implement production rollout execution on its feature
-branch. It is complete and was accepted on the final feature tip after the
-canonical Fork verification and Release CatX-UI workflows passed. Keep the
-change modular and low-divergence from upstream. Preserve the
-existing `UpdatePanel` compatibility method and the node-local `update.sh`
-transactional updater/rollback boundary.
+RC-1 must remain a low-divergence downstream sync. Preserve upstream behavior,
+CatX-UI modular boundaries, updater ownership, transactional rollback,
+feature-disabled compatibility, privacy limits, authentication contracts,
+migration safety, Xray boundaries, and generated frontend/API contracts.
 
 Production fleet mutation must remain disabled by default and may execute only
 when both the explicit fleet-update mutation setting and explicit admin
@@ -25,40 +24,28 @@ may execute. A timeout after POST is ambiguous: reconcile node status before
 any retry and require positive evidence before redispatch. Never redispatch
 blindly or accept status belonging to another `runId`.
 
-## Required Stage B behavior
+## Required RC-1 behavior
 
-- Add a real `runtime.Remote` executor with typed start/update status methods.
-- Persist the exact node `runId` for each target and correlate status strictly
-  by that value; reject stale or ambiguous evidence.
-- Gate canary and subsequent batches on complete convergence and soak.
-- Stop-on-failure prevents later dispatches.
-- Success requires matching successful update evidence plus fresh heartbeat,
-  target `PanelVersion`, and healthy node/Xray state.
-- Treat `rolledBack=true` as rollback-attempt evidence only; claim healthy
-  rollback only when `rollbackHealthy=true`. Never infer rollback from version
-  regression or timeout.
-- Preserve unknown/ambiguous state instead of blindly redispatching.
-- Extend Fleet UI with run ID, dispatch/result, rollback evidence, version
-  convergence, soak progress, failure reason, and safe retry state.
-- Emit audit events for authorization, dispatch, completion, rollback evidence,
-  abort, and retry.
-- Add end-to-end coverage for executor boundary, run ID correlation, stale
-  status rejection, POST-timeout ambiguity, canary/batch gating, restart
-  recovery, rollback evidence, health timeout, stop-on-failure, and duplicate
-  dispatch prevention.
+- Fetch and merge the exact pinned upstream commit, resolving every conflict
+  deliberately and documenting each nontrivial resolution.
+- Audit runtime, updater, release identity, workflows, dependencies,
+  database/migrations, auth/API, frontend, and Xray boundaries.
+- Verify SQLite/PostgreSQL migration and recovery paths where touched.
+- Verify checksum/signature, download, disk, service, healthcheck, rollback,
+  interrupted-transaction, and stale-state update failures.
+- Verify independent feature flags, feature-disabled compatibility, concurrency,
+  graceful shutdown, race-sensitive code, and lock boundaries.
+- Verify frontend route/API/OpenAPI/generated contracts and i18n as needed.
+- Do not copy Remnawave code, add TLS MITM, or collect decrypted HTTP bodies,
+  cookies, authorization headers, credentials, or passwords.
 
-## Verification and completion
+## Verification and delivery
 
-The final WP-8C tip was `cb760398`.
-
-Canonical verification passed:
-
-- Fork verification: `36390706017`
-- Release CatX-UI: `36390706149`
-
-WP-8C is complete. RC-1 is the next authorized work package and must be
-performed on its own feature branch. Do not modify `main`, create a release
-tag, or update production as part of this completion record.
+Use snapshot → validate → apply → healthcheck → commit for risky state
+changes. On failure, restore the previous known-good state, reload/restart as
+required, healthcheck, and report/audit the failure. Before merge, require
+`make verify`, `make verify-fork`, and canonical CI green on the exact final RC
+commit. Keep `main`, tags, and production untouched throughout RC-1.
 
 ## Authorized documents
 
