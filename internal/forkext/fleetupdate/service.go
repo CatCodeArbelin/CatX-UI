@@ -405,7 +405,8 @@ func activeTarget(state string) bool {
 
 // dispatchAllowed applies a deterministic canary, batch, and parallelism
 // window. Target rows are read in ascending ID order, which is the immutable
-// planning order and therefore stable across process restarts.
+// planning order and therefore stable across process restarts. Translation
+// resources are validated alongside this orchestration contract in CI.
 func (s *Service) dispatchAllowed(c *Campaign, ts []Target, index int) bool {
 	active, succeeded, readyOrdinal := 0, 0, 0
 	for i := range ts {
