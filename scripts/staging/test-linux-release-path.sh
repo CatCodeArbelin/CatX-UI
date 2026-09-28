@@ -148,7 +148,7 @@ EOF
             exit "$setting_apply_rc"
         fi
         echo "staging: initial panel settings applied"
-        XUI_PORT=28080 /usr/local/x-ui/x-ui run >/tmp/x-ui.log 2>&1 &
+        (cd /usr/local/x-ui && XUI_PORT=28080 ./x-ui run) >/tmp/x-ui.log 2>&1 &
         panel_pid=$!
         sleep 2
         if ! kill -0 "$panel_pid" 2>/dev/null; then
@@ -203,7 +203,7 @@ EOF
             /usr/local/x-ui/x-ui migrate >/dev/null
             # Two clean restarts are required after migration/update.
             for restart in 1 2; do
-                XUI_PORT=28080 /usr/local/x-ui/x-ui run >/tmp/x-ui-$label-$restart.log 2>&1 &
+                (cd /usr/local/x-ui && XUI_PORT=28080 ./x-ui run) >/tmp/x-ui-$label-$restart.log 2>&1 &
                 panel_pid=$!
                 wait_http http://127.0.0.1:28080/
                 kill "$panel_pid" 2>/dev/null || true
