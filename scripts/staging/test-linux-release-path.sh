@@ -52,6 +52,20 @@ esac
 EOF
         chmod +x /usr/local/bin/systemctl
 
+        # The real installer is exercised below, but its dependency bootstrap
+        # is intentionally bypassed after the harness has installed the tools
+        # needed for this rehearsal.  Otherwise cron's mail integration pulls
+        # a full MTA into the minimal container and fails while configuring
+        # service state that the harness does not run.
+        cat > /usr/local/bin/apt-get <<"EOF"
+#!/usr/bin/env bash
+case " ${*:-} " in
+  *" install "*) exit 0 ;;
+  *) exec /usr/bin/apt-get "$@" ;;
+esac
+EOF
+        chmod +x /usr/local/bin/apt-get
+
         python3 -m http.server 8765 --directory /srv/release >/tmp/release-server.log 2>&1 &
         server_pid=$!
         trap "kill $server_pid 2>/dev/null || true" EXIT
