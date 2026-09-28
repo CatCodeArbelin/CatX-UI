@@ -101,6 +101,9 @@ EOF
         fi
         echo "staging: install completed"
         cat /tmp/install.log >&2 || true
+        echo "staging: XUI_MAIN_FOLDER=${XUI_MAIN_FOLDER:-<unset>}" >&2
+        ls -lad /usr/local /usr/local/x-ui /usr/local/x-ui/x-ui 2>/dev/null >&2 || true
+        find /usr/local -maxdepth 3 -iname "x-ui*" -print 2>/dev/null >&2 || true
         find /usr/local/x-ui /etc/x-ui -maxdepth 2 -print 2>/dev/null >&2 || true
         test -x /usr/local/x-ui/x-ui || { echo "installed panel binary is missing" >&2; find /usr/local/x-ui -maxdepth 2 -type f -print >&2 || true; exit 1; }
         echo "staging: panel binary present"
