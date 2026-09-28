@@ -91,7 +91,14 @@ EOF
         export XUI_DB_FOLDER=/etc/x-ui XUI_UPDATE_STATUS_FILE=/etc/x-ui/update-status.json
 
         # A. Fresh install through the supported installer path.
-        bash -c "$install_script" -- dev-latest < /dev/null
+        set +e
+        bash -c "$install_script" -- dev-latest < /dev/null >/tmp/install.log 2>&1
+        install_rc=$?
+        set -e
+        if [[ "$install_rc" -ne 0 ]]; then
+            cat /tmp/install.log >&2 || true
+            exit "$install_rc"
+        fi
         test -x /usr/local/x-ui/x-ui
         /usr/local/x-ui/x-ui setting -show | grep -q "hasDefaultCredential: false"
         /usr/local/x-ui/x-ui setting -username staging-admin -password staging-password -port 28080 -listenIP 127.0.0.1
