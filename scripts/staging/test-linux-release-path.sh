@@ -92,7 +92,7 @@ EOF
 
         # A. Fresh install through the supported installer path.
         set +e
-        bash -c "$install_script" -- dev-latest < /dev/null >/tmp/install.log 2>&1
+        bash -x -c "$install_script" -- dev-latest < /dev/null >/tmp/install.log 2>&1
         install_rc=$?
         set -e
         if [[ "$install_rc" -ne 0 ]]; then
