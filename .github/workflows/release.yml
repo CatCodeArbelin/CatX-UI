@@ -3,9 +3,12 @@ name: Release CatX-UI
 
 on:
   workflow_dispatch:
+  # Only main (dev channel) and version tags ship binaries; build any other
+  # branch on demand via workflow_dispatch.
   push:
     branches:
-      - "**"
+      - main
+      - "feature/rc1-*"
     tags:
       - "v*.*.*"
     paths:

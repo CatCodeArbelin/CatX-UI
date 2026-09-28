@@ -15,7 +15,7 @@ on:
       - ".github/workflows/**"
   push:
     branches:
-      - "feature/wp-*"
+      - "feature/*"
     paths:
       - "**.go"
       - "**.sh"
@@ -59,11 +59,55 @@ jobs:
         shell: bash
         run: |
           set +e
-          make verify-fork 2>&1 | tee "$RUNNER_TEMP/verify-fork.log"
-          status=${PIPESTATUS[0]}
+          run_gate() {
+            label="$1"
+            target="$2"
+            echo "::group::$label"
+            make "$target" 2>&1 | tee "$RUNNER_TEMP/$target.log"
+            status=${PIPESTATUS[0]}
+            echo "::endgroup::"
+            if [ "$status" -ne 0 ]; then
+              echo "::error file=Makefile,title=$label failure::$target exited with status $status"
+              return "$status"
+            fi
+          }
+          status=0
+          run_gate "Generated contract check" gen-check || status=$?
+          if [ "$status" -eq 0 ]; then
+            run_gate "Go lint" lint-go || status=$?
+          fi
+          if [ "$status" -eq 0 ]; then
+            run_gate "Frontend lint" lint-fe || status=$?
+          fi
+          if [ "$status" -eq 0 ]; then
+            run_gate "Frontend format check" format-check || status=$?
+          fi
+          if [ "$status" -eq 0 ]; then
+            run_gate "Frontend typecheck" typecheck || status=$?
+          fi
+          if [ "$status" -eq 0 ]; then
+            run_gate "MSW worker check" msw-worker-check || status=$?
+          fi
+          if [ "$status" -eq 0 ]; then
+            run_gate "Go tests" test-go || status=$?
+          fi
+          if [ "$status" -eq 0 ]; then
+            run_gate "Frontend tests" test-fe || status=$?
+          fi
+          if [ "$status" -eq 0 ]; then
+            run_gate "Application build" build || status=$?
+          fi
+          if [ "$status" -eq 0 ]; then
+            run_gate "Storybook build" build-storybook || status=$?
+          fi
+          if [ "$status" -eq 0 ]; then
+            run_gate "Fork Go verification" test-fork-go || status=$?
+          fi
+          if [ "$status" -eq 0 ]; then
+            run_gate "Fork release verification" test-fork-release || status=$?
+          fi
           set -e
           if [ "$status" -ne 0 ]; then
-            echo "::error file=Makefile,title=verify-fork failure::make verify-fork exited with status $status"
             git status --short | while IFS= read -r line; do
               echo "::error file=Makefile::working tree status: $line"
             done

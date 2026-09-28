@@ -1129,9 +1129,18 @@ func (s *InboundService) AddInbound(inbound *model.Inbound) (*model.Inbound, boo
 	}
 	inbound.Tag = tag
 
+	normalizeLegacyClientSettings(inbound)
 	clients, err := s.GetClients(inbound)
 	if err != nil {
 		return inbound, false, err
+	}
+	if err := validateClientsRenewal(clients); err != nil {
+		return inbound, false, err
+	}
+	for _, traffic := range inbound.ClientStats {
+		if err := validateClientRenewal(model.Client{Reset: traffic.Reset, ResetDay: traffic.ResetDay, ResetWeekday: traffic.ResetWeekday}); err != nil {
+			return inbound, false, err
+		}
 	}
 	existEmail, err := s.clientService.checkEmailsExistForClients(s, clients)
 	if err != nil {
@@ -1702,6 +1711,9 @@ func (s *InboundService) UpdateInbound(inbound *model.Inbound) (*model.Inbound, 
 	if err != nil {
 		return inbound, false, err
 	}
+	if err := validateClientsRenewal(clients); err != nil {
+		return inbound, false, err
+	}
 	if inbound.Protocol == model.Hysteria {
 		for _, client := range clients {
 			if client.Auth == "" {
@@ -1853,6 +1865,7 @@ func (s *InboundService) UpdateInbound(inbound *model.Inbound) (*model.Inbound, 
 		oldInbound.Total = inbound.Total
 		oldInbound.Remark = inbound.Remark
 		oldInbound.SubSortIndex = inbound.SubSortIndex
+		oldInbound.ExcludeFromSub = inbound.ExcludeFromSub
 		oldInbound.Enable = inbound.Enable
 		oldInbound.ExpiryTime = inbound.ExpiryTime
 		oldInbound.TrafficReset = inbound.TrafficReset
