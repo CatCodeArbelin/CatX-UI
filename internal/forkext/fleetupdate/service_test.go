@@ -121,6 +121,30 @@ func TestAmbiguousDispatchIsNotRedispatched(t *testing.T) {
 	}
 }
 
+func TestDispatchWithoutRunIDIsAmbiguousAndNotRedispatched(t *testing.T) {
+	s, f := testService(t)
+	p, err := s.Plan(context.Background(), PlanRequest{NodeIDs: []int{1}, ConfirmProduction: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Reconcile(context.Background(), p.Campaign.ID, "test"); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Reconcile(context.Background(), p.Campaign.ID, "test"); err != nil {
+		t.Fatal(err)
+	}
+	if len(f.Dispatches) != 1 {
+		t.Fatalf("missing-run-id dispatches = %v, want exactly one", f.Dispatches)
+	}
+	got, err := s.Get(context.Background(), p.Campaign.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Targets[0].State != StateUnknown || got.Targets[0].RunID != "" || got.Targets[0].DispatchStatus != "ambiguous" {
+		t.Fatalf("target = %+v, want unknown ambiguous target without persisted run ID", got.Targets[0])
+	}
+}
+
 func TestAbortAndRetry(t *testing.T) {
 	s, _ := testService(t)
 	p, err := s.Plan(context.Background(), PlanRequest{NodeIDs: []int{1}, ConfirmProduction: true})

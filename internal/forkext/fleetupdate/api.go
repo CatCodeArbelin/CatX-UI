@@ -8,7 +8,8 @@ import (
 )
 
 func RegisterRoutes(api *gin.RouterGroup) {
-	if api == nil {
+	s := Current()
+	if api == nil || s == nil || !s.Enabled() {
 		return
 	}
 	g := api.Group("/fleet-updates")

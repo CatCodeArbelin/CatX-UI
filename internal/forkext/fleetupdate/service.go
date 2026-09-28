@@ -367,6 +367,14 @@ func (s *Service) Reconcile(ctx context.Context, id uint, owner string) error {
 					t.DispatchStatus = "ambiguous"
 					t.DispatchEvidence = dr.Evidence
 					t.Error = ErrAmbiguousDispatch.Error()
+				} else if strings.TrimSpace(dr.RunID) == "" {
+					// A successful POST without a durable correlation key is not
+					// evidence that this campaign owns the node's update. Preserve
+					// the ambiguous state and require reconciliation before retry.
+					t.State = StateUnknown
+					t.DispatchStatus = "ambiguous"
+					t.DispatchEvidence = dr.Evidence
+					t.Error = ErrMissingRunID.Error()
 				} else {
 					now := time.Now()
 					t.DispatchAt = &now

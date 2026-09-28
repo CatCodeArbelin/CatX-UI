@@ -11,6 +11,7 @@ import (
 var (
 	ErrMutationDisabled  = errors.New("fleet update execution is disabled")
 	ErrAmbiguousDispatch = errors.New("update dispatch outcome is ambiguous; reconcile before retry")
+	ErrMissingRunID      = errors.New("update dispatch did not return a run ID")
 	ErrStaleStatus       = errors.New("node update status does not match the persisted run ID")
 )
 
