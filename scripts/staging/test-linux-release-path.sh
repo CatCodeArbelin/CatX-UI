@@ -119,7 +119,7 @@ EOF
             echo "$setting_output" >&2
             exit "$setting_rc"
         fi
-        default_credential=$(echo "$setting_output" | sed -n 's/^hasDefaultCredential: //p')
+        default_credential=$(printf "%s\n" "$setting_output" | grep -F "hasDefaultCredential: " | cut -d " " -f2)
         echo "staging: setting inspection rc=$setting_rc defaultCredential=$default_credential"
         if [[ "$default_credential" != "false" ]]; then
             echo "default credential state was not cleared" >&2
