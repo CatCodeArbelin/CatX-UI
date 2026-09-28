@@ -27,8 +27,8 @@ docker run --rm \
     -e DEBIAN_FRONTEND=noninteractive \
     debian:bookworm-slim bash -euo pipefail -c '
         apt-get update -qq
-        apt-get install -y -qq --no-install-recommends ca-certificates curl jq openssl python3 sqlite3 tar procps > /dev/null || true
-        for required in curl jq openssl python3 sqlite3 tar sha256sum; do
+        apt-get install -y -qq --no-install-recommends curl jq python3 sqlite3 tar > /dev/null || true
+        for required in curl jq python3 sqlite3 tar sha256sum; do
             command -v "$required" >/dev/null || {
                 echo "required staging tool is unavailable: $required" >&2
                 exit 1
