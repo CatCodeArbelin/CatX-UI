@@ -20,7 +20,7 @@ make_control() {
 {"product":"$CATX_PRODUCT_NAME","repository":"$CATX_RELEASE_OWNER/$CATX_RELEASE_REPOSITORY","forkVersion":"$(tr -d '[:space:]' < "$repo_root/internal/forkrelease/fork_version")","upstreamBaseVersion":"$(tr -d '[:space:]' < "$repo_root/internal/forkrelease/upstream_version")","bundledXrayVersion":"$CATX_XRAY_VERSION","channel":"dev","buildCommit":"fixture-commit","releaseApiUrl":"https://api.github.com/repos/$CATX_RELEASE_OWNER/$CATX_RELEASE_REPOSITORY/releases/1","releaseHtmlUrl":"https://github.com/$CATX_RELEASE_OWNER/$CATX_RELEASE_REPOSITORY/releases/tag/dev-latest"}
 EOF
             ;;
-        "${CATX_ASSET_PREFIX}-changelog.txt") printf 'fixture-commit release qualification\n' > "$fixture/$name" ;;
+        "${CATX_ASSET_PREFIX}-changelog.txt") printf 'fixture-commit release qualification (upstream issue MHSanaei/3x-ui#1)\n' > "$fixture/$name" ;;
         *)
             cat > "$fixture/$name" <<EOF
 #!/usr/bin/env bash

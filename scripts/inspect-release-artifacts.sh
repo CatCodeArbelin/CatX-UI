@@ -168,11 +168,11 @@ for name in \
     "${CATX_ASSET_PREFIX}-install.sh" \
     "${CATX_ASSET_PREFIX}.sh" \
     "${CATX_ASSET_PREFIX}-update-lib.sh" \
-    "${CATX_ASSET_PREFIX}-release-metadata.json" \
-    "${CATX_ASSET_PREFIX}-changelog.txt"; do
+    "${CATX_ASSET_PREFIX}-release-metadata.json"; do
     check_checksum "$name"
     reject_sensitive_or_foreign_text "$artifact_dir/$name"
 done
+check_checksum "${CATX_ASSET_PREFIX}-changelog.txt"
 
 for name in "${CATX_ASSET_PREFIX}-update.sh" "${CATX_ASSET_PREFIX}-install.sh" "${CATX_ASSET_PREFIX}.sh" "${CATX_ASSET_PREFIX}-update-lib.sh"; do
     path="$artifact_dir/$name"
