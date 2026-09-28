@@ -252,10 +252,10 @@ export default function AppSidebar() {
       ...forkNavigationItems.map((item) => ({
         key: item.path,
         icon: 'activity' as IconName,
-        title: item.label,
+        title: t(item.labelKey),
       })),
     ],
-    [tabs],
+    [tabs, t],
   );
   const utilItems = useMemo(() => tabs.filter((tab) => tab.icon === 'logout'), [tabs]);
 

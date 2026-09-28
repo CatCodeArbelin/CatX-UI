@@ -422,8 +422,8 @@ export default function CommandPalette() {
       },
       ...forkNavigationItems.map((item) => ({
         path: item.path,
-        title: item.label,
-        keywords: [item.label.toLowerCase(), 'fork'],
+        title: t(item.labelKey),
+        keywords: [t(item.labelKey).toLowerCase(), 'fork'],
         icon: <FileTextOutlined />,
       })),
       {

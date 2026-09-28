@@ -32,11 +32,7 @@ export default function WebhooksPage() {
     if (endpointResult.success && endpointResult.obj) setEndpoints(endpointResult.obj);
     if (deliveryResult.success && deliveryResult.obj) setDeliveries(deliveryResult.obj.items);
     if (!endpointResult.success || !deliveryResult.success)
-      setError(
-        endpointResult.msg ||
-          deliveryResult.msg ||
-          t('fork.webhooks.error', 'Webhook data could not be loaded.'),
-      );
+      setError(endpointResult.msg || deliveryResult.msg || t('fork.webhooks.labels.error'));
   }, [t]);
   useEffect(() => {
     const timer = window.setTimeout(() => void load(), 0);
@@ -62,7 +58,7 @@ export default function WebhooksPage() {
   };
   const deleteEndpoint = (id: string) =>
     Modal.confirm({
-      title: t('fork.webhooks.confirmDelete', 'Delete webhook?'),
+      title: t('fork.webhooks.labels.confirmDelete'),
       okType: 'danger',
       onOk: async () => {
         await HttpUtil.delete(`/panel/api/fork/audit/webhooks/${id}`);
@@ -74,16 +70,18 @@ export default function WebhooksPage() {
     void load();
   };
   const endpointColumns: ColumnsType<Endpoint> = [
-    { title: 'Name', dataIndex: 'name' },
-    { title: 'Destination', dataIndex: 'url' },
+    { title: t('fork.webhooks.labels.name'), dataIndex: 'name' },
+    { title: t('fork.webhooks.labels.destination'), dataIndex: 'url' },
     {
-      title: 'State',
+      title: t('fork.webhooks.labels.state'),
       render: (_, row) => (
-        <Tag color={row.enabled ? 'green' : 'default'}>{row.enabled ? 'Enabled' : 'Disabled'}</Tag>
+        <Tag color={row.enabled ? 'green' : 'default'}>
+          {row.enabled ? t('fork.webhooks.labels.enabled') : t('fork.webhooks.labels.disabled')}
+        </Tag>
       ),
     },
     {
-      title: t('fork.webhooks.actions', 'Actions'),
+      title: t('fork.webhooks.labels.actions'),
       render: (_, row) => (
         <Button danger onClick={() => deleteEndpoint(row.id)}>
           {t('fork.webhooks.delete')}
@@ -92,10 +90,10 @@ export default function WebhooksPage() {
     },
   ];
   const deliveryColumns: ColumnsType<Delivery> = [
-    { title: 'Delivery', dataIndex: 'id' },
-    { title: 'Status', dataIndex: 'status' },
-    { title: 'Attempts', dataIndex: 'attempt' },
-    { title: 'Error', dataIndex: 'lastError' },
+    { title: t('fork.webhooks.labels.delivery'), dataIndex: 'id' },
+    { title: t('fork.webhooks.labels.status'), dataIndex: 'status' },
+    { title: t('fork.webhooks.labels.attempts'), dataIndex: 'attempt' },
+    { title: t('fork.webhooks.labels.error'), dataIndex: 'lastError' },
     {
       title: t('fork.webhooks.replay'),
       render: (_, row) => (
@@ -104,65 +102,74 @@ export default function WebhooksPage() {
     },
   ];
   return (
-    <Space direction="vertical" style={{ width: '100%' }} size="large">
-      <Card>
-        <Typography.Title level={2}>{t('fork.webhooks.title')}</Typography.Title>
-        <Typography.Text type="secondary">{t('fork.webhooks.summary')}</Typography.Text>
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={(value) => void create(value)}
-          style={{ marginTop: 24 }}
-        >
-          <Space wrap align="start">
-            <Form.Item
-              name="name"
-              label={t('fork.webhooks.name', 'Name')}
-              rules={[{ required: true }]}
+    <div className="webhooks-page">
+      <div className="content-area">
+        <Space direction="vertical" style={{ width: '100%' }} size="large">
+          <Card>
+            <Typography.Title level={2}>{t('fork.webhooks.title')}</Typography.Title>
+            <Typography.Text type="secondary">{t('fork.webhooks.summary')}</Typography.Text>
+            <Form
+              form={form}
+              layout="vertical"
+              onFinish={(value) => void create(value)}
+              style={{ marginTop: 24 }}
             >
-              <Input />
-            </Form.Item>
-            <Form.Item
-              name="url"
-              label={t('fork.webhooks.url', 'Public HTTPS URL')}
-              rules={[{ required: true, type: 'url' }]}
-            >
-              <Input style={{ width: 300 }} />
-            </Form.Item>
-            <Form.Item
-              name="secret"
-              label={t('fork.webhooks.secret', 'Secret')}
-              rules={[{ required: true }]}
-            >
-              <Input.Password />
-            </Form.Item>
-            <Form.Item
-              name="eventTypes"
-              label={t('fork.webhooks.events', 'Events')}
-              rules={[{ required: true }]}
-            >
-              <Input placeholder="* or auth.login,http.POST" />
-            </Form.Item>
-            <Form.Item>
-              <Button type="primary" htmlType="submit">
-                {t('fork.webhooks.create')}
-              </Button>
-            </Form.Item>
-          </Space>
-        </Form>
-      </Card>
-      {error && <Alert type="error" message={error} />}
-      <Card title={t('fork.webhooks.destinations')}>
-        <Table rowKey="id" columns={endpointColumns} dataSource={endpoints} pagination={false} />
-      </Card>
-      <Card title={t('fork.webhooks.deliveries')}>
-        <Table
-          rowKey="id"
-          columns={deliveryColumns}
-          dataSource={deliveries}
-          pagination={{ pageSize: 25 }}
-        />
-      </Card>
-    </Space>
+              <Space wrap align="start">
+                <Form.Item
+                  name="name"
+                  label={t('fork.webhooks.labels.name')}
+                  rules={[{ required: true }]}
+                >
+                  <Input />
+                </Form.Item>
+                <Form.Item
+                  name="url"
+                  label={t('fork.webhooks.labels.url')}
+                  rules={[{ required: true, type: 'url' }]}
+                >
+                  <Input style={{ width: 300 }} />
+                </Form.Item>
+                <Form.Item
+                  name="secret"
+                  label={t('fork.webhooks.labels.secret')}
+                  rules={[{ required: true }]}
+                >
+                  <Input.Password />
+                </Form.Item>
+                <Form.Item
+                  name="eventTypes"
+                  label={t('fork.webhooks.labels.events')}
+                  rules={[{ required: true }]}
+                >
+                  <Input placeholder="* or auth.login,http.POST" />
+                </Form.Item>
+                <Form.Item>
+                  <Button type="primary" htmlType="submit">
+                    {t('fork.webhooks.create')}
+                  </Button>
+                </Form.Item>
+              </Space>
+            </Form>
+          </Card>
+          {error && <Alert type="error" message={error} />}
+          <Card title={t('fork.webhooks.destinations')}>
+            <Table
+              rowKey="id"
+              columns={endpointColumns}
+              dataSource={endpoints}
+              pagination={false}
+            />
+          </Card>
+          <Card title={t('fork.webhooks.deliveries')}>
+            <Table
+              rowKey="id"
+              columns={deliveryColumns}
+              dataSource={deliveries}
+              pagination={{ pageSize: 25 }}
+            />
+          </Card>
+        </Space>
+      </div>
+    </div>
   );
 }

@@ -79,118 +79,133 @@ export default function FleetUpdatePage() {
     await load();
   }
   return (
-    <Space direction="vertical" style={{ width: '100%' }} size="large">
-      <Card title={t('fork.fleetUpdate.title', 'Fleet updates')}>
-        {error && <Alert type="error" message={error} />}
-        <Form
-          layout="inline"
-          onFinish={(v) => void create(v)}
-          initialValues={{
-            channel: 'stable',
-            canaryCount: 1,
-            batchSize: 1,
-            maxParallel: 1,
-            healthTimeoutSecs: 300,
-            soakSeconds: 0,
-            dryRun: true,
-            confirmProduction: false,
-          }}
-        >
-          <Form.Item name="name">
-            <Input placeholder={t('fork.fleetUpdate.name', 'Campaign name')} />
-          </Form.Item>
-          <Form.Item name="channel">
-            <Select
-              options={[
-                { value: 'stable', label: t('fork.fleetUpdate.stable', 'Stable') },
-                { value: 'dev', label: t('fork.fleetUpdate.dev', 'Development') },
+    <div className="fleet-update-page">
+      <div className="content-area">
+        <Space direction="vertical" style={{ width: '100%' }} size="large">
+          <Card title={t('fork.fleetUpdate.title')}>
+            {error && <Alert type="error" message={error} />}
+            <Form
+              layout="inline"
+              onFinish={(v) => void create(v)}
+              initialValues={{
+                channel: 'stable',
+                canaryCount: 1,
+                batchSize: 1,
+                maxParallel: 1,
+                healthTimeoutSecs: 300,
+                soakSeconds: 0,
+                dryRun: true,
+                confirmProduction: false,
+              }}
+            >
+              <Form.Item name="name">
+                <Input placeholder={t('fork.fleetUpdate.name')} />
+              </Form.Item>
+              <Form.Item name="channel">
+                <Select
+                  options={[
+                    { value: 'stable', label: t('fork.fleetUpdate.stable') },
+                    { value: 'dev', label: t('fork.fleetUpdate.dev') },
+                  ]}
+                />
+              </Form.Item>
+              <Form.Item name="canaryCount">
+                <InputNumber min={0} placeholder={t('fork.fleetUpdate.canary')} />
+              </Form.Item>
+              <Form.Item name="batchSize">
+                <InputNumber min={1} placeholder={t('fork.fleetUpdate.batch')} />
+              </Form.Item>
+              <Form.Item name="maxParallel">
+                <InputNumber min={1} placeholder={t('fork.fleetUpdate.parallel')} />
+              </Form.Item>
+              <Form.Item name="dryRun" valuePropName="checked">
+                <Checkbox>{t('fork.fleetUpdate.dryRun')}</Checkbox>
+              </Form.Item>
+              <Form.Item name="confirmProduction" valuePropName="checked">
+                <Checkbox>{t('fork.fleetUpdate.confirmProduction')}</Checkbox>
+              </Form.Item>
+              <Button htmlType="submit" type="primary">
+                {t('fork.fleetUpdate.plan')}
+              </Button>
+            </Form>
+          </Card>
+          <Card title={t('fork.fleetUpdate.campaigns')}>
+            <Table
+              rowKey="id"
+              dataSource={campaigns}
+              columns={[
+                { title: t('fork.common.name'), dataIndex: 'name' },
+                { title: t('fork.common.channel'), dataIndex: 'channel' },
+                { title: t('fork.common.status'), render: (_, r) => <Tag>{r.state}</Tag> },
+                {
+                  title: t('fork.common.actions'),
+                  render: (_, r) => (
+                    <Space>
+                      <Button onClick={() => void action(r.id, 'reconcile')}>
+                        {t('fork.fleetUpdate.reconcile')}
+                      </Button>
+                      <Button onClick={() => void action(r.id, 'retry')}>
+                        {t('fork.fleetUpdate.retry')}
+                      </Button>
+                      <Button danger onClick={() => void action(r.id, 'abort')}>
+                        {t('fork.fleetUpdate.abort')}
+                      </Button>
+                    </Space>
+                  ),
+                },
               ]}
+              pagination={false}
+              onRow={(r) => ({
+                onClick: async () => {
+                  const v = await HttpUtil.get<Plan>(`/panel/api/fleet-updates/campaigns/${r.id}`);
+                  if (v.success) setSelected(v.obj || null);
+                },
+              })}
             />
-          </Form.Item>
-          <Form.Item name="canaryCount">
-            <InputNumber min={0} placeholder={t('fork.fleetUpdate.canary', 'Canary')} />
-          </Form.Item>
-          <Form.Item name="batchSize">
-            <InputNumber min={1} placeholder={t('fork.fleetUpdate.batch', 'Batch')} />
-          </Form.Item>
-          <Form.Item name="maxParallel">
-            <InputNumber min={1} placeholder={t('fork.fleetUpdate.parallel', 'Parallel')} />
-          </Form.Item>
-          <Form.Item name="dryRun" valuePropName="checked">
-            <Checkbox>{t('fork.fleetUpdate.dryRun', 'Dry run (no mutation)')}</Checkbox>
-          </Form.Item>
-          <Form.Item name="confirmProduction" valuePropName="checked">
-            <Checkbox>
-              {t('fork.fleetUpdate.confirmProduction', 'Confirm production update')}
-            </Checkbox>
-          </Form.Item>
-          <Button htmlType="submit" type="primary">
-            {t('fork.fleetUpdate.plan', 'Plan dry run')}
-          </Button>
-        </Form>
-      </Card>
-      <Card title={t('fork.fleetUpdate.campaigns', 'Campaigns')}>
-        <Table
-          rowKey="id"
-          dataSource={campaigns}
-          columns={[
-            { title: t('name', 'Name'), dataIndex: 'name' },
-            { title: t('channel', 'Channel'), dataIndex: 'channel' },
-            { title: t('status', 'Status'), render: (_, r) => <Tag>{r.state}</Tag> },
-            {
-              title: t('actions', 'Actions'),
-              render: (_, r) => (
-                <Space>
-                  <Button onClick={() => void action(r.id, 'reconcile')}>
-                    {t('fork.fleetUpdate.reconcile', 'Reconcile')}
-                  </Button>
-                  <Button onClick={() => void action(r.id, 'retry')}>
-                    {t('fork.fleetUpdate.retry', 'Retry')}
-                  </Button>
-                  <Button danger onClick={() => void action(r.id, 'abort')}>
-                    {t('fork.fleetUpdate.abort', 'Abort')}
-                  </Button>
-                </Space>
-              ),
-            },
-          ]}
-          pagination={false}
-          onRow={(r) => ({
-            onClick: async () => {
-              const v = await HttpUtil.get<Plan>(`/panel/api/fleet-updates/campaigns/${r.id}`);
-              if (v.success) setSelected(v.obj || null);
-            },
-          })}
-        />
-      </Card>
-      {selected && (
-        <Card title={`${selected.campaign.name} — ${selected.campaign.releaseTag}`}>
-          <Table
-            rowKey="id"
-            dataSource={selected.targets}
-            columns={[
-              { title: t('node', 'Node'), dataIndex: 'nodeName' },
-              { title: t('status', 'Status'), render: (_, r) => <Tag>{r.state}</Tag> },
-              { title: t('reason', 'Reason'), dataIndex: 'blockedReason' },
-              { title: t('version', 'Version'), dataIndex: 'observedVersion' },
-              { title: t('fork.fleetUpdate.runId', 'Run ID'), dataIndex: 'runId' },
-              { title: t('fork.fleetUpdate.dispatch', 'Dispatch'), dataIndex: 'dispatchStatus' },
-              { title: t('fork.fleetUpdate.result', 'Update result'), dataIndex: 'updateState' },
-              {
-                title: t('fork.fleetUpdate.rollback', 'Rollback'),
-                render: (_, r) =>
-                  r.rolledBack ? (r.rollbackHealthy ? 'healthy' : 'attempted') : '—',
-              },
-              {
-                title: t('fork.fleetUpdate.soak', 'Soak'),
-                render: (_, r) => (r.state === 'soaking' ? r.soakStartedAt || 'active' : r.state),
-              },
-              { title: t('fork.fleetUpdate.failure', 'Failure'), dataIndex: 'error' },
-            ]}
-            pagination={false}
-          />
-        </Card>
-      )}
-    </Space>
+          </Card>
+          {selected && (
+            <Card title={`${selected.campaign.name} — ${selected.campaign.releaseTag}`}>
+              <Table
+                rowKey="id"
+                dataSource={selected.targets}
+                columns={[
+                  { title: t('fork.common.node'), dataIndex: 'nodeName' },
+                  { title: t('fork.common.status'), render: (_, r) => <Tag>{r.state}</Tag> },
+                  { title: t('fork.common.reason'), dataIndex: 'blockedReason' },
+                  { title: t('fork.common.version'), dataIndex: 'observedVersion' },
+                  { title: t('fork.fleetUpdate.runId'), dataIndex: 'runId' },
+                  {
+                    title: t('fork.fleetUpdate.dispatch'),
+                    dataIndex: 'dispatchStatus',
+                  },
+                  {
+                    title: t('fork.fleetUpdate.result'),
+                    dataIndex: 'updateState',
+                  },
+                  {
+                    title: t('fork.fleetUpdate.rollback'),
+                    render: (_, r) =>
+                      r.rolledBack
+                        ? r.rollbackHealthy
+                          ? t('fork.common.labels.healthy')
+                          : t('fork.common.labels.attempted')
+                        : '—',
+                  },
+                  {
+                    title: t('fork.fleetUpdate.soak'),
+                    render: (_, r) =>
+                      r.state === 'soaking'
+                        ? r.soakStartedAt || t('fork.common.labels.active')
+                        : r.state,
+                  },
+                  { title: t('fork.fleetUpdate.failure'), dataIndex: 'error' },
+                ]}
+                pagination={false}
+              />
+            </Card>
+          )}
+        </Space>
+      </div>
+    </div>
   );
 }

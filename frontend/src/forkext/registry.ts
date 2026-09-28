@@ -2,7 +2,7 @@ import type { RouteObject } from 'react-router';
 
 export interface ForkNavigationItem {
   key: string;
-  label: string;
+  labelKey: string;
   path: string;
 }
 
@@ -37,19 +37,20 @@ export const forkRoutes: readonly RouteObject[] = [
   },
 ];
 export const forkNavigationItems: readonly ForkNavigationItem[] = [
-  { key: 'fleet-updates', label: 'Fleet updates', path: '/fleet-updates' },
-  { key: 'portal-access', label: 'Portal access', path: '/portal-access' },
-  { key: 'fleet', label: 'Fleet', path: '/fleet' },
-  { key: 'client-activity', label: 'Client activity', path: '/activity' },
-  { key: 'policy-engine', label: 'Policy engine', path: '/policies' },
-  { key: 'audit', label: 'Audit', path: '/audit' },
-  { key: 'webhooks', label: 'Webhooks', path: '/webhooks' },
+  { key: 'fleet-updates', labelKey: 'fork.fleetUpdate.title', path: '/fleet-updates' },
+  { key: 'portal-access', labelKey: 'fork.portal.adminTitle', path: '/portal-access' },
+  { key: 'fleet', labelKey: 'fork.fleet.title', path: '/fleet' },
+  { key: 'client-activity', labelKey: 'fork.activity.title', path: '/activity' },
+  { key: 'policy-engine', labelKey: 'fork.policy.title', path: '/policies' },
+  { key: 'audit', labelKey: 'fork.audit.title', path: '/audit' },
+  { key: 'webhooks', labelKey: 'fork.webhooks.title', path: '/webhooks' },
 ];
 // Keep the fork contract registry as the single source for generated API verification.
 export const forkApiSections = [
   {
     id: 'fleet-updates',
     title: 'Fleet updates',
+    translationKey: 'fork.apiDocs.fleetUpdates',
     description:
       'Protected Stage A update campaign planning and reconciliation; production dispatch is disabled.',
     endpoints: [
@@ -95,6 +96,7 @@ export const forkApiSections = [
   {
     id: 'risk-intelligence',
     title: 'Risk intelligence',
+    translationKey: 'fork.apiDocs.risk',
     description:
       'Metadata-only, explainable risk signals. Informational only; no automatic enforcement is performed.',
     endpoints: [
@@ -151,6 +153,7 @@ export const forkApiSections = [
   {
     id: 'audit-webhooks-metrics',
     title: 'Audit / Webhooks / Metrics',
+    translationKey: 'fork.apiDocs.audit',
     description:
       'Durable metadata-only audit records, signed webhook delivery, and bounded Prometheus metrics.',
     endpoints: [
@@ -232,6 +235,7 @@ export const forkApiSections = [
   {
     id: 'self-service-portal',
     title: 'Self-service portal',
+    translationKey: 'fork.apiDocs.portal',
     description: 'Dedicated client portal sessions with metadata-only self-service access.',
     endpoints: [
       {

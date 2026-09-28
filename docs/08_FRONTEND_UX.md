@@ -127,3 +127,21 @@ No hardcoded UI strings.
 Regenerate through upstream mechanisms.
 
 Do not hand-edit generated schemas as the source of truth.
+
+## CatX frontend design-system contract
+
+CatX pages remain visually part of 3x-ui. They reuse the existing Ant Design
+components, panel layout, theme tokens, CSS variables, spacing scale, card
+styles, responsive breakpoints, and loading/error/empty-state conventions.
+CatX must not introduce a separate theme, UI framework, or page shell.
+
+All visible CatX text, including navigation, command-palette entries, API-doc
+section names, headings, labels, placeholders, alerts, confirmations, and
+empty/error states, uses the `fork.*` i18n namespace. English is the source of
+truth; locale parity is checked automatically. RTL locales use logical CSS
+properties and a document/component direction supplied by the active locale.
+
+Light, dark, and ultra-dark themes must remain supported. Unsupported or
+degraded capabilities stay explicit in the UI. Dangerous actions require a
+clear confirmation. Pages must remain usable at 375, 430, 768, and 1024+
+pixel widths; tables may scroll horizontally when their data requires it.

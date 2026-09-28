@@ -3,6 +3,7 @@ import { initReactI18next } from 'react-i18next';
 
 import { LanguageManager } from '@/utils';
 import type { LanguageScope } from '@/utils';
+import { applyDocumentDirection } from './direction';
 import enUS from '../../../internal/web/translation/en-US.json';
 
 const FALLBACK = 'en-US';
@@ -32,6 +33,7 @@ export async function readyI18n(scope: LanguageScope = 'panel') {
     interpolation: { escapeValue: false, prefix: '{', suffix: '}' },
     returnNull: false,
   });
+  applyDocumentDirection(active);
   if (active !== FALLBACK) {
     const loader = lazyModules[moduleKeyFor(active)] as
       | (() => Promise<{ default: Record<string, unknown> }>)
@@ -41,6 +43,7 @@ export async function readyI18n(scope: LanguageScope = 'panel') {
       const messages = (mod.default ?? mod) as Record<string, unknown>;
       i18next.addResourceBundle(active, 'translation', messages, true, true);
       await i18next.changeLanguage(active);
+      applyDocumentDirection(active);
     }
   }
   return i18next;

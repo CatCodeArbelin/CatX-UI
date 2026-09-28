@@ -63,7 +63,7 @@ export default function PortalPage() {
     ]);
     if (!me.success) {
       setClient(null);
-      setError(me.msg || t('fork.portal.loginRequired', 'Enter your portal access token.'));
+      setError(me.msg || t('fork.portal.loginRequired'));
       return;
     }
     setClient(me.obj);
@@ -86,7 +86,7 @@ export default function PortalPage() {
       { silent: true },
     );
     if (!result.success) {
-      setError(result.msg || t('fork.portal.invalidToken', 'Invalid portal token.'));
+      setError(result.msg || t('fork.portal.invalidToken'));
       return;
     }
     setCsrf(result.obj?.csrfToken || '');
@@ -100,7 +100,7 @@ export default function PortalPage() {
         method === 'patch'
           ? await HttpUtil.put(portalPath(path), body, options)
           : await HttpUtil.delete(portalPath(path), options);
-      if (!result.success) setError(result.msg || t('fork.portal.actionFailed', 'Action failed.'));
+      if (!result.success) setError(result.msg || t('fork.portal.actionFailed'));
       else await load();
     },
     [csrf, load, t],
@@ -109,31 +109,28 @@ export default function PortalPage() {
   const columns = useMemo<ColumnsType<Device>>(
     () => [
       {
-        title: t('fork.portal.device', 'Device'),
+        title: t('fork.portal.device'),
         render: (_, row) => row.deviceName || row.deviceModel || row.deviceOs || '—',
       },
       {
-        title: t('fork.portal.lastSeen', 'Last seen'),
+        title: t('fork.portal.lastSeen'),
         render: (_, row) => (row.lastSeen ? new Date(row.lastSeen).toLocaleString() : '—'),
       },
       {
-        title: t('fork.portal.actions', 'Actions'),
+        title: t('fork.portal.actions'),
         render: (_, row) => (
           <Space>
             <Button
               onClick={() => {
-                const name = window.prompt(
-                  t('fork.portal.renamePrompt', 'New device name'),
-                  row.deviceName,
-                );
+                const name = window.prompt(t('fork.portal.renamePrompt'), row.deviceName);
                 if (name != null)
                   void mutate(`/portal/devices/${row.id}`, 'patch', { deviceName: name });
               }}
             >
-              {t('rename', 'Rename')}
+              {t('fork.common.rename')}
             </Button>
             <Button danger onClick={() => void mutate(`/portal/devices/${row.id}`, 'delete')}>
-              {t('delete', 'Revoke')}
+              {t('fork.portal.revoke')}
             </Button>
           </Space>
         ),
@@ -144,90 +141,93 @@ export default function PortalPage() {
 
   if (!client)
     return (
-      <Card style={{ maxWidth: 520, margin: '8rem auto' }}>
-        <Space direction="vertical" style={{ width: '100%' }}>
-          <Typography.Title level={2}>{t('fork.portal.title', 'Client portal')}</Typography.Title>
-          <Typography.Paragraph>
-            {t(
-              'fork.portal.tokenHint',
-              'Use the portal access token provided by your administrator.',
-            )}
-          </Typography.Paragraph>
-          <Input.Password
-            value={token}
-            onChange={(e) => setToken(e.target.value)}
-            onPressEnter={() => void login()}
-            placeholder={t('fork.portal.token', 'Portal access token')}
-          />
-          <Button type="primary" onClick={() => void login()}>
-            {t('fork.portal.signIn', 'Sign in')}
-          </Button>
-          {error && <Alert type="error" message={error} />}
-        </Space>
-      </Card>
+      <div className="portal-page">
+        <div className="content-area portal-login-shell">
+          <Card>
+            <Space direction="vertical" style={{ width: '100%' }}>
+              <Typography.Title level={2}>{t('fork.portal.title')}</Typography.Title>
+              <Typography.Paragraph>{t('fork.portal.tokenHint')}</Typography.Paragraph>
+              <Input.Password
+                value={token}
+                onChange={(e) => setToken(e.target.value)}
+                onPressEnter={() => void login()}
+                placeholder={t('fork.portal.token')}
+              />
+              <Button type="primary" onClick={() => void login()}>
+                {t('fork.portal.signIn')}
+              </Button>
+              {error && <Alert type="error" message={error} />}
+            </Space>
+          </Card>
+        </div>
+      </div>
     );
 
   return (
-    <Card style={{ margin: 24 }}>
-      <Space direction="vertical" style={{ width: '100%' }} size="large">
-        <div>
-          <Typography.Title level={2}>{t('fork.portal.title', 'Client portal')}</Typography.Title>
-          {error && <Alert type="error" message={error} />}
-        </div>
-        <Descriptions
-          bordered
-          items={[
-            { key: 'email', label: t('email', 'Email'), children: client.email },
-            {
-              key: 'status',
-              label: t('status', 'Status'),
-              children: client.enabled ? t('enabled', 'Enabled') : t('disabled', 'Disabled'),
-            },
-            {
-              key: 'quota',
-              label: t('fork.portal.quota', 'Quota'),
-              children: traffic
-                ? `${traffic.up + traffic.down} / ${traffic.total || client.totalGB}`
-                : '—',
-            },
-            {
-              key: 'expiry',
-              label: t('fork.portal.expiry', 'Expiry'),
-              children: client.expiryTime
-                ? new Date(client.expiryTime).toLocaleString()
-                : t('never', 'Never'),
-            },
-          ]}
-        />
-        <Tabs
-          items={[
-            {
-              key: 'devices',
-              label: t('fork.portal.devices', 'Devices'),
-              children: (
-                <Table rowKey="id" columns={columns} dataSource={devices} pagination={false} />
-              ),
-            },
-            {
-              key: 'hosts',
-              label: t('fork.portal.hosts', 'Connection hosts'),
-              children: (
-                <Table
-                  rowKey="id"
-                  columns={[
-                    { title: t('fork.portal.host', 'Host'), dataIndex: 'address' },
-                    { title: t('port', 'Port'), dataIndex: 'port' },
-                    { title: t('security', 'Security'), dataIndex: 'security' },
-                    { title: t('sni', 'SNI'), dataIndex: 'sni' },
-                  ]}
-                  dataSource={hosts}
-                  pagination={false}
-                />
-              ),
-            },
-          ]}
-        />
-      </Space>
-    </Card>
+    <div className="portal-page">
+      <div className="content-area">
+        <Card>
+          <Space direction="vertical" style={{ width: '100%' }} size="large">
+            <div>
+              <Typography.Title level={2}>{t('fork.portal.title')}</Typography.Title>
+              {error && <Alert type="error" message={error} />}
+            </div>
+            <Descriptions
+              bordered
+              items={[
+                { key: 'email', label: t('fork.common.email'), children: client.email },
+                {
+                  key: 'status',
+                  label: t('fork.common.status'),
+                  children: client.enabled ? t('fork.common.enabled') : t('fork.common.disabled'),
+                },
+                {
+                  key: 'quota',
+                  label: t('fork.portal.quota'),
+                  children: traffic
+                    ? `${traffic.up + traffic.down} / ${traffic.total || client.totalGB}`
+                    : '—',
+                },
+                {
+                  key: 'expiry',
+                  label: t('fork.portal.expiry'),
+                  children: client.expiryTime
+                    ? new Date(client.expiryTime).toLocaleString()
+                    : t('fork.common.never'),
+                },
+              ]}
+            />
+            <Tabs
+              items={[
+                {
+                  key: 'devices',
+                  label: t('fork.portal.devices'),
+                  children: (
+                    <Table rowKey="id" columns={columns} dataSource={devices} pagination={false} />
+                  ),
+                },
+                {
+                  key: 'hosts',
+                  label: t('fork.portal.hosts'),
+                  children: (
+                    <Table
+                      rowKey="id"
+                      columns={[
+                        { title: t('fork.portal.host'), dataIndex: 'address' },
+                        { title: t('fork.common.labels.port'), dataIndex: 'port' },
+                        { title: t('fork.common.labels.security'), dataIndex: 'security' },
+                        { title: t('fork.common.labels.sni'), dataIndex: 'sni' },
+                      ]}
+                      dataSource={hosts}
+                      pagination={false}
+                    />
+                  ),
+                },
+              ]}
+            />
+          </Space>
+        </Card>
+      </div>
+    </div>
   );
 }

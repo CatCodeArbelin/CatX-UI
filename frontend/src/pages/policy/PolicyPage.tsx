@@ -22,6 +22,8 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import { DeleteOutlined, EditOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import { HttpUtil } from '@/utils';
+import { i18n } from '@/i18n/react';
+import { useTranslation } from 'react-i18next';
 import './PolicyPage.css';
 
 type Policy = {
@@ -131,6 +133,7 @@ const formatMinute = (value: number) =>
   `${String(Math.floor(value / 60)).padStart(2, '0')}:${String(value % 60).padStart(2, '0')}`;
 
 export default function PolicyPage() {
+  const { t } = useTranslation();
   const [policies, setPolicies] = useState<Policy[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [overrides, setOverrides] = useState<Override[]>([]);
@@ -284,7 +287,10 @@ export default function PolicyPage() {
             icon={<EditOutlined />}
             onClick={() => openPolicy(row)}
           />
-          <Popconfirm title="Delete this policy?" onConfirm={() => void deletePolicy(row.id)}>
+          <Popconfirm
+            title={t('fork.policy.deleteConfirm')}
+            onConfirm={() => void deletePolicy(row.id)}
+          >
             <Button danger aria-label={`Delete ${row.name}`} icon={<DeleteOutlined />} />
           </Popconfirm>
         </Space>
@@ -302,7 +308,7 @@ export default function PolicyPage() {
       title: 'Actions',
       render: (_, row) => (
         <Popconfirm
-          title="Delete this assignment?"
+          title={t('fork.policy.labels.deleteAssignment')}
           onConfirm={() => void deleteRecord('/panel/api/policies/assignments', row.id)}
         >
           <Button danger icon={<DeleteOutlined />} />
@@ -321,7 +327,10 @@ export default function PolicyPage() {
     {
       title: 'Actions',
       render: (_, row) => (
-        <Popconfirm title="Delete this override?" onConfirm={() => void deleteRecord(path, row.id)}>
+        <Popconfirm
+          title={t('fork.policy.labels.deleteOverride')}
+          onConfirm={() => void deleteRecord(path, row.id)}
+        >
           <Button danger icon={<DeleteOutlined />} />
         </Popconfirm>
       ),
@@ -348,7 +357,7 @@ export default function PolicyPage() {
       title: 'Actions',
       render: (_, row) => (
         <Popconfirm
-          title="Delete this schedule?"
+          title={t('fork.policy.labels.deleteSchedule')}
           onConfirm={() => void deleteRecord('/panel/api/policies/schedules', row.id)}
         >
           <Button danger icon={<DeleteOutlined />} />
@@ -364,7 +373,7 @@ export default function PolicyPage() {
           <Space direction="vertical" size="large" style={{ width: '100%' }}>
             <div className="policy-heading">
               <div>
-                <Typography.Title level={2}>Policy engine</Typography.Title>
+                <Typography.Title level={2}>{t('fork.policy.title')}</Typography.Title>
                 <Typography.Paragraph type="secondary">
                   Manage durable policies and inspect decisions without applying changes.
                 </Typography.Paragraph>
@@ -378,13 +387,7 @@ export default function PolicyPage() {
                 New policy
               </Button>
             </div>
-            {!enabled && (
-              <Alert
-                type="info"
-                showIcon
-                message="Policies are disabled. The panel remains upstream-compatible and simulations are read-only no-ops."
-              />
-            )}
+            {!enabled && <Alert type="info" showIcon message={t('fork.policy.labels.disabled')} />}
             {error && <Alert type="error" showIcon message={error} />}
             <Spin spinning={loading}>
               <Tabs
@@ -400,7 +403,7 @@ export default function PolicyPage() {
                         pagination={{ pageSize: 10 }}
                       />
                     ) : (
-                      <Empty description="No policies yet." />
+                      <Empty description={t('fork.policy.noPolicies')} />
                     ),
                   },
                   {
@@ -421,7 +424,7 @@ export default function PolicyPage() {
                         >
                           <Form.Item name="policyId" rules={[{ required: true }]}>
                             <Select
-                              placeholder="Policy"
+                              placeholder={t('fork.policy.labels.policy')}
                               style={{ width: 180 }}
                               options={policies.map((p) => ({ value: p.id, label: p.name }))}
                             />
@@ -435,10 +438,10 @@ export default function PolicyPage() {
                             />
                           </Form.Item>
                           <Form.Item name="targetRef" rules={[{ required: true }]}>
-                            <Input placeholder="Target email or group" />
+                            <Input placeholder={t('fork.policy.labels.targetEmailGroup')} />
                           </Form.Item>
                           <Form.Item name="priority" initialValue={0}>
-                            <InputNumber placeholder="Priority" />
+                            <InputNumber placeholder={t('fork.policy.labels.priority')} />
                           </Form.Item>
                           <Button type="primary" htmlType="submit">
                             Assign
@@ -449,7 +452,9 @@ export default function PolicyPage() {
                           columns={assignmentColumns}
                           dataSource={assignments}
                           pagination={{ pageSize: 10 }}
-                          locale={{ emptyText: <Empty description="No assignments." /> }}
+                          locale={{
+                            emptyText: <Empty description={t('fork.policy.noAssignments')} />,
+                          }}
                         />
                       </Space>
                     ),
@@ -459,7 +464,9 @@ export default function PolicyPage() {
                     label: `Overrides (${overrides.length + temporary.length})`,
                     children: (
                       <Space direction="vertical" style={{ width: '100%' }}>
-                        <Typography.Title level={4}>Explicit overrides</Typography.Title>
+                        <Typography.Title level={4}>
+                          {t('fork.policy.explicitOverrides')}
+                        </Typography.Title>
                         <Form
                           form={overrideForm}
                           layout="inline"
@@ -477,7 +484,7 @@ export default function PolicyPage() {
                         >
                           <Form.Item name="policyId" rules={[{ required: true }]}>
                             <Select
-                              placeholder="Policy"
+                              placeholder={t('fork.policy.labels.policy')}
                               style={{ width: 160 }}
                               options={policies.map((p) => ({ value: p.id, label: p.name }))}
                             />
@@ -491,7 +498,7 @@ export default function PolicyPage() {
                             />
                           </Form.Item>
                           <Form.Item name="targetRef" rules={[{ required: true }]}>
-                            <Input placeholder="Target" />
+                            <Input placeholder={t('fork.policy.labels.target')} />
                           </Form.Item>
                           <Form.Item name="scope" initialValue="domain">
                             <Select
@@ -501,7 +508,7 @@ export default function PolicyPage() {
                             />
                           </Form.Item>
                           <Form.Item name="value" initialValue="{}">
-                            <Input placeholder="Value JSON" />
+                            <Input placeholder={t('fork.policy.labels.valueJson')} />
                           </Form.Item>
                           <Button type="primary" htmlType="submit">
                             Add override
@@ -512,9 +519,13 @@ export default function PolicyPage() {
                           columns={overrideColumns('/panel/api/policies/overrides')}
                           dataSource={overrides}
                           pagination={{ pageSize: 10 }}
-                          locale={{ emptyText: <Empty description="No explicit overrides." /> }}
+                          locale={{
+                            emptyText: <Empty description={t('fork.policy.noExplicitOverrides')} />,
+                          }}
                         />
-                        <Typography.Title level={4}>Temporary overrides</Typography.Title>
+                        <Typography.Title level={4}>
+                          {t('fork.policy.temporaryOverrides')}
+                        </Typography.Title>
                         <Form
                           form={temporaryForm}
                           layout="inline"
@@ -532,7 +543,7 @@ export default function PolicyPage() {
                         >
                           <Form.Item name="policyId" rules={[{ required: true }]}>
                             <Select
-                              placeholder="Policy"
+                              placeholder={t('fork.policy.labels.policy')}
                               style={{ width: 160 }}
                               options={policies.map((p) => ({ value: p.id, label: p.name }))}
                             />
@@ -546,7 +557,7 @@ export default function PolicyPage() {
                             />
                           </Form.Item>
                           <Form.Item name="targetRef" rules={[{ required: true }]}>
-                            <Input placeholder="Target" />
+                            <Input placeholder={t('fork.policy.labels.target')} />
                           </Form.Item>
                           <Form.Item name="scope" initialValue="policy">
                             <Select
@@ -559,13 +570,13 @@ export default function PolicyPage() {
                             />
                           </Form.Item>
                           <Form.Item name="startsAt" rules={[{ required: true }]}>
-                            <InputNumber placeholder="Starts ms" />
+                            <InputNumber placeholder={t('fork.policy.labels.startsMs')} />
                           </Form.Item>
                           <Form.Item name="expiresAt" rules={[{ required: true }]}>
-                            <InputNumber placeholder="Expires ms" />
+                            <InputNumber placeholder={t('fork.policy.labels.expiresMs')} />
                           </Form.Item>
                           <Form.Item name="value" initialValue="{}">
-                            <Input placeholder="Value JSON" />
+                            <Input placeholder={t('fork.policy.labels.valueJson')} />
                           </Form.Item>
                           <Button type="primary" htmlType="submit">
                             Add temporary
@@ -577,7 +588,9 @@ export default function PolicyPage() {
                           dataSource={temporary}
                           pagination={{ pageSize: 10 }}
                           locale={{
-                            emptyText: <Empty description="No active temporary overrides." />,
+                            emptyText: (
+                              <Empty description={t('fork.policy.noTemporaryOverrides')} />
+                            ),
                           }}
                         />
                       </Space>
@@ -597,7 +610,7 @@ export default function PolicyPage() {
                         >
                           <Form.Item name="policyId" rules={[{ required: true }]}>
                             <Select
-                              placeholder="Policy"
+                              placeholder={t('fork.policy.labels.policy')}
                               style={{ width: 160 }}
                               options={policies.map((p) => ({ value: p.id, label: p.name }))}
                             />
@@ -607,28 +620,28 @@ export default function PolicyPage() {
                             initialValue="UTC"
                             rules={[{ required: true }]}
                           >
-                            <Input placeholder="IANA timezone" />
+                            <Input placeholder={t('fork.policy.labels.ianaTimezone')} />
                           </Form.Item>
                           <Form.Item
                             name="weekdays"
                             initialValue="1,2,3,4,5"
                             rules={[{ required: true }]}
                           >
-                            <Input placeholder="Weekdays 0–6" />
+                            <Input placeholder={t('fork.policy.labels.weekdays')} />
                           </Form.Item>
                           <Form.Item
                             name="startMinute"
                             initialValue={9 * 60}
                             rules={[{ required: true }]}
                           >
-                            <InputNumber placeholder="Start minute" />
+                            <InputNumber placeholder={t('fork.policy.labels.startMinute')} />
                           </Form.Item>
                           <Form.Item
                             name="endMinute"
                             initialValue={17 * 60}
                             rules={[{ required: true }]}
                           >
-                            <InputNumber placeholder="End minute" />
+                            <InputNumber placeholder={t('fork.policy.labels.endMinute')} />
                           </Form.Item>
                           <Button type="primary" htmlType="submit">
                             Add schedule
@@ -639,16 +652,18 @@ export default function PolicyPage() {
                           columns={scheduleColumns}
                           dataSource={schedules}
                           pagination={{ pageSize: 10 }}
-                          locale={{ emptyText: <Empty description="No schedules." /> }}
+                          locale={{
+                            emptyText: <Empty description={t('fork.policy.noSchedules')} />,
+                          }}
                         />
                       </Space>
                     ),
                   },
                   {
                     key: 'simulator',
-                    label: 'Simulator',
+                    label: t('fork.policy.labels.simulator'),
                     children: (
-                      <Card size="small" title="Read-only simulation">
+                      <Card size="small" title={t('fork.policy.simulation')}>
                         <Form
                           form={simForm}
                           layout="vertical"
@@ -657,25 +672,25 @@ export default function PolicyPage() {
                           <div className="policy-form-grid">
                             <Form.Item
                               name="clientEmail"
-                              label="Client email"
+                              label={t('fork.policy.labels.clientEmail')}
                               rules={[{ required: true }]}
                             >
-                              <Input placeholder="alice@example.test" />
+                              <Input placeholder={t('fork.policy.labels.clientPlaceholder')} />
                             </Form.Item>
-                            <Form.Item name="groupName" label="Group">
-                              <Input placeholder="staff" />
+                            <Form.Item name="groupName" label={t('fork.policy.labels.group')}>
+                              <Input placeholder={t('fork.policy.labels.groupPlaceholder')} />
                             </Form.Item>
-                            <Form.Item name="domain" label="Domain">
-                              <Input placeholder="example.com" />
+                            <Form.Item name="domain" label={t('fork.policy.labels.domain')}>
+                              <Input placeholder={t('fork.policy.labels.domainPlaceholder')} />
                             </Form.Item>
-                            <Form.Item name="ip" label="IP / CIDR">
-                              <Input placeholder="203.0.113.10" />
+                            <Form.Item name="ip" label={t('fork.policy.labels.ipCidr')}>
+                              <Input placeholder={t('fork.policy.labels.ipPlaceholder')} />
                             </Form.Item>
-                            <Form.Item name="category" label="Category">
-                              <Input placeholder="video/streaming" />
+                            <Form.Item name="category" label={t('fork.policy.labels.category')}>
+                              <Input placeholder={t('fork.policy.labels.categoryPlaceholder')} />
                             </Form.Item>
-                            <Form.Item name="service" label="Service">
-                              <Input placeholder="Example service" />
+                            <Form.Item name="service" label={t('fork.policy.labels.service')}>
+                              <Input placeholder={t('fork.policy.labels.exampleService')} />
                             </Form.Item>
                           </div>
                           <Button
@@ -684,7 +699,7 @@ export default function PolicyPage() {
                             icon={<SearchOutlined />}
                             loading={simLoading}
                           >
-                            Simulate
+                            {t('fork.policy.labels.simulate')}
                           </Button>
                         </Form>
                         {simulation && <SimulationView value={simulation} />}
@@ -698,41 +713,53 @@ export default function PolicyPage() {
         </Card>
         <Modal
           open={policyModal}
-          title={editing ? 'Edit policy' : 'New policy'}
-          okText="Save"
+          title={editing ? t('fork.policy.labels.editPolicy') : t('fork.policy.labels.newPolicy')}
+          okText={t('fork.policy.labels.save')}
           onCancel={() => setPolicyModal(false)}
           onOk={() => form.submit()}
           destroyOnClose
         >
           <Form form={form} layout="vertical" onFinish={(values) => void savePolicy(values)}>
-            <Form.Item name="name" label="Name" rules={[{ required: true }]}>
+            <Form.Item
+              name="name"
+              label={t('fork.policy.labels.name')}
+              rules={[{ required: true }]}
+            >
               <Input />
             </Form.Item>
-            <Form.Item name="description" label="Description">
+            <Form.Item name="description" label={t('fork.policy.labels.description')}>
               <Input.TextArea rows={2} />
             </Form.Item>
             <Space>
-              <Form.Item name="priority" label="Priority">
+              <Form.Item name="priority" label={t('fork.policy.labels.priority')}>
                 <InputNumber />
               </Form.Item>
-              <Form.Item name="enabled" label="Enabled" valuePropName="checked">
+              <Form.Item
+                name="enabled"
+                label={t('fork.policy.labels.enabled')}
+                valuePropName="checked"
+              >
                 <Switch />
               </Form.Item>
             </Space>
-            <Form.Item name="spec" label="Policy JSON" rules={[{ required: true }]}>
+            <Form.Item
+              name="spec"
+              label={t('fork.policy.labels.policyJson')}
+              rules={[{ required: true }]}
+            >
               <Input.TextArea rows={10} spellCheck={false} />
             </Form.Item>
             <Alert
               type="info"
               showIcon
-              message="WP-4B capabilities"
-              description='Use quarantine:true with an optional quarantineAllowlist. Use dns:{ managed:true, dnsOutboundTag:"dns-out" } for intercepted plaintext DNS. SafeSearch requires safeSearch:true and an explicit dnsOutboundTag whose resolver enforces SafeSearch. A bounded release uses temporary scope quarantine-release with value {"released":true}.'
+              message={t('fork.policy.labels.capabilities')}
+              description={t('fork.policy.labels.capabilitiesDescription')}
             />
-            <Form.Item name="categories" label="Known categories">
+            <Form.Item name="categories" label={t('fork.policy.labels.knownCategories')}>
               <Select
                 mode="multiple"
                 options={POLICY_CATEGORIES}
-                placeholder="Optional category targets"
+                placeholder={t('fork.policy.labels.optionalCategoryTargets')}
               />
             </Form.Item>
           </Form>
@@ -768,14 +795,25 @@ function SimulationView({ value }: { value: Simulation }) {
       },
     ];
   const routeColumns: ColumnsType<RoutePreview> = [
-    { title: 'Rule', dataIndex: 'ruleTag' },
-    { title: 'Destination', dataIndex: 'destination' },
-    { title: 'Outbound', dataIndex: 'outboundTag' },
+    { title: i18n.t('fork.policy.labels.rule'), dataIndex: 'ruleTag' },
+    { title: i18n.t('fork.policy.labels.destination'), dataIndex: 'destination' },
+    { title: i18n.t('fork.policy.labels.outbound'), dataIndex: 'outboundTag' },
     {
-      title: 'Match',
-      render: (_, row) => (row.matched ? <Tag color="green">Matched</Tag> : <Tag>Not matched</Tag>),
+      title: i18n.t('fork.policy.labels.match'),
+      render: (_, row) =>
+        row.matched ? (
+          <Tag color="green">{i18n.t('fork.policy.labels.matched')}</Tag>
+        ) : (
+          <Tag>{i18n.t('fork.policy.labels.notMatched')}</Tag>
+        ),
     },
-    { title: 'Emission', render: (_, row) => (row.emitted ? 'Would emit' : row.reason || 'No-op') },
+    {
+      title: i18n.t('fork.policy.labels.emission'),
+      render: (_, row) =>
+        row.emitted
+          ? i18n.t('fork.policy.labels.wouldEmit')
+          : row.reason || i18n.t('fork.policy.labels.noOp'),
+    },
   ];
   return (
     <div className="policy-result">
@@ -787,15 +825,25 @@ function SimulationView({ value }: { value: Simulation }) {
         description={value.decision.explanation}
       />
       <Space wrap style={{ marginTop: 12 }}>
-        {value.decision.quarantined && <Tag color="red">Quarantined</Tag>}
-        {value.decision.quarantineReleased && <Tag color="orange">Bounded release active</Tag>}
-        {value.decision.managedDns && <Tag color="blue">Managed DNS</Tag>}
-        {value.decision.safeSearch && <Tag color="purple">SafeSearch capability</Tag>}
+        {value.decision.quarantined && (
+          <Tag color="red">{i18n.t('fork.policy.labels.quarantined')}</Tag>
+        )}
+        {value.decision.quarantineReleased && (
+          <Tag color="orange">{i18n.t('fork.policy.labels.boundedRelease')}</Tag>
+        )}
+        {value.decision.managedDns && (
+          <Tag color="blue">{i18n.t('fork.policy.labels.managedDns')}</Tag>
+        )}
+        {value.decision.safeSearch && (
+          <Tag color="purple">{i18n.t('fork.policy.labels.safeSearch')}</Tag>
+        )}
       </Space>
       {value.decision.dnsLimitations?.map((limitation) => (
         <Alert key={limitation} style={{ marginTop: 12 }} type="warning" message={limitation} />
       ))}
-      <Typography.Title level={5}>Decision candidates</Typography.Title>
+      <Typography.Title level={5}>
+        {i18n.t('fork.policy.labels.decisionCandidates')}
+      </Typography.Title>
       <Table
         rowKey={(row) =>
           `${row.candidate.source}-${row.candidate.targetRef}-${row.candidate.priority}`
@@ -805,7 +853,7 @@ function SimulationView({ value }: { value: Simulation }) {
         dataSource={value.decision.explanations}
         columns={decisionColumns}
       />
-      <Typography.Title level={5}>Route preview</Typography.Title>
+      <Typography.Title level={5}>{i18n.t('fork.policy.labels.routePreview')}</Typography.Title>
       <Table
         rowKey="ruleTag"
         size="small"

@@ -440,13 +440,26 @@ Merged into `develop` with merge commit `ec6fbc3b`. The exact pinned upstream
 commit and RC-1 verification records are retained in
 `docs/21_RC1_UPSTREAM_SYNC.md`.
 
-## RC-2 — Staging Qualification & Release Engineering — CURRENT
+## RC-2 — Staging Qualification & Release Engineering — DONE
 
 Qualify release artifacts, Linux installation/upgrades, populated migrations,
 the real node-local updater, rollback, disposable fleet rollout, feature-off
 compatibility, secret boundaries, resource soak, and first-RC documentation.
 
 ---
+
+## RC-3 — Prerelease Versioning & First Public RC Cut — DONE
+
+The first public release candidate `0.1.0-rc.1` was cut successfully at
+`09f5432aacfb2c45f3df79cdca2e15e77bc9a8a6`.
+
+## WP-9A — Frontend Design System & i18n Foundation — CURRENT
+
+Branch: `feature/wp-9a-frontend-design-i18n-foundation`
+
+Align CatX frontend surfaces with the upstream 3x-ui design system, stabilize
+fork-owned i18n namespaces, establish RTL and responsive foundations, and add
+contract tests. Do not merge until the package verification gate is green.
 
 # Operating Rules
 
