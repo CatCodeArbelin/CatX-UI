@@ -571,6 +571,8 @@ jobs:
           POSTGRES_USER: catx
           POSTGRES_PASSWORD: catx
           POSTGRES_DB: catx
+        ports:
+          - 5432:5432
         options: >-
           --health-cmd="pg_isready -U catx -d catx"
           --health-interval=5s
