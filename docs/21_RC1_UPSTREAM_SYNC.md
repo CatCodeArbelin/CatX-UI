@@ -33,6 +33,11 @@ RC-1 merges the exact upstream commit
   derived artifacts. They were regenerated after resolving the merged Go
   schemas and endpoint registries, rather than preserving a stale side of the
   conflict.
+- Frontend formatter compatibility: kept the fork’s existing `oxfmt` 0.68
+  toolchain while accepting the upstream application dependency updates. The
+  upstream formatter bump reformats the whole existing source tree; pinning
+  the established formatter keeps RC-1 low-divergence and avoids an unrelated
+  repository-wide formatting rewrite.
 - RC-1 push validation: broadened Fork verification to `feature/*` and the
   release build workflow to `feature/rc1-*`. Release publication remains
   restricted to the existing main/tag conditions, so RC validation does not
