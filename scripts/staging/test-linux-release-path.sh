@@ -56,7 +56,7 @@ EOF
 
         # The real installer is exercised below, but its dependency bootstrap
         # is intentionally bypassed after the harness has installed the tools
-        # needed for this rehearsal.  Otherwise cron's mail integration pulls
+        # needed for this rehearsal.  Otherwise the cron mail integration pulls
         # a full MTA into the minimal container and fails while configuring
         # service state that the harness does not run.
         cat > /usr/local/bin/apt-get <<"EOF"
