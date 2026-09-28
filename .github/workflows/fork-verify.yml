@@ -67,6 +67,14 @@ jobs:
             git status --short | while IFS= read -r line; do
               echo "::error file=Makefile::working tree status: $line"
             done
+            git diff --numstat -- frontend/src/generated frontend/public/openapi.json | while IFS= read -r line; do
+              echo "::error file=Makefile::generated delta: $line"
+            done
+            git diff --unified=0 -- frontend/src/generated frontend/public/openapi.json | head -n 40 | while IFS= read -r line; do
+              line=${line//$'\r'/}
+              line=${line//$'\n'/ }
+              echo "::error file=Makefile::generated diff: $line"
+            done
             tail -n 30 "$RUNNER_TEMP/verify-fork.log" | while IFS= read -r line; do
               line=${line//$'\r'/}
               line=${line//$'\n'/ }
