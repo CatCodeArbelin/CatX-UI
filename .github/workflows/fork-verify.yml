@@ -72,5 +72,7 @@ jobs:
               line=${line//$'\n'/ }
               echo "::error file=Makefile::$line"
             done
+            fail_lines=$(grep -E '^FAIL|FAIL:|--- FAIL|Error Trace|panic:|fatal error' "$RUNNER_TEMP/verify-fork.log" | tr '\n' ';')
+            echo "::error file=Makefile::failures=$fail_lines"
             exit "$status"
           fi
