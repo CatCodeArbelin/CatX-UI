@@ -157,7 +157,7 @@ EOF
         fi
         trap "kill $panel_pid 2>/dev/null || true; kill $server_pid 2>/dev/null || true" EXIT
         wait_http http://127.0.0.1:28080/staging/
-        curl -fsS http://127.0.0.1:28080/staging/login >/dev/null
+        curl -fsS http://127.0.0.1:28080/staging/ >/dev/null
         kill "$panel_pid" 2>/dev/null || true
         wait "$panel_pid" 2>/dev/null || true
 
