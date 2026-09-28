@@ -544,7 +544,17 @@ jobs:
           path: release-assets
           merge-multiple: true
       - name: Run disposable Linux installation and upgrade matrix
-        run: bash scripts/staging/test-linux-release-path.sh release-assets legacy
+        run: |
+          set +e
+          bash scripts/staging/test-linux-release-path.sh release-assets legacy 2>&1 | tee "$RUNNER_TEMP/linux-staging.log"
+          status=${PIPESTATUS[0]}
+          if [ "$status" -ne 0 ]; then
+            {
+              echo '### Linux staging qualification output'
+              tail -n 240 "$RUNNER_TEMP/linux-staging.log"
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+          exit "$status"
 
   postgres-staging-qualification:
     name: Disposable PostgreSQL migration qualification
@@ -575,8 +585,21 @@ jobs:
           XUI_DB_TYPE: postgres
           XUI_DB_DSN: postgres://catx:catx@127.0.0.1:5432/catx?sslmode=disable
         run: |
-          env -u XUI_TEST_PG_DSN -u XUI_DB_TYPE -u XUI_DB_DSN go test -count=1 ./internal/forkext/groupquota ./internal/forkext/trafficpolicy
-          go test -count=1 ./internal/database -run 'Test(ClientWeeklyRenewMigration_Postgres|ClientHwidSchemaPostgres|Migrate_Postgres|HostAutoMigrateCreatesColumns_Postgres|MigrateData_)'
+          set +e
+          {
+            env -u XUI_TEST_PG_DSN -u XUI_DB_TYPE -u XUI_DB_DSN go test -count=1 ./internal/forkext/groupquota ./internal/forkext/trafficpolicy
+            first_status=$?
+            if [ "$first_status" -ne 0 ]; then exit "$first_status"; fi
+            go test -count=1 ./internal/database -run 'Test(ClientWeeklyRenewMigration_Postgres|ClientHwidSchemaPostgres|Migrate_Postgres|HostAutoMigrateCreatesColumns_Postgres|MigrateData_)'
+          } 2>&1 | tee "$RUNNER_TEMP/postgres-staging.log"
+          status=${PIPESTATUS[0]}
+          if [ "$status" -ne 0 ]; then
+            {
+              echo '### PostgreSQL staging qualification output'
+              tail -n 240 "$RUNNER_TEMP/postgres-staging.log"
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+          exit "$status"
 
   # =================================
   #  Rolling dev channel (per-commit)
