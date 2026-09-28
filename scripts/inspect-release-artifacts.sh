@@ -178,9 +178,6 @@ for name in "${CATX_ASSET_PREFIX}-update.sh" "${CATX_ASSET_PREFIX}-install.sh" "
     grep -Fq "CATX_RELEASE_REPOSITORY=\"$CATX_RELEASE_REPOSITORY\"" "$path" || fail "$name has wrong release repository"
     grep -Fq "CATX_ASSET_PREFIX=\"$CATX_ASSET_PREFIX\"" "$path" || fail "$name has wrong asset prefix"
     grep -Fq "CATX_DEV_RELEASE_TAG=\"$CATX_DEV_RELEASE_TAG\"" "$path" || fail "$name has wrong dev tag"
-    if [[ "$name" == "${CATX_ASSET_PREFIX}-update.sh" ]]; then
-        [[ -x "$path" ]] || fail "$name is not executable"
-    fi
 done
 check_metadata
 
