@@ -110,7 +110,16 @@ EOF
         ls -lad /usr/local /usr/local/x-ui /usr/local/x-ui/x-ui 2>/dev/null >&2 || true
         find /usr/local -maxdepth 3 -iname "x-ui*" -print 2>/dev/null >&2 || true
         find /usr/local/x-ui /etc/x-ui -maxdepth 2 -print 2>/dev/null >&2 || true
-        test -x /usr/local/x-ui/x-ui || { echo "installed panel binary is missing" >&2; find /usr/local/x-ui -maxdepth 2 -type f -print >&2 || true; exit 1; }
+        if [[ ! -e /usr/local/x-ui/x-ui ]]; then
+            echo "staging: binary path absent" >&2
+            find /usr/local -maxdepth 4 -type f -print >&2 || true
+            exit 1
+        fi
+        if [[ ! -x /usr/local/x-ui/x-ui ]]; then
+            echo "staging: binary path is not executable" >&2
+            ls -l /usr/local/x-ui/x-ui >&2 || true
+            exit 1
+        fi
         echo "staging: panel binary present"
         set +e
         setting_output=$(/usr/local/x-ui/x-ui setting -show 2>&1)
