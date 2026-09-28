@@ -27,7 +27,13 @@ docker run --rm \
     -e DEBIAN_FRONTEND=noninteractive \
     ubuntu:24.04 bash -euo pipefail -c '
         apt-get update -qq
-        apt-get install -y -qq --no-install-recommends ca-certificates curl jq openssl python3 sqlite3 tar procps > /dev/null
+        apt-get install -y -qq --no-install-recommends ca-certificates curl jq openssl python3 sqlite3 tar procps > /dev/null || true
+        for required in curl jq openssl python3 sqlite3 tar sha256sum; do
+            command -v "$required" >/dev/null || {
+                echo "required staging tool is unavailable: $required" >&2
+                exit 1
+            }
+        done
 
         mkdir -p /srv/release/CatCodeArbelin/CatX-UI/releases/download/dev-latest
         cp /assets/* /srv/release/CatCodeArbelin/CatX-UI/releases/download/dev-latest/
