@@ -566,7 +566,7 @@ jobs:
           XUI_DB_DSN: postgres://catx:catx@127.0.0.1:5432/catx?sslmode=disable
         run: |
           go test -count=1 ./internal/forkext/groupquota ./internal/forkext/trafficpolicy
-          go test -count=1 ./internal/database -run 'Postgres|MigrateData'
+          go test -count=1 ./internal/database -run 'Test(ClientWeeklyRenewMigration_Postgres|ClientHwidSchemaPostgres|Migrate_Postgres|HostAutoMigrateCreatesColumns_Postgres|MigrateData_)'
 
   # =================================
   #  Rolling dev channel (per-commit)

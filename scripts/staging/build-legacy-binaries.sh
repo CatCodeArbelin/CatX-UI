@@ -22,8 +22,11 @@ while [[ $# -gt 0 ]]; do
     # Older CatX snapshots predate the ignored embed directory.  A stub is
     # sufficient for the legacy binary used only as the known-good updater
     # starting point; the current release artifact supplies the real bundle.
-    mkdir -p "$work/internal/web/dist"
-    touch "$work/internal/web/dist/.gitkeep"
+    mkdir -p "$work/internal/web/dist/assets"
+    # Go's embed matcher must see a real file in the archived frontend tree;
+    # the current release artifact supplies the actual UI during qualification.
+    printf '<!doctype html><title>legacy staging placeholder</title>\n' > "$work/internal/web/dist/index.html"
+    printf 'legacy staging placeholder\n' > "$work/internal/web/dist/assets/index.txt"
     (cd "$work" && CGO_ENABLED=1 go build -buildvcs=false -o "$out_dir/$label/x-ui" .)
     chmod +x "$out_dir/$label/x-ui"
     rm -rf "$work"
