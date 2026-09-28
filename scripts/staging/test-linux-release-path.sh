@@ -99,8 +99,10 @@ EOF
             cat /tmp/install.log >&2 || true
             exit "$install_rc"
         fi
-        test -x /usr/local/x-ui/x-ui
-        /usr/local/x-ui/x-ui setting -show | grep -q "hasDefaultCredential: false"
+        echo "staging: install completed"
+        test -x /usr/local/x-ui/x-ui || { echo "installed panel binary is missing" >&2; find /usr/local/x-ui -maxdepth 2 -type f -print >&2 || true; exit 1; }
+        setting_output=$(/usr/local/x-ui/x-ui setting -show 2>&1) || { echo "$setting_output" >&2; exit 1; }
+        echo "$setting_output" | grep -q "hasDefaultCredential: false" || { echo "default credential state was not cleared" >&2; echo "$setting_output" >&2; exit 1; }
         /usr/local/x-ui/x-ui setting -username staging-admin -password staging-password -port 28080 -listenIP 127.0.0.1
         XUI_PORT=28080 /usr/local/x-ui/x-ui run >/tmp/x-ui.log 2>&1 &
         panel_pid=$!
