@@ -28,6 +28,26 @@ func (s *ClientService) ResetTrafficByEmail(inboundSvc *InboundService, email st
 	}
 
 	needRestart := false
+	if len(inboundIds) == 0 {
+		if rErr := inboundSvc.ResetClientTrafficByEmail(email); rErr != nil {
+			return false, rErr
+		}
+	} else {
+		applies := make([]inboundApply, 0, len(inboundIds))
+		for _, ibId := range inboundIds {
+			applies = append(applies, inboundApply{id: ibId, run: func() (bool, error) {
+				return inboundSvc.ResetClientTraffic(ibId, email)
+			}})
+		}
+		nr, applyErr := fanoutInboundApplies(applies)
+		if applyErr != nil {
+			return nr, applyErr
+		}
+		needRestart = nr
+	}
+
+	// Enable only once the counters are zero: a still-depleted client enabled
+	// first is switched off again by the next traffic tick.
 	if !rec.Enable {
 		updated := rec.ToClient()
 		updated.Enable = true
@@ -39,22 +59,7 @@ func (s *ClientService) ResetTrafficByEmail(inboundSvc *InboundService, email st
 			needRestart = true
 		}
 	}
-
-	if len(inboundIds) == 0 {
-		if rErr := inboundSvc.ResetClientTrafficByEmail(email); rErr != nil {
-			return false, rErr
-		}
-		return needRestart, nil
-	}
-
-	applies := make([]inboundApply, 0, len(inboundIds))
-	for _, ibId := range inboundIds {
-		applies = append(applies, inboundApply{id: ibId, run: func() (bool, error) {
-			return inboundSvc.ResetClientTraffic(ibId, email)
-		}})
-	}
-	nr, applyErr := fanoutInboundApplies(applies)
-	return needRestart || nr, applyErr
+	return needRestart, nil
 }
 
 func (s *ClientService) BulkResetTraffic(inboundSvc *InboundService, emails []string) (int, error) {

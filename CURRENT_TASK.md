@@ -55,3 +55,4 @@ commit. Keep `main`, tags, and production untouched throughout RC-1.
 - `docs/08_FRONTEND_UX.md`
 - `docs/15_DEFINITION_OF_DONE.md`
 - `docs/19_REPOSITORY_MAP.md`
+- `docs/21_RC1_UPSTREAM_SYNC.md`
