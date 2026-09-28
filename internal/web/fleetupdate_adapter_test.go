@@ -1,6 +1,7 @@
 package web
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/mhsanaei/3x-ui/v3/internal/forkext/fleetupdate"
@@ -9,7 +10,7 @@ import (
 
 func TestCorrelatePanelUpdateStatusRejectsStaleRun(t *testing.T) {
 	_, err := correlatePanelUpdateStatus("run-new", runtime.PanelUpdateStatus{RunID: "run-old", State: "success"})
-	if err != fleetupdate.ErrStaleStatus {
+	if !errors.Is(err, fleetupdate.ErrStaleStatus) {
 		t.Fatalf("error = %v, want stale status", err)
 	}
 }
