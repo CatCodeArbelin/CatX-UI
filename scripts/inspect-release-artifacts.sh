@@ -94,7 +94,9 @@ check_tar_archive() {
     local root
     root=$(mktemp -d)
     trap 'rm -rf "$root"' RETURN
-    tar -xzf "$archive" --no-same-owner --no-same-permissions -C "$root" || fail "cannot extract $name"
+    # Preserve executable bits for the binary check, but never restore archive
+    # ownership into the qualification workspace.
+    tar -xzf "$archive" --no-same-owner -C "$root" || fail "cannot extract $name"
     [[ -s "$root/x-ui/x-ui" ]] || fail "$name has no panel binary"
     [[ -x "$root/x-ui/x-ui" || "${CATX_ARTIFACT_TEST_MODE:-0}" == 1 ]] || fail "$name panel binary is not executable"
     [[ -s "$root/x-ui/x-ui.sh" ]] || fail "$name has no menu script"
