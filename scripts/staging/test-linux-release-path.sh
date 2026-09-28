@@ -98,7 +98,9 @@ EOF
             cp /assets/catx-ui-update.sh /usr/local/x-ui/update.sh
             cp /repo/x-ui.service.debian /usr/local/x-ui/x-ui.service.debian
             chmod +x /usr/local/x-ui/x-ui /usr/local/x-ui/x-ui.sh /usr/local/x-ui/update.sh
-            test "$(/usr/local/x-ui/x-ui -v 2>/dev/null || true)" != "0.1.0"
+            legacy_sha=$(sha256sum /usr/local/x-ui/x-ui | awk '{print $1}')
+            candidate_sha=$(tar -xOzf /assets/catx-ui-linux-amd64.tar.gz x-ui/x-ui | sha256sum | awk '{print $1}')
+            test "$legacy_sha" != "$candidate_sha"
 
             case "$label" in
                 production-baseline) run_id=900719925474099312345 ;;
