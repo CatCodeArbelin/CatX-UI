@@ -49,11 +49,12 @@ func (r ProviderResolver) Resolve(ctx context.Context, channel string) (ReleaseS
 }
 
 type Service struct {
-	db       *gorm.DB
-	enabled  bool
-	resolver ReleaseResolver
-	executor UpdateExecutor
-	mu       sync.Mutex
+	db              *gorm.DB
+	enabled         bool
+	resolver        ReleaseResolver
+	executor        UpdateExecutor
+	mutationEnabled bool
+	mu              sync.Mutex
 }
 
 var configured struct {
@@ -84,6 +85,8 @@ func (s *Service) SetExecutor(e UpdateExecutor) {
 		s.executor = e
 	}
 }
+
+func (s *Service) SetMutationEnabled(enabled bool) { s.mutationEnabled = enabled }
 
 func SetExecutor(e UpdateExecutor) {
 	if s := Current(); s != nil && e != nil {
@@ -165,6 +168,13 @@ func (s *Service) Plan(ctx context.Context, req PlanRequest) (Plan, error) {
 		return Plan{}, ErrDisabled
 	}
 	defaults(&req)
+	if !req.DryRun && (!s.mutationEnabled || !req.ConfirmProduction) {
+		_ = audit.Record(ctx, &audit.AuditEvent{EventType: "fleet_update.authorization", Outcome: "denied", ActorType: "user", TargetType: "update_campaign", Metadata: "{\"reason\":\"mutation_gate\"}"})
+		return Plan{}, ErrMutationDisabled
+	}
+	if !req.DryRun {
+		_ = audit.Record(ctx, &audit.AuditEvent{EventType: "fleet_update.authorization", Outcome: "success", ActorType: "user", TargetType: "update_campaign", Metadata: "{\"confirmed\":true}"})
+	}
 	release, err := s.resolver.Resolve(ctx, req.Channel)
 	if err != nil {
 		return Plan{}, err
@@ -177,7 +187,7 @@ func (s *Service) Plan(ctx context.Context, req PlanRequest) (Plan, error) {
 	if err := q.Order("id asc").Find(&nodes).Error; err != nil {
 		return Plan{}, err
 	}
-	c := Campaign{Name: req.Name, Channel: req.Channel, ReleaseTag: release.Tag, ReleaseAPIURL: release.APIURL, ReleaseHTMLURL: release.HTMLURL, DryRun: req.DryRun, CanaryCount: req.CanaryCount, BatchSize: req.BatchSize, MaxParallel: req.MaxParallel, HealthTimeoutSecs: req.HealthTimeoutSecs, SoakSeconds: req.SoakSeconds, StopOnFailure: *req.StopOnFailure, State: StatePreflight, Revision: 1}
+	c := Campaign{Name: req.Name, Channel: req.Channel, ReleaseTag: release.Tag, ReleaseAPIURL: release.APIURL, ReleaseHTMLURL: release.HTMLURL, DryRun: req.DryRun, MutationAuthorized: !req.DryRun && s.mutationEnabled && req.ConfirmProduction, CanaryCount: req.CanaryCount, BatchSize: req.BatchSize, MaxParallel: req.MaxParallel, HealthTimeoutSecs: req.HealthTimeoutSecs, SoakSeconds: req.SoakSeconds, StopOnFailure: *req.StopOnFailure, State: StatePreflight, Revision: 1}
 	if err := s.db.WithContext(ctx).Create(&c).Error; err != nil {
 		return Plan{}, err
 	}
@@ -286,6 +296,11 @@ func (s *Service) Reconcile(ctx context.Context, id uint, owner string) error {
 	if c.State == StateAborted || c.State == StateSucceeded || c.State == StateFailed {
 		return nil
 	}
+	if c.DryRun || !c.MutationAuthorized {
+		c.State = StateReady
+		c.Revision++
+		return s.db.WithContext(ctx).Save(&c).Error
+	}
 	var ts []Target
 	if err := s.db.WithContext(ctx).Where("campaign_id = ?", id).Order("id asc").Find(&ts).Error; err != nil {
 		return err
@@ -314,6 +329,7 @@ func (s *Service) Reconcile(ctx context.Context, id uint, owner string) error {
 			continue
 		}
 		ns := nodeSnapshot(n)
+		ns.ExpectedRunID = t.RunID
 		rel := ReleaseSnapshot{Channel: c.Channel, Tag: c.ReleaseTag, APIURL: c.ReleaseAPIURL, HTMLURL: c.ReleaseHTMLURL, ChecksumVerified: true}
 		if t.State == StateReady || t.State == StatePreflight || t.State == StatePending {
 			if reason := eligibility(ns, rel); reason != "" {
@@ -337,15 +353,29 @@ func (s *Service) Reconcile(ctx context.Context, id uint, owner string) error {
 						t.State = StateBlocked
 						t.BlockedReason = ReasonExecutionDisabled
 						t.Error = e.Error()
+					} else if errors.Is(e, ErrAmbiguousDispatch) {
+						t.State = StateUnknown
+						t.DispatchStatus = "ambiguous"
+						t.DispatchEvidence = dr.Evidence
+						t.Error = e.Error()
 					} else {
 						t.State = StateFailed
 						t.Error = e.Error()
 					}
+				} else if dr.Ambiguous {
+					t.State = StateUnknown
+					t.DispatchStatus = "ambiguous"
+					t.DispatchEvidence = dr.Evidence
+					t.Error = ErrAmbiguousDispatch.Error()
 				} else {
 					now := time.Now()
 					t.DispatchAt = &now
 					t.DispatchEvidence = dr.Evidence
+					t.RunID = dr.RunID
+					t.DispatchStatus = "accepted"
+					t.UpdateState = "pending"
 					t.State = StateWaitingRestart
+					auditTarget(ctx, "fleet_update.dispatch", &c, t, "accepted")
 				}
 			}
 			_ = s.saveTarget(t)
@@ -360,12 +390,31 @@ func (s *Service) Reconcile(ctx context.Context, id uint, owner string) error {
 				t.ObservedVersion = conv.PanelVersion
 				t.ObservedStatus = conv.NodeStatus
 				t.ObservedXray = conv.XrayState
-				if healthyConvergence(conv, rel) {
+				t.UpdateState = conv.UpdateState
+				if conv.ExitCode != 0 {
+					code := conv.ExitCode
+					t.UpdateExitCode = &code
+				}
+				t.UpdateFinishedAt = conv.FinishedAt
+				t.RolledBack = conv.RolledBack
+				t.RollbackHealthy = conv.RollbackHealthy
+				if conv.UpdateState == "failed" {
+					t.State = StateFailed
+					t.DispatchStatus = "completed"
+					t.Error = "node update failed"
+					auditTarget(ctx, "fleet_update.completion", &c, t, "failed")
+					if conv.RolledBack {
+						auditTarget(ctx, "fleet_update.rollback_evidence", &c, t, map[bool]string{true: "healthy", false: "attempted"}[conv.RollbackHealthy])
+					}
+				} else if healthyConvergence(conv, rel) {
 					if t.State != StateSoaking {
 						t.State = StateSoaking
+						started := time.Now()
+						t.SoakStartedAt = &started
 					}
-					if c.SoakSeconds == 0 || t.DispatchAt != nil && time.Since(*t.DispatchAt) >= time.Duration(c.SoakSeconds)*time.Second {
+					if c.SoakSeconds == 0 || t.SoakStartedAt != nil && time.Since(*t.SoakStartedAt) >= time.Duration(c.SoakSeconds)*time.Second {
 						t.State = StateSucceeded
+						auditTarget(ctx, "fleet_update.completion", &c, t, "success")
 					}
 				} else {
 					t.State = StateHealthCheck
@@ -408,6 +457,13 @@ func activeTarget(state string) bool {
 // planning order and therefore stable across process restarts. Translation
 // resources are validated alongside this orchestration contract in CI.
 func (s *Service) dispatchAllowed(c *Campaign, ts []Target, index int) bool {
+	if c.StopOnFailure {
+		for i := range ts {
+			if ts[i].State == StateFailed {
+				return false
+			}
+		}
+	}
 	active, succeeded, readyOrdinal := 0, 0, 0
 	for i := range ts {
 		if activeTarget(ts[i].State) {
@@ -484,7 +540,7 @@ func (s *Service) Retry(ctx context.Context, id uint) error {
 	if err := s.db.WithContext(ctx).Save(&c).Error; err != nil {
 		return err
 	}
-	err := s.db.WithContext(ctx).Model(&Target{}).Where("campaign_id = ? AND state IN ?", id, []string{StateFailed, StateUnknown, StateAborted, StateBlocked}).Updates(map[string]any{"state": StateReady, "blocked_reason": "", "error": ""}).Error
+	err := s.db.WithContext(ctx).Model(&Target{}).Where("campaign_id = ? AND state IN ?", id, []string{StateFailed, StateAborted, StateBlocked}).Updates(map[string]any{"state": StateReady, "blocked_reason": "", "error": "", "dispatch_status": "retry_requested"}).Error
 	if err == nil {
 		auditCampaign(ctx, "fleet_update.retry", &c, "success")
 	}
@@ -493,4 +549,8 @@ func (s *Service) Retry(ctx context.Context, id uint) error {
 
 func auditCampaign(ctx context.Context, event string, c *Campaign, outcome string) {
 	_ = audit.Record(ctx, &audit.AuditEvent{EventType: event, Outcome: outcome, ActorType: "user", TargetType: "update_campaign", TargetRef: fmt.Sprint(c.ID), Metadata: "{}"})
+}
+
+func auditTarget(ctx context.Context, event string, c *Campaign, t *Target, outcome string) {
+	_ = audit.Record(ctx, &audit.AuditEvent{EventType: event, Outcome: outcome, ActorType: "system", TargetType: "update_target", TargetRef: fmt.Sprintf("%d:%d", c.ID, t.NodeID), Metadata: fmt.Sprintf("{\"campaignId\":%d,\"runId\":%q}", c.ID, t.RunID)})
 }

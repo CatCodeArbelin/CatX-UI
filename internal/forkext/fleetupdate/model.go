@@ -32,26 +32,27 @@ const (
 )
 
 type Campaign struct {
-	ID                uint      `json:"id" gorm:"primaryKey"`
-	Name              string    `json:"name" gorm:"size:160;not null"`
-	Channel           string    `json:"channel" gorm:"size:16;not null;index"`
-	ReleaseTag        string    `json:"releaseTag" gorm:"size:64;not null"`
-	ReleaseAPIURL     string    `json:"releaseApiUrl" gorm:"size:512;not null"`
-	ReleaseHTMLURL    string    `json:"releaseHtmlUrl" gorm:"size:512;not null"`
-	DryRun            bool      `json:"dryRun" gorm:"not null"`
-	CanaryCount       int       `json:"canaryCount" gorm:"not null;default:0"`
-	BatchSize         int       `json:"batchSize" gorm:"not null;default:1"`
-	MaxParallel       int       `json:"maxParallel" gorm:"not null;default:1"`
-	HealthTimeoutSecs int       `json:"healthTimeoutSecs" gorm:"not null;default:300"`
-	SoakSeconds       int       `json:"soakSeconds" gorm:"not null;default:0"`
-	StopOnFailure     bool      `json:"stopOnFailure" gorm:"not null;default:true"`
-	State             string    `json:"state" gorm:"size:32;not null;index"`
-	Error             string    `json:"error,omitempty" gorm:"size:500"`
-	LeaseOwner        string    `json:"-" gorm:"size:120;index"`
-	LeaseUntil        time.Time `json:"-" gorm:"index"`
-	Revision          int64     `json:"revision" gorm:"not null;default:1"`
-	CreatedAt         time.Time `json:"createdAt"`
-	UpdatedAt         time.Time `json:"updatedAt"`
+	ID                 uint      `json:"id" gorm:"primaryKey"`
+	Name               string    `json:"name" gorm:"size:160;not null"`
+	Channel            string    `json:"channel" gorm:"size:16;not null;index"`
+	ReleaseTag         string    `json:"releaseTag" gorm:"size:64;not null"`
+	ReleaseAPIURL      string    `json:"releaseApiUrl" gorm:"size:512;not null"`
+	ReleaseHTMLURL     string    `json:"releaseHtmlUrl" gorm:"size:512;not null"`
+	DryRun             bool      `json:"dryRun" gorm:"not null"`
+	CanaryCount        int       `json:"canaryCount" gorm:"not null;default:0"`
+	BatchSize          int       `json:"batchSize" gorm:"not null;default:1"`
+	MaxParallel        int       `json:"maxParallel" gorm:"not null;default:1"`
+	HealthTimeoutSecs  int       `json:"healthTimeoutSecs" gorm:"not null;default:300"`
+	SoakSeconds        int       `json:"soakSeconds" gorm:"not null;default:0"`
+	StopOnFailure      bool      `json:"stopOnFailure" gorm:"not null;default:true"`
+	MutationAuthorized bool      `json:"mutationAuthorized" gorm:"not null;default:false"`
+	State              string    `json:"state" gorm:"size:32;not null;index"`
+	Error              string    `json:"error,omitempty" gorm:"size:500"`
+	LeaseOwner         string    `json:"-" gorm:"size:120;index"`
+	LeaseUntil         time.Time `json:"-" gorm:"index"`
+	Revision           int64     `json:"revision" gorm:"not null;default:1"`
+	CreatedAt          time.Time `json:"createdAt"`
+	UpdatedAt          time.Time `json:"updatedAt"`
 }
 
 func (Campaign) TableName() string { return "fork_update_campaigns" }
@@ -74,6 +75,14 @@ type Target struct {
 	ObservedXray     string     `json:"observedXray" gorm:"size:32"`
 	DispatchKey      string     `json:"dispatchKey" gorm:"size:100;uniqueIndex"`
 	DispatchEvidence string     `json:"dispatchEvidence,omitempty" gorm:"size:500"`
+	RunID            string     `json:"runId,omitempty" gorm:"size:80;index"`
+	DispatchStatus   string     `json:"dispatchStatus,omitempty" gorm:"size:32"`
+	UpdateState      string     `json:"updateState,omitempty" gorm:"size:32"`
+	UpdateExitCode   *int       `json:"updateExitCode,omitempty"`
+	UpdateFinishedAt int64      `json:"updateFinishedAt,omitempty"`
+	RolledBack       bool       `json:"rolledBack"`
+	RollbackHealthy  bool       `json:"rollbackHealthy"`
+	SoakStartedAt    *time.Time `json:"soakStartedAt,omitempty"`
 	LeaseOwner       string     `json:"-" gorm:"size:120;index"`
 	LeaseUntil       time.Time  `json:"-" gorm:"index"`
 	Attempts         int        `json:"attempts" gorm:"not null;default:0"`
@@ -104,6 +113,7 @@ type NodeSnapshot struct {
 	LastHeartbeat int64
 	PanelVersion  string
 	XrayState     string
+	ExpectedRunID string `json:"-"`
 }
 
 type PlanRequest struct {
@@ -117,6 +127,7 @@ type PlanRequest struct {
 	HealthTimeoutSecs int    `json:"healthTimeoutSecs"`
 	SoakSeconds       int    `json:"soakSeconds"`
 	StopOnFailure     *bool  `json:"stopOnFailure"`
+	ConfirmProduction bool   `json:"confirmProduction"`
 }
 
 type Plan struct {

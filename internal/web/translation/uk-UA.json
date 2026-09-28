@@ -2559,7 +2559,15 @@
       "campaigns": "Campaigns",
       "reconcile": "Reconcile",
       "retry": "Retry",
-      "abort": "Abort"
+      "abort": "Abort",
+      "dryRun": "Dry run (no mutation)",
+      "confirmProduction": "Confirm production update",
+      "runId": "Run ID",
+      "dispatch": "Dispatch",
+      "result": "Update result",
+      "rollback": "Rollback",
+      "soak": "Soak",
+      "failure": "Failure"
     },
     "audit": {
       "title": "Audit",

@@ -8,20 +8,35 @@ import (
 	"time"
 )
 
-var ErrMutationDisabled = errors.New("fleet update execution is disabled in Stage A")
+var (
+	ErrMutationDisabled  = errors.New("fleet update execution is disabled")
+	ErrAmbiguousDispatch = errors.New("update dispatch outcome is ambiguous; reconcile before retry")
+	ErrStaleStatus       = errors.New("node update status does not match the persisted run ID")
+)
 
 type PreflightResult struct {
 	Supported bool
 	Reason    string
 }
 type (
-	DispatchResult    struct{ Evidence string }
+	DispatchResult struct {
+		Evidence  string
+		RunID     string
+		Ambiguous bool
+	}
 	ConvergenceResult struct {
 		FreshHeartbeat   bool
 		PanelVersion     string
 		NodeStatus       string
 		XrayState        string
 		RollbackEvidence string
+		RunID            string
+		UpdateState      string
+		ExitCode         int
+		FinishedAt       int64
+		RolledBack       bool
+		RollbackHealthy  bool
+		UpdateEvidence   bool
 	}
 )
 
@@ -74,13 +89,20 @@ func (f *FakeExecutor) Reconcile(_ context.Context, n NodeSnapshot, _ ReleaseSna
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	if r, ok := f.Nodes[n.ID]; ok {
+		if r.UpdateState == "" {
+			r.UpdateState = "success"
+			r.UpdateEvidence = true
+		}
 		return r, nil
 	}
 	return ConvergenceResult{}, nil
 }
 
 func healthyConvergence(c ConvergenceResult, release ReleaseSnapshot) bool {
-	if !c.FreshHeartbeat || c.PanelVersion != release.Tag {
+	if !c.UpdateEvidence || c.UpdateState != "success" {
+		return false
+	}
+	if !c.FreshHeartbeat || !sameVersion(c.PanelVersion, release.Tag) {
 		return false
 	}
 	if c.NodeStatus != "online" {

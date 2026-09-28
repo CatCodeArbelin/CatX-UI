@@ -35,6 +35,7 @@ func testService(t *testing.T) (*Service, *FakeExecutor) {
 	}
 	f := &FakeExecutor{Nodes: map[int]ConvergenceResult{}, DispatchErr: map[int]error{}}
 	s := New(db, true)
+	s.SetMutationEnabled(true)
 	s.SetResolver(testResolver{})
 	s.SetExecutor(f)
 	return s, f
@@ -56,7 +57,7 @@ func TestPlanSnapshotsAndBlocks(t *testing.T) {
 
 func TestCanaryBatchAndParallelism(t *testing.T) {
 	s, f := testService(t)
-	p, err := s.Plan(context.Background(), PlanRequest{NodeIDs: []int{1, 2, 3, 4}, CanaryCount: 1, BatchSize: 2, MaxParallel: 2})
+	p, err := s.Plan(context.Background(), PlanRequest{NodeIDs: []int{1, 2, 3, 4}, CanaryCount: 1, BatchSize: 2, MaxParallel: 2, ConfirmProduction: true})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -76,9 +77,53 @@ func TestFeatureDisabledIsNoop(t *testing.T) {
 	}
 }
 
+func TestProductionMutationRequiresSettingAndConfirmation(t *testing.T) {
+	s, _ := testService(t)
+	s.SetMutationEnabled(false)
+	if _, err := s.Plan(context.Background(), PlanRequest{NodeIDs: []int{1}, ConfirmProduction: true}); !errors.Is(err, ErrMutationDisabled) {
+		t.Fatalf("without mutation setting error = %v, want gate", err)
+	}
+	s.SetMutationEnabled(true)
+	if _, err := s.Plan(context.Background(), PlanRequest{NodeIDs: []int{1}}); !errors.Is(err, ErrMutationDisabled) {
+		t.Fatalf("without confirmation error = %v, want gate", err)
+	}
+}
+
+func TestDryRunNeverDispatches(t *testing.T) {
+	s, f := testService(t)
+	p, err := s.Plan(context.Background(), PlanRequest{NodeIDs: []int{1}, DryRun: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Reconcile(context.Background(), p.Campaign.ID, "test"); err != nil {
+		t.Fatal(err)
+	}
+	if len(f.Dispatches) != 0 {
+		t.Fatalf("dry-run dispatches = %v, want none", f.Dispatches)
+	}
+}
+
+func TestAmbiguousDispatchIsNotRedispatched(t *testing.T) {
+	s, f := testService(t)
+	f.DispatchErr[1] = ErrAmbiguousDispatch
+	p, err := s.Plan(context.Background(), PlanRequest{NodeIDs: []int{1}, ConfirmProduction: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Reconcile(context.Background(), p.Campaign.ID, "test"); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Reconcile(context.Background(), p.Campaign.ID, "test"); err != nil {
+		t.Fatal(err)
+	}
+	if len(f.Dispatches) != 1 {
+		t.Fatalf("ambiguous dispatches = %v, want exactly one", f.Dispatches)
+	}
+}
+
 func TestAbortAndRetry(t *testing.T) {
 	s, _ := testService(t)
-	p, err := s.Plan(context.Background(), PlanRequest{NodeIDs: []int{1}})
+	p, err := s.Plan(context.Background(), PlanRequest{NodeIDs: []int{1}, ConfirmProduction: true})
 	if err != nil {
 		t.Fatal(err)
 	}

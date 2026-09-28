@@ -1520,6 +1520,9 @@ export const SCHEMAS: Record<string, unknown> = {
       "maxParallel": {
         "type": "integer"
       },
+      "mutationAuthorized": {
+        "type": "boolean"
+      },
       "name": {
         "type": "string"
       },
@@ -1559,6 +1562,7 @@ export const SCHEMAS: Record<string, unknown> = {
       "healthTimeoutSecs",
       "id",
       "maxParallel",
+      "mutationAuthorized",
       "name",
       "releaseApiUrl",
       "releaseHtmlUrl",
@@ -4269,6 +4273,9 @@ export const SCHEMAS: Record<string, unknown> = {
       "maxParallel": {
         "type": "integer"
       },
+      "mutationAuthorized": {
+        "type": "boolean"
+      },
       "name": {
         "type": "string"
       },
@@ -4314,6 +4321,7 @@ export const SCHEMAS: Record<string, unknown> = {
       "healthTimeoutSecs",
       "id",
       "maxParallel",
+      "mutationAuthorized",
       "name",
       "releaseApiUrl",
       "releaseHtmlUrl",
@@ -4337,6 +4345,9 @@ export const SCHEMAS: Record<string, unknown> = {
       },
       "channel": {
         "type": "string"
+      },
+      "confirmProduction": {
+        "type": "boolean"
       },
       "dryRun": {
         "type": "boolean"
@@ -4368,6 +4379,7 @@ export const SCHEMAS: Record<string, unknown> = {
       "batchSize",
       "canaryCount",
       "channel",
+      "confirmProduction",
       "dryRun",
       "healthTimeoutSecs",
       "maxParallel",
@@ -5102,6 +5114,9 @@ export const SCHEMAS: Record<string, unknown> = {
       "dispatchKey": {
         "type": "string"
       },
+      "dispatchStatus": {
+        "type": "string"
+      },
       "error": {
         "type": "string"
       },
@@ -5129,7 +5144,32 @@ export const SCHEMAS: Record<string, unknown> = {
       "observedXray": {
         "type": "string"
       },
+      "rollbackHealthy": {
+        "type": "boolean"
+      },
+      "rolledBack": {
+        "type": "boolean"
+      },
+      "runId": {
+        "type": "string"
+      },
+      "soakStartedAt": {
+        "format": "date-time",
+        "nullable": true,
+        "type": "string"
+      },
       "state": {
+        "type": "string"
+      },
+      "updateExitCode": {
+        "nullable": true,
+        "type": "integer"
+      },
+      "updateFinishedAt": {
+        "format": "int64",
+        "type": "integer"
+      },
+      "updateState": {
         "type": "string"
       },
       "updatedAt": {
@@ -5149,6 +5189,8 @@ export const SCHEMAS: Record<string, unknown> = {
       "observedStatus",
       "observedVersion",
       "observedXray",
+      "rollbackHealthy",
+      "rolledBack",
       "state",
       "updatedAt"
     ],

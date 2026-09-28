@@ -25,6 +25,7 @@ const (
 	FlagMetrics         Flag = "metrics.enabled"
 	FlagSelfService     Flag = "self_service.enabled"
 	FlagFleetUpdates    Flag = "fleet_updates.enabled"
+	FlagFleetMutation   Flag = "fleet_updates.mutation.enabled"
 )
 
 var allFlags = [...]Flag{
@@ -38,6 +39,7 @@ var allFlags = [...]Flag{
 	FlagMetrics,
 	FlagSelfService,
 	FlagFleetUpdates,
+	FlagFleetMutation,
 }
 
 func settingKey(flag Flag) string {

@@ -1,5 +1,17 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, Button, Card, Form, Input, InputNumber, Select, Space, Table, Tag } from 'antd';
+import {
+  Alert,
+  Button,
+  Card,
+  Checkbox,
+  Form,
+  Input,
+  InputNumber,
+  Select,
+  Space,
+  Table,
+  Tag,
+} from 'antd';
 import { useTranslation } from 'react-i18next';
 import { HttpUtil } from '@/utils';
 
@@ -10,6 +22,13 @@ type Target = {
   state: string;
   blockedReason?: string;
   observedVersion?: string;
+  runId?: string;
+  dispatchStatus?: string;
+  updateState?: string;
+  rolledBack?: boolean;
+  rollbackHealthy?: boolean;
+  error?: string;
+  soakStartedAt?: string;
 };
 type Campaign = {
   id: number;
@@ -46,6 +65,7 @@ export default function FleetUpdatePage() {
     healthTimeoutSecs?: number;
     soakSeconds?: number;
     dryRun?: boolean;
+    confirmProduction?: boolean;
   }) {
     const result = await HttpUtil.post<Plan>('/panel/api/fleet-updates/campaigns', values);
     if (result.success && result.obj) {
@@ -73,6 +93,7 @@ export default function FleetUpdatePage() {
             healthTimeoutSecs: 300,
             soakSeconds: 0,
             dryRun: true,
+            confirmProduction: false,
           }}
         >
           <Form.Item name="name">
@@ -94,6 +115,14 @@ export default function FleetUpdatePage() {
           </Form.Item>
           <Form.Item name="maxParallel">
             <InputNumber min={1} placeholder={t('fork.fleetUpdate.parallel', 'Parallel')} />
+          </Form.Item>
+          <Form.Item name="dryRun" valuePropName="checked">
+            <Checkbox>{t('fork.fleetUpdate.dryRun', 'Dry run (no mutation)')}</Checkbox>
+          </Form.Item>
+          <Form.Item name="confirmProduction" valuePropName="checked">
+            <Checkbox>
+              {t('fork.fleetUpdate.confirmProduction', 'Confirm production update')}
+            </Checkbox>
           </Form.Item>
           <Button htmlType="submit" type="primary">
             {t('fork.fleetUpdate.plan', 'Plan dry run')}
@@ -144,6 +173,19 @@ export default function FleetUpdatePage() {
               { title: t('status', 'Status'), render: (_, r) => <Tag>{r.state}</Tag> },
               { title: t('reason', 'Reason'), dataIndex: 'blockedReason' },
               { title: t('version', 'Version'), dataIndex: 'observedVersion' },
+              { title: t('fork.fleetUpdate.runId', 'Run ID'), dataIndex: 'runId' },
+              { title: t('fork.fleetUpdate.dispatch', 'Dispatch'), dataIndex: 'dispatchStatus' },
+              { title: t('fork.fleetUpdate.result', 'Update result'), dataIndex: 'updateState' },
+              {
+                title: t('fork.fleetUpdate.rollback', 'Rollback'),
+                render: (_, r) =>
+                  r.rolledBack ? (r.rollbackHealthy ? 'healthy' : 'attempted') : '—',
+              },
+              {
+                title: t('fork.fleetUpdate.soak', 'Soak'),
+                render: (_, r) => (r.state === 'soaking' ? r.soakStartedAt || 'active' : r.state),
+              },
+              { title: t('fork.fleetUpdate.failure', 'Failure'), dataIndex: 'error' },
             ]}
             pagination={false}
           />

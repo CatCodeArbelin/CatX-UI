@@ -377,6 +377,7 @@ export interface Campaign {
   healthTimeoutSecs: number;
   id: number;
   maxParallel: number;
+  mutationAuthorized: boolean;
   name: string;
   releaseApiUrl: string;
   releaseHtmlUrl: string;
@@ -995,6 +996,7 @@ export interface Plan {
   healthTimeoutSecs: number;
   id: number;
   maxParallel: number;
+  mutationAuthorized: boolean;
   name: string;
   releaseApiUrl: string;
   releaseHtmlUrl: string;
@@ -1011,6 +1013,7 @@ export interface PlanRequest {
   batchSize: number;
   canaryCount: number;
   channel: string;
+  confirmProduction: boolean;
   dryRun: boolean;
   healthTimeoutSecs: number;
   maxParallel: number;
@@ -1202,6 +1205,7 @@ export interface Target {
   dispatchAt?: string | null;
   dispatchEvidence?: string;
   dispatchKey: string;
+  dispatchStatus?: string;
   error?: string;
   id: number;
   initialVersion: string;
@@ -1211,7 +1215,14 @@ export interface Target {
   observedStatus: string;
   observedVersion: string;
   observedXray: string;
+  rollbackHealthy: boolean;
+  rolledBack: boolean;
+  runId?: string;
+  soakStartedAt?: string | null;
   state: string;
+  updateExitCode?: number | null;
+  updateFinishedAt?: number;
+  updateState?: string;
   updatedAt: string;
 }
 

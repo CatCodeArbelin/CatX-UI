@@ -57,6 +57,10 @@ func RegisterMigrations(db *gorm.DB) error {
 	portal.Configure(db, portalEnabled)
 	fleetEnabled, _ := NewSettings(db).Enabled(FlagFleetUpdates)
 	fleetupdate.Configure(db, fleetEnabled)
+	fleetMutationEnabled, _ := NewSettings(db).Enabled(FlagFleetMutation)
+	if s := fleetupdate.Current(); s != nil {
+		s.SetMutationEnabled(fleetMutationEnabled)
+	}
 	auditEnabled, _ := NewSettings(db).Enabled(FlagAudit)
 	webhooksEnabled, _ := NewSettings(db).Enabled(FlagWebhooks)
 	if auditEnabled {

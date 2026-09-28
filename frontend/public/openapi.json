@@ -1546,6 +1546,9 @@
           "maxParallel": {
             "type": "integer"
           },
+          "mutationAuthorized": {
+            "type": "boolean"
+          },
           "name": {
             "type": "string"
           },
@@ -1585,6 +1588,7 @@
           "healthTimeoutSecs",
           "id",
           "maxParallel",
+          "mutationAuthorized",
           "name",
           "releaseApiUrl",
           "releaseHtmlUrl",
@@ -4295,6 +4299,9 @@
           "maxParallel": {
             "type": "integer"
           },
+          "mutationAuthorized": {
+            "type": "boolean"
+          },
           "name": {
             "type": "string"
           },
@@ -4340,6 +4347,7 @@
           "healthTimeoutSecs",
           "id",
           "maxParallel",
+          "mutationAuthorized",
           "name",
           "releaseApiUrl",
           "releaseHtmlUrl",
@@ -4363,6 +4371,9 @@
           },
           "channel": {
             "type": "string"
+          },
+          "confirmProduction": {
+            "type": "boolean"
           },
           "dryRun": {
             "type": "boolean"
@@ -4394,6 +4405,7 @@
           "batchSize",
           "canaryCount",
           "channel",
+          "confirmProduction",
           "dryRun",
           "healthTimeoutSecs",
           "maxParallel",
@@ -5128,6 +5140,9 @@
           "dispatchKey": {
             "type": "string"
           },
+          "dispatchStatus": {
+            "type": "string"
+          },
           "error": {
             "type": "string"
           },
@@ -5155,7 +5170,32 @@
           "observedXray": {
             "type": "string"
           },
+          "rollbackHealthy": {
+            "type": "boolean"
+          },
+          "rolledBack": {
+            "type": "boolean"
+          },
+          "runId": {
+            "type": "string"
+          },
+          "soakStartedAt": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
           "state": {
+            "type": "string"
+          },
+          "updateExitCode": {
+            "nullable": true,
+            "type": "integer"
+          },
+          "updateFinishedAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "updateState": {
             "type": "string"
           },
           "updatedAt": {
@@ -5175,6 +5215,8 @@
           "observedStatus",
           "observedVersion",
           "observedXray",
+          "rollbackHealthy",
+          "rolledBack",
           "state",
           "updatedAt"
         ],
@@ -19076,6 +19118,7 @@
                     "healthTimeoutSecs": 0,
                     "id": 0,
                     "maxParallel": 0,
+                    "mutationAuthorized": false,
                     "name": "",
                     "releaseApiUrl": "",
                     "releaseHtmlUrl": "",
@@ -19092,6 +19135,7 @@
                         "dispatchAt": null,
                         "dispatchEvidence": "",
                         "dispatchKey": "",
+                        "dispatchStatus": "",
                         "error": "",
                         "id": 0,
                         "initialVersion": "",
@@ -19101,7 +19145,14 @@
                         "observedStatus": "",
                         "observedVersion": "",
                         "observedXray": "",
+                        "rollbackHealthy": false,
+                        "rolledBack": false,
+                        "runId": "",
+                        "soakStartedAt": null,
                         "state": "",
+                        "updateExitCode": null,
+                        "updateFinishedAt": 0,
+                        "updateState": "",
                         "updatedAt": "2025-01-01T00:00:00Z"
                       }
                     ],
@@ -19154,6 +19205,7 @@
                       "healthTimeoutSecs": 0,
                       "id": 0,
                       "maxParallel": 0,
+                      "mutationAuthorized": false,
                       "name": "",
                       "releaseApiUrl": "",
                       "releaseHtmlUrl": "",
@@ -19221,6 +19273,7 @@
                     "healthTimeoutSecs": 0,
                     "id": 0,
                     "maxParallel": 0,
+                    "mutationAuthorized": false,
                     "name": "",
                     "releaseApiUrl": "",
                     "releaseHtmlUrl": "",
@@ -19237,6 +19290,7 @@
                         "dispatchAt": null,
                         "dispatchEvidence": "",
                         "dispatchKey": "",
+                        "dispatchStatus": "",
                         "error": "",
                         "id": 0,
                         "initialVersion": "",
@@ -19246,7 +19300,14 @@
                         "observedStatus": "",
                         "observedVersion": "",
                         "observedXray": "",
+                        "rollbackHealthy": false,
+                        "rolledBack": false,
+                        "runId": "",
+                        "soakStartedAt": null,
                         "state": "",
+                        "updateExitCode": null,
+                        "updateFinishedAt": 0,
+                        "updateState": "",
                         "updatedAt": "2025-01-01T00:00:00Z"
                       }
                     ],
@@ -19308,6 +19369,7 @@
                     "healthTimeoutSecs": 0,
                     "id": 0,
                     "maxParallel": 0,
+                    "mutationAuthorized": false,
                     "name": "",
                     "releaseApiUrl": "",
                     "releaseHtmlUrl": "",
@@ -19374,6 +19436,7 @@
                     "healthTimeoutSecs": 0,
                     "id": 0,
                     "maxParallel": 0,
+                    "mutationAuthorized": false,
                     "name": "",
                     "releaseApiUrl": "",
                     "releaseHtmlUrl": "",
@@ -19440,6 +19503,7 @@
                     "healthTimeoutSecs": 0,
                     "id": 0,
                     "maxParallel": 0,
+                    "mutationAuthorized": false,
                     "name": "",
                     "releaseApiUrl": "",
                     "releaseHtmlUrl": "",
