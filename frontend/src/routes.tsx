@@ -54,9 +54,9 @@ const routes: RouteObject[] = [
       { path: 'outbound', element: withSuspense(<XrayPage />) },
       { path: 'routing', element: withSuspense(<XrayPage />) },
       { path: 'api-docs', element: withSuspense(<ApiDocsPage />) },
-        { path: 'portal', element: withSuspense(<PortalPage />) },
-        ...forkRoutes,
-        { path: 'sponsors', element: withSuspense(<SponsorsPage />) },
+      { path: 'portal', element: withSuspense(<PortalPage />) },
+      ...forkRoutes,
+      { path: 'sponsors', element: withSuspense(<SponsorsPage />) },
     ],
   },
 ];

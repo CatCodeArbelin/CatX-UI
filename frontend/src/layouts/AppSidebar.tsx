@@ -45,8 +45,8 @@ import { formatPanelVersion } from '@/lib/panel-version';
 import { pauseAnimationsUntilLeave, useTheme } from '@/hooks/useTheme';
 import { useAllSettings } from '@/api/queries/useAllSettings';
 import { useCommandPalette } from '@/components/command-palette/useCommandPalette';
-  import { forkNavigationItems } from '@/forkext/registry';
-  import SponsorSlot from '@/components/sponsor/SponsorSlot';
+import { forkNavigationItems } from '@/forkext/registry';
+import SponsorSlot from '@/components/sponsor/SponsorSlot';
 import './AppSidebar.css';
 
 const DONATE_URL = 'https://donate.sanaei.dev/';

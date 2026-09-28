@@ -420,18 +420,18 @@ export default function CommandPalette() {
         keywords: ['api', 'api docs', 'swagger', 'rest api', 'endpoints'],
         icon: <ApiOutlined />,
       },
-        ...forkNavigationItems.map((item) => ({
+      ...forkNavigationItems.map((item) => ({
         path: item.path,
         title: item.label,
         keywords: [item.label.toLowerCase(), 'fork'],
         icon: <FileTextOutlined />,
       })),
-        {
-          path: '/sponsors',
-          title: t('menu.sponsors'),
-          keywords: ['sponsors', 'sponsor', 'partners'],
-          icon: <CrownOutlined />,
-        },
+      {
+        path: '/sponsors',
+        title: t('menu.sponsors'),
+        keywords: ['sponsors', 'sponsor', 'partners'],
+        icon: <CrownOutlined />,
+      },
     ];
 
     pages
