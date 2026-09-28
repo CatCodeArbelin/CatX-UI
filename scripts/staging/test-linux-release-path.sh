@@ -91,8 +91,10 @@ EOF
         export XUI_DB_FOLDER=/etc/x-ui XUI_UPDATE_STATUS_FILE=/etc/x-ui/update-status.json
 
         # A. Fresh install through the supported installer path.
+        printf "%s\n" "$install_script" >/tmp/staging-install.sh
+        chmod 700 /tmp/staging-install.sh
         set +e
-        bash -x -c "$install_script" -- dev-latest < /dev/null >/tmp/install.log 2>&1
+        bash -x /tmp/staging-install.sh dev-latest < /dev/null >/tmp/install.log 2>&1
         install_rc=$?
         set -e
         echo "staging: installer exit code $install_rc" >&2
@@ -168,8 +170,10 @@ EOF
                 pre-rc-develop) run_id=900719925474099312346 ;;
                 *) echo "unexpected legacy label: $label" >&2; exit 1 ;;
             esac
+            printf "%s\n" "$update_script" >/tmp/staging-update.sh
+            chmod 700 /tmp/staging-update.sh
             set +e
-            XUI_UPDATE_RUN_ID="$run_id" XUI_UPDATE_TAG=dev-latest bash -c "$update_script" -- >/tmp/update-$label.log 2>&1 < /dev/null
+            XUI_UPDATE_RUN_ID="$run_id" XUI_UPDATE_TAG=dev-latest bash /tmp/staging-update.sh >/tmp/update-$label.log 2>&1 < /dev/null
             update_rc=$?
             set -e
             if [[ "$update_rc" -ne 0 ]]; then
@@ -196,7 +200,7 @@ EOF
         printf corruption >> /srv/release/CatCodeArbelin/CatX-UI/releases/download/dev-latest/catx-ui-linux-amd64.tar.gz
         sha256sum /srv/release/CatCodeArbelin/CatX-UI/releases/download/dev-latest/catx-ui-linux-amd64.tar.gz > /srv/release/CatCodeArbelin/CatX-UI/releases/download/dev-latest/catx-ui-linux-amd64.tar.gz.sha256
         set +e
-        XUI_UPDATE_RUN_ID=900719925474099312347 XUI_UPDATE_TAG=dev-latest bash -c "$update_script" -- >/tmp/update-corrupt.log 2>&1 < /dev/null
+        XUI_UPDATE_RUN_ID=900719925474099312347 XUI_UPDATE_TAG=dev-latest bash /tmp/staging-update.sh >/tmp/update-corrupt.log 2>&1 < /dev/null
         corrupt_rc=$?
         set -e
         test "$corrupt_rc" -ne 0
