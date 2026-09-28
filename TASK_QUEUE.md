@@ -360,7 +360,7 @@ Includes:
 
 ---
 
-## WP-6B — Speed / Rolling Quota / Soft Throttle — CURRENT
+## WP-6B — Speed / Rolling Quota / Soft Throttle — DONE
 
 Recommended model: `Sol High`
 
@@ -376,6 +376,8 @@ Includes:
 # PHASE 7 — Security / Anomaly
 
 ## WP-7A — Risk Intelligence
+
+Status: DONE
 
 Recommended model: `Sol Medium`
 
@@ -394,6 +396,8 @@ No automatic ban by default.
 
 ## WP-8A — Audit / Webhooks / Metrics
 
+Status: DONE
+
 Recommended model: `Luna Medium`
 
 Includes:
@@ -408,6 +412,8 @@ Reuse upstream event bus for notifications, not as durable audit storage.
 
 ## WP-8B — Self-service / Host Visibility / Fleet UI
 
+Status: DONE
+
 Recommended model: `Luna Medium`, with security review for self-service.
 
 Includes:
@@ -420,9 +426,25 @@ Includes:
 
 ## WP-8C — Multi-node Update Orchestration
 
+Status: DONE
+
 Recommended model: `Sol High`
 
 Only after single-node updater/rollback is proven.
+
+# RELEASE CANDIDATES
+
+## RC-1 — Upstream Sync & Release Candidate Hardening — DONE
+
+Merged into `develop` with merge commit `ec6fbc3b`. The exact pinned upstream
+commit and RC-1 verification records are retained in
+`docs/21_RC1_UPSTREAM_SYNC.md`.
+
+## RC-2 — Staging Qualification & Release Engineering — CURRENT
+
+Qualify release artifacts, Linux installation/upgrades, populated migrations,
+the real node-local updater, rollback, disposable fleet rollout, feature-off
+compatibility, secret boundaries, resource soak, and first-RC documentation.
 
 ---
 

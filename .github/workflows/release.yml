@@ -9,6 +9,7 @@ on:
     branches:
       - main
       - "feature/rc1-*"
+      - "feature/rc2-*"
     tags:
       - "v*.*.*"
     paths:
@@ -23,6 +24,7 @@ on:
       - "x-ui.service.arch"
       - "x-ui.service.rhel"
       - ".github/workflows/release.yml"
+      - ".github/workflows/fork-verify.yml"
   pull_request:
     paths:
       - "**.go"
@@ -36,6 +38,7 @@ on:
       - "x-ui.service.arch"
       - "x-ui.service.rhel"
       - ".github/workflows/release.yml"
+      - ".github/workflows/fork-verify.yml"
 
 jobs:
   validate-release-identity:
@@ -110,7 +113,17 @@ jobs:
         run: |
           source internal/forkrelease/identity.env
           CURL_RETRY="--retry 5 --retry-all-errors --retry-delay 3"
-          fetch() { wget -q --tries=5 --waitretry=10 --retry-on-http-error=429,500,502,503 "$@"; }
+          fetch() {
+            local attempt
+            for attempt in 1 2 3; do
+              if wget -q --tries=5 --waitretry=10 --retry-on-http-error=429,500,502,503 "$@"; then
+                return 0
+              fi
+              echo "download attempt ${attempt}/3 failed; retrying" >&2
+              sleep 5
+            done
+            return 1
+          }
           export CGO_ENABLED=1
           export GOOS=linux
           export GOARCH=${{ matrix.platform }}
@@ -470,6 +483,9 @@ jobs:
             "upstreamBaseVersion": "${upstream_version}",
             "bundledXrayVersion": "${CATX_XRAY_VERSION}",
             "channel": "$([[ "$GITHUB_REF" == refs/tags/* ]] && echo stable || echo dev)",
+            "buildCommit": "${GITHUB_SHA}",
+            "releaseApiUrl": "https://api.github.com/repos/${CATX_RELEASE_OWNER}/${CATX_RELEASE_REPOSITORY}/releases/${GITHUB_REF_NAME}",
+            "releaseHtmlUrl": "https://github.com/${CATX_RELEASE_OWNER}/${CATX_RELEASE_REPOSITORY}/releases/tag/${GITHUB_REF_NAME}",
             "changelogAsset": "catx-ui-changelog.txt",
             "migrationNotes": "The transactional updater snapshots database/config state and runs the candidate x-ui migrate command before service start.",
             "supportedLinuxArchitectures": ["amd64", "arm64", "armv7", "armv6", "386", "armv5", "s390x"],
@@ -490,6 +506,110 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh release upload "${GITHUB_REF_NAME}" release-control/* --clobber
+
+  qualify-artifacts:
+    name: Qualify emitted release artifacts
+    needs: [build, build-windows, package-release-control]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Download the exact workflow artifacts
+        uses: actions/download-artifact@v8
+        with:
+          path: release-assets
+          merge-multiple: true
+      - name: Inspect names, checksums, archives, identity, and metadata
+        run: bash scripts/inspect-release-artifacts.sh release-assets "$GITHUB_SHA"
+
+  linux-staging-qualification:
+    name: Disposable Linux install and upgrade rehearsal
+    if: startsWith(github.ref, 'refs/heads/feature/rc2-')
+    needs: qualify-artifacts
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Build preserved CatX baseline binaries
+        run: |
+          bash scripts/staging/build-legacy-binaries.sh legacy \
+            7ef22f94c950ff09f0870e2295fa65ad5968742c production-baseline \
+            1c88ed18 pre-rc-develop
+      - name: Download qualified artifacts
+        uses: actions/download-artifact@v8
+        with:
+          path: release-assets
+          merge-multiple: true
+      - name: Run disposable Linux installation and upgrade matrix
+        run: |
+          set +e
+          bash scripts/staging/test-linux-release-path.sh release-assets legacy 2>&1 | tee "$RUNNER_TEMP/linux-staging.log"
+          status=${PIPESTATUS[0]}
+          if [ "$status" -ne 0 ]; then
+            {
+              echo '### Linux staging qualification output'
+              tail -n 240 "$RUNNER_TEMP/linux-staging.log"
+            } >> "$GITHUB_STEP_SUMMARY"
+            while IFS= read -r line; do
+              echo "::error title=Linux staging diagnostic::$line"
+            done < <(grep -E 'staging:|credential|binary|health probe|checksum|archive|rollback|qualification:|update-' "$RUNNER_TEMP/linux-staging.log" || true)
+          fi
+          exit "$status"
+
+  postgres-staging-qualification:
+    name: Disposable PostgreSQL migration qualification
+    if: startsWith(github.ref, 'refs/heads/feature/rc2-')
+    needs: qualify-artifacts
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: catx
+          POSTGRES_PASSWORD: catx
+          POSTGRES_DB: catx
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U catx -d catx"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Run PostgreSQL migration and fork accounting tests
+        env:
+          XUI_TEST_PG_DSN: postgres://catx:catx@127.0.0.1:5432/catx?sslmode=disable
+          XUI_DB_TYPE: postgres
+          XUI_DB_DSN: postgres://catx:catx@127.0.0.1:5432/catx?sslmode=disable
+        run: |
+          set +e
+          {
+            env -u XUI_TEST_PG_DSN -u XUI_DB_TYPE -u XUI_DB_DSN go test -count=1 ./internal/forkext/groupquota ./internal/forkext/trafficpolicy
+            first_status=$?
+            if [ "$first_status" -ne 0 ]; then exit "$first_status"; fi
+            go test -count=1 ./internal/database -run 'Test(ClientWeeklyRenewMigration_Postgres|ClientHwidSchemaPostgres|Migrate_Postgres|HostAutoMigrateCreatesColumns_Postgres|MigrateData_)'
+          } 2>&1 | tee "$RUNNER_TEMP/postgres-staging.log"
+          status=${PIPESTATUS[0]}
+          if [ "$status" -ne 0 ]; then
+            {
+              echo '### PostgreSQL staging qualification output'
+              tail -n 240 "$RUNNER_TEMP/postgres-staging.log"
+            } >> "$GITHUB_STEP_SUMMARY"
+            while IFS= read -r line; do
+              echo "::error title=PostgreSQL staging diagnostic::$line"
+            done < <(tail -n 120 "$RUNNER_TEMP/postgres-staging.log")
+          fi
+          exit "$status"
 
   # =================================
   #  Rolling dev channel (per-commit)

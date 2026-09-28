@@ -13,8 +13,16 @@ readonly CATX_RELEASE_REPOSITORY="CatX-UI"
 readonly CATX_RELEASE_SLUG="${CATX_RELEASE_OWNER}/${CATX_RELEASE_REPOSITORY}"
 readonly CATX_ASSET_PREFIX="catx-ui"
 readonly CATX_DEV_RELEASE_TAG="dev-latest"
-readonly CATX_RELEASE_WEB="https://github.com/${CATX_RELEASE_SLUG}"
-readonly CATX_RELEASE_API="https://api.github.com/repos/${CATX_RELEASE_SLUG}"
+CATX_RELEASE_WEB="https://github.com/${CATX_RELEASE_SLUG}"
+CATX_RELEASE_API="https://api.github.com/repos/${CATX_RELEASE_SLUG}"
+# Hermetic staging only. Production keeps the immutable CatX endpoints unless
+# the caller explicitly opts into the disposable test mode.
+if [[ "${CATX_TEST_RELEASE_MODE:-0}" == 1 && "${CI:-}" == true ]]; then
+    : "${CATX_TEST_RELEASE_BASE_URL:?CATX_TEST_RELEASE_BASE_URL is required in test mode}"
+    CATX_RELEASE_WEB="${CATX_TEST_RELEASE_BASE_URL%/}"
+    CATX_RELEASE_API="${CATX_TEST_RELEASE_BASE_URL%/}"
+fi
+readonly CATX_RELEASE_WEB CATX_RELEASE_API
 
 xui_folder="${XUI_MAIN_FOLDER:=/usr/local/x-ui}"
 xui_service="${XUI_SERVICE:=/etc/systemd/system}"

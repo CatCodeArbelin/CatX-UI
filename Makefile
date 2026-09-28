@@ -94,9 +94,10 @@ test-fork-go: dist-stub ## Fork-owned foundation tests
 
 .PHONY: test-fork-release
 test-fork-release: ## Fork release identity, integrity, and rollback tests
-	bash -n update.sh install.sh x-ui.sh scripts/catx-update-transaction.sh scripts/test-release-identity.sh scripts/test-update-transaction.sh
+	bash -n update.sh install.sh x-ui.sh scripts/catx-update-transaction.sh scripts/inspect-release-artifacts.sh scripts/test-release-identity.sh scripts/test-update-transaction.sh scripts/test-artifact-qualification.sh
 	bash scripts/test-release-identity.sh
 	bash scripts/test-update-transaction.sh
+	bash scripts/test-artifact-qualification.sh
 
 .PHONY: verify-fork
 verify-fork: verify test-fork-go test-fork-release ## Upstream gate plus fork-owned verification
