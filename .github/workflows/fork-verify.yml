@@ -66,6 +66,12 @@ jobs:
             echo "::error file=Makefile,title=verify-fork failure::make verify-fork exited with status $status"
             echo "::error file=Makefile,title=generated diff names::$(git diff --name-status -- frontend/src/generated frontend/public/openapi.json | tr '\n' ';')"
             git diff -- frontend/src/generated frontend/public/openapi.json > "$RUNNER_TEMP/generated.diff"
+            grep -E -i 'FAIL|ERROR|error:|make:|exit status|undefined|race|diff' "$RUNNER_TEMP/verify-fork.log" | tail -n 120 | while IFS= read -r line; do
+              line=${line//'%'/'%25'}
+              line=${line//$'\r'/'%0D'}
+              line=${line//$'\n'/'%0A'}
+              echo "::error file=Makefile::$line"
+            done
             git status --short | while IFS= read -r line; do
               echo "::error file=Makefile::working tree status: $line"
             done
