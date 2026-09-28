@@ -10,6 +10,7 @@ out_dir=$1
 shift
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 mkdir -p "$out_dir"
+out_dir=$(cd "$out_dir" && pwd)
 
 while [[ $# -gt 0 ]]; do
     commit=$1
