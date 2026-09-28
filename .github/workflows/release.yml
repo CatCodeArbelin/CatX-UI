@@ -9,6 +9,7 @@ on:
     branches:
       - main
       - "feature/rc1-*"
+      - "feature/rc2-*"
     tags:
       - "v*.*.*"
     paths:
@@ -470,6 +471,9 @@ jobs:
             "upstreamBaseVersion": "${upstream_version}",
             "bundledXrayVersion": "${CATX_XRAY_VERSION}",
             "channel": "$([[ "$GITHUB_REF" == refs/tags/* ]] && echo stable || echo dev)",
+            "buildCommit": "${GITHUB_SHA}",
+            "releaseApiUrl": "https://api.github.com/repos/${CATX_RELEASE_OWNER}/${CATX_RELEASE_REPOSITORY}/releases/${GITHUB_REF_NAME}",
+            "releaseHtmlUrl": "https://github.com/${CATX_RELEASE_OWNER}/${CATX_RELEASE_REPOSITORY}/releases/tag/${GITHUB_REF_NAME}",
             "changelogAsset": "catx-ui-changelog.txt",
             "migrationNotes": "The transactional updater snapshots database/config state and runs the candidate x-ui migrate command before service start.",
             "supportedLinuxArchitectures": ["amd64", "arm64", "armv7", "armv6", "386", "armv5", "s390x"],
@@ -490,6 +494,47 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh release upload "${GITHUB_REF_NAME}" release-control/* --clobber
+
+  qualify-artifacts:
+    name: Qualify emitted release artifacts
+    needs: [build, build-windows, package-release-control]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Download the exact workflow artifacts
+        uses: actions/download-artifact@v8
+        with:
+          path: release-assets
+          merge-multiple: true
+      - name: Inspect names, checksums, archives, identity, and metadata
+        run: bash scripts/inspect-release-artifacts.sh release-assets "$GITHUB_SHA"
+
+  linux-staging-qualification:
+    name: Disposable Linux install and upgrade rehearsal
+    if: startsWith(github.ref, 'refs/heads/feature/rc2-')
+    needs: qualify-artifacts
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Build preserved CatX baseline binaries
+        run: |
+          bash scripts/staging/build-legacy-binaries.sh legacy \
+            7ef22f94c950ff09f0870e2295fa65ad5968742c production-baseline \
+            1c88ed18 pre-rc-develop
+      - name: Download qualified artifacts
+        uses: actions/download-artifact@v8
+        with:
+          path: release-assets
+          merge-multiple: true
+      - name: Run disposable Linux installation and upgrade matrix
+        run: bash scripts/staging/test-linux-release-path.sh release-assets legacy
 
   # =================================
   #  Rolling dev channel (per-commit)

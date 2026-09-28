@@ -44,6 +44,35 @@ func TestRemotePanelUpdateStartAndStatusAreTypedAndCorrelated(t *testing.T) {
 	}
 }
 
+func TestRemotePanelUpdatePreservesLargeRunIDAsJSONString(t *testing.T) {
+	const runID = "900719925474099312345"
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if r.Method == http.MethodPost {
+			_, _ = w.Write([]byte(`{"success":true,"obj":{"runId":"` + runID + `"}}`))
+			return
+		}
+		_, _ = w.Write([]byte(`{"success":true,"obj":{"runId":"` + runID + `","state":"success","exitCode":0,"finishedAt":1735689600,"rolledBack":false,"rollbackHealthy":false}}`))
+	}))
+	defer srv.Close()
+
+	r := NewRemote(nodeForPlainServer(t, srv, "verify", "tok"), nil)
+	started, err := r.StartUpdate(context.Background(), false)
+	if err != nil {
+		t.Fatalf("StartUpdate: %v", err)
+	}
+	if started.RunID != runID {
+		t.Fatalf("run ID = %q, want exact JSON string %q", started.RunID, runID)
+	}
+	status, err := r.GetUpdateStatus(context.Background())
+	if err != nil {
+		t.Fatalf("GetUpdateStatus: %v", err)
+	}
+	if status.RunID != runID {
+		t.Fatalf("status run ID = %q, want exact JSON string %q", status.RunID, runID)
+	}
+}
+
 func TestRemotePanelUpdateStartRejectsMissingRunID(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
