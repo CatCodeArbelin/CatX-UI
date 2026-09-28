@@ -27,7 +27,7 @@ docker run --rm \
     -e DEBIAN_FRONTEND=noninteractive \
     ubuntu:24.04 bash -euo pipefail -c '
         apt-get update -qq
-        apt-get install -y -qq ca-certificates curl jq openssl python3 sqlite3 tar procps > /dev/null
+        apt-get install -y -qq --no-install-recommends ca-certificates curl jq openssl python3 sqlite3 tar procps > /dev/null
 
         mkdir -p /srv/release/CatCodeArbelin/CatX-UI/releases/download/dev-latest
         cp /assets/* /srv/release/CatCodeArbelin/CatX-UI/releases/download/dev-latest/
