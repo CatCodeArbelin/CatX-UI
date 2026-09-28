@@ -110,7 +110,7 @@ check_tar_archive() {
             arm64) grep -Eqi 'aarch64|arm64' <<< "$file_type" || fail "$name panel binary is not arm64" ;;
             armv7|armv6|armv5) grep -Eqi 'ARM' <<< "$file_type" || fail "$name panel binary is not ARM" ;;
             386) grep -Eqi '80386|i386' <<< "$file_type" || fail "$name panel binary is not 386" ;;
-            s390x) grep -Eqi 's390' <<< "$file_type" || fail "$name panel binary is not s390x" ;;
+            s390x) grep -Eqi 's/390|s390' <<< "$file_type" || fail "$name panel binary is not s390x" ;;
         esac
     fi
     rm -rf "$root"
