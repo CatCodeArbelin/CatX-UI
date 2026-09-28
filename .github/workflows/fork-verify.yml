@@ -67,7 +67,7 @@ jobs:
             git status --short | while IFS= read -r line; do
               echo "::error file=Makefile::working tree status: $line"
             done
-            fail_lines=$(grep -E '^FAIL|FAIL:|--- FAIL|Error Trace|panic:|fatal error' "$RUNNER_TEMP/verify-fork.log" | tr '\n' ';')
+            fail_lines=$(grep -E '^FAIL|FAIL:|--- FAIL|Error Trace|panic:|fatal error|canary dispatches' "$RUNNER_TEMP/verify-fork.log" | tr '\n' ';')
             echo "::error file=Makefile::failures=$fail_lines"
             exit "$status"
           fi

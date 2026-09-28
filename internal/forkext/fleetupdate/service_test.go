@@ -64,7 +64,7 @@ func TestCanaryBatchAndParallelism(t *testing.T) {
 		t.Fatal(err)
 	}
 	if len(f.Dispatches) != 1 {
-		t.Fatalf("canary dispatches=%v", f.Dispatches)
+		t.Fatalf("canary dispatches=%v targets=%+v", f.Dispatches, p.Targets)
 	}
 }
 
