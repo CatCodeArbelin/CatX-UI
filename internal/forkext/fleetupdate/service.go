@@ -425,6 +425,12 @@ func (s *Service) dispatchAllowed(c *Campaign, ts []Target, index int) bool {
 	window := c.BatchSize
 	if succeeded == 0 && c.CanaryCount > 0 {
 		window = c.CanaryCount
+		// Hold the campaign at the canary window until every canary target
+		// converges. Active dispatches count toward that window even though
+		// their rows are no longer in StateReady.
+		if active >= c.CanaryCount {
+			return false
+		}
 	}
 	if window <= 0 {
 		window = 1
