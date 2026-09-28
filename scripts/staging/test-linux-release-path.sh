@@ -100,7 +100,11 @@ EOF
             chmod +x /usr/local/x-ui/x-ui /usr/local/x-ui/x-ui.sh /usr/local/x-ui/update.sh
             test "$(/usr/local/x-ui/x-ui -v 2>/dev/null || true)" != "0.1.0"
 
-            run_id="900719925474099312345-$label"
+            case "$label" in
+                production-baseline) run_id=900719925474099312345 ;;
+                pre-rc-develop) run_id=900719925474099312346 ;;
+                *) echo "unexpected legacy label: $label" >&2; exit 1 ;;
+            esac
             set +e
             XUI_UPDATE_RUN_ID="$run_id" XUI_UPDATE_TAG=dev-latest bash /tmp/update.sh >/tmp/update-$label.log 2>&1
             update_rc=$?
@@ -129,7 +133,7 @@ EOF
         printf corruption >> /srv/release/CatCodeArbelin/CatX-UI/releases/download/dev-latest/catx-ui-linux-amd64.tar.gz
         sha256sum /srv/release/CatCodeArbelin/CatX-UI/releases/download/dev-latest/catx-ui-linux-amd64.tar.gz > /srv/release/CatCodeArbelin/CatX-UI/releases/download/dev-latest/catx-ui-linux-amd64.tar.gz.sha256
         set +e
-        XUI_UPDATE_RUN_ID=corrupt-case XUI_UPDATE_TAG=dev-latest bash /tmp/update.sh >/tmp/update-corrupt.log 2>&1
+        XUI_UPDATE_RUN_ID=900719925474099312347 XUI_UPDATE_TAG=dev-latest bash /tmp/update.sh >/tmp/update-corrupt.log 2>&1
         corrupt_rc=$?
         set -e
         test "$corrupt_rc" -ne 0
