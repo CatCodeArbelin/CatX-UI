@@ -111,7 +111,17 @@ jobs:
         run: |
           source internal/forkrelease/identity.env
           CURL_RETRY="--retry 5 --retry-all-errors --retry-delay 3"
-          fetch() { wget -q --tries=5 --waitretry=10 --retry-on-http-error=429,500,502,503 "$@"; }
+          fetch() {
+            local attempt
+            for attempt in 1 2 3; do
+              if wget -q --tries=5 --waitretry=10 --retry-on-http-error=429,500,502,503 "$@"; then
+                return 0
+              fi
+              echo "download attempt ${attempt}/3 failed; retrying" >&2
+              sleep 5
+            done
+            return 1
+          }
           export CGO_ENABLED=1
           export GOOS=linux
           export GOARCH=${{ matrix.platform }}
