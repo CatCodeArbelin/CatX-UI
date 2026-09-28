@@ -63,8 +63,22 @@ jobs:
             label="$1"
             target="$2"
             echo "::group::$label"
-            make "$target" 2>&1 | tee "$RUNNER_TEMP/$target.log"
-            status=${PIPESTATUS[0]}
+            attempts=1
+            if [ "$target" = "test-fe" ]; then
+              # Playwright/Vitest browser startup can be transient on shared
+              # hosted runners. Keep this retry bounded and frontend-only;
+              # every other verification gate remains single-attempt strict.
+              attempts=3
+            fi
+            status=1
+            for attempt in $(seq 1 "$attempts"); do
+              make "$target" 2>&1 | tee "$RUNNER_TEMP/$target.log"
+              status=${PIPESTATUS[0]}
+              [ "$status" -eq 0 ] && break
+              if [ "$attempt" -lt "$attempts" ]; then
+                echo "warning: $target attempt $attempt failed; retrying" >&2
+              fi
+            done
             echo "::endgroup::"
             if [ "$status" -ne 0 ]; then
               echo "::error file=Makefile,title=$label failure::$target exited with status $status"
