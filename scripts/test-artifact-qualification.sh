@@ -17,7 +17,7 @@ make_control() {
     case "$name" in
         "${CATX_ASSET_PREFIX}-release-metadata.json")
             cat > "$fixture/$name" <<EOF
-{"product":"$CATX_PRODUCT_NAME","repository":"$CATX_RELEASE_OWNER/$CATX_RELEASE_REPOSITORY","forkVersion":"$(tr -d '[:space:]' < "$repo_root/internal/forkrelease/fork_version")","upstreamBaseVersion":"$(tr -d '[:space:]' < "$repo_root/internal/forkrelease/upstream_version")","bundledXrayVersion":"$CATX_XRAY_VERSION","channel":"dev","buildCommit":"fixture-commit","releaseApiUrl":"https://api.github.com/repos/$CATX_RELEASE_OWNER/$CATX_RELEASE_REPOSITORY/releases/1","releaseHtmlUrl":"https://github.com/$CATX_RELEASE_OWNER/$CATX_RELEASE_REPOSITORY/releases/tag/dev-latest"}
+{"product":"$CATX_PRODUCT_NAME","repository":"$CATX_RELEASE_OWNER/$CATX_RELEASE_REPOSITORY","forkVersion":"$(tr -d '[:space:]' < "$repo_root/internal/forkrelease/fork_version")","releaseVersion":"dev+fixture-commit","releaseTag":"dev-latest","prerelease":true,"latest":false,"upstreamBaseVersion":"$(tr -d '[:space:]' < "$repo_root/internal/forkrelease/upstream_version")","bundledXrayVersion":"$CATX_XRAY_VERSION","channel":"dev","buildCommit":"fixture-commit","releaseApiUrl":"https://api.github.com/repos/$CATX_RELEASE_OWNER/$CATX_RELEASE_REPOSITORY/releases/1","releaseHtmlUrl":"https://github.com/$CATX_RELEASE_OWNER/$CATX_RELEASE_REPOSITORY/releases/tag/dev-latest"}
 EOF
             ;;
         "${CATX_ASSET_PREFIX}-changelog.txt") printf 'fixture-commit release qualification (upstream issue MHSanaei/3x-ui#1)\n' > "$fixture/$name" ;;
@@ -28,6 +28,7 @@ readonly CATX_RELEASE_OWNER="$CATX_RELEASE_OWNER"
 readonly CATX_RELEASE_REPOSITORY="$CATX_RELEASE_REPOSITORY"
 readonly CATX_ASSET_PREFIX="$CATX_ASSET_PREFIX"
 readonly CATX_DEV_RELEASE_TAG="$CATX_DEV_RELEASE_TAG"
+readonly CATX_RC_VERSION="0.1.0-rc.1"
 EOF
             chmod +x "$fixture/$name"
             ;;
@@ -76,6 +77,10 @@ for path in "$fixture"/*; do
     sha256sum "$path" > "$path.sha256"
 done
 
+CATX_ARTIFACT_TEST_MODE=1 "$checker" "$fixture" fixture-commit
+
+sed -i 's/"releaseVersion":"dev+fixture-commit"/"releaseVersion":"0.1.0-rc.1"/; s/"releaseTag":"dev-latest"/"releaseTag":"v0.1.0-rc.1"/; s/"channel":"dev"/"channel":"rc"/; s#releases/tag/dev-latest#releases/tag/v0.1.0-rc.1#' "$fixture/${CATX_ASSET_PREFIX}-release-metadata.json"
+sha256sum "$fixture/${CATX_ASSET_PREFIX}-release-metadata.json" > "$fixture/${CATX_ASSET_PREFIX}-release-metadata.json.sha256"
 CATX_ARTIFACT_TEST_MODE=1 "$checker" "$fixture" fixture-commit
 
 expect_failure() {

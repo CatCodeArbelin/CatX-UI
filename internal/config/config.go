@@ -19,13 +19,15 @@ import (
 //go:embed name
 var name string
 
-// buildCommit and buildDate are injected at build time via `-ldflags -X` for
+// buildCommit, buildDate, and buildChannel are injected at build time via `-ldflags -X` for
 // CI per-commit (dev channel) builds; see .github/workflows/release.yml. They
-// stay empty for a plain `go build` and for stable tagged releases, which is how
-// IsDevBuild tells a rolling dev build apart from a stable/local one.
+// stay empty for a plain `go build` and for stable tagged releases. RC builds
+// set buildChannel explicitly so their release identity cannot be confused with
+// a stable build.
 var (
-	buildCommit string
-	buildDate   string
+	buildCommit  string
+	buildDate    string
+	buildChannel string
 )
 
 // LogLevel represents the logging level for the application.
@@ -86,12 +88,26 @@ func IsDevBuild() bool {
 	return GetBuildCommit() != ""
 }
 
+func GetReleaseChannel() forkrelease.Channel {
+	if IsDevBuild() {
+		return forkrelease.ChannelDev
+	}
+	if strings.TrimSpace(buildChannel) == string(forkrelease.ChannelRC) {
+		return forkrelease.ChannelRC
+	}
+	return forkrelease.ChannelStable
+}
+
 // GetPanelVersion returns the version a panel advertises to a managing master
-// node and displays in the UI: the plain version for stable builds, or
-// "dev+<short commit>" for dev builds. The dev form mirrors the master's
+// node and displays in the UI: the plain version for stable builds, the
+// checked-in prerelease version for RC builds, or "dev+<short commit>" for
+// dev builds. The dev form mirrors the master's
 // getPanelUpdateInfo latestVersion so a node on the current dev commit compares
 // as up to date instead of always showing "update available".
 func GetPanelVersion() string {
+	if GetReleaseChannel() == forkrelease.ChannelRC {
+		return forkrelease.RCVersion()
+	}
 	if !IsDevBuild() {
 		return GetForkVersion()
 	}

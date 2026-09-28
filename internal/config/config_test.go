@@ -7,9 +7,11 @@ import (
 
 func TestGetPanelVersion(t *testing.T) {
 	orig := buildCommit
-	t.Cleanup(func() { buildCommit = orig })
+	origChannel := buildChannel
+	t.Cleanup(func() { buildCommit = orig; buildChannel = origChannel })
 
 	buildCommit = ""
+	buildChannel = ""
 	if got := GetPanelVersion(); got != GetBaseVersion() {
 		t.Fatalf("stable build: GetPanelVersion = %q, want %q", got, GetBaseVersion())
 	}
@@ -22,6 +24,12 @@ func TestGetPanelVersion(t *testing.T) {
 	buildCommit = "1d1128cf945c4615efa05cf41ba7fa766e2ee428"
 	if got := GetPanelVersion(); got != "dev+1d1128cf" {
 		t.Fatalf("dev build (full sha): GetPanelVersion = %q, want %q", got, "dev+1d1128cf")
+	}
+
+	buildCommit = ""
+	buildChannel = "rc"
+	if got := GetPanelVersion(); got != "0.1.0-rc.1" {
+		t.Fatalf("RC build: GetPanelVersion = %q, want %q", got, "0.1.0-rc.1")
 	}
 }
 

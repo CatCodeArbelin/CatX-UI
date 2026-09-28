@@ -13,6 +13,7 @@ for file in update.sh install.sh x-ui.sh scripts/catx-update-transaction.sh; do
     grep -Fq "CATX_RELEASE_REPOSITORY=\"${CATX_RELEASE_REPOSITORY}\"" "$file"
     grep -Fq "CATX_ASSET_PREFIX=\"${CATX_ASSET_PREFIX}\"" "$file"
     grep -Fq "CATX_DEV_RELEASE_TAG=\"${CATX_DEV_RELEASE_TAG}\"" "$file"
+    grep -Fq 'CATX_RC_VERSION="0.1.0-rc.1"' "$file"
 done
 
 if grep -En 'https?://(api\.github\.com/repos/|github\.com/|raw\.githubusercontent\.com/)[Mm][Hh][Ss]anaei/3x-ui' \
@@ -39,6 +40,9 @@ grep -Fq 'requires a same-release checksum sidecar' install.sh
 grep -Fq 'rollback-failed' scripts/catx-update-transaction.sh
 grep -Fq 'validate-release-identity:' .github/workflows/release.yml
 grep -Fq 'needs: validate-release-identity' .github/workflows/release.yml
+grep -Fq 'rc_version=$(tr -d' .github/workflows/release.yml
+grep -Fq 'gh release edit "${GITHUB_REF_NAME}" --prerelease --latest=false' .github/workflows/release.yml
+grep -Fq '"releaseVersion"' .github/workflows/release.yml
 grep -Fq '"$recorded_name" == "$asset"' deploy/cloud-init/cloud-init.yaml
 
 echo "release identity tests: PASS"

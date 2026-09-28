@@ -769,14 +769,12 @@ func main() {
 // staged updater candidate before it can replace the known-good binary. The
 // simple key=value format deliberately needs no jq/eval in the shell updater.
 func releaseInfoText() string {
-	channel := string(forkrelease.ChannelStable)
-	if config.IsDevBuild() {
-		channel = string(forkrelease.ChannelDev)
-	}
-	return fmt.Sprintf("product=%s\nrepository=%s\nfork_version=%s\nupstream_base_version=%s\nbundled_xray_version=%s\nchannel=%s\nbuild_commit=%s\n",
+	channel := config.GetReleaseChannel()
+	return fmt.Sprintf("product=%s\nrepository=%s\nfork_version=%s\nrelease_version=%s\nupstream_base_version=%s\nbundled_xray_version=%s\nchannel=%s\nbuild_commit=%s\n",
 		forkrelease.Current.ProductName,
 		forkrelease.Current.RepositorySlug(),
 		config.GetForkVersion(),
+		config.GetPanelVersion(),
 		config.GetUpstreamBaseVersion(),
 		config.GetBundledXrayVersion(),
 		channel,

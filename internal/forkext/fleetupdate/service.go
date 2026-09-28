@@ -33,6 +33,8 @@ func (r ProviderResolver) Resolve(ctx context.Context, channel string) (ReleaseS
 		ch = forkrelease.ChannelStable
 	case string(forkrelease.ChannelDev):
 		ch = forkrelease.ChannelDev
+	case string(forkrelease.ChannelRC):
+		ch = forkrelease.ChannelRC
 	default:
 		return ReleaseSnapshot{}, fmt.Errorf("unsupported release channel %q", channel)
 	}
@@ -101,10 +103,12 @@ func (s *Service) Enabled() bool { return s != nil && s.enabled && s.db != nil }
 func Migrate(db *gorm.DB) error  { return db.AutoMigrate(&Campaign{}, &Target{}) }
 
 func normalizeChannel(c string) string {
-	if c == string(forkrelease.ChannelDev) {
+	switch c {
+	case string(forkrelease.ChannelDev), string(forkrelease.ChannelRC):
 		return c
+	default:
+		return string(forkrelease.ChannelStable)
 	}
-	return string(forkrelease.ChannelStable)
 }
 
 func defaults(r *PlanRequest) {

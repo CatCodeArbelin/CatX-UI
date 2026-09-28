@@ -16,6 +16,7 @@ expected_commit=${2:-}
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 source "$repo_root/internal/forkrelease/identity.env"
 fork_version=$(tr -d '[:space:]' < "$repo_root/internal/forkrelease/fork_version")
+rc_version=$(tr -d '[:space:]' < "$repo_root/internal/forkrelease/rc_version")
 upstream_version=$(tr -d '[:space:]' < "$repo_root/internal/forkrelease/upstream_version")
 if command -v python3 >/dev/null 2>&1; then
     python_cmd=python3
@@ -51,23 +52,44 @@ check_metadata() {
     local path="$artifact_dir/$name"
     [[ -n "$python_cmd" ]] || fail "python3 or python is required for metadata validation"
     "$python_cmd" - "$path" "$CATX_PRODUCT_NAME" "$CATX_RELEASE_OWNER/$CATX_RELEASE_REPOSITORY" \
-        "$fork_version" "$upstream_version" "$CATX_XRAY_VERSION" "$expected_commit" <<'PY' || fail "release metadata is invalid"
+        "$fork_version" "$rc_version" "$upstream_version" "$CATX_XRAY_VERSION" "$expected_commit" <<'PY' || fail "release metadata is invalid"
 import json
 import sys
 
-path, product, repository, fork, upstream, xray, expected_commit = sys.argv[1:]
+path, product, repository, fork, rc, upstream, xray, expected_commit = sys.argv[1:]
 with open(path, encoding="utf-8") as handle:
     data = json.load(handle)
 assert data["product"] == product
 assert data["repository"] == repository
 assert data["forkVersion"] == fork
+assert data["releaseVersion"]
+assert data["releaseTag"]
 assert data["upstreamBaseVersion"] == upstream
 assert data["bundledXrayVersion"] == xray
 assert isinstance(data.get("buildCommit"), str) and data["buildCommit"]
 assert isinstance(data.get("releaseApiUrl"), str)
 assert isinstance(data.get("releaseHtmlUrl"), str)
 assert data["releaseApiUrl"].startswith("https://api.github.com/repos/" + repository + "/releases/")
+assert data["releaseHtmlUrl"] == "https://github.com/" + repository + "/releases/tag/" + data["releaseTag"]
 assert data["releaseHtmlUrl"].startswith("https://github.com/" + repository + "/releases/")
+channel = data["channel"]
+if channel == "stable":
+    assert data["releaseVersion"] == fork
+    assert data["releaseTag"] == "v" + fork
+    assert data["prerelease"] is False
+    assert data["latest"] is True
+elif channel == "rc":
+    assert data["releaseVersion"] == rc
+    assert data["releaseTag"] == "v" + rc
+    assert data["prerelease"] is True
+    assert data["latest"] is False
+elif channel == "dev":
+    assert data["releaseTag"] == "dev-latest"
+    assert data["releaseVersion"].startswith("dev+")
+    assert data["prerelease"] is True
+    assert data["latest"] is False
+else:
+    raise AssertionError("unknown release channel")
 if expected_commit:
     assert data["buildCommit"] == expected_commit
 PY
@@ -176,6 +198,7 @@ check_checksum "${CATX_ASSET_PREFIX}-changelog.txt"
 
 for name in "${CATX_ASSET_PREFIX}-update.sh" "${CATX_ASSET_PREFIX}-install.sh" "${CATX_ASSET_PREFIX}.sh" "${CATX_ASSET_PREFIX}-update-lib.sh"; do
     path="$artifact_dir/$name"
+    grep -Fq 'CATX_RC_VERSION="0.1.0-rc.1"' "$path" || fail "$name has wrong RC version"
     grep -Fq "CATX_RELEASE_OWNER=\"$CATX_RELEASE_OWNER\"" "$path" || fail "$name has wrong release owner"
     grep -Fq "CATX_RELEASE_REPOSITORY=\"$CATX_RELEASE_REPOSITORY\"" "$path" || fail "$name has wrong release repository"
     grep -Fq "CATX_ASSET_PREFIX=\"$CATX_ASSET_PREFIX\"" "$path" || fail "$name has wrong asset prefix"

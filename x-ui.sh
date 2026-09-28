@@ -13,6 +13,7 @@ readonly CATX_RELEASE_REPOSITORY="CatX-UI"
 readonly CATX_RELEASE_SLUG="${CATX_RELEASE_OWNER}/${CATX_RELEASE_REPOSITORY}"
 readonly CATX_ASSET_PREFIX="catx-ui"
 readonly CATX_DEV_RELEASE_TAG="dev-latest"
+readonly CATX_RC_VERSION="0.1.0-rc.1"
 readonly CATX_RELEASE_WEB="https://github.com/${CATX_RELEASE_SLUG}"
 readonly CATX_RELEASE_API="https://api.github.com/repos/${CATX_RELEASE_SLUG}"
 
@@ -139,7 +140,7 @@ before_show_menu() {
 }
 
 catx_validate_release_tag() {
-    [[ "$1" == "${CATX_DEV_RELEASE_TAG}" || "$1" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+    [[ "$1" == "${CATX_DEV_RELEASE_TAG}" || "$1" == "v${CATX_RC_VERSION}" || "$1" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
 }
 
 catx_resolve_latest_tag() {
@@ -147,13 +148,13 @@ catx_resolve_latest_tag() {
     url=$(curl -fsSLI -o /dev/null -w '%{url_effective}' --retry 5 --retry-all-errors --retry-delay 3 \
         "${CATX_RELEASE_WEB}/releases/latest" 2> /dev/null || true)
     tag=${url##*/tag/}
-    if [[ "$tag" != "$url" ]] && catx_validate_release_tag "$tag" && [[ "$tag" != "${CATX_DEV_RELEASE_TAG}" ]]; then
+    if [[ "$tag" != "$url" ]] && [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
         printf '%s\n' "$tag"
         return 0
     fi
     tag=$(curl -fsSL --retry 5 --retry-all-errors --retry-delay 3 \
         "${CATX_RELEASE_API}/releases/latest" 2> /dev/null | grep '"tag_name":' | head -n1 | sed -E 's/.*"([^"]+)".*/\1/')
-    catx_validate_release_tag "$tag" && [[ "$tag" != "${CATX_DEV_RELEASE_TAG}" ]] || return 1
+    [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || return 1
     printf '%s\n' "$tag"
 }
 

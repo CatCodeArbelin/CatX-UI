@@ -12,6 +12,7 @@ readonly CATX_RELEASE_REPOSITORY="CatX-UI"
 readonly CATX_RELEASE_SLUG="${CATX_RELEASE_OWNER}/${CATX_RELEASE_REPOSITORY}"
 readonly CATX_ASSET_PREFIX="catx-ui"
 readonly CATX_DEV_RELEASE_TAG="dev-latest"
+readonly CATX_RC_VERSION="0.1.0-rc.1"
 CATX_RELEASE_WEB="https://github.com/${CATX_RELEASE_SLUG}"
 CATX_RELEASE_API="https://api.github.com/repos/${CATX_RELEASE_SLUG}"
 if [[ "${CATX_TEST_RELEASE_MODE:-0}" == 1 && "${CI:-}" == true ]]; then
@@ -1010,14 +1011,22 @@ require_repo_files() {
 }
 
 catx_load_transaction_module() {
-    local tag="${XUI_UPDATE_TAG:-}" asset="${CATX_ASSET_PREFIX}-update-lib.sh"
+    local tag="${XUI_UPDATE_TAG:-}" asset="${CATX_ASSET_PREFIX}-update-lib.sh" explicit=0
     local module sums code expected actual recorded_name
     if [[ -z "$tag" ]]; then
         tag=$(${curl_bin} -fsSL "${CATX_RELEASE_API}/releases/latest" 2> /dev/null |
             grep '"tag_name":' | head -n1 | sed -E 's/.*"([^"]+)".*/\1/')
     fi
-    [[ "$tag" == "${CATX_DEV_RELEASE_TAG}" || "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] ||
-        _fail "ERROR: Refusing invalid CatX-UI update tag: ${tag:-<empty>}"
+    if [[ -n "${XUI_UPDATE_TAG:-}" ]]; then
+        explicit=1
+    fi
+    if (( explicit )); then
+        [[ "$tag" == "${CATX_DEV_RELEASE_TAG}" || "$tag" == "v${CATX_RC_VERSION}" || "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] ||
+            _fail "ERROR: Refusing invalid CatX-UI update tag: ${tag:-<empty>}"
+    else
+        [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] ||
+            _fail "ERROR: Stable latest release is not a valid stable CatX-UI tag: ${tag:-<empty>}"
+    fi
     XUI_UPDATE_TAG="$tag"
     export XUI_UPDATE_TAG
 

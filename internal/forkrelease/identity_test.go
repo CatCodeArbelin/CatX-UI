@@ -12,6 +12,9 @@ func TestCurrentIdentityIsCatXOwned(t *testing.T) {
 	if ForkVersion() == "" || UpstreamBaseVersion() == "" {
 		t.Fatal("fork and upstream-base versions must both be explicit")
 	}
+	if RCVersion() != "0.1.0-rc.1" || Current.RCReleaseTag() != "v0.1.0-rc.1" {
+		t.Fatalf("RC release identity = %q/%q, want 0.1.0-rc.1/v0.1.0-rc.1", RCVersion(), Current.RCReleaseTag())
+	}
 	if ForkVersion() == UpstreamBaseVersion() {
 		t.Fatal("fork version and upstream-base version must remain separate values")
 	}
