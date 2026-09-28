@@ -12,8 +12,8 @@ usage() {
 }
 [[ $# -eq 2 && -d "$1" && -d "$2" ]] || usage
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
-artifacts=$1
-legacy=$2
+artifacts=$(cd "$1" && pwd)
+legacy=$(cd "$2" && pwd)
 
 command -v docker >/dev/null 2>&1 || {
     echo "linux release-path qualification requires Docker" >&2
