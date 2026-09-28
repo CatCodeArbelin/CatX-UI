@@ -37,7 +37,12 @@ docker run --rm \
 
         mkdir -p /srv/release/CatCodeArbelin/CatX-UI/releases/download/dev-latest
         cp /assets/* /srv/release/CatCodeArbelin/CatX-UI/releases/download/dev-latest/
+        for required_file in /repo/install.sh /repo/update.sh /repo/scripts/catx-update-transaction.sh; do
+            test -f "$required_file" || { echo "repository fixture is missing: $required_file" >&2; exit 1; }
+        done
         cp /repo/install.sh /repo/update.sh /repo/scripts/catx-update-transaction.sh /tmp/
+        test -f /tmp/install.sh
+        test -f /tmp/update.sh
 
         # The service manager is deliberately a disposable shim.  The panel
         # itself is started and health-probed below; the shim lets the real
