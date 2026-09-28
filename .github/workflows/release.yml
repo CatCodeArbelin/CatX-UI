@@ -536,6 +536,38 @@ jobs:
       - name: Run disposable Linux installation and upgrade matrix
         run: bash scripts/staging/test-linux-release-path.sh release-assets legacy
 
+  postgres-staging-qualification:
+    name: Disposable PostgreSQL migration qualification
+    if: startsWith(github.ref, 'refs/heads/feature/rc2-')
+    needs: qualify-artifacts
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: catx
+          POSTGRES_PASSWORD: catx
+          POSTGRES_DB: catx
+        options: >-
+          --health-cmd="pg_isready -U catx -d catx"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Run PostgreSQL migration and fork accounting tests
+        env:
+          XUI_TEST_PG_DSN: postgres://catx:catx@127.0.0.1:5432/catx?sslmode=disable
+          XUI_DB_TYPE: postgres
+          XUI_DB_DSN: postgres://catx:catx@127.0.0.1:5432/catx?sslmode=disable
+        run: |
+          go test -count=1 ./internal/forkext/groupquota ./internal/forkext/trafficpolicy
+          go test -count=1 ./internal/database -run 'Postgres|MigrateData'
+
   # =================================
   #  Rolling dev channel (per-commit)
   # =================================
