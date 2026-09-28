@@ -156,8 +156,8 @@ EOF
             tail -n 80 /tmp/x-ui.log >&2 || true
         fi
         trap "kill $panel_pid 2>/dev/null || true; kill $server_pid 2>/dev/null || true" EXIT
-        wait_http http://127.0.0.1:28080/
-        curl -fsS http://127.0.0.1:28080/login >/dev/null
+        wait_http http://127.0.0.1:28080/staging/
+        curl -fsS http://127.0.0.1:28080/staging/login >/dev/null
         kill "$panel_pid" 2>/dev/null || true
         wait "$panel_pid" 2>/dev/null || true
 
@@ -205,7 +205,7 @@ EOF
             for restart in 1 2; do
                 (cd /usr/local/x-ui && XUI_PORT=28080 ./x-ui run) >/tmp/x-ui-$label-$restart.log 2>&1 &
                 panel_pid=$!
-                wait_http http://127.0.0.1:28080/
+                wait_http http://127.0.0.1:28080/staging/
                 kill "$panel_pid" 2>/dev/null || true
                 wait "$panel_pid" 2>/dev/null || true
             done
