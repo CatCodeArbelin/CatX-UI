@@ -27,7 +27,7 @@ while [[ $# -gt 0 ]]; do
     # the current release artifact supplies the actual UI during qualification.
     printf '<!doctype html><title>legacy staging placeholder</title>\n' > "$work/internal/web/dist/index.html"
     printf 'legacy staging placeholder\n' > "$work/internal/web/dist/assets/index.txt"
-    (cd "$work" && CGO_ENABLED=1 go build -buildvcs=false -o "$out_dir/$label/x-ui" .)
+    (cd "$work" && GOWORK=off CGO_ENABLED=1 go build -mod=mod -buildvcs=false -o "$out_dir/$label/x-ui" .)
     chmod +x "$out_dir/$label/x-ui"
     rm -rf "$work"
     trap - RETURN
