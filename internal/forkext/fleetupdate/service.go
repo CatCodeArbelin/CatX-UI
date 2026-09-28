@@ -9,10 +9,11 @@ import (
 	"sync"
 	"time"
 
+	"gorm.io/gorm"
+
 	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
 	"github.com/mhsanaei/3x-ui/v3/internal/forkext/audit"
 	"github.com/mhsanaei/3x-ui/v3/internal/forkrelease"
-	"gorm.io/gorm"
 )
 
 var (
