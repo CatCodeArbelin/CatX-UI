@@ -39,6 +39,8 @@ docker run --rm \
         cp -a /assets/. /srv/release/CatCodeArbelin/CatX-UI/releases/download/dev-latest/
         test -f /srv/release/CatCodeArbelin/CatX-UI/releases/download/dev-latest/catx-ui-install.sh || { find /assets -maxdepth 2 -type f -print >&2; exit 1; }
         test -f /srv/release/CatCodeArbelin/CatX-UI/releases/download/dev-latest/catx-ui-update.sh
+        install_script=$(cat /srv/release/CatCodeArbelin/CatX-UI/releases/download/dev-latest/catx-ui-install.sh)
+        update_script=$(cat /srv/release/CatCodeArbelin/CatX-UI/releases/download/dev-latest/catx-ui-update.sh)
         # The service manager is deliberately a disposable shim.  The panel
         # itself is started and health-probed below; the shim lets the real
         # updater execute its service lifecycle in a container without PID 1
@@ -89,7 +91,7 @@ EOF
         export XUI_DB_FOLDER=/etc/x-ui XUI_UPDATE_STATUS_FILE=/etc/x-ui/update-status.json
 
         # A. Fresh install through the supported installer path.
-        bash /srv/release/CatCodeArbelin/CatX-UI/releases/download/dev-latest/catx-ui-install.sh dev-latest < /dev/null
+        printf '%s\n' "$install_script" | bash -s -- dev-latest
         test -x /usr/local/x-ui/x-ui
         /usr/local/x-ui/x-ui setting -show | grep -q "hasDefaultCredential: false"
         /usr/local/x-ui/x-ui setting -username staging-admin -password staging-password -port 28080 -listenIP 127.0.0.1
@@ -128,7 +130,7 @@ EOF
                 *) echo "unexpected legacy label: $label" >&2; exit 1 ;;
             esac
             set +e
-            XUI_UPDATE_RUN_ID="$run_id" XUI_UPDATE_TAG=dev-latest bash /srv/release/CatCodeArbelin/CatX-UI/releases/download/dev-latest/catx-ui-update.sh >/tmp/update-$label.log 2>&1
+            printf '%s\n' "$update_script" | XUI_UPDATE_RUN_ID="$run_id" XUI_UPDATE_TAG=dev-latest bash -s -- >/tmp/update-$label.log 2>&1
             update_rc=$?
             set -e
             if [[ "$update_rc" -ne 0 ]]; then
@@ -155,7 +157,7 @@ EOF
         printf corruption >> /srv/release/CatCodeArbelin/CatX-UI/releases/download/dev-latest/catx-ui-linux-amd64.tar.gz
         sha256sum /srv/release/CatCodeArbelin/CatX-UI/releases/download/dev-latest/catx-ui-linux-amd64.tar.gz > /srv/release/CatCodeArbelin/CatX-UI/releases/download/dev-latest/catx-ui-linux-amd64.tar.gz.sha256
         set +e
-        XUI_UPDATE_RUN_ID=900719925474099312347 XUI_UPDATE_TAG=dev-latest bash /srv/release/CatCodeArbelin/CatX-UI/releases/download/dev-latest/catx-ui-update.sh >/tmp/update-corrupt.log 2>&1
+        printf '%s\n' "$update_script" | XUI_UPDATE_RUN_ID=900719925474099312347 XUI_UPDATE_TAG=dev-latest bash -s -- >/tmp/update-corrupt.log 2>&1
         corrupt_rc=$?
         set -e
         test "$corrupt_rc" -ne 0
