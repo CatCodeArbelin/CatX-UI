@@ -3000,6 +3000,6 @@
       "destinations": "目的地",
       "deliveries": "傳遞與死信"
 },
-    "settings": {"title":"CatX-UI 功能","description":"只啟用需要的分支模組。依賴關係會明確驗證，變更後需要重新啟動面板。","save":"儲存功能設定","saved":"功能設定已儲存。請重新啟動面板以套用模組變更。","loadFailed":"無法載入功能設定。","saveFailed":"無法儲存功能設定。","restartRequired":"需要重新啟動面板","restartRequiredDescription":"大多數 CatX 模組會在啟動時初始化。儲存開關後，請先重新啟動面板再使用已變更的模組。","dependencyWarning":"請先啟用所需依賴。依賴不會自動啟用。"}
+    "settings": {"title":"CatX-UI 功能","intro":"只啟用需要的分支模組。依賴關係會明確驗證，變更後需要重新啟動面板。","save":"儲存功能設定","saved":"功能設定已儲存。請重新啟動面板以套用模組變更。","loadFailed":"無法載入功能設定。","saveFailed":"無法儲存功能設定。","restartRequired":"需要重新啟動面板","restartRequiredDescription":"大多數 CatX 模組會在啟動時初始化。儲存開關後，請先重新啟動面板再使用已變更的模組。","dependencyWarning":"請先啟用所需依賴。依賴不會自動啟用。"}
   }
 }

@@ -3000,6 +3000,6 @@
       "destinations": "Tujuan",
       "deliveries": "Pengiriman dan pesan gagal"
 },
-    "settings": {"title":"Fitur CatX-UI","description":"Aktifkan hanya modul fork yang diperlukan. Dependensi diperiksa secara eksplisit dan perubahan memerlukan panel dimulai ulang.","save":"Simpan fitur","saved":"Fitur tersimpan. Mulai ulang panel untuk menerapkan perubahan modul.","loadFailed":"Fitur tidak dapat dimuat.","saveFailed":"Fitur tidak dapat disimpan.","restartRequired":"Panel harus dimulai ulang","restartRequiredDescription":"Sebagian besar modul CatX diinisialisasi saat mulai. Simpan flag, lalu mulai ulang panel sebelum memakai modul yang diubah.","dependencyWarning":"Aktifkan dependensi yang diperlukan terlebih dahulu. Dependensi tidak pernah diaktifkan otomatis."}
+    "settings": {"title":"Fitur CatX-UI","intro":"Aktifkan hanya modul fork yang diperlukan. Dependensi diperiksa secara eksplisit dan perubahan memerlukan panel dimulai ulang.","save":"Simpan fitur","saved":"Fitur tersimpan. Mulai ulang panel untuk menerapkan perubahan modul.","loadFailed":"Fitur tidak dapat dimuat.","saveFailed":"Fitur tidak dapat disimpan.","restartRequired":"Panel harus dimulai ulang","restartRequiredDescription":"Sebagian besar modul CatX diinisialisasi saat mulai. Simpan flag, lalu mulai ulang panel sebelum memakai modul yang diubah.","dependencyWarning":"Aktifkan dependensi yang diperlukan terlebih dahulu. Dependensi tidak pernah diaktifkan otomatis."}
   }
 }

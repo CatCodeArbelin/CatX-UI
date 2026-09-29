@@ -3000,6 +3000,6 @@
       "destinations": "目标",
       "deliveries": "投递和死信"
 },
-    "settings": {"title":"CatX-UI 功能","description":"仅启用需要的分支模块。依赖关系会明确校验，修改后需要重启面板。","save":"保存功能设置","saved":"功能设置已保存。请重启面板以应用模块更改。","loadFailed":"无法加载功能设置。","saveFailed":"无法保存功能设置。","restartRequired":"需要重启面板","restartRequiredDescription":"大多数 CatX 模块会在启动时初始化。保存开关后，请先重启面板再使用已更改的模块。","dependencyWarning":"请先启用所需依赖。依赖不会自动启用。"}
+    "settings": {"title":"CatX-UI 功能","intro":"仅启用需要的分支模块。依赖关系会明确校验，修改后需要重启面板。","save":"保存功能设置","saved":"功能设置已保存。请重启面板以应用模块更改。","loadFailed":"无法加载功能设置。","saveFailed":"无法保存功能设置。","restartRequired":"需要重启面板","restartRequiredDescription":"大多数 CatX 模块会在启动时初始化。保存开关后，请先重启面板再使用已更改的模块。","dependencyWarning":"请先启用所需依赖。依赖不会自动启用。"}
   }
 }

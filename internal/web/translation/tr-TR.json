@@ -3000,6 +3000,6 @@
       "destinations": "Hedefler",
       "deliveries": "Teslimatlar ve başarısız iletiler"
 },
-    "settings": {"title":"CatX-UI Özellikleri","description":"Yalnızca ihtiyacınız olan fork modüllerini etkinleştirin. Bağımlılıklar açıkça doğrulanır ve değişiklikler panelin yeniden başlatılmasını gerektirir.","save":"Özellikleri kaydet","saved":"Özellikler kaydedildi. Modül değişikliklerini uygulamak için paneli yeniden başlatın.","loadFailed":"Özellikler yüklenemedi.","saveFailed":"Özellikler kaydedilemedi.","restartRequired":"Panel yeniden başlatılmalı","restartRequiredDescription":"Çoğu CatX modülü başlangıçta başlatılır. Bayrakları kaydedin ve değiştirilen modülü kullanmadan önce paneli yeniden başlatın.","dependencyWarning":"Önce gerekli bağımlılığı etkinleştirin. Bağımlılıklar otomatik olarak etkinleştirilmez."}
+    "settings": {"title":"CatX-UI Özellikleri","intro":"Yalnızca ihtiyacınız olan fork modüllerini etkinleştirin. Bağımlılıklar açıkça doğrulanır ve değişiklikler panelin yeniden başlatılmasını gerektirir.","save":"Özellikleri kaydet","saved":"Özellikler kaydedildi. Modül değişikliklerini uygulamak için paneli yeniden başlatın.","loadFailed":"Özellikler yüklenemedi.","saveFailed":"Özellikler kaydedilemedi.","restartRequired":"Panel yeniden başlatılmalı","restartRequiredDescription":"Çoğu CatX modülü başlangıçta başlatılır. Bayrakları kaydedin ve değiştirilen modülü kullanmadan önce paneli yeniden başlatın.","dependencyWarning":"Önce gerekli bağımlılığı etkinleştirin. Bağımlılıklar otomatik olarak etkinleştirilmez."}
   }
 }

@@ -69,9 +69,7 @@ export default function CatxFeaturesTab() {
       {contextHolder}
       <div>
         <Typography.Title level={2}>{t('fork.settings.title')}</Typography.Title>
-        <Typography.Paragraph type="secondary">
-          {t('fork.settings.description')}
-        </Typography.Paragraph>
+        <Typography.Paragraph type="secondary">{t('fork.settings.intro')}</Typography.Paragraph>
       </div>
       <Alert
         type="warning"

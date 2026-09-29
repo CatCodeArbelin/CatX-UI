@@ -3000,6 +3000,6 @@
       "destinations": "Destinos",
       "deliveries": "Entregas y mensajes fallidos"
 },
-    "settings": {"title":"Funciones de CatX-UI","description":"Activa solo los módulos que necesites. Las dependencias se comprueban de forma explícita y los cambios requieren reiniciar el panel.","save":"Guardar funciones","saved":"Funciones guardadas. Reinicia el panel para aplicar los cambios.","loadFailed":"No se pudieron cargar las funciones.","saveFailed":"No se pudieron guardar las funciones.","restartRequired":"Es necesario reiniciar el panel","restartRequiredDescription":"La mayoría de los módulos de CatX se inicializan al arrancar. Guarda los indicadores y reinicia el panel antes de usar un módulo cambiado.","dependencyWarning":"Activa primero la dependencia requerida. Las dependencias nunca se activan automáticamente."}
+    "settings": {"title":"Funciones de CatX-UI","intro":"Activa solo los módulos que necesites. Las dependencias se comprueban de forma explícita y los cambios requieren reiniciar el panel.","save":"Guardar funciones","saved":"Funciones guardadas. Reinicia el panel para aplicar los cambios.","loadFailed":"No se pudieron cargar las funciones.","saveFailed":"No se pudieron guardar las funciones.","restartRequired":"Es necesario reiniciar el panel","restartRequiredDescription":"La mayoría de los módulos de CatX se inicializan al arrancar. Guarda los indicadores y reinicia el panel antes de usar un módulo cambiado.","dependencyWarning":"Activa primero la dependencia requerida. Las dependencias nunca se activan automáticamente."}
   }
 }

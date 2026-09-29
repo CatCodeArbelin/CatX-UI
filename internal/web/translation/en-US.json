@@ -3003,7 +3003,7 @@
     },
     "settings": {
       "title": "CatX-UI Features",
-      "description": "Enable only the fork modules you need. Dependencies are checked explicitly and changes require a panel restart.",
+      "intro": "Enable only the fork modules you need. Dependencies are checked explicitly and changes require a panel restart.",
       "save": "Save feature settings",
       "saved": "Feature settings saved. Restart the panel to apply module changes.",
       "loadFailed": "Feature settings could not be loaded.",

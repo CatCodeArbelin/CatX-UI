@@ -3000,6 +3000,6 @@
       "destinations": "Đích",
       "deliveries": "Lần gửi và thư không gửi được"
 },
-    "settings": {"title":"Tính năng CatX-UI","description":"Chỉ bật các mô-đun fork cần thiết. Phụ thuộc được kiểm tra rõ ràng và thay đổi yêu cầu khởi động lại bảng điều khiển.","save":"Lưu tính năng","saved":"Đã lưu tính năng. Khởi động lại bảng điều khiển để áp dụng thay đổi mô-đun.","loadFailed":"Không thể tải tính năng.","saveFailed":"Không thể lưu tính năng.","restartRequired":"Cần khởi động lại bảng điều khiển","restartRequiredDescription":"Hầu hết mô-đun CatX được khởi tạo khi khởi động. Lưu cờ rồi khởi động lại bảng điều khiển trước khi dùng mô-đun đã đổi.","dependencyWarning":"Trước tiên hãy bật phần phụ thuộc bắt buộc. Phần phụ thuộc không được bật tự động."}
+    "settings": {"title":"Tính năng CatX-UI","intro":"Chỉ bật các mô-đun fork cần thiết. Phụ thuộc được kiểm tra rõ ràng và thay đổi yêu cầu khởi động lại bảng điều khiển.","save":"Lưu tính năng","saved":"Đã lưu tính năng. Khởi động lại bảng điều khiển để áp dụng thay đổi mô-đun.","loadFailed":"Không thể tải tính năng.","saveFailed":"Không thể lưu tính năng.","restartRequired":"Cần khởi động lại bảng điều khiển","restartRequiredDescription":"Hầu hết mô-đun CatX được khởi tạo khi khởi động. Lưu cờ rồi khởi động lại bảng điều khiển trước khi dùng mô-đun đã đổi.","dependencyWarning":"Trước tiên hãy bật phần phụ thuộc bắt buộc. Phần phụ thuộc không được bật tự động."}
   }
 }

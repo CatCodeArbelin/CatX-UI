@@ -3000,6 +3000,6 @@
       "destinations": "Destinos",
       "deliveries": "Entregas e mensagens não entregues"
 },
-    "settings": {"title":"Recursos do CatX-UI","description":"Ative apenas os módulos necessários. As dependências são verificadas explicitamente e as alterações exigem reiniciar o painel.","save":"Salvar recursos","saved":"Recursos salvos. Reinicie o painel para aplicar as alterações dos módulos.","loadFailed":"Não foi possível carregar os recursos.","saveFailed":"Não foi possível salvar os recursos.","restartRequired":"É necessário reiniciar o painel","restartRequiredDescription":"A maioria dos módulos CatX é inicializada no início. Salve os sinalizadores e reinicie o painel antes de usar um módulo alterado.","dependencyWarning":"Ative primeiro a dependência necessária. Dependências nunca são ativadas automaticamente."}
+    "settings": {"title":"Recursos do CatX-UI","intro":"Ative apenas os módulos necessários. As dependências são verificadas explicitamente e as alterações exigem reiniciar o painel.","save":"Salvar recursos","saved":"Recursos salvos. Reinicie o painel para aplicar as alterações dos módulos.","loadFailed":"Não foi possível carregar os recursos.","saveFailed":"Não foi possível salvar os recursos.","restartRequired":"É necessário reiniciar o painel","restartRequiredDescription":"A maioria dos módulos CatX é inicializada no início. Salve os sinalizadores e reinicie o painel antes de usar um módulo alterado.","dependencyWarning":"Ative primeiro a dependência necessária. Dependências nunca são ativadas automaticamente."}
   }
 }
