@@ -533,13 +533,21 @@ Activity, `/activity`, `/clients`, `/nodes`, and `/routing` HTTP 200 responses,
 and no panic, fatal, or migration errors. WP-9D is merge-ready. The next
 package is RC-5; no `v0.1.0-rc.2` tag or release exists.
 
-## RC-5 — Final Second Public RC Qualification & Cut — PLANNED
+WP-9D was merged into `develop` with merge SHA
+`17588b4ed90798979ee2a3953ed5d1d8430afd6e`; its feature branch was deleted
+locally and remotely.
 
-Start only after WP-9D is merged with explicit human approval. Re-run release
-qualification on the exact post-WP-9D SHA and target `v0.1.0-rc.2`, preserving
-the RC-4 release-engineering improvements. After the tag, perform real
-published-asset smoke checks on disposable installations. Do not touch stable
-`v0.1.0` and do not perform repository productization in RC-5.
+## RC-5 — Final Second Public RC Qualification & Cut — CURRENT
+
+Branch: `feature/rc5-final-second-public-rc`
+
+Start from exact post-WP-9D `develop` SHA
+`17588b4ed90798979ee2a3953ed5d1d8430afd6e`. Re-run release qualification and,
+only after every pre-tag gate passes, target `v0.1.0-rc.2`, preserving the RC-4
+release-engineering improvements. After the tag, perform real published-asset
+smoke checks on disposable installations. Do not touch stable `v0.1.0` and do
+not perform repository productization in RC-5. The RC-5 required-reading set is
+defined in `CURRENT_TASK.md`; no `v0.1.0-rc.2` tag or release exists yet.
 
 # Operating Rules
 
