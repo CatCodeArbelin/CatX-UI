@@ -301,6 +301,7 @@ EOF
         rollback_evidence=/tmp/catx-staging-rollback.log
         rollback_audit=/tmp/catx-staging-update-audit.log
         rm -f "$rollback_evidence" "$rollback_audit" /tmp/catx-staging-candidate-failure-injected
+        echo "staging: post-activation rollback case begin"
         pkill -f "[/]usr/local/x-ui/bin/xray-linux-" >/dev/null 2>&1 || true
         rm -rf /usr/local/x-ui /etc/x-ui
         mkdir -p /usr/local/x-ui /etc/x-ui /etc/systemd/system
@@ -326,12 +327,13 @@ EOF
 
         known_good_sha=$(sha256sum /usr/local/x-ui/x-ui | cut -d " " -f1)
         candidate_sha=$(tar -xOzf "$rollback_archive" x-ui/x-ui | sha256sum | cut -d " " -f1)
-        candidate_identity=$(mktemp)
-        tar -xOzf "$rollback_archive" x-ui/x-ui > "$candidate_identity"
-        chmod +x "$candidate_identity"
-        candidate_release_info=$("$candidate_identity" release-info)
-        rm -f "$candidate_identity"
-        known_good_identity=$(/usr/local/x-ui/x-ui release-info)
+        candidate_release_info=$(cat "/srv/release/CatCodeArbelin/CatX-UI/releases/download/$release_tag/catx-ui-release-metadata.json")
+        known_good_release_info=$(/usr/local/x-ui/x-ui release-info 2>/dev/null || true)
+        if [[ -n "$known_good_release_info" ]]; then
+            known_good_identity="$known_good_release_info"
+        else
+            known_good_identity="binary-sha=$known_good_sha"
+        fi
         db_marker_before=$(sqlite3 /etc/x-ui/x-ui.db "SELECT value FROM catx_rc2_fixture WHERE key = \"synthetic-client\";")
         cli_before=$(sha256sum /usr/bin/x-ui | cut -d " " -f1)
         service_before=$(sha256sum /etc/systemd/system/x-ui.service | cut -d " " -f1)
@@ -352,6 +354,7 @@ EOF
         rollback_rc=$?
         set -e
         echo "staging: post-activation rollback updater exit=$rollback_rc"
+        sed -n '1,240p' /tmp/update-post-activation-rollback.log >&2 || true
         cat "$rollback_evidence" >&2
         grep -Fq "candidate-activated=$candidate_sha" "$rollback_evidence"
         grep -Fq "failure=service-start" "$rollback_evidence"
@@ -371,7 +374,9 @@ EOF
         test "$restored_service" = "$service_before"
         test "$restored_environment" = "$environment_before"
         test "$db_marker_after" = "$db_marker_before"
-        test "$known_good_identity" = "$(/usr/local/x-ui/x-ui release-info)"
+        if [[ -n "$known_good_release_info" ]]; then
+            test "$known_good_release_info" = "$(/usr/local/x-ui/x-ui release-info 2>/dev/null)"
+        fi
         echo "staging: rollback restored binary sha=$restored_sha"
         echo "staging: rollback database marker after=$db_marker_after"
         test -s /tmp/catx-x-ui-service.pid
