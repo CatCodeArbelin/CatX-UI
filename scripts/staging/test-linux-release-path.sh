@@ -58,7 +58,7 @@ service_log=/tmp/catx-x-ui-service.log
 evidence_file=${CATX_STAGING_ROLLBACK_EVIDENCE_FILE:-/tmp/catx-staging-rollback.log}
 
 binary_sha() {
-  sha256sum "$live/x-ui" | awk '{print $1}'
+  sha256sum "$live/x-ui" | cut -d " " -f1
 }
 
 service_running() {
@@ -88,9 +88,9 @@ start_service() {
   if [[ "${CATX_STAGING_RUNTIME:-0}" == 1 && "${CATX_STAGING_ROLLBACK_INJECT:-0}" == 1 && \
         "$current_sha" == "${CATX_STAGING_ROLLBACK_CANDIDATE_SHA:-}" && \
         ! -e /tmp/catx-staging-candidate-failure-injected ]]; then
-    printf 'candidate-activated=%s failure=service-start\n' "$current_sha" >> "$evidence_file"
+    printf "candidate-activated=%s failure=service-start\n" "$current_sha" >> "$evidence_file"
     : > /tmp/catx-staging-candidate-failure-injected
-    printf 'staging: candidate activated before injected service-start failure sha=%s\n' "$current_sha" >> "$evidence_file"
+    printf "staging: candidate activated before injected service-start failure sha=%s\n" "$current_sha" >> "$evidence_file"
     return 42
   fi
   stop_service
@@ -301,7 +301,7 @@ EOF
         rollback_evidence=/tmp/catx-staging-rollback.log
         rollback_audit=/tmp/catx-staging-update-audit.log
         rm -f "$rollback_evidence" "$rollback_audit" /tmp/catx-staging-candidate-failure-injected
-        pkill -f '[/]usr/local/x-ui/bin/xray-linux-' >/dev/null 2>&1 || true
+        pkill -f "[/]usr/local/x-ui/bin/xray-linux-" >/dev/null 2>&1 || true
         rm -rf /usr/local/x-ui /etc/x-ui
         mkdir -p /usr/local/x-ui /etc/x-ui /etc/systemd/system
         cp -a /tmp/populated-db/. /etc/x-ui/
@@ -319,10 +319,10 @@ EOF
 
         # These synthetic external files make restoration observable without
         # introducing credentials or relying on a host service manager.
-        printf '#!/usr/bin/env bash\n# synthetic known-good CLI\n' > /usr/bin/x-ui
+        printf "#!/usr/bin/env bash\n# synthetic known-good CLI\n" > /usr/bin/x-ui
         chmod 755 /usr/bin/x-ui
-        printf 'synthetic-known-good-service\n' > /etc/systemd/system/x-ui.service
-        printf 'synthetic-known-good-environment\n' > /etc/default/x-ui
+        printf "synthetic-known-good-service\n" > /etc/systemd/system/x-ui.service
+        printf "synthetic-known-good-environment\n" > /etc/default/x-ui
 
         known_good_sha=$(sha256sum /usr/local/x-ui/x-ui | cut -d " " -f1)
         candidate_sha=$(tar -xOzf "$rollback_archive" x-ui/x-ui | sha256sum | cut -d " " -f1)
@@ -338,8 +338,8 @@ EOF
         environment_before=$(sha256sum /etc/default/x-ui | cut -d " " -f1)
         echo "staging: rollback known-good binary sha=$known_good_sha"
         echo "staging: rollback candidate binary sha=$candidate_sha"
-        echo "staging: rollback candidate identity=$(printf '%s' "$candidate_release_info" | tr '\n' ';')"
-        echo "staging: rollback known-good identity=$(printf '%s' "$known_good_identity" | tr '\n' ';')"
+        echo "staging: rollback candidate identity=$candidate_release_info"
+        echo "staging: rollback known-good identity=$known_good_identity"
         echo "staging: rollback database marker before=$db_marker_before"
         test "$known_good_sha" != "$candidate_sha"
 
@@ -379,10 +379,10 @@ EOF
         kill -0 "$service_pid"
         wait_http http://127.0.0.1:28080/staging/
         curl -fsS http://127.0.0.1:28080/staging/ >/dev/null
-        xray_pid=$(pgrep -f '[/]usr/local/x-ui/bin/xray-linux-' | head -n 1 || true)
+        xray_pid=$(pgrep -f "[/]usr/local/x-ui/bin/xray-linux-" | head -n 1 || true)
         test -n "$xray_pid"
         kill -0 "$xray_pid"
-        grep -Eiq 'xray.*started' /tmp/catx-x-ui-service.log
+        grep -Eiq "xray.*started" /tmp/catx-x-ui-service.log
         echo "staging: rollback restored panel healthy pid=$service_pid"
         echo "staging: rollback restored xray healthy pid=$xray_pid"
         systemctl stop x-ui
