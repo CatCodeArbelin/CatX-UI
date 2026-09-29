@@ -492,7 +492,7 @@ Completed at `954a1536a3c018eec48eb9b7a6146f8e1328fae0` after green Fork
 Verification run `36510971071`; merged into `develop` with merge SHA
 `8435466fe004f2488ad0be241fab7d898da84147`.
 
-## RC-4 — Second Public RC Qualification & Cut — CURRENT
+## RC-4 — Second Public RC Qualification & Cut — DONE
 
 Branch: `feature/rc4-second-public-rc`
 
@@ -502,6 +502,44 @@ operator path, generalize future RC discovery and branch qualification, and
 retain the full artifact, Linux, PostgreSQL, upgrade, rollback, and publication
 evidence. After publication the next phase is release observation and stable
 qualification, not feature development.
+
+RC-4 release engineering was technically qualified at
+`e780d9b87e7bb2fcb3cdeab6e33f11b893d9e68b`; Fork Verification
+`36514812058` and Release CatX-UI `36514812043` were green. The public
+`v0.1.0-rc.2` cut was intentionally deferred because manual smoke testing
+found product UX/localization blockers. No public tag or release was created.
+RC-4 merged into `develop` with `b66ac15f79d411b5a0b2386e8770b05e88254bc2`,
+and its feature branch was deleted. `main` was not changed.
+
+## WP-9D — Product UX Integration & Human QA — DONE
+
+Branch: `feature/wp-9d-product-ux-integration`
+
+Group CatX destinations into existing upstream sidebar submenus, use semantic
+Ant Design icons, remove Sponsors from primary navigation without deleting its
+implementation, improve shared page composition and empty states, make
+feature-off states explicit and localized, and complete the Russian and
+narrow non-Russian leakage review. The current package includes the native
+themed CatX admin shell, restored upstream submenu destinations, contextual
+client access, CatX feature settings, actionable feature-off UX, semantic
+localization QA, and the mandatory human visual gate. Preserve direct routes.
+
+Final human functional smoke was approved at implementation SHA
+`52f70d832b5062dda495b9b6e406075b2ce3ae0a`. The apparent restart failure was
+environment-only: the disposable preview used automatic container removal and
+exited cleanly on SIGINT; a corrected persistent-container smoke passed with
+Analytics and DNS Analytics enabled, including save, restart, flag persistence,
+Activity, `/activity`, `/clients`, `/nodes`, and `/routing` HTTP 200 responses,
+and no panic, fatal, or migration errors. WP-9D is merge-ready. The next
+package is RC-5; no `v0.1.0-rc.2` tag or release exists.
+
+## RC-5 — Final Second Public RC Qualification & Cut — PLANNED
+
+Start only after WP-9D is merged with explicit human approval. Re-run release
+qualification on the exact post-WP-9D SHA and target `v0.1.0-rc.2`, preserving
+the RC-4 release-engineering improvements. After the tag, perform real
+published-asset smoke checks on disposable installations. Do not touch stable
+`v0.1.0` and do not perform repository productization in RC-5.
 
 # Operating Rules
 

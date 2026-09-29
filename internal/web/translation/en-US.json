@@ -2720,6 +2720,9 @@
     "settings": "Settings"
   },
   "fork": {
+    "operations": {
+      "title": "Operations"
+    },
    "apiDocs": {
     "labels": {
       "panelApi": "3X-UI Panel API",
@@ -2733,6 +2736,7 @@
       "audit": "Audit / Webhooks / Metrics",
       "portal": "Self-service portal",
       "fleetUpdates": "Fleet updates",
+      "settings": "CatX-UI Features",
       "traffic": "Traffic control"
     },
    "portal": {
@@ -2794,17 +2798,19 @@
       "delete": "Delete",
       "rename": "Rename",
       "email": "Email",
-      "never": "Never"
+      "never": "Never",
+      "noItems": "No items",
+      "featureOffTitle": "{feature} is disabled",
+      "featureOffDescription": "This CatX-UI feature is disabled. Enable it in CatX-UI Features, then restart the panel to use this page."
     },
    "activity": {
     "labels": {
-      "ambiguous": "Ambiguous / conflicting"
+      "ambiguous": "Ambiguous / conflicting","time":"Time","domainIp":"Domain / IP","service":"Service","category":"Category","asnCountry":"ASN / country","sourceProvenance":"Source / provenance","confidence":"Confidence","firstSeen":"First seen","lastSeen":"Last seen","protocol":"Protocol","observedDomain":"Observed domain","resolvedIp":"Resolved IP","record":"Record","timeline":"Timeline","dnsObservations":"DNS observations","enrichedDetails":"Enriched details","sessionHistory":"Session history","trafficHistory":"Traffic history","events":"Events","dns":"DNS","sessions":"Sessions","range":"Range","upload":"Upload","download":"Download","clients":"Clients","inbounds":"Inbounds","serviceCategory":"Service / category","observations":"Observations","metadataNote":"Metadata-derived rows; byte totals come from upstream traffic accounting.","aggregates":"Aggregates","saveError":"Settings could not be saved."
     },
       "title": "Client activity & DNS intelligence",
       "subtitle": "Metadata-only observations for one existing panel client.",
       "client": "Client email",
       "enter": "Enter a client email to view activity.",
-      "disabled": "Analytics is disabled. Enable analytics to collect and view activity.",
       "dnsDisabled": "DNS intelligence is disabled. Core analytics remains available.",
       "error": "Analytics activity could not be loaded.",
       "privacy": "Privacy: metadata only. Classifications use visible metadata and may be uncertain; no payloads, cookies, credentials, or headers are collected.",
@@ -2866,7 +2872,6 @@
       "deleteAssignment": "Delete this assignment?",
       "deleteOverride": "Delete this override?",
       "deleteSchedule": "Delete this schedule?",
-      "disabled": "Policies are disabled. The panel remains upstream-compatible and simulations are read-only no-ops.",
       "policy": "Policy",
       "targetEmailGroup": "Target email or group",
       "priority": "Priority",
@@ -2994,6 +2999,56 @@
       "replay": "Replay",
       "destinations": "Destinations",
       "deliveries": "Deliveries and dead letters"
+    },
+    "settings": {
+      "title": "CatX-UI Features",
+      "intro": "Enable only the fork modules you need. Dependencies are checked explicitly and changes require a panel restart.",
+      "save": "Save feature settings",
+      "saved": "Feature settings saved. Restart the panel to apply module changes.",
+      "loadFailed": "Feature settings could not be loaded.",
+      "saveFailed": "Feature settings could not be saved.",
+      "restartRequired": "Panel restart required",
+      "restartRequiredDescription": "Most CatX modules initialize at startup. Save the flags, then restart the panel before using a changed module.",
+      "dependencyWarning": "Enable the required dependency first. Dependencies are never enabled automatically."
+    ,
+      "dependencyRequired": "Enable {dependency} before enabling {feature}.",       "features": {
+        "analytics": {
+          "name": "Analytics",
+          "details": "Collect and show metadata-only activity, DNS, session, and traffic insights."
+        },
+        "dnsIntelligence": {
+          "name": "DNS intelligence",
+          "details": "Enrich activity with DNS observations and resolver intelligence."
+        },
+        "policies": {
+          "name": "Policy engine",
+          "details": "Create and assign policies and preview their non-mutating decisions."
+        },
+        "trafficControl": {
+          "name": "Traffic control / QoS",
+          "details": "Apply client traffic limits and fixed-window QoS controls."
+        },
+        "riskIntelligence": {
+          "name": "Risk intelligence",
+          "details": "Detect and review metadata-based security and anomaly signals."
+        },
+        "audit": {
+          "name": "Audit",
+          "details": "Record and review metadata-only administrative events."
+        },
+        "clientPortal": {
+          "name": "Client portal",
+          "details": "Provide clients with controlled access to their portal and devices."
+        },
+        "fleetUpdates": {
+          "name": "Fleet updates",
+          "details": "Plan and reconcile updates across managed nodes."
+        },
+        "productionFleetUpdates": {
+          "name": "Production fleet updates",
+          "details": "Allow dispatching fleet updates to production nodes."
+        }
+      }
     }
   }
 }

@@ -2720,6 +2720,9 @@
     "settings": "Configurações"
   },
   "fork": {
+    "operations": {
+      "title": "Operações"
+    },
     "apiDocs": {
       "labels": {
         "panelApi": "API do painel 3X-UI",
@@ -2733,6 +2736,7 @@
       "audit": "Auditoria / Webhooks / Metrics",
       "portal": "Self-Serviço Portal",
       "fleetUpdates": "Frota Atualizações",
+      "settings": "Recursos do CatX-UI",
       "traffic": "Tráfego control"
     },
     "portal": {
@@ -2760,7 +2764,7 @@
       "hosts": "Conexão Hosts",
       "invalidToken": "Inválido Portal token.",
       "lastSeen": "Último seen",
-      "loginRequired": "Enter your Portal access token.",
+      "loginRequired": "Insira o token de acesso do portal.",
       "quota": "Cota",
       "renamePrompt": "Novo Dispositivo Nome",
       "signIn": "Entrar in",
@@ -2794,17 +2798,19 @@
       "delete": "Excluir",
       "rename": "Renomear",
       "email": "E-mail",
-      "never": "Nunca"
+      "never": "Nunca",
+      "noItems": "Nenhum item",
+      "featureOffTitle": "O recurso «{feature}» está desativado",
+      "featureOffDescription": "Este recurso do CatX-UI está desativado. Ative-o nas configurações de recursos do servidor para usar esta página."
     },
     "activity": {
       "labels": {
-        "ambiguous": "Ambíguo / conflitante"
+      "ambiguous": "Ambíguo / conflitante","time":"Hora","domainIp":"Domínio / IP","service":"Serviço","category":"Categoria","asnCountry":"ASN / país","sourceProvenance":"Fonte / procedência","confidence":"Confiança","firstSeen":"Primeira ocorrência","lastSeen":"Última ocorrência","protocol":"Protocolo","observedDomain":"Domínio observado","resolvedIp":"IP resolvido","record":"Registro","timeline":"Linha do tempo","dnsObservations":"Observações DNS","enrichedDetails":"Detalhes enriquecidos","sessionHistory":"Histórico de sessões","trafficHistory":"Histórico de tráfego","events":"Eventos","dns":"DNS","sessions":"Sessões","range":"Intervalo","upload":"Envio","download":"Recebimento","clients":"Clientes","inbounds":"Entradas","serviceCategory":"Serviço / categoria","observations":"Observações","metadataNote":"Linhas derivadas de metadados; os totais de bytes vêm da contabilidade de tráfego do painel.","aggregates":"Agregados","saveError":"Não foi possível salvar as configurações."
       },
       "title": "Cliente Atividade & DNS Inteligência",
       "subtitle": "Observações somente de metadados de um cliente existente do painel.",
       "client": "Cliente email",
       "enter": "Enter a Cliente email to Visualizar Atividade.",
-      "disabled": "As análises estão desativadas. Ative-as para coletar e visualizar atividades.",
       "dnsDisabled": "A inteligência DNS está desativada. As análises principais continuam disponíveis.",
       "error": "Análises Atividade could not be loaded.",
       "privacy": "Privacidade: somente metadados. As classificações usam metadados visíveis e podem ser incertas; cargas, cookies, credenciais e cabeçalhos não são coletados.",
@@ -2866,7 +2872,6 @@
         "deleteAssignment": "Excluir this Atribuição?",
         "deleteOverride": "Excluir this Substituição?",
         "deleteSchedule": "Excluir this schedule?",
-        "disabled": "As políticas estão desativadas. O painel continua compatível com upstream e as simulações são no-op somente leitura.",
         "policy": "Política",
         "targetEmailGroup": "Alvo email or Grupo",
         "priority": "Prioridade",
@@ -2993,6 +2998,46 @@
       "replay": "Repetir",
       "destinations": "Destinos",
       "deliveries": "Entregas e mensagens não entregues"
+},
+    "settings": {"title":"Recursos do CatX-UI","intro":"Ative apenas os módulos necessários. As dependências são verificadas explicitamente e as alterações exigem reiniciar o painel.","save":"Salvar recursos","saved":"Recursos salvos. Reinicie o painel para aplicar as alterações dos módulos.","loadFailed":"Não foi possível carregar os recursos.","saveFailed":"Não foi possível salvar os recursos.","restartRequired":"É necessário reiniciar o painel","restartRequiredDescription":"A maioria dos módulos CatX é inicializada no início. Salve os sinalizadores e reinicie o painel antes de usar um módulo alterado.","dependencyWarning":"Ative primeiro a dependência necessária. Dependências nunca são ativadas automaticamente.",
+      "dependencyRequired": "Ative {dependency} antes de ativar {feature}.",       "features": {
+        "analytics": {
+          "name": "Análise",
+          "details": "Coleta e exibe informações de atividade, DNS, sessões e tráfego baseadas apenas em metadados."
+        },
+        "dnsIntelligence": {
+          "name": "Inteligência de DNS",
+          "details": "Enriquece a atividade com observações de DNS e informações do resolvedor."
+        },
+        "policies": {
+          "name": "Mecanismo de políticas",
+          "details": "Cria e atribui políticas e permite visualizar decisões sem aplicar alterações."
+        },
+        "trafficControl": {
+          "name": "Controle de tráfego / QoS",
+          "details": "Aplica limites de tráfego por cliente e controles QoS de janela fixa."
+        },
+        "riskIntelligence": {
+          "name": "Inteligência de riscos",
+          "details": "Detecta e revisa sinais de segurança e anomalias baseados em metadados."
+        },
+        "audit": {
+          "name": "Auditoria",
+          "details": "Registra e revisa eventos administrativos baseados apenas em metadados."
+        },
+        "clientPortal": {
+          "name": "Portal do cliente",
+          "details": "Oferece aos clientes acesso controlado ao portal e aos dispositivos."
+        },
+        "fleetUpdates": {
+          "name": "Atualizações da frota",
+          "details": "Planeja e reconcilia atualizações nos nós gerenciados."
+        },
+        "productionFleetUpdates": {
+          "name": "Atualizações da frota em produção",
+          "details": "Permite enviar atualizações da frota aos nós de produção."
+        }
+      }
     }
   }
 }

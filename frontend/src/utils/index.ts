@@ -3,17 +3,27 @@ import { httpRequest } from '@/api/http-init';
 import type { HttpResponse } from '@/api/http-init';
 import { getMessage } from './messageBus';
 
-type RespEnvelope = { success?: unknown; msg?: unknown; obj?: unknown };
+type RespEnvelope = { success?: unknown; msg?: unknown; obj?: unknown; featureDisabled?: unknown };
 
 export class Msg<T = unknown> {
   success: boolean;
   msg: string;
   obj: T | null;
+  status?: number;
+  featureDisabled?: boolean;
 
-  constructor(success: boolean = false, msg: string = '', obj: T | null = null) {
+  constructor(
+    success: boolean = false,
+    msg: string = '',
+    obj: T | null = null,
+    status?: number,
+    featureDisabled = false,
+  ) {
     this.success = success;
     this.msg = msg;
     this.obj = obj;
+    this.status = status;
+    this.featureDisabled = featureDisabled;
   }
 }
 
@@ -62,7 +72,13 @@ export class HttpUtil {
     }
     if (typeof data === 'object' && 'success' in (data as object)) {
       const d = data as RespEnvelope;
-      return new Msg(Boolean(d.success), typeof d.msg === 'string' ? d.msg : '', d.obj ?? null);
+      return new Msg(
+        Boolean(d.success),
+        typeof d.msg === 'string' ? d.msg : '',
+        d.obj ?? null,
+        resp.status,
+        d.featureDisabled === true,
+      );
     }
     return typeof data === 'object' ? (data as Msg) : new Msg(false, 'unknown data:', data);
   }
@@ -80,13 +96,20 @@ export class HttpUtil {
       return msg;
     } catch (error) {
       const err = error as {
-        response?: { data?: { msg?: string; message?: string } };
+        response?: {
+          status?: number;
+          data?: { msg?: string; message?: string; featureDisabled?: boolean };
+        };
         message?: string;
+        status?: number;
       };
       const data = err.response?.data;
       const errorMsg = new Msg<T>(
         false,
         data?.msg || data?.message || err.message || 'Request failed',
+        null,
+        typeof err.status === 'number' ? err.status : err.response?.status,
+        data?.featureDisabled === true,
       );
       if (!silent) {
         console.error('GET request failed:', error);
@@ -109,13 +132,20 @@ export class HttpUtil {
       return msg;
     } catch (error) {
       const err = error as {
-        response?: { data?: { msg?: string; message?: string } };
+        response?: {
+          status?: number;
+          data?: { msg?: string; message?: string; featureDisabled?: boolean };
+        };
         message?: string;
+        status?: number;
       };
       const data = err.response?.data;
       const errorMsg = new Msg<T>(
         false,
         data?.msg || data?.message || err.message || 'Request failed',
+        null,
+        typeof err.status === 'number' ? err.status : err.response?.status,
+        data?.featureDisabled === true,
       );
       if (!silent) {
         console.error('POST request failed:', error);
@@ -135,13 +165,20 @@ export class HttpUtil {
     } catch (error) {
       console.error('DELETE request failed:', error);
       const err = error as {
-        response?: { data?: { msg?: string; message?: string } };
+        response?: {
+          status?: number;
+          data?: { msg?: string; message?: string; featureDisabled?: boolean };
+        };
         message?: string;
+        status?: number;
       };
       const data = err.response?.data;
       const errorMsg = new Msg<T>(
         false,
         data?.msg || data?.message || err.message || 'Request failed',
+        null,
+        typeof err.status === 'number' ? err.status : err.response?.status,
+        data?.featureDisabled === true,
       );
       if (!silent) this._handleMsg(errorMsg);
       return errorMsg;
@@ -161,13 +198,20 @@ export class HttpUtil {
       return msg;
     } catch (error) {
       const err = error as {
-        response?: { data?: { msg?: string; message?: string } };
+        response?: {
+          status?: number;
+          data?: { msg?: string; message?: string; featureDisabled?: boolean };
+        };
         message?: string;
+        status?: number;
       };
       const data = err.response?.data;
       const errorMsg = new Msg<T>(
         false,
         data?.msg || data?.message || err.message || 'Request failed',
+        null,
+        typeof err.status === 'number' ? err.status : err.response?.status,
+        data?.featureDisabled === true,
       );
       if (!silent) this._handleMsg(errorMsg);
       return errorMsg;

@@ -2720,6 +2720,9 @@
     "settings": "设置"
   },
   "fork": {
+    "operations": {
+      "title": "运维"
+    },
     "apiDocs": {
       "labels": {
         "panelApi": "3X-UI 面板 API",
@@ -2733,6 +2736,7 @@
       "audit": "审计 / Webhook / Metrics",
       "portal": "Self-服务 门户",
       "fleetUpdates": "节点集群 更新",
+      "settings": "CatX-UI 功能",
       "traffic": "流量 control"
     },
     "portal": {
@@ -2794,17 +2798,19 @@
       "delete": "删除",
       "rename": "重命名",
       "email": "电子邮件",
-      "never": "从不"
+      "never": "从不",
+      "noItems": "暂无项目",
+      "featureOffTitle": "功能“{feature}”已停用",
+      "featureOffDescription": "此 CatX-UI 功能已禁用。请在服务器功能设置中启用它后再使用此页面。"
     },
     "activity": {
       "labels": {
-        "ambiguous": "含糊 / 冲突"
+      "ambiguous": "含糊 / 冲突","time":"时间","domainIp":"域名 / IP","service":"服务","category":"类别","asnCountry":"ASN / 国家","sourceProvenance":"来源 / 依据","confidence":"置信度","firstSeen":"首次发现","lastSeen":"最近发现","protocol":"协议","observedDomain":"观测域名","resolvedIp":"解析 IP","record":"记录","timeline":"时间线","dnsObservations":"DNS 观测","enrichedDetails":"增强详情","sessionHistory":"会话历史","trafficHistory":"流量历史","events":"事件","dns":"DNS","sessions":"会话","range":"范围","upload":"上传","download":"下载","clients":"客户端","inbounds":"入站","serviceCategory":"服务 / 类别","observations":"观测数","metadataNote":"这些行来自元数据；字节总量来自面板流量统计。","aggregates":"聚合","saveError":"无法保存设置。"
       },
       "title": "客户端 活动 & DNS 智能",
       "subtitle": "仅记录一个现有面板客户端的元数据观测。",
       "client": "客户端 email",
       "enter": "Enter a 客户端 email to 查看 活动.",
-      "disabled": "分析功能已禁用。启用分析功能以收集和查看活动。",
       "dnsDisabled": "DNS 智能已禁用。核心分析仍可用。",
       "error": "分析 活动 could not be loaded.",
       "privacy": "隐私：仅收集元数据。分类使用可见元数据，可能存在不确定性；不会收集有效载荷、Cookie、凭据或标头。",
@@ -2866,7 +2872,6 @@
         "deleteAssignment": "删除 this 分配?",
         "deleteOverride": "删除 this 覆盖?",
         "deleteSchedule": "删除 this schedule?",
-        "disabled": "策略已禁用。面板保持 upstream 兼容，模拟操作为只读 no-op。",
         "policy": "策略",
         "targetEmailGroup": "目标 email or 组",
         "priority": "优先级",
@@ -2993,6 +2998,46 @@
       "replay": "重放",
       "destinations": "目标",
       "deliveries": "投递和死信"
+},
+    "settings": {"title":"CatX-UI 功能","intro":"仅启用需要的分支模块。依赖关系会明确校验，修改后需要重启面板。","save":"保存功能设置","saved":"功能设置已保存。请重启面板以应用模块更改。","loadFailed":"无法加载功能设置。","saveFailed":"无法保存功能设置。","restartRequired":"需要重启面板","restartRequiredDescription":"大多数 CatX 模块会在启动时初始化。保存开关后，请先重启面板再使用已更改的模块。","dependencyWarning":"请先启用所需依赖。依赖不会自动启用。",
+      "dependencyRequired": "请先启用{dependency}，再启用{feature}。",       "features": {
+        "analytics": {
+          "name": "分析",
+          "details": "仅基于元数据收集并显示活动、DNS、会话和流量信息。"
+        },
+        "dnsIntelligence": {
+          "name": "DNS 智能",
+          "details": "通过 DNS 观测和解析器信息丰富活动数据。"
+        },
+        "policies": {
+          "name": "策略引擎",
+          "details": "创建和分配策略，并预览不会修改配置的决策结果。"
+        },
+        "trafficControl": {
+          "name": "流量控制 / QoS",
+          "details": "应用客户端流量限制和固定窗口 QoS 控制。"
+        },
+        "riskIntelligence": {
+          "name": "风险情报",
+          "details": "检测并查看基于元数据的安全和异常信号。"
+        },
+        "audit": {
+          "name": "审计",
+          "details": "记录并查看仅基于元数据的管理事件。"
+        },
+        "clientPortal": {
+          "name": "客户门户",
+          "details": "为客户提供受控的门户和设备访问权限。"
+        },
+        "fleetUpdates": {
+          "name": "节点集群更新",
+          "details": "规划并协调受管节点的更新。"
+        },
+        "productionFleetUpdates": {
+          "name": "生产节点集群更新",
+          "details": "允许向生产节点发送集群更新。"
+        }
+      }
     }
   }
 }

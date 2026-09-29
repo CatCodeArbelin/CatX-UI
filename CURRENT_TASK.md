@@ -2,69 +2,91 @@
 
 ## Work Package
 
-`RC-4 — Second Public RC Qualification & Cut`
+`WP-9D — Product UX Integration & Human QA`
 
-## Completed predecessor
+## Required reading
 
-WP-9C was completed at implementation SHA
-`954a1536a3c018eec48eb9b7a6146f8e1328fae0` and Fork Verification
-`36510971071` (`success`). It was merged into `develop` with merge SHA
-`8435466fe004f2488ad0be241fab7d898da84147`. The RC-4 branch starts from
-that exact post-merge `develop` state. `main` must remain untouched.
+For WP-9D, read only these canonical documents in addition to `AGENTS.md` and
+this file:
 
-## Branch and release target
+- `docs/08_FRONTEND_UX.md`
+- `docs/15_DEFINITION_OF_DONE.md`
+- `docs/25_FRONTEND_I18N_CONTRACT.md`
+- `docs/26_LOCALIZATION_GLOSSARY.md`
+- `docs/27_SECOND_RC_PLAN.md`
 
-Work only on `feature/rc4-second-public-rc`.
+## RC-4 closure
 
-- stable version: `0.1.0` / `v0.1.0`;
-- RC version: `0.1.0-rc.2` / `v0.1.0-rc.2`;
-- dev channel: `dev-latest`;
-- no stable release and no production update.
+RC-4 release engineering was technically qualified at exact SHA
+`e780d9b87e7bb2fcb3cdeab6e33f11b893d9e68b` with Fork Verification
+`36514812058`, Release CatX-UI `36514812043`, and Deploy Smoke Tests
+`36514812068` all green. It was merged into `develop` with merge SHA
+`b66ac15f79d411b5a0b2386e8770b05e88254bc2`.
+
+The public `v0.1.0-rc.2` cut was intentionally deferred after manual smoke
+testing found product UX and localization blockers. No public tag or release
+was created. The RC-4 feature branch was deleted locally and remotely.
+
+`main` remains untouched. WP-9D starts from the exact post-RC-4 `develop`
+state on `feature/wp-9d-product-ux-integration`.
 
 ## Scope
 
-Audit and qualify the existing release, installer, updater, and channel
-semantics. Keep the implementation narrow and fork-owned. Do not add product
-features, rewrite upstream services, modify the database schema, or touch
-`main`.
+Integrate CatX-owned frontend surfaces into the upstream 3x-ui information
+architecture without changing backend semantics, database schema, Xray,
+updater, release behavior, or upstream Sponsors implementation. Preserve all
+direct CatX routes and keep fork modules low-divergence and independently
+reviewable.
 
-Required work:
+Required gates before this package can be considered ready for human review:
 
-- prove the old `rc.1` binary is pinned to `v0.1.0-rc.1` and document the
-  explicit verified `rc.1 → rc.2` path without claiming automatic discovery;
-- make RC discovery reusable for `rc.2` and future approved CatX RC tags while
-  preserving stable `/releases/latest`, unchanged `dev-latest`, trusted
-  repository/asset identity, draft and malformed-tag rejection, SemVer order,
-  checksum validation, no downgrade, and no stable→RC cross-grade;
-- generalize release workflow qualification to `feature/rc*-*`; branch builds
-  must never publish releases; retain Linux and PostgreSQL staging gates;
-- update the mirrored release identity and tests to `0.1.0-rc.2`;
-- add `docs/27_SECOND_RC_PLAN.md` with scope, base/Xray versions, migration,
-  recovery, limitations, channel semantics, and upgrade instructions.
-
-## Mandatory qualification before the public tag
-
-Qualify one exact final SHA with:
-
+- frontend formatting, lint, typecheck, tests, generated checks;
+- i18n parity, Russian leakage guards, RTL/accessibility and navigation tests;
 - `make verify` and `make verify-fork`;
-- frontend lint/typecheck/tests, i18n contracts, RTL/accessibility checks,
-  generated artifacts, release identity, artifact inspection;
-- Linux and PostgreSQL staging;
-- Linux amd64/arm64/armv7/armv6/386/armv5/s390x and Windows amd64 assets;
-- clean install, supported upgrades, `rc.1 → rc.2`, rollback, checksum and
-  identity failure cases in disposable environments.
+- disposable local preview instructions for manual light/dark/ultra-dark,
+  responsive, RTL, and long-string review.
 
-Do not create or push `v0.1.0-rc.2` until every applicable automated gate is
-green on the exact final SHA and the working tree is clean. Push only that tag,
-wait for the tagged workflow, verify the published release and assets, then
-run the post-publication disposable smoke test. Preserve all run IDs and
-evidence before deleting the RC-4 branch or merging it according to the
-repository release convention.
+## WP-9D review history
 
-## Authorized documents
+- The first human visual review failed at
+  `a37a804ab7534fefb6cf408d2d71b0f7bc7a8773`.
+- The corrective shell/navigation pass reached
+  `5a889d560fbd19dcd1d748c4f99b688fb69024c6`.
+- The second human review showed large improvement but found remaining
+  feature-operability and localization issues.
+- CatX feature settings, dependency validation, actionable feature-off UX,
+  and the related semantic localization fixes were then added.
+- SHA `ce00e0badea28b805b12302354cdd13b96979cc4` failed canonical CI solely
+  because `fork.settings.description` collided with reserved Go i18n message
+  metadata; the behavior-neutral key rename is the current corrective fix.
 
-- `docs/05_TESTING_ROLLBACK_RELEASE.md`
-- `docs/22_RC2_STAGING_RELEASE_QUALIFICATION.md`
-- `docs/23_RC2_RELEASE_NOTES.md`
-- `docs/24_FIRST_RC_PLAN.md`
-- `docs/27_SECOND_RC_PLAN.md`
+The branch remains unmerged, no `v0.1.0-rc.2` tag exists, and explicit human
+visual approval remains mandatory. WP-9D is not DONE.
+
+## WP-9D implementation evidence
+
+- `npm run format:check`, `npm run lint`, `npm run typecheck`, and
+  `git diff --check` pass locally.
+- Vitest and the frontend build are not runnable in the local Node `20.12.0`
+  environment: the repository requires Node `>=26.0.0`, and both commands
+  stop before project code executes. No repository files, dependencies,
+  lockfiles, or test configuration were changed for this limitation.
+- Go tests are likewise deferred to canonical Linux verification: the local
+  Windows run lacks the SQLite backup binding and CGO race support.
+- Feature-off rendering is driven by explicit `featureDisabled` state where
+  available, with only page-scoped handling for known fork-owned endpoints;
+  ordinary HTTP 404 responses remain ordinary errors.
+
+## Final human gate and closure
+
+Final human functional smoke is approved. The apparent restart failure was
+environment-only: the disposable preview used automatic container removal,
+exited cleanly on SIGINT with exit code 0, and Docker removed it before the
+restart attempt. A corrected persistent-container smoke using the same named
+volume passed with Analytics and DNS Analytics enabled: save, restart, panel
+startup, flag persistence, Activity, and HTTP 200 responses from `/activity`,
+`/clients`, `/nodes`, and `/routing`, with no panic, fatal, or migration errors.
+
+Implementation SHA remains `52f70d832b5062dda495b9b6e406075b2ce3ae0a`.
+WP-9D is DONE and merge-ready. RC-5 is the next work package; no RC-2 tag or
+release has been created.

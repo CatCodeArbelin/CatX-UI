@@ -32,6 +32,7 @@ const englishIdenticalTechnicalKeys = new Set([
   'fork.policy.scopes.dns',
   'fork.policy.scopes.qos',
   'fork.policy.labels.ipCidr',
+  'fork.activity.labels.dns',
 ]);
 
 type Json = string | number | boolean | null | Json[] | { [key: string]: Json };
@@ -71,6 +72,8 @@ describe('CatX frontend i18n contract', () => {
   it('keeps fork navigation fully localized', () => {
     expect(forkNavigationItems.every((item) => item.labelKey.startsWith('fork.'))).toBe(true);
     expect(forkNavigationItems).toHaveLength(7);
+    expect(new Set(forkNavigationItems.map((item) => item.icon)).size).toBe(7);
+    expect(forkNavigationItems.filter((item) => item.group === 'operations')).toHaveLength(2);
     expect(forkApiSections.every((section) => section.translationKey?.startsWith('fork.'))).toBe(
       true,
     );
@@ -124,6 +127,28 @@ describe('CatX frontend i18n contract', () => {
     }
   });
 
+  it('guards the reviewed Russian CatX surface against known mixed-language regressions', () => {
+    const ru = JSON.parse(readFileSync(resolve(translationDir, 'ru-RU.json'), 'utf8')) as {
+      fork: Json;
+    };
+    const values = flatten(ru.fork)
+      .filter(([, value]) => typeof value === 'string')
+      .map(([, value]) => String(value));
+    for (const broken of [
+      'Парк Обновления',
+      'Кампания Имя',
+      'Канареечный count',
+      'Пакет size',
+      'Plan Пробный run',
+      'Пробный run (Нет mutation)',
+      'Confirm production Обновление',
+      'Enable DNS Интеллект',
+      'Risk Интеллект',
+    ]) {
+      expect(values).not.toContain(broken);
+    }
+  });
+
   it('keeps every CatX page on the shared page shell', () => {
     const expectedClasses = [
       'activity-page',
@@ -151,8 +176,27 @@ describe('CatX frontend i18n contract', () => {
       )
       .join('\n');
     for (const name of expectedClasses) expect(source).toContain(name);
+    for (const [directory, file] of pageFiles.slice(0, -1)) {
+      expect(
+        readFileSync(resolve(process.cwd(), 'src/pages', directory, file), 'utf8'),
+        `${directory}/${file}`,
+      ).toContain('ForkAdminPageShell');
+    }
+    const portalPage = readFileSync(
+      resolve(process.cwd(), 'src/pages/portal/PortalPage.tsx'),
+      'utf8',
+    );
+    expect(portalPage).not.toContain('ForkAdminPageShell');
+    expect(portalPage).not.toContain('@/layouts/AppSidebar');
+    const adminShell = readFileSync(
+      resolve(process.cwd(), 'src/components/fork/ForkAdminPageShell.tsx'),
+      'utf8',
+    );
+    expect(adminShell).toContain('ConfigProvider');
+    expect(adminShell).toContain('AppSidebar');
+    expect(adminShell).toContain('content-shell');
     expect(readFileSync(resolve(process.cwd(), 'src/styles/page-shell.css'), 'utf8')).toContain(
-      'activity-page',
+      'fork-admin-page',
     );
     expect(readFileSync(resolve(process.cwd(), 'src/styles/page-cards.css'), 'utf8')).toContain(
       'activity-page',
@@ -161,7 +205,7 @@ describe('CatX frontend i18n contract', () => {
 
   it('keeps CatX narrow-layout and RTL safeguards in the shared styles', () => {
     const shell = readFileSync(resolve(process.cwd(), 'src/styles/page-shell.css'), 'utf8');
-    expect(shell).toContain('.activity-page .ant-table-wrapper');
+    expect(shell).toContain('.fork-admin-page .ant-table-wrapper');
     expect(shell).toContain('overflow-x: auto');
     expect(shell).toContain('.catx-technical-value');
     expect(shell).toContain('prefers-reduced-motion: reduce');

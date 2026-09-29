@@ -2720,6 +2720,9 @@
     "settings": "Configuración"
   },
   "fork": {
+    "operations": {
+      "title": "Operaciones"
+    },
     "apiDocs": {
       "labels": {
         "panelApi": "API del panel 3X-UI",
@@ -2733,6 +2736,7 @@
       "audit": "Auditoría / Webhooks / Métricas",
       "portal": "Portal de autoservicio",
       "fleetUpdates": "Actualizaciones de la flota",
+      "settings": "Funciones de CatX-UI",
       "traffic": "Control del tráfico"
     },
     "portal": {
@@ -2794,17 +2798,19 @@
       "delete": "Eliminar",
       "rename": "Renombrar",
       "email": "Correo",
-      "never": "Nunca"
+      "never": "Nunca",
+      "noItems": "Sin elementos",
+      "featureOffTitle": "La función «{feature}» está desactivada",
+      "featureOffDescription": "Esta función de CatX-UI está desactivada. Actívela en la configuración de funciones del servidor para usar esta página."
     },
     "activity": {
       "labels": {
-        "ambiguous": "Ambiguo / conflictivo"
+      "ambiguous": "Ambiguo / conflictivo","time":"Hora","domainIp":"Dominio / IP","service":"Servicio","category":"Categoría","asnCountry":"ASN / país","sourceProvenance":"Origen / procedencia","confidence":"Confianza","firstSeen":"Primera detección","lastSeen":"Última detección","protocol":"Protocolo","observedDomain":"Dominio observado","resolvedIp":"IP resuelta","record":"Registro","timeline":"Línea temporal","dnsObservations":"Observaciones DNS","enrichedDetails":"Detalles enriquecidos","sessionHistory":"Historial de sesiones","trafficHistory":"Historial de tráfico","events":"Eventos","dns":"DNS","sessions":"Sesiones","range":"Rango","upload":"Subida","download":"Descarga","clients":"Clientes","inbounds":"Entradas","serviceCategory":"Servicio / categoría","observations":"Observaciones","metadataNote":"Filas derivadas de metadatos; los bytes provienen de la contabilidad del panel.","aggregates":"Agregados","saveError":"No se pudieron guardar los ajustes."
       },
       "title": "Actividad del cliente e inteligencia DNS",
       "subtitle": "Observaciones únicamente de metadatos de un cliente existente del panel.",
       "client": "Correo del cliente",
       "enter": "Introduce el correo de un cliente para ver su actividad.",
-      "disabled": "La analítica está desactivada. Actívala para recopilar y consultar actividad.",
       "dnsDisabled": "La inteligencia DNS está desactivada. La analítica principal sigue disponible.",
       "error": "No se ha podido cargar la actividad analítica.",
       "privacy": "Privacidad: solo metadatos. Las clasificaciones usan metadatos visibles y pueden ser inciertas; no se recopilan cargas, cookies, credenciales ni cabeceras.",
@@ -2866,7 +2872,6 @@
         "deleteAssignment": "Eliminar this Asignación?",
         "deleteOverride": "Eliminar this Anulación?",
         "deleteSchedule": "Eliminar this schedule?",
-        "disabled": "Las políticas están desactivadas. El panel mantiene la compatibilidad con upstream y las simulaciones son no-op de solo lectura.",
         "policy": "Política",
         "targetEmailGroup": "Destino email or Grupo",
         "priority": "Prioridad",
@@ -2993,6 +2998,46 @@
       "replay": "Repetir",
       "destinations": "Destinos",
       "deliveries": "Entregas y mensajes fallidos"
+},
+    "settings": {"title":"Funciones de CatX-UI","intro":"Activa solo los módulos que necesites. Las dependencias se comprueban de forma explícita y los cambios requieren reiniciar el panel.","save":"Guardar funciones","saved":"Funciones guardadas. Reinicia el panel para aplicar los cambios.","loadFailed":"No se pudieron cargar las funciones.","saveFailed":"No se pudieron guardar las funciones.","restartRequired":"Es necesario reiniciar el panel","restartRequiredDescription":"La mayoría de los módulos de CatX se inicializan al arrancar. Guarda los indicadores y reinicia el panel antes de usar un módulo cambiado.","dependencyWarning":"Activa primero la dependencia requerida. Las dependencias nunca se activan automáticamente.",
+      "dependencyRequired": "Activa {dependency} antes de activar {feature}.",       "features": {
+        "analytics": {
+          "name": "Analítica",
+          "details": "Recopila y muestra información de actividad, DNS, sesiones y tráfico basada solo en metadatos."
+        },
+        "dnsIntelligence": {
+          "name": "Inteligencia DNS",
+          "details": "Enriquece la actividad con observaciones DNS e información del resolvedor."
+        },
+        "policies": {
+          "name": "Motor de políticas",
+          "details": "Crea y asigna políticas y previsualiza sus decisiones sin modificar nada."
+        },
+        "trafficControl": {
+          "name": "Control de tráfico / QoS",
+          "details": "Aplica límites de tráfico por cliente y controles QoS de ventana fija."
+        },
+        "riskIntelligence": {
+          "name": "Inteligencia de riesgos",
+          "details": "Detecta y revisa señales de seguridad y anomalías basadas en metadatos."
+        },
+        "audit": {
+          "name": "Auditoría",
+          "details": "Registra y revisa eventos administrativos basados solo en metadatos."
+        },
+        "clientPortal": {
+          "name": "Portal del cliente",
+          "details": "Ofrece a los clientes acceso controlado a su portal y dispositivos."
+        },
+        "fleetUpdates": {
+          "name": "Actualizaciones de la flota",
+          "details": "Planifica y reconcilia actualizaciones en nodos gestionados."
+        },
+        "productionFleetUpdates": {
+          "name": "Actualizaciones de la flota en producción",
+          "details": "Permite enviar actualizaciones de la flota a nodos de producción."
+        }
+      }
     }
   }
 }

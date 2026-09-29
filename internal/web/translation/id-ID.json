@@ -2720,6 +2720,9 @@
     "settings": "Pengaturan"
   },
   "fork": {
+    "operations": {
+      "title": "Operasi"
+    },
     "apiDocs": {
       "labels": {
         "panelApi": "API Panel 3X-UI",
@@ -2733,6 +2736,7 @@
       "audit": "Audit / Webhook / Metrics",
       "portal": "Self-Layanan Portal",
       "fleetUpdates": "Armada Pembaruan",
+      "settings": "Fitur CatX-UI",
       "traffic": "Lalu lintas control"
     },
     "portal": {
@@ -2760,7 +2764,7 @@
       "hosts": "Koneksi Host",
       "invalidToken": "Tidak valid Portal token.",
       "lastSeen": "Terakhir seen",
-      "loginRequired": "Enter your Portal access token.",
+      "loginRequired": "Masukkan token akses portal Anda.",
       "quota": "Kuota",
       "renamePrompt": "Baru Perangkat Nama",
       "signIn": "Masuk in",
@@ -2794,17 +2798,19 @@
       "delete": "Hapus",
       "rename": "Ganti nama",
       "email": "Surel",
-      "never": "Tidak pernah"
+      "never": "Tidak pernah",
+      "noItems": "Tidak ada item",
+      "featureOffTitle": "Fitur «{feature}» dinonaktifkan",
+      "featureOffDescription": "Fitur CatX-UI ini dinonaktifkan. Aktifkan di pengaturan fitur server untuk menggunakan halaman ini."
     },
     "activity": {
       "labels": {
-        "ambiguous": "Ambigu / bertentangan"
+      "ambiguous": "Ambigu / bertentangan","time":"Waktu","domainIp":"Domain atau IP","service":"Layanan","category":"Kategori","asnCountry":"ASN / negara","sourceProvenance":"Sumber / asal","confidence":"Keyakinan","firstSeen":"Pertama terlihat","lastSeen":"Terakhir terlihat","protocol":"Protokol","observedDomain":"Domain teramati","resolvedIp":"IP terurai","record":"Rekaman","timeline":"Linimasa","dnsObservations":"Pengamatan DNS","enrichedDetails":"Detail diperkaya","sessionHistory":"Riwayat sesi","trafficHistory":"Riwayat lalu lintas","events":"Peristiwa","dns":"DNS","sessions":"Sesi","range":"Rentang","upload":"Unggah","download":"Unduh","clients":"Klien","inbounds":"Inbound","serviceCategory":"Layanan / kategori","observations":"Pengamatan","metadataNote":"Baris berasal dari metadata; total byte berasal dari pencatatan lalu lintas panel.","aggregates":"Agregat","saveError":"Pengaturan tidak dapat disimpan."
       },
       "title": "Klien Aktivitas & DNS Intelijen",
       "subtitle": "Observasi hanya metadata untuk satu klien panel yang sudah ada.",
       "client": "Klien email",
       "enter": "Enter a Klien email to Lihat Aktivitas.",
-      "disabled": "Analitik dinonaktifkan. Aktifkan analitik untuk mengumpulkan dan melihat aktivitas.",
       "dnsDisabled": "Intelijen DNS dinonaktifkan. Analitik inti tetap tersedia.",
       "error": "Analitik Aktivitas could not be loaded.",
       "privacy": "Privasi: hanya metadata. Klasifikasi menggunakan metadata yang terlihat dan mungkin tidak pasti; payload, cookie, kredensial, atau header tidak dikumpulkan.",
@@ -2866,7 +2872,6 @@
         "deleteAssignment": "Hapus this Penetapan?",
         "deleteOverride": "Hapus this Penimpaan?",
         "deleteSchedule": "Hapus this schedule?",
-        "disabled": "Kebijakan dinonaktifkan. Panel tetap kompatibel dengan upstream dan simulasi hanya-baca merupakan no-op.",
         "policy": "Kebijakan",
         "targetEmailGroup": "Target email or Grup",
         "priority": "Prioritas",
@@ -2993,6 +2998,46 @@
       "replay": "Putar ulang",
       "destinations": "Tujuan",
       "deliveries": "Pengiriman dan pesan gagal"
+},
+    "settings": {"title":"Fitur CatX-UI","intro":"Aktifkan hanya modul fork yang diperlukan. Dependensi diperiksa secara eksplisit dan perubahan memerlukan panel dimulai ulang.","save":"Simpan fitur","saved":"Fitur tersimpan. Mulai ulang panel untuk menerapkan perubahan modul.","loadFailed":"Fitur tidak dapat dimuat.","saveFailed":"Fitur tidak dapat disimpan.","restartRequired":"Panel harus dimulai ulang","restartRequiredDescription":"Sebagian besar modul CatX diinisialisasi saat mulai. Simpan flag, lalu mulai ulang panel sebelum memakai modul yang diubah.","dependencyWarning":"Aktifkan dependensi yang diperlukan terlebih dahulu. Dependensi tidak pernah diaktifkan otomatis.",
+      "dependencyRequired": "Aktifkan {dependency} sebelum mengaktifkan {feature}.",       "features": {
+        "analytics": {
+          "name": "Analitik",
+          "details": "Mengumpulkan dan menampilkan wawasan aktivitas, DNS, sesi, dan lalu lintas yang hanya berbasis metadata."
+        },
+        "dnsIntelligence": {
+          "name": "Intelijen DNS",
+          "details": "Memperkaya aktivitas dengan observasi DNS dan informasi resolver."
+        },
+        "policies": {
+          "name": "Mesin kebijakan",
+          "details": "Membuat dan menetapkan kebijakan serta melihat pratinjau keputusannya tanpa perubahan."
+        },
+        "trafficControl": {
+          "name": "Kontrol lalu lintas / QoS",
+          "details": "Menerapkan batas lalu lintas klien dan kontrol QoS dengan jendela tetap."
+        },
+        "riskIntelligence": {
+          "name": "Intelijen risiko",
+          "details": "Mendeteksi dan meninjau sinyal keamanan serta anomali berbasis metadata."
+        },
+        "audit": {
+          "name": "Pengauditan",
+          "details": "Mencatat dan meninjau peristiwa administratif yang hanya berbasis metadata."
+        },
+        "clientPortal": {
+          "name": "Portal klien",
+          "details": "Memberikan klien akses terkontrol ke portal dan perangkat mereka."
+        },
+        "fleetUpdates": {
+          "name": "Pembaruan armada",
+          "details": "Merencanakan dan menyelaraskan pembaruan di node yang dikelola."
+        },
+        "productionFleetUpdates": {
+          "name": "Pembaruan armada produksi",
+          "details": "Mengizinkan pengiriman pembaruan armada ke node produksi."
+        }
+      }
     }
   }
 }

@@ -30,6 +30,9 @@ punctuation requires surrounding text to change.
 | Portal / Host visibility / Device / Expiry / Retention | Client portal, permitted host display, registered client device, end time, and data holding period. |
 | Evidence / Confidence | Supporting signal and certainty level; do not imply proof when the source says evidence. |
 | Unsupported / Degraded / Unknown | Capability unavailable, operating with reduced capability, and state not established. |
+| Feature / Module | A user-visible capability / its independently configured subsystem. |
+| Feature disabled | The capability is intentionally unavailable; explain how to enable it where the operator can act. |
+| Restart required | Saved configuration needs a panel restart before the module uses the new state. |
 
 Operational words such as update, rollback, abort, retry, delete, revoke,
 quarantine, reset, and dry run must preserve their actual action semantics in

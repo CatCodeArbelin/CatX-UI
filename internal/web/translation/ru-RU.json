@@ -807,34 +807,34 @@
       "qrCode": "QR-код",
       "clientInfo": "Информация о клиенте",
       "risk": {
-        "title": "Risk Intelligence",
-        "score": "Risk score",
-        "confidence": "Confidence",
-        "state": "State",
-        "evidence": "Evidence",
-        "timeline": "Explainable signal timeline",
-        "ipHistory": "Recent source IP history",
-        "noEvents": "No risk events",
-        "noIpHistory": "No IP history",
-        "insufficient": "There is not enough corroborating metadata to draw a high-risk conclusion.",
-        "unknown": "unknown",
-        "unknownSource": "unknown source node",
-        "noEvidence": "evidence details unavailable",
+      "title": "Аналитика рисков",
+      "score": "Оценка риска",
+      "confidence": "Уверенность",
+      "state": "Состояние",
+      "evidence": "Сигналы",
+      "timeline": "Объяснимая история сигналов",
+      "ipHistory": "История исходных IP-адресов",
+      "noEvents": "Событий риска нет",
+      "noIpHistory": "История IP-адресов отсутствует",
+      "insufficient": "Недостаточно подтверждающих метаданных для вывода о высоком риске.",
+      "unknown": "неизвестно",
+      "unknownSource": "неизвестный узел-источник",
+      "noEvidence": "детали сигнала недоступны",
         "signals": {
-          "concurrent_ips": "Concurrent source IPs",
-          "concurrent_nodes": "Concurrent source nodes",
-          "country_divergence": "Country divergence",
-          "asn_divergence": "ASN divergence",
-          "ip_churn": "Source IP churn",
-          "dns_anomaly": "DNS anomaly"
+        "concurrent_ips": "Одновременные исходные IP-адреса",
+        "concurrent_nodes": "Одновременные узлы-источники",
+        "country_divergence": "Расхождение стран",
+        "asn_divergence": "Расхождение ASN",
+        "ip_churn": "Смена исходных IP-адресов",
+        "dns_anomaly": "Аномалия DNS"
         },
-        "acknowledge": "Acknowledge",
-        "acknowledged": "Acknowledged",
+      "acknowledge": "Подтвердить",
+      "acknowledged": "Подтверждено",
         "states": {
           "healthy": "Informational",
-          "degraded": "Degraded evidence",
-          "stale": "Stale data",
-          "insufficient_evidence": "Insufficient evidence"
+        "degraded": "Неполные сигналы",
+        "stale": "Устаревшие данные",
+        "insufficient_evidence": "Недостаточно сигналов"
         }
       },
       "editClient": "Изменить клиента",
@@ -2720,32 +2720,36 @@
     "settings": "Настройки"
   },
   "fork": {
+    "operations": {
+      "title": "Операции"
+    },
     "apiDocs": {
       "labels": {
         "panelApi": "API панели 3X-UI",
-        "websocket": "WebSocket События",
+        "websocket": "События WebSocket",
         "websocketDescription": "После обновления с аутентификацией cookie",
         "websocketUpgrade": "каждое сообщение сервера использует",
-        "websocketTime": "The Время Значение is Unix milliseconds."
+        "websocketTime": "Значение времени указано в миллисекундах Unix."
       },
       "policies": "Политики (CatX-UI)",
-      "risk": "Risk Интеллект",
-      "audit": "Аудит / Вебхуки / Metrics",
-      "portal": "Self-Сервис Портал",
-      "fleetUpdates": "Парк Обновления",
-      "traffic": "Трафик control"
+      "risk": "Аналитика рисков",
+      "audit": "Аудит / вебхуки / метрики",
+      "portal": "Портал самообслуживания",
+      "fleetUpdates": "Обновление узлов",
+      "settings": "Функции CatX-UI",
+      "traffic": "Управление трафиком"
     },
     "portal": {
       "subjectTypePlaceholder": "client/group",
-      "adminTitle": "Портал access",
-      "clientId": "Клиент ID",
-      "enabled": "Self-Сервис Включён",
-      "issue": "Выпустить token",
-      "lastUsed": "Последний used",
+      "adminTitle": "Доступ к порталу",
+      "clientId": "ID клиента",
+      "enabled": "Самообслуживание включено",
+      "issue": "Выпустить токен",
+      "lastUsed": "Последнее использование",
       "rotate": "Ротация",
       "revoke": "Отозвать",
-      "grants": "Хост visibility grants",
-      "subjectType": "Объект type",
+      "grants": "Разрешения на видимость хостов",
+      "subjectType": "Тип субъекта",
       "subjectId": "Объект ID",
       "hostId": "Хост ID",
       "subject": "Объект",
@@ -2757,15 +2761,15 @@
       "devices": "Устройства",
       "expiry": "Срок действия",
       "host": "Хост",
-      "hosts": "Подключение Хосты",
-      "invalidToken": "Недействителен Портал token.",
-      "lastSeen": "Последний seen",
-      "loginRequired": "Enter your Портал access token.",
+      "hosts": "Хосты подключений",
+      "invalidToken": "Недействительный токен портала.",
+      "lastSeen": "Последняя активность",
+      "loginRequired": "Введите токен доступа к порталу.",
       "quota": "Квота",
-      "renamePrompt": "Новый Устройство Имя",
-      "signIn": "Войти in",
-      "title": "Клиент Портал",
-      "token": "Портал access token",
+      "renamePrompt": "Новое имя устройства",
+      "signIn": "Войти",
+      "title": "Портал клиента",
+      "token": "Токен доступа к порталу",
       "tokenHint": "Используйте токен доступа к порталу, предоставленный администратором."
     },
     "common": {
@@ -2776,7 +2780,7 @@
         "search": "Поиск",
         "save": "Сохранить",
         "raw": "Исходный",
-        "enableDns": "Enable DNS Интеллект",
+        "enableDns": "Включить аналитику DNS",
         "healthy": "исправен",
         "attempted": "выполнено",
         "active": "Активен"
@@ -2794,40 +2798,42 @@
       "delete": "Удалить",
       "rename": "Переименовать",
       "email": "Электронная почта",
-      "never": "Никогда"
+      "never": "Никогда",
+      "noItems": "Нет элементов",
+      "featureOffTitle": "Функция «{feature}» отключена",
+      "featureOffDescription": "Эта функция CatX-UI отключена. Включите её в разделе «Функции CatX-UI» и перезапустите панель, чтобы использовать страницу."
     },
     "activity": {
       "labels": {
-        "ambiguous": "Неоднозначный / противоречивый"
+      "ambiguous": "Неоднозначный / противоречивый","time":"Время","domainIp":"Домен / IP","service":"Сервис","category":"Категория","asnCountry":"ASN / страна","sourceProvenance":"Источник / происхождение","confidence":"Уверенность","firstSeen":"Первое наблюдение","lastSeen":"Последнее наблюдение","protocol":"Протокол","observedDomain":"Наблюдаемый домен","resolvedIp":"Резолвленный IP","record":"Запись","timeline":"Лента событий","dnsObservations":"DNS-наблюдения","enrichedDetails":"Расширенные сведения","sessionHistory":"История сеансов","trafficHistory":"История трафика","events":"События","dns":"DNS","sessions":"Сеансы","range":"Период","upload":"Отправлено","download":"Получено","clients":"Клиенты","inbounds":"Входящие подключения","serviceCategory":"Сервис / категория","observations":"Наблюдения","metadataNote":"Строки построены по метаданным; итоги в байтах берутся из учёта трафика панели.","aggregates":"Агрегаты","saveError":"Не удалось сохранить настройки."
       },
-      "title": "Клиент Активность & DNS Интеллект",
+      "title": "Активность клиента и аналитика DNS",
       "subtitle": "Наблюдения только за метаданными одного существующего клиента панели.",
-      "client": "Клиент email",
-      "enter": "Enter a Клиент email to Просмотр Активность.",
-      "disabled": "Аналитика отключена. Включите её, чтобы собирать и просматривать активность.",
+      "client": "Электронная почта клиента",
+      "enter": "Введите электронную почту клиента, чтобы просмотреть активность.",
       "dnsDisabled": "Интеллект DNS отключён. Основная аналитика остаётся доступной.",
-      "error": "Аналитика Активность could not be loaded.",
-      "privacy": "Конфиденциальность: только метаданные. Классификация использует видимые метаданные и может быть неточной; полезные нагрузки, cookie, учётные данные и заголовки не собираются.",
-      "noActivity": "Нет observed Активность in this range.",
-      "noDns": "Нет DNS observations in this range.",
-      "noSessions": "Нет Сеансы in this range.",
-      "noTraffic": "Нет historical Трафик in this range.",
-      "retention": "Privacy & Хранение"
+      "error": "Не удалось загрузить активность клиента.",
+      "privacy": "Конфиденциальность: только метаданные. Классификация использует видимые метаданные и может быть неточной; полезные нагрузки, файлы cookie, учётные данные и заголовки не собираются.",
+      "noActivity": "За этот период активность не обнаружена.",
+      "noDns": "За этот период DNS-наблюдений нет.",
+      "noSessions": "За этот период сеансов нет.",
+      "noTraffic": "За этот период истории трафика нет.",
+      "retention": "Конфиденциальность и хранение"
     },
     "policy": {
       "simulator": "Симулятор",
       "simulate": "Симулировать",
-      "editPolicy": "Изменить Политика",
-      "newPolicy": "Новый Политика",
+      "editPolicy": "Изменить политику",
+      "newPolicy": "Новая политика",
       "save": "Сохранить",
-      "capabilitiesDescription": "Используйте quarantine:true с необязательным quarantineAllowlist. Управляемый DNS допускается только с явно заданным резолвером. Для SafeSearch требуется явно заданный поддерживаемый DNS outbound. Ограниченный выпуск использует временную область quarantine-release.",
+      "capabilitiesDescription": "Используйте quarantine:true с необязательным quarantineAllowlist. Управляемый DNS допускается только с явно заданным резолвером. Для SafeSearch требуется явно заданное поддерживаемое DNS-подключение. Ограниченный выпуск использует временную область quarantine-release.",
       "rule": "Правило",
       "destination": "Назначение",
       "outbound": "Исходящий",
       "match": "Совпадение",
       "emission": "Вывод",
       "wouldEmit": "Будет выдано",
-      "noOp": "Нет-op",
+      "noOp": "Без изменений",
       "clientPlaceholder": "alice@example.test",
       "groupPlaceholder": "staff",
       "domainPlaceholder": "example.com",
@@ -2835,12 +2841,12 @@
       "categoryPlaceholder": "video/streaming",
       "manageDescription": "Управляйте постоянными политиками и проверяйте решения без применения изменений.",
       "assign": "Назначить",
-      "addOverride": "Добавить Переопределение",
-      "addTemporary": "Добавить Временный",
-      "addSchedule": "Добавить schedule",
-      "loadFailed": "Политики could not be loaded.",
-      "simulationFailed": "Симуляция Не выполнено.",
-      "noEffectivePolicy": "Нет effective Политика.",
+      "addOverride": "Добавить переопределение",
+      "addTemporary": "Добавить временное правило",
+      "addSchedule": "Добавить расписание",
+      "loadFailed": "Не удалось загрузить политики.",
+      "simulationFailed": "Не удалось выполнить симуляцию.",
+      "noEffectivePolicy": "Действующая политика не найдена.",
       "editAria": "Изменить {name}",
       "deleteAria": "Удалить {name}",
       "tabs": {
@@ -2850,8 +2856,8 @@
         "schedules": "Расписания ({count})"
       },
       "errors": {
-        "specObject": "Политика spec must be a JSON object.",
-        "specSyntax": "Политика spec must be valid JSON object syntax."
+        "specObject": "Описание политики должно быть объектом JSON.",
+        "specSyntax": "Описание политики должно иметь корректный синтаксис объекта JSON."
       },
       "scopes": {
         "policy": "Политика",
@@ -2860,15 +2866,14 @@
         "dns": "DNS",
         "quota": "Квота",
         "qos": "QoS",
-        "quarantineRelease": "Карантин release"
+        "quarantineRelease": "Ограниченный выпуск из карантина"
       },
       "labels": {
-        "deleteAssignment": "Удалить this Назначение?",
-        "deleteOverride": "Удалить this Переопределение?",
-        "deleteSchedule": "Удалить this schedule?",
-        "disabled": "Политики отключены. Панель сохраняет совместимость с upstream, а симуляции являются read-only no-op.",
+        "deleteAssignment": "Удалить это назначение?",
+        "deleteOverride": "Удалить это переопределение?",
+        "deleteSchedule": "Удалить это расписание?",
         "policy": "Политика",
-        "targetEmailGroup": "Цель email or Группа",
+        "targetEmailGroup": "Электронная почта или группа назначения",
         "priority": "Приоритет",
         "target": "Цель",
         "valueJson": "Значение JSON",
@@ -2877,85 +2882,85 @@
         "ianaTimezone": "Часовой пояс IANA",
         "weekdays": "Дни недели 0–6",
         "startMinute": "Минута начала",
-        "endMinute": "Конец minute",
-        "clientEmail": "Клиент email",
+        "endMinute": "Минута окончания",
+        "clientEmail": "Электронная почта клиента",
         "client": "Клиент",
         "group": "Группа",
         "domain": "Домен",
         "ipCidr": "IP / CIDR",
         "category": "Категория",
         "service": "Сервис",
-        "exampleService": "Example Сервис",
+        "exampleService": "Например, видеосервис",
         "name": "Имя",
         "summary": "Описание",
         "enabled": "Включён",
         "policyJson": "Политика JSON",
         "specification": "Спецификация",
         "scope": "Область",
-        "localWindow": "Локальный window",
+        "localWindow": "Локальное окно",
         "active": "Активен",
         "inactive": "Неактивен",
         "source": "Источник",
         "result": "Результат",
         "winner": "Победитель",
         "capabilities": "Возможности WP-4B",
-        "knownCategories": "Известные categories",
-        "optionalCategoryTargets": "Необязательно Категория targets",
+        "knownCategories": "Известные категории",
+        "optionalCategoryTargets": "Необязательные категории назначения",
         "matched": "Совпало",
-        "notMatched": "Not Совпало",
+        "notMatched": "Не совпало",
         "quarantined": "В карантине",
-        "boundedRelease": "Ограниченный release Активен",
+        "boundedRelease": "Ограниченный выпуск активен",
         "managedDns": "Управляемый DNS",
         "safeSearch": "Возможность SafeSearch",
         "decisionCandidates": "Кандидаты решения",
         "routePreview": "Предпросмотр маршрута"
       },
-      "title": "Политика engine",
-      "noPolicies": "Нет Политики yet.",
-      "noAssignments": "Нет Назначения.",
-      "explicitOverrides": "Явный Переопределения",
-      "noExplicitOverrides": "Нет Явный Переопределения.",
-      "temporaryOverrides": "Временный Переопределения",
-      "noTemporaryOverrides": "Нет Активен Временный Переопределения.",
-      "noSchedules": "Нет schedules.",
-      "simulation": "Read-only Симуляция",
-      "deleteConfirm": "Удалить this Политика?"
+      "title": "Движок политик",
+      "noPolicies": "Политик пока нет.",
+      "noAssignments": "Назначений нет.",
+      "explicitOverrides": "Явные переопределения",
+      "noExplicitOverrides": "Явных переопределений нет.",
+      "temporaryOverrides": "Временные переопределения",
+      "noTemporaryOverrides": "Активных временных переопределений нет.",
+      "noSchedules": "Расписаний нет.",
+      "simulation": "Симуляция только для чтения",
+      "deleteConfirm": "Удалить эту политику?"
     },
     "fleet": {
       "title": "Парк",
       "clients": "Клиенты",
       "online": "В сети",
       "latency": "Задержка",
-      "lastHeartbeat": "Последний heartbeat"
+      "lastHeartbeat": "Последний сигнал"
     },
     "fleetUpdate": {
-      "title": "Парк Обновления",
-      "name": "Кампания Имя",
+      "title": "Обновление узлов",
+      "name": "Название кампании",
       "stable": "Стабильный",
       "dev": "Разработка",
-      "canary": "Канареечный count",
-      "batch": "Пакет size",
-      "parallel": "Максимум Параллельный",
-      "plan": "Plan Пробный run",
+      "canary": "Канареечные узлы",
+      "batch": "Размер пакета",
+      "parallel": "Максимальное число параллельных операций",
+      "plan": "Сформировать план",
       "campaigns": "Кампании",
       "reconcile": "Сверить",
       "retry": "Повторить",
       "abort": "Прервать",
-      "dryRun": "Пробный run (Нет mutation)",
-      "confirmProduction": "Confirm production Обновление",
+      "dryRun": "Пробный запуск (без изменений)",
+      "confirmProduction": "Подтверждаю обновление в рабочей среде",
       "runId": "ID запуска",
       "dispatch": "Отправка",
-      "result": "Обновление Результат",
+      "result": "Результат обновления",
       "rollback": "Откатить",
       "soak": "Наблюдение",
       "failure": "Сбой"
     },
     "audit": {
       "labels": {
-        "error": "Аудит События could not be loaded.",
+        "error": "Не удалось загрузить события аудита.",
         "view": "Просмотр",
         "eventType": "Тип события",
-        "event": "Аудит event",
+        "event": "Событие аудита",
         "time": "Время",
         "action": "Действие",
         "outcome": "Результат",
@@ -2965,14 +2970,14 @@
       },
       "title": "Аудит",
       "summary": "Достоверная история безопасности и привилегированных действий только на основе метаданных.",
-      "empty": "Нет Аудит События",
+      "empty": "Событий аудита нет",
       "filter": "Фильтр",
       "details": "Подробности"
     },
     "webhooks": {
       "labels": {
         "error": "Ошибка",
-        "confirmDelete": "Удалить Вебхук?",
+        "confirmDelete": "Удалить вебхук?",
         "actions": "Действия",
         "name": "Имя",
         "destination": "Назначение",
@@ -2993,6 +2998,56 @@
       "replay": "Повторить",
       "destinations": "Назначения",
       "deliveries": "Доставки и недоставленные сообщения"
+    },
+    "settings": {
+      "title": "Функции CatX-UI",
+      "intro": "Включайте только нужные модули форка. Зависимости проверяются явно; после изменения флагов требуется перезапуск панели.",
+      "save": "Сохранить функции",
+      "saved": "Настройки функций сохранены. Перезапустите панель для применения изменений.",
+      "loadFailed": "Не удалось загрузить настройки функций.",
+      "saveFailed": "Не удалось сохранить настройки функций.",
+      "restartRequired": "Требуется перезапуск панели",
+      "restartRequiredDescription": "Большинство модулей CatX запускаются при старте. После сохранения флагов перезапустите панель перед использованием изменённого модуля.",
+      "dependencyWarning": "Сначала включите требуемую зависимость. Зависимости не включаются автоматически."
+    ,
+      "dependencyRequired": "Для функции «{feature}» сначала включите «{dependency}».",       "features": {
+        "analytics": {
+          "name": "Аналитика",
+          "details": "Собирает и показывает сведения об активности, DNS, сессиях и трафике только по метаданным."
+        },
+        "dnsIntelligence": {
+          "name": "DNS-аналитика",
+          "details": "Дополняет активность наблюдениями DNS и сведениями о резолвере."
+        },
+        "policies": {
+          "name": "Движок политик",
+          "details": "Позволяет создавать и назначать политики, а также просматривать решения без изменений."
+        },
+        "trafficControl": {
+          "name": "Управление трафиком / QoS",
+          "details": "Применяет лимиты трафика клиентов и управление QoS в фиксированных окнах."
+        },
+        "riskIntelligence": {
+          "name": "Анализ рисков",
+          "details": "Выявляет и помогает просматривать сигналы безопасности и аномалии по метаданным."
+        },
+        "audit": {
+          "name": "Аудит",
+          "details": "Записывает и позволяет просматривать административные события только на основе метаданных."
+        },
+        "clientPortal": {
+          "name": "Клиентский портал",
+          "details": "Даёт клиентам контролируемый доступ к порталу и устройствам."
+        },
+        "fleetUpdates": {
+          "name": "Обновление узлов",
+          "details": "Планирует и согласует обновления управляемых узлов."
+        },
+        "productionFleetUpdates": {
+          "name": "Обновление узлов в рабочей среде",
+          "details": "Разрешает отправку обновлений узлам в рабочей среде."
+        }
+      }
     }
   }
 }

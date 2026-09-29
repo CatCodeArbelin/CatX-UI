@@ -2720,6 +2720,9 @@
     "settings": "Cài đặt"
   },
   "fork": {
+    "operations": {
+      "title": "Vận hành"
+    },
     "apiDocs": {
       "labels": {
         "panelApi": "API bảng điều khiển 3X-UI",
@@ -2733,6 +2736,7 @@
       "audit": "Kiểm toán / Các Webhook / Metrics",
       "portal": "Self-Dịch vụ Cổng thông tin",
       "fleetUpdates": "Đội máy chủ Các cập nhật",
+      "settings": "Tính năng CatX-UI",
       "traffic": "Lưu lượng control"
     },
     "portal": {
@@ -2794,17 +2798,19 @@
       "delete": "Xóa",
       "rename": "Đổi tên",
       "email": "Thư điện tử",
-      "never": "Không bao giờ"
+      "never": "Không bao giờ",
+      "noItems": "Không có mục nào",
+      "featureOffTitle": "Tính năng «{feature}» đã tắt",
+      "featureOffDescription": "Tính năng CatX-UI này đang tắt. Hãy bật tính năng này trong cài đặt tính năng của máy chủ để sử dụng trang này."
     },
     "activity": {
       "labels": {
-        "ambiguous": "Mơ hồ / xung đột"
+      "ambiguous": "Mơ hồ / xung đột","time":"Thời gian","domainIp":"Miền / IP","service":"Dịch vụ","category":"Danh mục","asnCountry":"ASN / quốc gia","sourceProvenance":"Nguồn / xuất xứ","confidence":"Độ tin cậy","firstSeen":"Thấy lần đầu","lastSeen":"Thấy lần cuối","protocol":"Giao thức","observedDomain":"Miền quan sát","resolvedIp":"IP đã phân giải","record":"Bản ghi","timeline":"Dòng thời gian","dnsObservations":"Quan sát DNS","enrichedDetails":"Chi tiết mở rộng","sessionHistory":"Lịch sử phiên","trafficHistory":"Lịch sử lưu lượng","events":"Sự kiện","dns":"DNS","sessions":"Phiên","range":"Phạm vi","upload":"Tải lên","download":"Tải xuống","clients":"Máy khách","inbounds":"Kết nối vào","serviceCategory":"Dịch vụ / danh mục","observations":"Số quan sát","metadataNote":"Các dòng được suy ra từ siêu dữ liệu; tổng byte lấy từ phần kế toán lưu lượng của bảng điều khiển.","aggregates":"Tổng hợp","saveError":"Không thể lưu cài đặt."
       },
       "title": "Máy khách Hoạt động & DNS Thông tin chuyên sâu",
       "subtitle": "Chỉ quan sát siêu dữ liệu của một máy khách bảng điều khiển hiện có.",
       "client": "Máy khách email",
       "enter": "Enter a Máy khách email to Xem Hoạt động.",
-      "disabled": "Phân tích đã tắt. Bật phân tích để thu thập và xem hoạt động.",
       "dnsDisabled": "Thông tin chuyên sâu DNS đã tắt. Phân tích cốt lõi vẫn khả dụng.",
       "error": "Phân tích Hoạt động could not be loaded.",
       "privacy": "Quyền riêng tư: chỉ siêu dữ liệu. Phân loại dùng siêu dữ liệu hiển thị và có thể không chắc chắn; không thu thập payload, cookie, thông tin xác thực hoặc header.",
@@ -2866,7 +2872,6 @@
         "deleteAssignment": "Xóa this Gán?",
         "deleteOverride": "Xóa this Ghi đè?",
         "deleteSchedule": "Xóa this schedule?",
-        "disabled": "Các chính sách đã tắt. Bảng điều khiển vẫn tương thích với upstream và mô phỏng là no-op chỉ đọc.",
         "policy": "Chính sách",
         "targetEmailGroup": "Mục tiêu email or Nhóm",
         "priority": "Mức ưu tiên",
@@ -2993,6 +2998,46 @@
       "replay": "Phát lại",
       "destinations": "Đích",
       "deliveries": "Lần gửi và thư không gửi được"
+},
+    "settings": {"title":"Tính năng CatX-UI","intro":"Chỉ bật các mô-đun fork cần thiết. Phụ thuộc được kiểm tra rõ ràng và thay đổi yêu cầu khởi động lại bảng điều khiển.","save":"Lưu tính năng","saved":"Đã lưu tính năng. Khởi động lại bảng điều khiển để áp dụng thay đổi mô-đun.","loadFailed":"Không thể tải tính năng.","saveFailed":"Không thể lưu tính năng.","restartRequired":"Cần khởi động lại bảng điều khiển","restartRequiredDescription":"Hầu hết mô-đun CatX được khởi tạo khi khởi động. Lưu cờ rồi khởi động lại bảng điều khiển trước khi dùng mô-đun đã đổi.","dependencyWarning":"Trước tiên hãy bật phần phụ thuộc bắt buộc. Phần phụ thuộc không được bật tự động.",
+      "dependencyRequired": "Hãy bật {dependency} trước khi bật {feature}.",       "features": {
+        "analytics": {
+          "name": "Phân tích",
+          "details": "Thu thập và hiển thị thông tin hoạt động, DNS, phiên và lưu lượng chỉ dựa trên siêu dữ liệu."
+        },
+        "dnsIntelligence": {
+          "name": "Trí tuệ DNS",
+          "details": "Bổ sung quan sát DNS và thông tin trình phân giải cho hoạt động."
+        },
+        "policies": {
+          "name": "Bộ máy chính sách",
+          "details": "Tạo, gán chính sách và xem trước quyết định mà không thay đổi cấu hình."
+        },
+        "trafficControl": {
+          "name": "Kiểm soát lưu lượng / QoS",
+          "details": "Áp dụng giới hạn lưu lượng cho máy khách và kiểm soát QoS theo cửa sổ cố định."
+        },
+        "riskIntelligence": {
+          "name": "Phân tích rủi ro",
+          "details": "Phát hiện và xem xét tín hiệu bảo mật, bất thường dựa trên siêu dữ liệu."
+        },
+        "audit": {
+          "name": "Kiểm toán",
+          "details": "Ghi lại và xem xét sự kiện quản trị chỉ dựa trên siêu dữ liệu."
+        },
+        "clientPortal": {
+          "name": "Cổng khách hàng",
+          "details": "Cung cấp quyền truy cập có kiểm soát vào cổng và thiết bị cho khách hàng."
+        },
+        "fleetUpdates": {
+          "name": "Cập nhật cụm máy chủ",
+          "details": "Lập kế hoạch và đồng bộ cập nhật trên các nút được quản lý."
+        },
+        "productionFleetUpdates": {
+          "name": "Cập nhật cụm máy chủ sản xuất",
+          "details": "Cho phép gửi cập nhật cụm máy chủ đến các nút sản xuất."
+        }
+      }
     }
   }
 }

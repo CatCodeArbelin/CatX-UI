@@ -1,5 +1,5 @@
 import { act, fireEvent, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
+import { MemoryRouter, useLocation } from 'react-router';
 import { afterEach, expect, test, vi } from 'vitest';
 
 import AppSidebar from '@/layouts/AppSidebar';
@@ -22,6 +22,11 @@ async function renderSidebar() {
   );
   await act(async () => {});
   return view;
+}
+
+function LocationProbe() {
+  const { pathname } = useLocation();
+  return <output data-testid="location-probe">{pathname}</output>;
 }
 
 test('keeps the sidebar expanded after pinning it from the header and restores the choice', async () => {
@@ -73,4 +78,43 @@ test('labels the palette shortcut with the modifier the platform actually uses',
   const view = await renderSidebar();
   const chip = view.container.querySelector('.sidebar-command-kbd');
   expect(chip?.textContent).toBe('CtrlK');
+});
+
+test('groups fork destinations into upstream navigation and removes Sponsors from primary menu', async () => {
+  const view = await renderSidebar();
+  const submenuLabels = Array.from(
+    view.container.querySelectorAll('.ant-sidebar > .ant-layout-sider .ant-menu-submenu-title'),
+  ).map((item) => item.textContent?.trim());
+  expect(submenuLabels).toEqual(
+    expect.arrayContaining(['Clients', 'Nodes', 'Routing', 'Operations']),
+  );
+  expect(screen.queryByText('Sponsors')).toBeNull();
+});
+
+test('keeps upstream root destinations as clickable submenu entries', async () => {
+  const view = renderWithProviders(
+    <MemoryRouter initialEntries={['/']}>
+      <LocationProbe />
+      <AppSidebar />
+    </MemoryRouter>,
+  );
+  await act(async () => {});
+  fireEvent.mouseEnter(view.container.querySelector('.ant-sidebar')!);
+
+  for (const destination of ['Clients', 'Nodes', 'Routing']) {
+    const groupTitle = Array.from(
+      view.container.querySelectorAll('.ant-sidebar > .ant-layout-sider .ant-menu-submenu-title'),
+    ).find((candidate) => candidate.textContent?.trim() === destination);
+    expect(groupTitle, `${destination} group`).toBeTruthy();
+    fireEvent.click(groupTitle!);
+    const desktopItems = Array.from(
+      view.container.querySelectorAll('.ant-sidebar > .ant-layout-sider .ant-menu-item'),
+    );
+    const item = desktopItems.find((candidate) => candidate.textContent?.trim() === destination);
+    expect(item, destination).toBeTruthy();
+    fireEvent.click(item!);
+    expect(screen.getByTestId('location-probe').textContent).toBe(
+      destination === 'Clients' ? '/clients' : destination === 'Nodes' ? '/nodes' : '/routing',
+    );
+  }
 });

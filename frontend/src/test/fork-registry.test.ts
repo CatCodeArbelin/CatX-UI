@@ -6,13 +6,38 @@ describe('fork registries', () => {
   it('registers the client activity page through the fork boundary', () => {
     expect(forkRoutes).toHaveLength(7);
     expect(forkNavigationItems).toEqual([
-      { key: 'fleet-updates', labelKey: 'fork.fleetUpdate.title', path: '/fleet-updates' },
-      { key: 'portal-access', labelKey: 'fork.portal.adminTitle', path: '/portal-access' },
-      { key: 'fleet', labelKey: 'fork.fleet.title', path: '/fleet' },
-      { key: 'client-activity', labelKey: 'fork.activity.title', path: '/activity' },
-      { key: 'policy-engine', labelKey: 'fork.policy.title', path: '/policies' },
-      { key: 'audit', labelKey: 'fork.audit.title', path: '/audit' },
-      { key: 'webhooks', labelKey: 'fork.webhooks.title', path: '/webhooks' },
+      expect.objectContaining({
+        key: 'client-activity',
+        path: '/activity',
+        group: 'clients',
+        icon: 'activity',
+      }),
+      expect.objectContaining({
+        key: 'portal-access',
+        path: '/portal-access',
+        group: 'clients',
+        icon: 'portal',
+      }),
+      expect.objectContaining({ key: 'fleet', path: '/fleet', group: 'nodes', icon: 'fleet' }),
+      expect.objectContaining({
+        key: 'fleet-updates',
+        path: '/fleet-updates',
+        group: 'nodes',
+        icon: 'fleet-updates',
+      }),
+      expect.objectContaining({
+        key: 'policy-engine',
+        path: '/policies',
+        group: 'routing',
+        icon: 'policy',
+      }),
+      expect.objectContaining({ key: 'audit', path: '/audit', group: 'operations', icon: 'audit' }),
+      expect.objectContaining({
+        key: 'webhooks',
+        path: '/webhooks',
+        group: 'operations',
+        icon: 'webhooks',
+      }),
     ]);
     const risk = forkApiSections.find((section) => section.id === 'risk-intelligence');
     expect(risk?.endpoints).toHaveLength(7);

@@ -23,7 +23,7 @@ func RegisterRoutes(api *gin.RouterGroup) {
 func svc(c *gin.Context) (*Service, bool) {
 	s := Current()
 	if s == nil || !s.Enabled() {
-		c.JSON(http.StatusNotFound, gin.H{"success": false, "msg": "fleet updates disabled"})
+		c.JSON(http.StatusNotFound, gin.H{"success": false, "msg": "fleet updates disabled", "featureDisabled": true})
 		return nil, false
 	}
 	return s, true

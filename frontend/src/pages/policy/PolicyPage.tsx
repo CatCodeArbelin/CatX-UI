@@ -22,6 +22,9 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import { DeleteOutlined, EditOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import { HttpUtil } from '@/utils';
+import ForkAdminPageShell from '@/components/fork/ForkAdminPageShell';
+import FeatureOffState from '@/components/fork/FeatureOffState';
+import { isKnownForkFeatureUnavailable } from '@/lib/fork-feature';
 import { i18n } from '@/i18n/react';
 import { useTranslation } from 'react-i18next';
 import './PolicyPage.css';
@@ -151,6 +154,7 @@ export default function PolicyPage() {
   const [enabled, setEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [featureOff, setFeatureOff] = useState(false);
   const [editing, setEditing] = useState<Policy | null>(null);
   const [policyModal, setPolicyModal] = useState(false);
   const [form] = Form.useForm();
@@ -183,6 +187,15 @@ export default function PolicyPage() {
           silent: true,
         }),
       ]);
+      if (
+        [p, a, o, temporaryResponse, s].some((response) =>
+          isKnownForkFeatureUnavailable(response, 'policies'),
+        )
+      ) {
+        setFeatureOff(true);
+        setLoading(false);
+        return;
+      }
       if (!p.success) setError(p.msg || t('fork.policy.loadFailed'));
       setEnabled(p.obj?.enabled !== false);
       setPolicies(p.obj?.items || []);
@@ -405,28 +418,34 @@ export default function PolicyPage() {
   ];
 
   return (
-    <div className="policy-page">
-      <div className="content-area">
-        <Card>
-          <Space direction="vertical" size="large" style={{ width: '100%' }}>
-            <div className="policy-heading">
-              <div>
-                <Typography.Title level={2}>{t('fork.policy.title')}</Typography.Title>
-                <Typography.Paragraph type="secondary">
-                  {t('fork.policy.manageDescription')}
-                </Typography.Paragraph>
-              </div>
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                disabled={!enabled}
-                onClick={() => openPolicy()}
-              >
-                {t('fork.policy.newPolicy')}
-              </Button>
+    <ForkAdminPageShell pageClass="policy-page">
+      <Card size="small">
+        <Space direction="vertical" size="large" style={{ width: '100%' }}>
+          <div className="policy-heading">
+            <div>
+              <Typography.Title level={2}>{t('fork.policy.title')}</Typography.Title>
+              <Typography.Paragraph type="secondary">
+                {t('fork.policy.manageDescription')}
+              </Typography.Paragraph>
             </div>
-            {!enabled && <Alert type="info" showIcon message={t('fork.policy.labels.disabled')} />}
-            {error && <Alert type="error" showIcon message={error} />}
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              disabled={!enabled}
+              onClick={() => openPolicy()}
+            >
+              {t('fork.policy.newPolicy')}
+            </Button>
+          </div>
+          {!featureOff && !enabled && (
+            <FeatureOffState feature="policies" messageKey="fork.policy.labels.disabled" />
+          )}
+          {featureOff ? (
+            <FeatureOffState feature="policies" messageKey="fork.policy.labels.disabled" />
+          ) : (
+            error && <Alert type="error" showIcon message={error} />
+          )}
+          {!featureOff && enabled && (
             <Spin spinning={loading}>
               <Tabs
                 items={[
@@ -753,63 +772,59 @@ export default function PolicyPage() {
                 ]}
               />
             </Spin>
+          )}
+        </Space>
+      </Card>
+      <Modal
+        open={policyModal}
+        title={editing ? t('fork.policy.editPolicy') : t('fork.policy.newPolicy')}
+        okText={t('fork.policy.save')}
+        onCancel={() => setPolicyModal(false)}
+        onOk={() => form.submit()}
+        destroyOnClose
+      >
+        <Form form={form} layout="vertical" onFinish={(values) => void savePolicy(values)}>
+          <Form.Item name="name" label={t('fork.policy.labels.name')} rules={[{ required: true }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item name="description" label={t('fork.policy.labels.summary')}>
+            <Input.TextArea rows={2} />
+          </Form.Item>
+          <Space>
+            <Form.Item name="priority" label={t('fork.policy.labels.priority')}>
+              <InputNumber />
+            </Form.Item>
+            <Form.Item
+              name="enabled"
+              label={t('fork.policy.labels.enabled')}
+              valuePropName="checked"
+            >
+              <Switch />
+            </Form.Item>
           </Space>
-        </Card>
-        <Modal
-          open={policyModal}
-          title={editing ? t('fork.policy.editPolicy') : t('fork.policy.newPolicy')}
-          okText={t('fork.policy.save')}
-          onCancel={() => setPolicyModal(false)}
-          onOk={() => form.submit()}
-          destroyOnClose
-        >
-          <Form form={form} layout="vertical" onFinish={(values) => void savePolicy(values)}>
-            <Form.Item
-              name="name"
-              label={t('fork.policy.labels.name')}
-              rules={[{ required: true }]}
-            >
-              <Input />
-            </Form.Item>
-            <Form.Item name="description" label={t('fork.policy.labels.summary')}>
-              <Input.TextArea rows={2} />
-            </Form.Item>
-            <Space>
-              <Form.Item name="priority" label={t('fork.policy.labels.priority')}>
-                <InputNumber />
-              </Form.Item>
-              <Form.Item
-                name="enabled"
-                label={t('fork.policy.labels.enabled')}
-                valuePropName="checked"
-              >
-                <Switch />
-              </Form.Item>
-            </Space>
-            <Form.Item
-              name="spec"
-              label={t('fork.policy.labels.policyJson')}
-              rules={[{ required: true }]}
-            >
-              <Input.TextArea rows={10} spellCheck={false} />
-            </Form.Item>
-            <Alert
-              type="info"
-              showIcon
-              message={t('fork.policy.labels.capabilities')}
-              description={t('fork.policy.capabilitiesDescription')}
+          <Form.Item
+            name="spec"
+            label={t('fork.policy.labels.policyJson')}
+            rules={[{ required: true }]}
+          >
+            <Input.TextArea rows={10} spellCheck={false} />
+          </Form.Item>
+          <Alert
+            type="info"
+            showIcon
+            message={t('fork.policy.labels.capabilities')}
+            description={t('fork.policy.capabilitiesDescription')}
+          />
+          <Form.Item name="categories" label={t('fork.policy.labels.knownCategories')}>
+            <Select
+              mode="multiple"
+              options={POLICY_CATEGORIES}
+              placeholder={t('fork.policy.labels.optionalCategoryTargets')}
             />
-            <Form.Item name="categories" label={t('fork.policy.labels.knownCategories')}>
-              <Select
-                mode="multiple"
-                options={POLICY_CATEGORIES}
-                placeholder={t('fork.policy.labels.optionalCategoryTargets')}
-              />
-            </Form.Item>
-          </Form>
-        </Modal>
-      </div>
-    </div>
+          </Form.Item>
+        </Form>
+      </Modal>
+    </ForkAdminPageShell>
   );
 }
 

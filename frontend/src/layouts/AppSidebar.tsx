@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ComponentType, CSSProperties } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
@@ -6,6 +6,7 @@ import { Drawer, Layout, Menu, Tooltip } from 'antd';
 import type { MenuProps } from 'antd';
 import {
   ApiOutlined,
+  CloudDownloadOutlined,
   HistoryOutlined,
   ApartmentOutlined,
   CloseOutlined,
@@ -17,6 +18,7 @@ import {
   DatabaseOutlined,
   DiscordOutlined,
   ExportOutlined,
+  FileSearchOutlined,
   GithubOutlined,
   GlobalOutlined,
   HeartOutlined,
@@ -31,6 +33,7 @@ import {
   PushpinOutlined,
   ReadOutlined,
   SafetyOutlined,
+  SafetyCertificateOutlined,
   SearchOutlined,
   SettingOutlined,
   SunOutlined,
@@ -38,6 +41,8 @@ import {
   TagsOutlined,
   TeamOutlined,
   ToolOutlined,
+  UserOutlined,
+  LinkOutlined,
 } from '@ant-design/icons';
 
 import { HttpUtil } from '@/utils';
@@ -70,13 +75,19 @@ type IconName =
   | 'setting'
   | 'tool'
   | 'cluster'
+  | 'fleet'
   | 'hosts'
   | 'logout'
   | 'sponsors'
   | 'apidocs'
   | 'outbound'
   | 'routing'
-  | 'activity';
+  | 'activity'
+  | 'portal'
+  | 'fleet-updates'
+  | 'policy'
+  | 'audit'
+  | 'webhooks';
 
 const iconByName: Record<IconName, ComponentType> = {
   dashboard: DashboardOutlined,
@@ -86,6 +97,7 @@ const iconByName: Record<IconName, ComponentType> = {
   setting: SettingOutlined,
   tool: ToolOutlined,
   cluster: ClusterOutlined,
+  fleet: ClusterOutlined,
   hosts: GlobalOutlined,
   logout: LogoutOutlined,
   sponsors: CrownOutlined,
@@ -93,6 +105,11 @@ const iconByName: Record<IconName, ComponentType> = {
   outbound: ExportOutlined,
   routing: SwapOutlined,
   activity: HistoryOutlined,
+  portal: UserOutlined,
+  'fleet-updates': CloudDownloadOutlined,
+  policy: SafetyCertificateOutlined,
+  audit: FileSearchOutlined,
+  webhooks: LinkOutlined,
 };
 
 function DonateButton({ ariaLabel }: { ariaLabel: string }) {
@@ -227,36 +244,52 @@ export default function AppSidebar() {
   const currentTheme: 'light' | 'dark' = isDark ? 'dark' : 'light';
   const panelVersion = window.X_UI_CUR_VER || '';
 
-  const tabs = useMemo<{ key: string; icon: IconName; title: string }[]>(
+  const tabs = useMemo<
+    { key: string; icon: IconName; title: string; forkGroup?: string; menuKey?: string }[]
+  >(
     () => [
       { key: '/', icon: 'dashboard', title: t('menu.dashboard') },
       { key: '/inbounds', icon: 'inbound', title: t('menu.inbounds') },
-      { key: '/clients', icon: 'team', title: t('menu.clients') },
+      {
+        key: '/clients',
+        icon: 'team',
+        title: t('menu.clients'),
+        forkGroup: 'clients',
+        menuKey: '__fork-group-clients',
+      },
       { key: '/groups', icon: 'groups', title: t('menu.groups') },
-      { key: '/nodes', icon: 'cluster', title: t('menu.nodes') },
+      {
+        key: '/nodes',
+        icon: 'cluster',
+        title: t('menu.nodes'),
+        forkGroup: 'nodes',
+        menuKey: '__fork-group-nodes',
+      },
       { key: '/hosts', icon: 'hosts', title: t('menu.hosts') },
       { key: '/outbound', icon: 'outbound', title: t('menu.outbounds') },
-      { key: '/routing', icon: 'routing', title: t('menu.routing') },
+      {
+        key: '/routing',
+        icon: 'routing',
+        title: t('menu.routing'),
+        forkGroup: 'routing',
+        menuKey: '__fork-group-routing',
+      },
       { key: '/settings', icon: 'setting', title: t('menu.settings') },
       { key: '/xray', icon: 'tool', title: t('menu.xray') },
       { key: '/api-docs', icon: 'apidocs', title: t('menu.apiDocs') },
-      { key: '/sponsors', icon: 'sponsors', title: t('menu.sponsors') },
+      {
+        key: '/operations',
+        icon: 'tool',
+        title: t('fork.operations.title'),
+        forkGroup: 'operations',
+        menuKey: '__fork-group-operations',
+      },
       { key: LOGOUT_KEY, icon: 'logout', title: t('logout') },
     ],
     [t],
   );
 
-  const navItems = useMemo(
-    () => [
-      ...tabs.filter((tab) => tab.icon !== 'logout'),
-      ...forkNavigationItems.map((item) => ({
-        key: item.path,
-        icon: 'activity' as IconName,
-        title: t(item.labelKey),
-      })),
-    ],
-    [tabs, t],
-  );
+  const navItems = useMemo(() => tabs.filter((tab) => tab.icon !== 'logout'), [tabs]);
   const utilItems = useMemo(() => tabs.filter((tab) => tab.icon === 'logout'), [tabs]);
 
   const settingsChildren = useMemo<NonNullable<MenuProps['items']>>(() => {
@@ -270,6 +303,11 @@ export default function AppSidebar() {
         key: '/settings#security',
         icon: <SafetyOutlined />,
         label: t('pages.settings.securitySettings'),
+      },
+      {
+        key: '/settings#catx-features',
+        icon: <ApiOutlined />,
+        label: t('fork.settings.title'),
       },
       {
         key: '/settings#telegram',
@@ -325,7 +363,17 @@ export default function AppSidebar() {
         ? '/'
         : pathname;
 
-  const openSubmenu = settingsActive ? '/settings' : xrayActive ? '/xray' : null;
+  const activeForkGroup = tabs.find(
+    (tab) =>
+      tab.forkGroup &&
+      (pathname === tab.key ||
+        forkNavigationItems.some((item) => item.group === tab.forkGroup && item.path === pathname)),
+  );
+  const openSubmenu = settingsActive
+    ? '/settings'
+    : xrayActive
+      ? '/xray'
+      : activeForkGroup?.menuKey || null;
   const [openKeys, setOpenKeys] = useState<string[]>(() => (openSubmenu ? [openSubmenu] : []));
   if (openSubmenu && !openKeys.includes(openSubmenu)) {
     setOpenKeys([...openKeys, openSubmenu]);
@@ -341,9 +389,29 @@ export default function AppSidebar() {
         if (tab.key === '/xray') {
           return { key: tab.key, icon: <Icon />, label: tab.title, children: xrayChildren };
         }
+        if (tab.forkGroup) {
+          const Icon = iconByName[tab.icon];
+          const rootDestination =
+            tab.key === '/operations' ? [] : [{ key: tab.key, icon: <Icon />, label: tab.title }];
+          const children = rootDestination.concat(
+            forkNavigationItems
+              .filter((item) => item.group === tab.forkGroup)
+              .map((item) => ({
+                key: item.path,
+                icon: createElement(iconByName[item.icon]),
+                label: t(item.labelKey),
+              })),
+          );
+          return {
+            key: tab.menuKey || tab.key,
+            icon: <Icon />,
+            label: tab.title,
+            children,
+          };
+        }
         return { key: tab.key, icon: <Icon />, label: tab.title, title: '' };
       }),
-    [settingsChildren, xrayChildren],
+    [settingsChildren, xrayChildren, t],
   );
 
   const openLink = useCallback(
@@ -353,7 +421,7 @@ export default function AppSidebar() {
         window.location.href = window.X_UI_BASE_PATH || '/';
         return;
       }
-      navigate(key);
+      if (!key.startsWith('__fork-group-')) navigate(key);
     },
     [navigate],
   );

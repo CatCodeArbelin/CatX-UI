@@ -62,6 +62,31 @@ type Settings struct {
 	db *gorm.DB
 }
 
+// FeatureFlagInfo is the small, fork-owned DTO used by the CatX feature
+// settings page. It deliberately excludes reserved flags that have no active
+// runtime behavior.
+type FeatureFlagInfo struct {
+	Key             Flag   `json:"key"`
+	Enabled         bool   `json:"enabled"`
+	Requires        []Flag `json:"requires,omitempty"`
+	RestartRequired bool   `json:"restartRequired"`
+}
+
+var managedFeatureFlags = []struct {
+	flag     Flag
+	requires []Flag
+}{
+	{FlagAnalytics, nil},
+	{FlagDNSIntelligence, []Flag{FlagAnalytics}},
+	{FlagPolicies, nil},
+	{FlagTrafficControl, nil},
+	{FlagSecurityAnomaly, []Flag{FlagAnalytics}},
+	{FlagAudit, nil},
+	{FlagSelfService, nil},
+	{FlagFleetUpdates, nil},
+	{FlagFleetMutation, []Flag{FlagFleetUpdates}},
+}
+
 func NewSettings(db *gorm.DB) Settings {
 	return Settings{db: db}
 }
@@ -111,16 +136,94 @@ func (s Settings) Set(flag Flag, enabled bool) error {
 	if s.db == nil {
 		return errors.New("fork settings database is nil")
 	}
+	return setFlag(s.db, flag, enabled)
+}
+
+func setFlag(db *gorm.DB, flag Flag, enabled bool) error {
 	key := settingKey(flag)
 	value := strconv.FormatBool(enabled)
 	var row model.Setting
-	err := s.db.Where("key = ?", key).First(&row).Error
+	err := db.Where("key = ?", key).First(&row).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return s.db.Create(&model.Setting{Key: key, Value: value}).Error
+		return db.Create(&model.Setting{Key: key, Value: value}).Error
 	}
 	if err != nil {
 		return err
 	}
 	row.Value = value
-	return s.db.Save(&row).Error
+	return db.Save(&row).Error
+}
+
+func managedFeature(flag Flag) (requires []Flag, ok bool) {
+	for _, feature := range managedFeatureFlags {
+		if feature.flag == flag {
+			return feature.requires, true
+		}
+	}
+	return nil, false
+}
+
+// FeatureFlags returns only flags with an active CatX runtime consumer.
+func (s Settings) FeatureFlags() ([]FeatureFlagInfo, error) {
+	result := make([]FeatureFlagInfo, 0, len(managedFeatureFlags))
+	for _, feature := range managedFeatureFlags {
+		enabled, err := s.Enabled(feature.flag)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, FeatureFlagInfo{
+			Key:             feature.flag,
+			Enabled:         enabled,
+			Requires:        feature.requires,
+			RestartRequired: true,
+		})
+	}
+	return result, nil
+}
+
+func validateFeatureState(values map[Flag]bool) error {
+	for _, feature := range managedFeatureFlags {
+		if !values[feature.flag] {
+			continue
+		}
+		for _, dependency := range feature.requires {
+			if !values[dependency] {
+				return fmt.Errorf("%s requires %s", feature.flag, dependency)
+			}
+		}
+	}
+	return nil
+}
+
+// UpdateFeatures validates the complete resulting state and persists the
+// requested changes atomically. Dependencies are never enabled implicitly.
+func (s Settings) UpdateFeatures(updates map[Flag]bool) error {
+	if s.db == nil {
+		return errors.New("fork settings database is nil")
+	}
+	current := make(map[Flag]bool, len(managedFeatureFlags))
+	for _, feature := range managedFeatureFlags {
+		enabled, err := s.Enabled(feature.flag)
+		if err != nil {
+			return err
+		}
+		current[feature.flag] = enabled
+	}
+	for flag, enabled := range updates {
+		if _, ok := managedFeature(flag); !ok {
+			return fmt.Errorf("unknown or unmanaged fork feature flag %q", flag)
+		}
+		current[flag] = enabled
+	}
+	if err := validateFeatureState(current); err != nil {
+		return err
+	}
+	return s.db.Transaction(func(tx *gorm.DB) error {
+		for flag, enabled := range updates {
+			if err := setFlag(tx, flag, enabled); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 }

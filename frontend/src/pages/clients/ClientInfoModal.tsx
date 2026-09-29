@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button, Divider, Modal, Popover, Tag, Tooltip, message } from 'antd';
+import { useInRouterContext, useNavigate } from 'react-router';
+import { Button, Divider, Modal, Popover, Space, Tag, Tooltip, message } from 'antd';
 import {
   CopyOutlined,
   DownloadOutlined,
@@ -92,6 +93,42 @@ const SUBSCRIPTION_DOWNLOAD_NAMES = {
   clash: 'subscription-clash.yaml',
 } as const;
 
+function ClientContextActions({
+  client,
+  onOpenChange,
+}: {
+  client: ClientRecord;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const navigate = useNavigate();
+  const { t } = useTranslation();
+  return (
+    <Space wrap>
+      <span>{client.email}</span>
+      <Button
+        size="small"
+        onClick={() => {
+          onOpenChange(false);
+          navigate(`/activity?email=${encodeURIComponent(client.email)}`);
+        }}
+      >
+        {t('fork.activity.title')}
+      </Button>
+      <Button
+        size="small"
+        disabled={client.id == null}
+        onClick={() => {
+          if (client.id == null) return;
+          onOpenChange(false);
+          navigate(`/portal-access?clientId=${encodeURIComponent(String(client.id))}`);
+        }}
+      >
+        {t('fork.portal.adminTitle')}
+      </Button>
+    </Space>
+  );
+}
+
 export default function ClientInfoModal({
   open,
   client,
@@ -101,6 +138,7 @@ export default function ClientInfoModal({
   subSettings = DEFAULT_SUB,
   onOpenChange,
 }: ClientInfoModalProps) {
+  const inRouter = useInRouterContext();
   const { datepicker } = useDatepicker();
   const { t } = useTranslation();
   const expiryLabel = (ts?: number) => {
@@ -295,9 +333,16 @@ export default function ClientInfoModal({
       <Modal
         open={open}
         title={
-          client
-            ? `${t('pages.clients.clientInfo')} — ${client.email}`
-            : t('pages.clients.clientInfo')
+          client && inRouter ? (
+            <Space wrap>
+              <span>{t('pages.clients.clientInfo')}</span>
+              <ClientContextActions client={client} onOpenChange={onOpenChange} />
+            </Space>
+          ) : client ? (
+            `${t('pages.clients.clientInfo')} — ${client.email}`
+          ) : (
+            t('pages.clients.clientInfo')
+          )
         }
         footer={null}
         width={640}

@@ -135,6 +135,17 @@ components, panel layout, theme tokens, CSS variables, spacing scale, card
 styles, responsive breakpoints, and loading/error/empty-state conventions.
 CatX must not introduce a separate theme, UI framework, or page shell.
 
+Grouping navigation must never hide the original upstream destination. Fork
+wrappers such as `ForkAdminPageShell` are allowed only when they compose the
+existing upstream `Layout`, `AppSidebar`, theme configuration, tokens, and
+responsive behavior; they must not create an independent visual shell.
+
+Client-specific operations should be reachable from client context where
+practical, while global administration remains on global pages. An expected
+disabled feature renders an actionable localized state, not a raw backend
+error; where appropriate, its action leads to CatX feature settings. Human
+visual review is required for release-facing frontend changes.
+
 All visible CatX text, including navigation, command-palette entries, API-doc
 section names, headings, labels, placeholders, alerts, confirmations, and
 empty/error states, uses the `fork.*` i18n namespace. English is the source of

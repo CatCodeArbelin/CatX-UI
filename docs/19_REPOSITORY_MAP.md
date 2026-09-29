@@ -6,6 +6,10 @@ This map records the checked-out repository at commit
 It is an analysis baseline for later fork work, not an implementation plan that
 authorizes production changes.
 
+> **Historical baseline note:** This document originated as an early repository
+> audit. Some implementation-state statements are historical; current code,
+> `CURRENT_TASK.md`, and completed qualification documents are authoritative.
+
 The principal architectural constraint is to preserve the upstream execution
 paths and add a small number of fixed, first-party fork hooks. A general plugin
 framework would create more divergence than the planned features require.
@@ -402,17 +406,19 @@ Generated TypeScript and the public OpenAPI JSON must never be hand-edited.
 `PanelLayout`. Existing routes cover dashboard, inbounds, clients, groups,
 nodes, hosts, settings, Xray configuration/routing, and API documentation.
 
-`frontend/src/layouts/AppSidebar.tsx` contains hard-coded primary and submenu
-navigation arrays. `frontend/src/components/CommandPalette.tsx` has another
-hard-coded set of navigation/settings entries. Because the backend has an
-authenticated SPA fallback, most new client-side paths do not need new explicit
-Gin page routes.
+`frontend/src/layouts/AppSidebar.tsx` contains the upstream primary and submenu
+navigation arrays and adapts the CatX route/navigation registry. The registry
+also feeds `frontend/src/components/CommandPalette.tsx`. Grouped navigation
+preserves the original upstream root destinations, and feature-disabled routes
+may remain visible so they can present an actionable disabled state rather than
+being blindly omitted. Because the backend has an authenticated SPA fallback,
+most new client-side paths do not need new explicit Gin page routes.
 
-The low-divergence frontend design is a fork-owned route descriptor file and a
-fork-owned navigation descriptor file, each spread once into the upstream
-arrays. Prefer sharing the navigation descriptor with the command palette so a
-feature is not declared three times. Each descriptor should be omitted when its
-feature flag is disabled. Existing client UI is under
+The low-divergence frontend design is a fork-owned route/navigation registry
+adapted once into the upstream arrays. Prefer sharing the navigation descriptor
+with the command palette so a feature is not declared three times. A descriptor
+may remain visible when its page must explain an explicit disabled capability.
+Existing client UI is under
 `frontend/src/pages/clients/` (including `ClientsPage.tsx`) and uses hooks such
 as `frontend/src/hooks/useClients.ts`; group UI is under
 `frontend/src/pages/groups/` (including `GroupsPage.tsx`). These pages and their
@@ -633,8 +639,8 @@ cycles. Empty/default hooks are exact no-ops.
 - File: `frontend/src/routes.tsx`
 - Function/type: root `RouteObject` children
 - Purpose: Add lazy fork pages without duplicating the upstream router.
-- Fork hook: Import and spread `forkRoutes`, whose factory filters disabled
-  features.
+- Fork hook: Import and spread `forkRoutes`; retain visible entries when an
+  explicit disabled state must remain actionable.
 - Why this is minimal: One insertion keeps all pages in fork-owned feature
   directories and preserves the SPA fallback.
 - Expected upstream-sync conflict risk: LOW

@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { Alert, Button, Card, Descriptions, List, Space, Tag, Typography, message } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { HttpUtil } from '@/utils';
+import FeatureOffState from '@/components/fork/FeatureOffState';
+import { isKnownForkFeatureUnavailable } from '@/lib/fork-feature';
 
 type RiskEvent = {
   id: number;
@@ -41,6 +43,7 @@ export default function RiskIntelligencePanel({ email }: { email: string }) {
   const { t } = useTranslation();
   const [summary, setSummary] = useState<RiskSummary | null>(null);
   const [loading, setLoading] = useState(false);
+  const [featureOff, setFeatureOff] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
 
   const load = useCallback(async () => {
@@ -51,6 +54,10 @@ export default function RiskIntelligencePanel({ email }: { email: string }) {
         { silent: true },
       );
       const raw = result?.obj;
+      if (isKnownForkFeatureUnavailable(result, 'risk')) {
+        setFeatureOff(true);
+        return;
+      }
       setSummary(raw?.success ? raw.obj : null);
     } finally {
       setLoading(false);
@@ -67,6 +74,7 @@ export default function RiskIntelligencePanel({ email }: { email: string }) {
     await load();
   };
 
+  if (featureOff && !loading) return <FeatureOffState feature="risk" />;
   if ((!summary || !summary.enabled) && !loading) return null;
   if (!summary) return <Card loading size="small" />;
 

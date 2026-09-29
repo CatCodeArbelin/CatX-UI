@@ -103,6 +103,22 @@ Do not ship stable until reconnect/restart/multi-node behavior is proven.
 
 No automatic ban by default.
 
+## Current release track
+
+```text
+WP-9D human approval
+→ RC-5
+→ v0.1.0-rc.2
+→ real RC observation
+→ Stable Qualification
+→ v0.1.0
+→ Repository Productization
+→ Upstream Maintenance Strategy
+```
+
+Repository productization and new product features are not pre-stable
+blockers unless they are required to fix a release blocker.
+
 ## Phase 8 — Operations
 
 - self-service portal;
