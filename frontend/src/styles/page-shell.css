@@ -342,6 +342,67 @@ html[data-theme='ultra-dark'] body .portal-page {
   padding-block-start: 8rem !important;
 }
 
+/* CatX keeps the upstream page shell but must allow wide operational tables
+   to remain usable on phones and in long-string locales. */
+.activity-page .content-area,
+.policy-page .content-area,
+.audit-page .content-area,
+.webhooks-page .content-area,
+.fleet-page .content-area,
+.fleet-update-page .content-area,
+.portal-admin-page .content-area,
+.portal-page .content-area,
+.activity-page .ant-card,
+.policy-page .ant-card,
+.audit-page .ant-card,
+.webhooks-page .ant-card,
+.fleet-page .ant-card,
+.fleet-update-page .ant-card,
+.portal-admin-page .ant-card,
+.portal-page .ant-card {
+  min-width: 0;
+}
+
+.activity-page .ant-table-wrapper,
+.policy-page .ant-table-wrapper,
+.audit-page .ant-table-wrapper,
+.webhooks-page .ant-table-wrapper,
+.fleet-update-page .ant-table-wrapper,
+.portal-admin-page .ant-table-wrapper,
+.portal-page .ant-table-wrapper {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.api-docs-page .swagger-ui .table-container {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* Preserve the visual order of technical identifiers inside RTL pages. */
+.catx-technical-value {
+  direction: ltr;
+  unicode-bidi: isolate;
+  overflow-wrap: anywhere;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .activity-page *,
+  .policy-page *,
+  .audit-page *,
+  .webhooks-page *,
+  .fleet-page *,
+  .fleet-update-page *,
+  .portal-admin-page *,
+  .portal-page *,
+  .api-docs-page * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
 @media (max-width: 768px) {
   .portal-login-shell {
     padding-block-start: 2rem !important;

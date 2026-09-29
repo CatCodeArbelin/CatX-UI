@@ -1,5 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Button, Card, Descriptions, Input, Space, Table, Tabs, Typography } from 'antd';
+import {
+  Alert,
+  Button,
+  Card,
+  Descriptions,
+  Input,
+  Modal,
+  Space,
+  Table,
+  Tabs,
+  Typography,
+} from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useTranslation } from 'react-i18next';
 import { HttpUtil } from '@/utils';
@@ -129,7 +140,15 @@ export default function PortalPage() {
             >
               {t('fork.common.rename')}
             </Button>
-            <Button danger onClick={() => void mutate(`/portal/devices/${row.id}`, 'delete')}>
+            <Button
+              danger
+              onClick={() =>
+                Modal.confirm({
+                  title: `${t('fork.portal.revoke')}?`,
+                  onOk: () => mutate(`/portal/devices/${row.id}`, 'delete'),
+                })
+              }
+            >
               {t('fork.portal.revoke')}
             </Button>
           </Space>
@@ -213,10 +232,26 @@ export default function PortalPage() {
                     <Table
                       rowKey="id"
                       columns={[
-                        { title: t('fork.portal.host'), dataIndex: 'address' },
+                        {
+                          title: t('fork.portal.host'),
+                          dataIndex: 'address',
+                          render: (value: string) => (
+                            <span className="catx-technical-value" dir="ltr">
+                              {value}
+                            </span>
+                          ),
+                        },
                         { title: t('fork.common.labels.port'), dataIndex: 'port' },
                         { title: t('fork.common.labels.security'), dataIndex: 'security' },
-                        { title: t('fork.common.labels.sni'), dataIndex: 'sni' },
+                        {
+                          title: t('fork.common.labels.sni'),
+                          dataIndex: 'sni',
+                          render: (value: string) => (
+                            <span className="catx-technical-value" dir="ltr">
+                              {value}
+                            </span>
+                          ),
+                        },
                       ]}
                       dataSource={hosts}
                       pagination={false}

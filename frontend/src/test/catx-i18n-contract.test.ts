@@ -158,4 +158,27 @@ describe('CatX frontend i18n contract', () => {
       'activity-page',
     );
   });
+
+  it('keeps CatX narrow-layout and RTL safeguards in the shared styles', () => {
+    const shell = readFileSync(resolve(process.cwd(), 'src/styles/page-shell.css'), 'utf8');
+    expect(shell).toContain('.activity-page .ant-table-wrapper');
+    expect(shell).toContain('overflow-x: auto');
+    expect(shell).toContain('.catx-technical-value');
+    expect(shell).toContain('prefers-reduced-motion: reduce');
+    expect(shell).toContain('.api-docs-page .swagger-ui .table-container');
+  });
+
+  it('keeps dangerous CatX actions confirmable and icon controls named', () => {
+    const fleet = readFileSync(
+      resolve(process.cwd(), 'src/pages/fleet/FleetUpdatePage.tsx'),
+      'utf8',
+    );
+    const portal = readFileSync(resolve(process.cwd(), 'src/pages/portal/PortalPage.tsx'), 'utf8');
+    const policy = readFileSync(resolve(process.cwd(), 'src/pages/policy/PolicyPage.tsx'), 'utf8');
+    expect(fleet).toContain('<Popconfirm');
+    expect(portal).toContain('Modal.confirm');
+    expect(policy).toContain("aria-label={t('fork.policy.labels.deleteAssignment')}");
+    expect(policy).toContain("aria-label={t('fork.policy.labels.deleteOverride')}");
+    expect(policy).toContain("aria-label={t('fork.policy.labels.deleteSchedule')}");
+  });
 });
