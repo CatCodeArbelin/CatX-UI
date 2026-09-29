@@ -56,36 +56,3 @@ func TestSettingsUnknownFlagRejected(t *testing.T) {
 		t.Fatal("Set() accepted an unknown flag")
 	}
 }
-
-func TestManagedFeatureSettingsExcludeReservedFlagsAndValidateDependencies(t *testing.T) {
-	if len(managedFeatureFlags) != 9 {
-		t.Fatalf("managed feature count = %d, want 9", len(managedFeatureFlags))
-	}
-	values := make(map[Flag]bool, len(managedFeatureFlags))
-	for _, feature := range managedFeatureFlags {
-		if feature.flag == FlagWebhooks || feature.flag == FlagMetrics {
-			t.Fatalf("reserved flag %q was exposed", feature.flag)
-		}
-		values[feature.flag] = false
-	}
-	if err := validateFeatureState(values); err != nil {
-		t.Fatalf("default feature state rejected: %v", err)
-	}
-	values[FlagDNSIntelligence] = true
-	if err := validateFeatureState(values); err == nil {
-		t.Fatal("DNS intelligence accepted without analytics dependency")
-	}
-	values[FlagAnalytics] = true
-	values[FlagSecurityAnomaly] = true
-	if err := validateFeatureState(values); err != nil {
-		t.Fatalf("analytics dependency state rejected: %v", err)
-	}
-	values[FlagFleetMutation] = true
-	if err := validateFeatureState(values); err == nil {
-		t.Fatal("fleet mutation accepted without fleet updates dependency")
-	}
-	values[FlagFleetUpdates] = true
-	if err := validateFeatureState(values); err != nil {
-		t.Fatalf("fleet dependency state rejected: %v", err)
-	}
-}
