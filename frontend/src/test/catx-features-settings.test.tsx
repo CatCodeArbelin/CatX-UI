@@ -89,8 +89,13 @@ test('uses localized feature names in dependency warnings', async () => {
     </MemoryRouter>,
   );
 
-  const message = await screen.findByText('Enable Analytics before enabling DNS intelligence.');
-  expect(message.closest('.ant-alert')?.textContent).not.toContain('analytics.enabled');
+  const message = 'Enable Analytics before enabling DNS intelligence.';
+  await screen.findAllByText(message);
+  const dependencyAlert = screen
+    .getAllByRole('alert')
+    .find((alert) => alert.textContent?.includes(message));
+  expect(dependencyAlert).toBeTruthy();
+  expect(dependencyAlert?.textContent).not.toContain('analytics.enabled');
 });
 
 test('keeps webhook mutation controls hidden when the feature entrypoint is disabled', async () => {
