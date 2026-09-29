@@ -300,9 +300,10 @@ EOF
         rollback_run_id=900719925474099312348
         rollback_evidence=/tmp/catx-staging-rollback.log
         rollback_audit=/tmp/catx-staging-update-audit.log
+        xray_process_pattern="xray""-linux-"
         rm -f "$rollback_evidence" "$rollback_audit" /tmp/catx-staging-candidate-failure-injected
         echo "staging: post-activation rollback case begin"
-        pkill -f "[/]usr/local/x-ui/bin/xray-linux-" >/dev/null 2>&1 || true
+        pkill -f "$xray_process_pattern" >/dev/null 2>&1 || true
         rm -rf /usr/local/x-ui /etc/x-ui
         mkdir -p /usr/local/x-ui /etc/x-ui /etc/systemd/system
         cp -a /tmp/populated-db/. /etc/x-ui/
@@ -384,7 +385,7 @@ EOF
         kill -0 "$service_pid"
         wait_http http://127.0.0.1:28080/staging/
         curl -fsS http://127.0.0.1:28080/staging/ >/dev/null
-        xray_pid=$(pgrep -f "[/]usr/local/x-ui/bin/xray-linux-" | head -n 1 || true)
+        xray_pid=$(pgrep -f "$xray_process_pattern" | head -n 1 || true)
         test -n "$xray_pid"
         kill -0 "$xray_pid"
         grep -Eiq "xray.*started" /tmp/catx-x-ui-service.log
