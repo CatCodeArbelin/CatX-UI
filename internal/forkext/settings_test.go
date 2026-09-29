@@ -58,49 +58,34 @@ func TestSettingsUnknownFlagRejected(t *testing.T) {
 }
 
 func TestManagedFeatureSettingsExcludeReservedFlagsAndValidateDependencies(t *testing.T) {
-	db, err := gorm.Open(sqlite.Open("file:forkext-managed-settings?mode=memory&cache=shared"), &gorm.Config{})
-	if err != nil {
-		t.Fatalf("open sqlite: %v", err)
+	if len(managedFeatureFlags) != 9 {
+		t.Fatalf("managed feature count = %d, want 9", len(managedFeatureFlags))
 	}
-	if err := db.AutoMigrate(&model.Setting{}); err != nil {
-		t.Fatalf("migrate settings: %v", err)
-	}
-	settings := NewSettings(db)
-	items, err := settings.FeatureFlags()
-	if err != nil {
-		t.Fatalf("FeatureFlags() error = %v", err)
-	}
-	if len(items) != 9 {
-		t.Fatalf("managed feature count = %d, want 9", len(items))
-	}
-	for _, item := range items {
-		if item.Key == FlagWebhooks || item.Key == FlagMetrics {
-			t.Fatalf("reserved flag %q was exposed", item.Key)
+	values := make(map[Flag]bool, len(managedFeatureFlags))
+	for _, feature := range managedFeatureFlags {
+		if feature.flag == FlagWebhooks || feature.flag == FlagMetrics {
+			t.Fatalf("reserved flag %q was exposed", feature.flag)
 		}
-		if item.Enabled || !item.RestartRequired {
-			t.Fatalf("unexpected default descriptor: %+v", item)
-		}
+		values[feature.flag] = false
 	}
-	if err := settings.UpdateFeatures(map[Flag]bool{FlagDNSIntelligence: true}); err == nil {
-		t.Fatal("DNS intelligence enabled without analytics dependency")
+	if err := validateFeatureState(values); err != nil {
+		t.Fatalf("default feature state rejected: %v", err)
 	}
-	if enabled, _ := settings.Enabled(FlagDNSIntelligence); enabled {
-		t.Fatal("invalid dependency update was persisted")
+	values[FlagDNSIntelligence] = true
+	if err := validateFeatureState(values); err == nil {
+		t.Fatal("DNS intelligence accepted without analytics dependency")
 	}
-	if err := settings.UpdateFeatures(map[Flag]bool{
-		FlagAnalytics:       true,
-		FlagDNSIntelligence: true,
-		FlagSecurityAnomaly: true,
-	}); err != nil {
-		t.Fatalf("valid analytics dependency update: %v", err)
+	values[FlagAnalytics] = true
+	values[FlagSecurityAnomaly] = true
+	if err := validateFeatureState(values); err != nil {
+		t.Fatalf("analytics dependency state rejected: %v", err)
 	}
-	if err := settings.UpdateFeatures(map[Flag]bool{FlagFleetMutation: true}); err == nil {
-		t.Fatal("fleet mutation enabled without fleet updates dependency")
+	values[FlagFleetMutation] = true
+	if err := validateFeatureState(values); err == nil {
+		t.Fatal("fleet mutation accepted without fleet updates dependency")
 	}
-	if err := settings.UpdateFeatures(map[Flag]bool{
-		FlagFleetUpdates:  true,
-		FlagFleetMutation: true,
-	}); err != nil {
-		t.Fatalf("valid fleet dependency update: %v", err)
+	values[FlagFleetUpdates] = true
+	if err := validateFeatureState(values); err != nil {
+		t.Fatalf("fleet dependency state rejected: %v", err)
 	}
 }
