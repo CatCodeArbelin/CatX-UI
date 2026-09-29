@@ -437,9 +437,11 @@ export default function PolicyPage() {
               {t('fork.policy.newPolicy')}
             </Button>
           </div>
-          {!featureOff && !enabled && <FeatureOffState feature="policies" />}
+          {!featureOff && !enabled && (
+            <FeatureOffState feature="policies" messageKey="fork.policy.labels.disabled" />
+          )}
           {featureOff ? (
-            <FeatureOffState feature="policies" />
+            <FeatureOffState feature="policies" messageKey="fork.policy.labels.disabled" />
           ) : (
             error && <Alert type="error" showIcon message={error} />
           )}

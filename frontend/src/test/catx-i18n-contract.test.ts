@@ -32,6 +32,7 @@ const englishIdenticalTechnicalKeys = new Set([
   'fork.policy.scopes.dns',
   'fork.policy.scopes.qos',
   'fork.policy.labels.ipCidr',
+  'fork.activity.labels.dns',
 ]);
 
 type Json = string | number | boolean | null | Json[] | { [key: string]: Json };

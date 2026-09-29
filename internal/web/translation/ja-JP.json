@@ -2805,7 +2805,7 @@
     },
     "activity": {
       "labels": {
-      "ambiguous": "不明瞭 / 矛盾","time":"時刻","domainIp":"ドメイン / IP","service":"サービス","category":"カテゴリ","asnCountry":"ASN / 国","sourceProvenance":"ソース / 出所","confidence":"信頼度","firstSeen":"初回確認","lastSeen":"最終確認","protocol":"プロトコル","observedDomain":"観測ドメイン","resolvedIp":"解決済み IP","record":"レコード","timeline":"タイムライン","dnsObservations":"DNS 観測","enrichedDetails":"詳細情報","sessionHistory":"セッション履歴","trafficHistory":"トラフィック履歴","events":"イベント","dns":"DNS","sessions":"セッション","range":"範囲","upload":"アップロード","download":"ダウンロード","clients":"クライアント","inbounds":"インバウンド","serviceCategory":"サービス / カテゴリ","observations":"観測数","metadataNote":"メタデータから作成した行です。バイト合計はパネルのトラフィック集計を使用します。","rawEvents":"生イベント","dnsRetention":"DNS 観測","sessionsRetention":"セッション","aggregates":"集計","saveError":"設定を保存できませんでした。"
+      "ambiguous": "不明瞭 / 矛盾","time":"時刻","domainIp":"ドメイン / IP","service":"サービス","category":"カテゴリ","asnCountry":"ASN / 国","sourceProvenance":"ソース / 出所","confidence":"信頼度","firstSeen":"初回確認","lastSeen":"最終確認","protocol":"プロトコル","observedDomain":"観測ドメイン","resolvedIp":"解決済み IP","record":"レコード","timeline":"タイムライン","dnsObservations":"DNS 観測","enrichedDetails":"詳細情報","sessionHistory":"セッション履歴","trafficHistory":"トラフィック履歴","events":"イベント","dns":"DNS","sessions":"セッション","range":"範囲","upload":"アップロード","download":"ダウンロード","clients":"クライアント","inbounds":"インバウンド","serviceCategory":"サービス / カテゴリ","observations":"観測数","metadataNote":"メタデータから作成した行です。バイト合計はパネルのトラフィック集計を使用します。","aggregates":"集計","saveError":"設定を保存できませんでした。"
       },
       "title": "クライアント アクティビティ & DNS インテリジェンス",
       "subtitle": "既存のパネルクライアント1件に対するメタデータのみの観測。",

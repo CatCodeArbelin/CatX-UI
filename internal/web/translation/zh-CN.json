@@ -2805,7 +2805,7 @@
     },
     "activity": {
       "labels": {
-      "ambiguous": "含糊 / 冲突","time":"时间","domainIp":"域名 / IP","service":"服务","category":"类别","asnCountry":"ASN / 国家","sourceProvenance":"来源 / 依据","confidence":"置信度","firstSeen":"首次发现","lastSeen":"最近发现","protocol":"协议","observedDomain":"观测域名","resolvedIp":"解析 IP","record":"记录","timeline":"时间线","dnsObservations":"DNS 观测","enrichedDetails":"增强详情","sessionHistory":"会话历史","trafficHistory":"流量历史","events":"事件","dns":"DNS","sessions":"会话","range":"范围","upload":"上传","download":"下载","clients":"客户端","inbounds":"入站","serviceCategory":"服务 / 类别","observations":"观测数","metadataNote":"这些行来自元数据；字节总量来自面板流量统计。","rawEvents":"原始事件","dnsRetention":"DNS 观测","sessionsRetention":"会话","aggregates":"聚合","saveError":"无法保存设置。"
+      "ambiguous": "含糊 / 冲突","time":"时间","domainIp":"域名 / IP","service":"服务","category":"类别","asnCountry":"ASN / 国家","sourceProvenance":"来源 / 依据","confidence":"置信度","firstSeen":"首次发现","lastSeen":"最近发现","protocol":"协议","observedDomain":"观测域名","resolvedIp":"解析 IP","record":"记录","timeline":"时间线","dnsObservations":"DNS 观测","enrichedDetails":"增强详情","sessionHistory":"会话历史","trafficHistory":"流量历史","events":"事件","dns":"DNS","sessions":"会话","range":"范围","upload":"上传","download":"下载","clients":"客户端","inbounds":"入站","serviceCategory":"服务 / 类别","observations":"观测数","metadataNote":"这些行来自元数据；字节总量来自面板流量统计。","aggregates":"聚合","saveError":"无法保存设置。"
       },
       "title": "客户端 活动 & DNS 智能",
       "subtitle": "仅记录一个现有面板客户端的元数据观测。",

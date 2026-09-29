@@ -11,6 +11,7 @@ function FeatureSettingsLink() {
     <Button
       type="link"
       icon={<SettingOutlined />}
+      aria-label={t('fork.settings.title')}
       onClick={() => navigate('/settings#catx-features')}
     >
       {t('fork.settings.title')}
@@ -18,7 +19,13 @@ function FeatureSettingsLink() {
   );
 }
 
-export default function FeatureOffState({ feature }: { feature?: ForkFeature }) {
+export default function FeatureOffState({
+  feature,
+  messageKey,
+}: {
+  feature?: ForkFeature;
+  messageKey?: string;
+}) {
   const { t } = useTranslation();
   const inRouter = useInRouterContext();
   const labels: Record<ForkFeature, string> = {
@@ -36,7 +43,9 @@ export default function FeatureOffState({ feature }: { feature?: ForkFeature }) 
     <Alert
       type="info"
       showIcon
-      message={t('fork.common.featureOffTitle', { feature: featureLabel })}
+      message={
+        messageKey ? t(messageKey) : t('fork.common.featureOffTitle', { feature: featureLabel })
+      }
       description={
         <Space direction="vertical" size={2}>
           <Typography.Text>{t('fork.common.featureOffDescription')}</Typography.Text>
