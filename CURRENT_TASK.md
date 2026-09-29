@@ -77,5 +77,16 @@ visual approval remains mandatory. WP-9D is not DONE.
   available, with only page-scoped handling for known fork-owned endpoints;
   ordinary HTTP 404 responses remain ordinary errors.
 
-This package must stop before merge and before any RC-2 tag or release. Human
-visual approval is required after the preview.
+## Final human gate and closure
+
+Final human functional smoke is approved. The apparent restart failure was
+environment-only: the disposable preview used automatic container removal,
+exited cleanly on SIGINT with exit code 0, and Docker removed it before the
+restart attempt. A corrected persistent-container smoke using the same named
+volume passed with Analytics and DNS Analytics enabled: save, restart, panel
+startup, flag persistence, Activity, and HTTP 200 responses from `/activity`,
+`/clients`, `/nodes`, and `/routing`, with no panic, fatal, or migration errors.
+
+Implementation SHA remains `52f70d832b5062dda495b9b6e406075b2ce3ae0a`.
+WP-9D is DONE and merge-ready. RC-5 is the next work package; no RC-2 tag or
+release has been created.

@@ -511,7 +511,7 @@ found product UX/localization blockers. No public tag or release was created.
 RC-4 merged into `develop` with `b66ac15f79d411b5a0b2386e8770b05e88254bc2`,
 and its feature branch was deleted. `main` was not changed.
 
-## WP-9D — Product UX Integration & Human QA — CURRENT
+## WP-9D — Product UX Integration & Human QA — DONE
 
 Branch: `feature/wp-9d-product-ux-integration`
 
@@ -522,11 +522,16 @@ feature-off states explicit and localized, and complete the Russian and
 narrow non-Russian leakage review. The current package includes the native
 themed CatX admin shell, restored upstream submenu destinations, contextual
 client access, CatX feature settings, actionable feature-off UX, semantic
-localization QA, and the mandatory human visual gate. Preserve direct routes
-and stop before merge pending human visual approval. The first visual review
-at `a37a804ab7534fefb6cf408d2d71b0f7bc7a8773` failed because upstream root
-destinations were hidden and CatX admin pages bypassed the native themed shell;
-the corrective pass continues on this branch.
+localization QA, and the mandatory human visual gate. Preserve direct routes.
+
+Final human functional smoke was approved at implementation SHA
+`52f70d832b5062dda495b9b6e406075b2ce3ae0a`. The apparent restart failure was
+environment-only: the disposable preview used automatic container removal and
+exited cleanly on SIGINT; a corrected persistent-container smoke passed with
+Analytics and DNS Analytics enabled, including save, restart, flag persistence,
+Activity, `/activity`, `/clients`, `/nodes`, and `/routing` HTTP 200 responses,
+and no panic, fatal, or migration errors. WP-9D is merge-ready. The next
+package is RC-5; no `v0.1.0-rc.2` tag or release exists.
 
 ## RC-5 — Final Second Public RC Qualification & Cut — PLANNED
 
