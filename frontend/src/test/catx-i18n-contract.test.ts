@@ -195,7 +195,7 @@ describe('CatX frontend i18n contract', () => {
     expect(adminShell).toContain('AppSidebar');
     expect(adminShell).toContain('content-shell');
     expect(readFileSync(resolve(process.cwd(), 'src/styles/page-shell.css'), 'utf8')).toContain(
-      'activity-page',
+      'fork-admin-page',
     );
     expect(readFileSync(resolve(process.cwd(), 'src/styles/page-cards.css'), 'utf8')).toContain(
       'activity-page',

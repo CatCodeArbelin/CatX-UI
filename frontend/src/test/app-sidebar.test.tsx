@@ -82,12 +82,12 @@ test('labels the palette shortcut with the modifier the platform actually uses',
 
 test('groups fork destinations into upstream navigation and removes Sponsors from primary menu', async () => {
   const view = await renderSidebar();
-  fireEvent.mouseEnter(view.container.querySelector('.ant-sidebar')!);
-  const menuLabels = Array.from(
-    document.querySelectorAll('.ant-menu-item .ant-menu-title-content'),
+  const submenuLabels = Array.from(
+    view.container.querySelectorAll('.ant-sidebar > .ant-layout-sider .ant-menu-submenu-title'),
   ).map((item) => item.textContent?.trim());
-  expect(menuLabels).toEqual(expect.arrayContaining(['Clients', 'Nodes', 'Routing']));
-  expect(screen.getByText('Operations')).toBeTruthy();
+  expect(submenuLabels).toEqual(
+    expect.arrayContaining(['Clients', 'Nodes', 'Routing', 'Operations']),
+  );
   expect(screen.queryByText('Sponsors')).toBeNull();
 });
 
@@ -101,10 +101,15 @@ test('keeps upstream root destinations as clickable submenu entries', async () =
   await act(async () => {});
   fireEvent.mouseEnter(view.container.querySelector('.ant-sidebar')!);
 
-  const desktopItems = Array.from(
-    view.container.querySelectorAll('.ant-sidebar > .ant-layout-sider .ant-menu-item'),
-  );
   for (const destination of ['Clients', 'Nodes', 'Routing']) {
+    const groupTitle = Array.from(
+      view.container.querySelectorAll('.ant-sidebar > .ant-layout-sider .ant-menu-submenu-title'),
+    ).find((candidate) => candidate.textContent?.trim() === destination);
+    expect(groupTitle, `${destination} group`).toBeTruthy();
+    fireEvent.click(groupTitle!);
+    const desktopItems = Array.from(
+      view.container.querySelectorAll('.ant-sidebar > .ant-layout-sider .ant-menu-item'),
+    );
     const item = desktopItems.find((candidate) => candidate.textContent?.trim() === destination);
     expect(item, destination).toBeTruthy();
     fireEvent.click(item!);

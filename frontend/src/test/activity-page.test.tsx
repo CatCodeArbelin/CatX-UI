@@ -1,9 +1,10 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { afterEach, expect, test, vi } from 'vitest';
 
 import ActivityPage from '@/pages/activity/ActivityPage';
 import { HttpUtil } from '@/utils';
+import { renderWithProviders } from './test-utils';
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -13,7 +14,7 @@ test('shows the analytics-disabled state without rendering activity data', async
     msg: '',
     obj: { enabled: false, items: [], page: 1, pageSize: 25, total: 0, from: 1, to: 2 },
   });
-  render(
+  renderWithProviders(
     <MemoryRouter initialEntries={['/activity?email=alice@example.com']}>
       <ActivityPage />
     </MemoryRouter>,
@@ -53,7 +54,7 @@ test('renders DNS enrichment provenance confidence and ambiguity', async () => {
       to: 3,
     },
   } as never);
-  render(
+  renderWithProviders(
     <MemoryRouter initialEntries={['/activity?email=alice@example.com']}>
       <ActivityPage />
     </MemoryRouter>,
