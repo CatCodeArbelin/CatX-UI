@@ -372,4 +372,22 @@ export const forkApiSections = [
       },
     ],
   },
+  {
+    id: 'feature-settings',
+    title: 'CatX-UI Features',
+    translationKey: 'fork.apiDocs.settings',
+    description: 'Protected CatX feature flags and restart requirement.',
+    endpoints: [
+      {
+        method: 'GET',
+        path: '/panel/api/fork/settings/features',
+        summary: 'Read CatX feature flags and restart requirement.',
+      },
+      {
+        method: 'PUT',
+        path: '/panel/api/fork/settings/features',
+        summary: 'Update CatX feature flags.',
+      },
+    ],
+  },
 ] satisfies import('../pages/api-docs/endpoints').Section[];

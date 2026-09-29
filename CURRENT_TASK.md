@@ -4,6 +4,17 @@
 
 `WP-9D — Product UX Integration & Human QA`
 
+## Required reading
+
+For WP-9D, read only these canonical documents in addition to `AGENTS.md` and
+this file:
+
+- `docs/08_FRONTEND_UX.md`
+- `docs/15_DEFINITION_OF_DONE.md`
+- `docs/25_FRONTEND_I18N_CONTRACT.md`
+- `docs/26_LOCALIZATION_GLOSSARY.md`
+- `docs/27_SECOND_RC_PLAN.md`
+
 ## RC-4 closure
 
 RC-4 release engineering was technically qualified at exact SHA
@@ -35,14 +46,22 @@ Required gates before this package can be considered ready for human review:
 - disposable local preview instructions for manual light/dark/ultra-dark,
   responsive, RTL, and long-string review.
 
-## WP-9D review checkpoint
+## WP-9D review history
 
-The first human visual review failed at `a37a804ab7534fefb6cf408d2d71b0f7bc7a8773`.
-The branch remains unmerged and no RC tag was created. Corrective work stays on
-this same branch and is limited to restoring upstream root destinations,
-composing CatX admin pages with the native themed shell, improving page
-composition, explicit self-service feature-off UX, contextual client access,
-and the associated regression coverage.
+- The first human visual review failed at
+  `a37a804ab7534fefb6cf408d2d71b0f7bc7a8773`.
+- The corrective shell/navigation pass reached
+  `5a889d560fbd19dcd1d748c4f99b688fb69024c6`.
+- The second human review showed large improvement but found remaining
+  feature-operability and localization issues.
+- CatX feature settings, dependency validation, actionable feature-off UX,
+  and the related semantic localization fixes were then added.
+- SHA `ce00e0badea28b805b12302354cdd13b96979cc4` failed canonical CI solely
+  because `fork.settings.description` collided with reserved Go i18n message
+  metadata; the behavior-neutral key rename is the current corrective fix.
+
+The branch remains unmerged, no `v0.1.0-rc.2` tag exists, and explicit human
+visual approval remains mandatory. WP-9D is not DONE.
 
 ## WP-9D implementation evidence
 

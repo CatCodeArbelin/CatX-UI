@@ -2736,6 +2736,7 @@
       "audit": "監査 / Webhook / Metrics",
       "portal": "Self-サービス ポータル",
       "fleetUpdates": "フリート 更新",
+      "settings": "CatX-UI 機能",
       "traffic": "トラフィック control"
     },
     "portal": {

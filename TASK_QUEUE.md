@@ -519,11 +519,22 @@ Group CatX destinations into existing upstream sidebar submenus, use semantic
 Ant Design icons, remove Sponsors from primary navigation without deleting its
 implementation, improve shared page composition and empty states, make
 feature-off states explicit and localized, and complete the Russian and
-narrow non-Russian leakage review. Preserve direct routes and stop before
-merge pending human visual approval. The first visual review at
-`a37a804ab7534fefb6cf408d2d71b0f7bc7a8773` failed because upstream root
+narrow non-Russian leakage review. The current package includes the native
+themed CatX admin shell, restored upstream submenu destinations, contextual
+client access, CatX feature settings, actionable feature-off UX, semantic
+localization QA, and the mandatory human visual gate. Preserve direct routes
+and stop before merge pending human visual approval. The first visual review
+at `a37a804ab7534fefb6cf408d2d71b0f7bc7a8773` failed because upstream root
 destinations were hidden and CatX admin pages bypassed the native themed shell;
 the corrective pass continues on this branch.
+
+## RC-5 — Final Second Public RC Qualification & Cut — PLANNED
+
+Start only after WP-9D is merged with explicit human approval. Re-run release
+qualification on the exact post-WP-9D SHA and target `v0.1.0-rc.2`, preserving
+the RC-4 release-engineering improvements. After the tag, perform real
+published-asset smoke checks on disposable installations. Do not touch stable
+`v0.1.0` and do not perform repository productization in RC-5.
 
 # Operating Rules
 

@@ -69,6 +69,7 @@ export default function CatxFeaturesTab() {
       {contextHolder}
       <div>
         <Typography.Title level={2}>{t('fork.settings.title')}</Typography.Title>
+        {/* Go-i18n reserves "description" in locale message trees. */}
         <Typography.Paragraph type="secondary">{t('fork.settings.intro')}</Typography.Paragraph>
       </div>
       <Alert

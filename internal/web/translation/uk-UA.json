@@ -2736,6 +2736,7 @@
       "audit": "Аудит / Вебхуки / Metrics",
       "portal": "Self-Сервіс Портал",
       "fleetUpdates": "Парк Оновлення",
+      "settings": "Функції CatX-UI",
       "traffic": "Трафік control"
     },
     "portal": {

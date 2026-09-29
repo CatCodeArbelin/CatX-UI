@@ -2736,6 +2736,7 @@
       "audit": "稽核 / Webhook / Metrics",
       "portal": "Self-服務 入口網站",
       "fleetUpdates": "節點叢集 更新",
+      "settings": "CatX-UI 功能",
       "traffic": "流量 control"
     },
     "portal": {

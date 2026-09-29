@@ -113,6 +113,10 @@ If tests fail:
 
 **MERGE IS FORBIDDEN.**
 
+For user-facing frontend work, green automated verification is necessary but
+not sufficient when `CURRENT_TASK.md` declares a human visual-approval gate.
+The agent must stop before merge until that explicit approval is recorded.
+
 ## 6. Rollback — mandatory rule
 
 Every feature that can affect:
@@ -150,6 +154,11 @@ FAIL
 "Fix it manually through SSH" is not an acceptable default rollback plan.
 
 ## 7. Feature flags
+
+The authoritative fork feature-flag inventory is the implementation in
+`internal/forkext/settings.go`. Lists in governance or planning documents are
+examples only and must not silently become an incomplete second source of
+truth.
 
 Large fork subsystems should be independently disableable when practical:
 

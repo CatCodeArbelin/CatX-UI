@@ -2736,6 +2736,7 @@
       "audit": "Denetim / Webhooklar / Metrics",
       "portal": "Self-Hizmet Portal",
       "fleetUpdates": "Filo Güncellemeler",
+      "settings": "CatX-UI Özellikleri",
       "traffic": "Trafik control"
     },
     "portal": {

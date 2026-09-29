@@ -2736,6 +2736,7 @@
       "audit": "Audit / Webhook / Metrics",
       "portal": "Self-Layanan Portal",
       "fleetUpdates": "Armada Pembaruan",
+      "settings": "Fitur CatX-UI",
       "traffic": "Lalu lintas control"
     },
     "portal": {

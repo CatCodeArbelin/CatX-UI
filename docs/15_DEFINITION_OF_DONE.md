@@ -42,6 +42,12 @@ A feature is DONE only when all applicable conditions are true.
 - important interactions tested;
 - dangerous actions confirmed;
 - unsupported capability clearly shown.
+- expected feature-disabled states are explicit, localized, and actionable;
+- raw backend errors are not used as normal feature-off UX;
+- user-facing frontend changes receive manual visual QA across applicable
+  theme, desktop/mobile, and LTR/RTL cases;
+- when a work package declares a human approval gate, merge is forbidden until
+  that approval is recorded.
 
 ## Tests
 

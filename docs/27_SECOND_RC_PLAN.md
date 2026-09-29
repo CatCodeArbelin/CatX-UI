@@ -3,6 +3,16 @@
 This document qualifies the second public prerelease. It does not authorize a
 production update or a stable release.
 
+RC-4 release engineering was qualified, but the public `v0.1.0-rc.2` cut was
+intentionally deferred after human review found product UX and localization
+blockers. WP-9D is the blocking product-quality package. The final pre-tag
+qualification and cut is planned as RC-5; its exact final post-WP-9D/RC-5 SHA,
+not the historical RC-4 SHA, must pass every pre-tag gate.
+
+WP-9D introduced a narrow protected CatX feature-settings control surface. It
+did not change database schema, Xray compiler semantics, stable-channel
+semantics, or the updater transaction model.
+
 ## Identity and base
 
 - target tag: `v0.1.0-rc.2`;
@@ -86,7 +96,7 @@ SemVer ordering is `0.1.0-rc.1 < 0.1.0-rc.2 < 0.1.0`.
 
 ## Pre-tag and post-publication gate
 
-The exact final RC-4 SHA must pass the full Go/frontend/i18n/accessibility,
+The exact final post-WP-9D/RC-5 SHA must pass the full Go/frontend/i18n/accessibility,
 artifact, Linux, PostgreSQL, upgrade, checksum, identity, and rollback matrix
 before the annotated tag is created. After publication, use the actual RC-2
 assets for a disposable clean install, the documented RC-1 transition, panel

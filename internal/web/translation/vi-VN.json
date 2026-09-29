@@ -2736,6 +2736,7 @@
       "audit": "Kiểm toán / Các Webhook / Metrics",
       "portal": "Self-Dịch vụ Cổng thông tin",
       "fleetUpdates": "Đội máy chủ Các cập nhật",
+      "settings": "Tính năng CatX-UI",
       "traffic": "Lưu lượng control"
     },
     "portal": {

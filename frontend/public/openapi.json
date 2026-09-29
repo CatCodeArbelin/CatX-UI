@@ -6123,6 +6123,10 @@
     {
       "name": "Self-service portal",
       "description": "Dedicated client portal sessions with metadata-only self-service access."
+    },
+    {
+      "name": "CatX-UI Features",
+      "description": "Protected CatX feature flags and restart requirement."
     }
   ],
   "paths": {
@@ -21756,6 +21760,64 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/fork/settings/features": {
+      "get": {
+        "tags": [
+          "CatX-UI Features"
+        ],
+        "summary": "Read CatX feature flags and restart requirement.",
+        "operationId": "get_panel_api_fork_settings_features",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "CatX-UI Features"
+        ],
+        "summary": "Update CatX feature flags.",
+        "operationId": "put_panel_api_fork_settings_features",
         "responses": {
           "200": {
             "description": "Successful response",

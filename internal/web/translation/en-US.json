@@ -2736,6 +2736,7 @@
       "audit": "Audit / Webhooks / Metrics",
       "portal": "Self-service portal",
       "fleetUpdates": "Fleet updates",
+      "settings": "CatX-UI Features",
       "traffic": "Traffic control"
     },
    "portal": {

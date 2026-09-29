@@ -1,5 +1,7 @@
 name: Fork verification
-# WP-8B canonical retry marker.
+# WP-8B canonical retry marker. Keep a workflow-file touch available for
+# exact-SHA verification when a focused documentation synchronization changes
+# no code paths covered by the workflow path filter. WP-9D exact-SHA retry.
 
 on:
   pull_request:

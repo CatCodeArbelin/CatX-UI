@@ -52,6 +52,10 @@ v3.8.5-custom.2
 v3.9.0-custom.1
 ```
 
+The historical `v3.8.5-custom.N` examples above are design examples. The
+current CatX release identity uses `v0.1.0-rc.N` and `v0.1.0`, with Stable,
+RC, and Dev semantics defined in the release qualification documents.
+
 ## Quality commands
 
 Upstream verification:

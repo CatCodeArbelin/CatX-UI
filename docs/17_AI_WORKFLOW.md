@@ -19,20 +19,25 @@ Luna Medium
 → CRUD/migrations/UI
 → regular refactors
 
+Luna High
+→ broad cross-cutting frontend/product integration
+→ wide debugging
+→ larger but bounded implementation packages
+
 Sol High
-→ architecture
-→ Xray semantics
-→ concurrency
-→ security-sensitive changes
-→ upstream sync
-→ difficult regressions
-→ high-risk PR review
+→ exceptional high-risk architecture
+→ security, recovery, updater, or upstream-sync blockers
+→ difficult regressions when Luna High is insufficient
 
 Astra
 → only exceptional blockers/security/very difficult merges
 ```
 
-## One task = one session
+## One work package = one agent chat/session
+
+One work package stays in one agent chat/session. Corrective iterations and
+review checkpoints for that same work package stay in the same session rather
+than becoming unrelated new tasks.
 
 Bad:
 
@@ -102,6 +107,9 @@ tests
 ```
 
 ## Spend Sol where mistakes are expensive
+
+Model guidance in this document is advisory and does not define code
+correctness or replace repository tests and review gates.
 
 Do not spend Sol on:
 
