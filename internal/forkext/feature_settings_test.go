@@ -8,9 +8,10 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+
+	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
 )
 
 func TestFeatureSettingsRoutesReadAndWrite(t *testing.T) {
