@@ -359,7 +359,7 @@ EOF
         grep -Fq "candidate-activated=$candidate_sha" "$rollback_evidence"
         grep -Fq "failure=service-start" "$rollback_evidence"
         test "$rollback_rc" -eq 2
-        jq -e --arg run "$rollback_run_id" '.runId == $run and .state == "failed" and .exitCode == 2 and .rolledBack == true and .rollbackHealthy == true' /etc/x-ui/update-status.json >/dev/null
+        jq -e --arg run "$rollback_run_id" ".runId == \\$run and .state == \"failed\" and .exitCode == 2 and .rolledBack == true and .rollbackHealthy == true" /etc/x-ui/update-status.json >/dev/null
         grep -Fq "outcome=failure" "$rollback_audit"
         grep -Fq "outcome=rollback rollback_healthy=1" "$rollback_audit"
 
