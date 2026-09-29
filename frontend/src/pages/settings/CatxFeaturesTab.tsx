@@ -92,7 +92,11 @@ export default function CatxFeaturesTab() {
   async function save() {
     if (invalidDependencies.length) return;
     setSaving(true);
-    const result = await HttpUtil.put<FeatureResponse>(path, { flags: values }, { silent: true });
+    const result = await HttpUtil.put<FeatureResponse>(
+      path,
+      { flags: values },
+      { headers: { 'Content-Type': 'application/json' }, silent: true },
+    );
     if (!result.success || !result.obj) {
       setError(result.msg || t('fork.settings.saveFailed'));
     } else {

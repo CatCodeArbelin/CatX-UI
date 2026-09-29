@@ -72,6 +72,9 @@ test('reads feature flags, enforces dependencies, and saves with restart guidanc
   expect(put.mock.calls[0][1]).toMatchObject({
     flags: { 'analytics.enabled': true, 'dns_intelligence.enabled': true },
   });
+  expect(put.mock.calls[0][2]).toMatchObject({
+    headers: { 'Content-Type': 'application/json' },
+  });
 });
 
 test('uses localized feature names in dependency warnings', async () => {
