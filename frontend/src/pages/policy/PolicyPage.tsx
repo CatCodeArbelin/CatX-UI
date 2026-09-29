@@ -332,7 +332,11 @@ export default function PolicyPage() {
           title={t('fork.policy.labels.deleteAssignment')}
           onConfirm={() => void deleteRecord('/panel/api/policies/assignments', row.id)}
         >
-          <Button danger icon={<DeleteOutlined />} />
+          <Button
+            danger
+            aria-label={t('fork.policy.labels.deleteAssignment')}
+            icon={<DeleteOutlined />}
+          />
         </Popconfirm>
       ),
     },
@@ -355,7 +359,11 @@ export default function PolicyPage() {
           title={t('fork.policy.labels.deleteOverride')}
           onConfirm={() => void deleteRecord(path, row.id)}
         >
-          <Button danger icon={<DeleteOutlined />} />
+          <Button
+            danger
+            aria-label={t('fork.policy.labels.deleteOverride')}
+            icon={<DeleteOutlined />}
+          />
         </Popconfirm>
       ),
     },
@@ -386,7 +394,11 @@ export default function PolicyPage() {
           title={t('fork.policy.labels.deleteSchedule')}
           onConfirm={() => void deleteRecord('/panel/api/policies/schedules', row.id)}
         >
-          <Button danger icon={<DeleteOutlined />} />
+          <Button
+            danger
+            aria-label={t('fork.policy.labels.deleteSchedule')}
+            icon={<DeleteOutlined />}
+          />
         </Popconfirm>
       ),
     },

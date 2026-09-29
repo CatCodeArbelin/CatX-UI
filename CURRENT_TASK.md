@@ -2,62 +2,55 @@
 
 ## Work Package
 
-`WP-9B — Full CatX Localization`
+`WP-9C — Accessibility, RTL, Responsive & Visual QA`
 
 ## Authorization and guardrails
 
-WP-9A was merged into `develop` at `cc6b13aa` after green Fork Verification
-run `36504762871`. Work on branch
-`feature/wp-9b-full-localization`. `main` must remain untouched.
+WP-9B was merged into `develop` at `323e5028` after green Fork Verification
+run `36508672070` for implementation SHA
+`4a02a2edfefe48fa30a81acc9e47f521f3e2c8d1`. Work on branch
+`feature/wp-9c-visual-accessibility-qa`. `main` must remain untouched.
 
-Translate only the fork-owned `fork.*` tree in the 12 non-English supported
-locales. English (`en-US`) remains the source of truth. Preserve the exact
-CatX key tree, value types, interpolation placeholders, go-i18n compatibility,
-navigation/API-doc references, RTL behavior, and upstream translations.
+Audit and correct only real frontend defects across Activity, Policy, Audit,
+Webhooks, Fleet, Fleet Updates, Portal Admin, Client Portal,
+navigation/sidebar, command palette, and API docs. Validate light, dark, and
+ultra-dark themes; 375, 430, 768, and 1024+ pixel viewports; LTR; RTL
+(`ar-EG`, `fa-IR`); and long-string locales (`ru-RU`, `uk-UA`, `es-ES`,
+`pt-BR`, `tr-TR`). Preserve upstream architecture and behavior. Do not
+modify backend, database, Xray, updater, release semantics, dependencies, or
+`main`.
 
-Do not change frontend behavior, backend behavior, database/schema, Xray,
-updater, release semantics, dependencies, or feature logic. Do not merge
-WP-9B.
+Use existing Ant Design/theme infrastructure, logical CSS properties, and
+existing tokens. Do not create a second CatX theme or broadly rewrite
+upstream CSS. Technical LTR values in RTL must remain readable. Dangerous
+actions require clear confirmation. All visible CatX text remains localized
+through `fork.*`.
 
-## Required WP-9B behavior
+## Required WP-9C behavior
 
-- Fully translate all 238 stabilized `fork.*` keys in `ar-EG`, `es-ES`,
-  `fa-IR`, `id-ID`, `ja-JP`, `pt-BR`, `ru-RU`, `tr-TR`, `uk-UA`, `vi-VN`,
-  `zh-CN`, and `zh-TW`.
-- Add and use `docs/26_LOCALIZATION_GLOSSARY.md` for consistent operator and
-  network terminology.
-- Reject unintended English-identical non-English values with a narrow,
-  justified technical-term allowlist.
-- Preserve placeholder parity, dead-key strictness, reserved-key safety,
-  locale shape parity, navigation/API-doc references, and RTL foundations.
-- Review operational language for update, rollback, abort, retry, delete,
-  revoke, quarantine, reset, dry run, unsupported, degraded, failure, and
-  unknown states.
-- Check RTL and representative long-string responsive layouts without
-  introducing duplicate or unrelated CSS.
+- Check keyboard navigation, visible focus, labels, modal focus, ARIA names,
+  semantic buttons/links, non-color status communication, reduced motion, and
+  mobile table usability.
+- Check overflow, clipped text/buttons, modal bounds, page shells/cards,
+  spacing, RTL alignment, and mixed-direction IP, CIDR, domain, SNI, UUID,
+  runId, version, and URL values.
+- Perform translation-quality smoke review for update, rollback, abort, retry,
+  delete, revoke, quarantine, dry run, unsupported, degraded, failed, and
+  unknown. Change only semantic or obviously broken wording.
+- Add narrowly scoped regression/accessibility tests for confirmed defects.
 
 ## Verification and delivery
 
-Run JSON parsing, CatX parity/type/placeholder checks, the untranslated-English
-detector, reserved-key and dead-key checks, frontend format/lint/typecheck/
+Run frontend format, lint, typecheck, tests, i18n contracts, accessibility
 tests, generated checks, `make verify`, and `make verify-fork`. Use canonical
-Linux CI for gates unavailable on Windows; do not modify dependencies to work
-around local native bindings.
+Linux CI for unavailable Windows-native gates; do not modify dependencies to
+work around local bindings.
 
 Push the branch and require green Fork Verification on the exact final SHA.
-Do not modify release workflows merely to trigger unrelated qualification.
+Do not merge WP-9C. Do not publish a release.
 
 ## Authorized documents
 
-- `docs/01_ARCHITECTURE.md`
-- `docs/05_TESTING_ROLLBACK_RELEASE.md`
-- `docs/07_SECURITY_PRIVACY.md`
 - `docs/08_FRONTEND_UX.md`
-- `docs/15_DEFINITION_OF_DONE.md`
-- `docs/19_REPOSITORY_MAP.md`
-- `docs/21_RC1_UPSTREAM_SYNC.md`
-- `docs/22_RC2_STAGING_RELEASE_QUALIFICATION.md`
-- `docs/23_RC2_RELEASE_NOTES.md`
-- `docs/24_FIRST_RC_PLAN.md`
 - `docs/25_FRONTEND_I18N_CONTRACT.md`
 - `docs/26_LOCALIZATION_GLOSSARY.md`

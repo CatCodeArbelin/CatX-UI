@@ -7,6 +7,7 @@ import {
   Form,
   Input,
   InputNumber,
+  Popconfirm,
   Select,
   Space,
   Table,
@@ -99,10 +100,14 @@ export default function FleetUpdatePage() {
               }}
             >
               <Form.Item name="name">
-                <Input placeholder={t('fork.fleetUpdate.name')} />
+                <Input
+                  aria-label={t('fork.fleetUpdate.name')}
+                  placeholder={t('fork.fleetUpdate.name')}
+                />
               </Form.Item>
               <Form.Item name="channel">
                 <Select
+                  aria-label={t('fork.common.channel')}
                   options={[
                     { value: 'stable', label: t('fork.fleetUpdate.stable') },
                     { value: 'dev', label: t('fork.fleetUpdate.dev') },
@@ -110,13 +115,25 @@ export default function FleetUpdatePage() {
                 />
               </Form.Item>
               <Form.Item name="canaryCount">
-                <InputNumber min={0} placeholder={t('fork.fleetUpdate.canary')} />
+                <InputNumber
+                  aria-label={t('fork.fleetUpdate.canary')}
+                  min={0}
+                  placeholder={t('fork.fleetUpdate.canary')}
+                />
               </Form.Item>
               <Form.Item name="batchSize">
-                <InputNumber min={1} placeholder={t('fork.fleetUpdate.batch')} />
+                <InputNumber
+                  aria-label={t('fork.fleetUpdate.batch')}
+                  min={1}
+                  placeholder={t('fork.fleetUpdate.batch')}
+                />
               </Form.Item>
               <Form.Item name="maxParallel">
-                <InputNumber min={1} placeholder={t('fork.fleetUpdate.parallel')} />
+                <InputNumber
+                  aria-label={t('fork.fleetUpdate.parallel')}
+                  min={1}
+                  placeholder={t('fork.fleetUpdate.parallel')}
+                />
               </Form.Item>
               <Form.Item name="dryRun" valuePropName="checked">
                 <Checkbox>{t('fork.fleetUpdate.dryRun')}</Checkbox>
@@ -147,9 +164,12 @@ export default function FleetUpdatePage() {
                       <Button onClick={() => void action(r.id, 'retry')}>
                         {t('fork.fleetUpdate.retry')}
                       </Button>
-                      <Button danger onClick={() => void action(r.id, 'abort')}>
-                        {t('fork.fleetUpdate.abort')}
-                      </Button>
+                      <Popconfirm
+                        title={`${t('fork.fleetUpdate.abort')}?`}
+                        onConfirm={() => void action(r.id, 'abort')}
+                      >
+                        <Button danger>{t('fork.fleetUpdate.abort')}</Button>
+                      </Popconfirm>
                     </Space>
                   ),
                 },
@@ -173,7 +193,18 @@ export default function FleetUpdatePage() {
                   { title: t('fork.common.status'), render: (_, r) => <Tag>{r.state}</Tag> },
                   { title: t('fork.common.reason'), dataIndex: 'blockedReason' },
                   { title: t('fork.common.version'), dataIndex: 'observedVersion' },
-                  { title: t('fork.fleetUpdate.runId'), dataIndex: 'runId' },
+                  {
+                    title: t('fork.fleetUpdate.runId'),
+                    dataIndex: 'runId',
+                    render: (value: string | undefined) =>
+                      value ? (
+                        <span className="catx-technical-value" dir="ltr">
+                          {value}
+                        </span>
+                      ) : (
+                        '—'
+                      ),
+                  },
                   {
                     title: t('fork.fleetUpdate.dispatch'),
                     dataIndex: 'dispatchStatus',

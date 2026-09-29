@@ -478,6 +478,16 @@ locales while preserving the WP-9A i18n contract, behavior, RTL foundation,
 and low-divergence upstream boundary. Do not merge until the package
 verification gate is green.
 
+## WP-9C — Accessibility, RTL, Responsive & Visual QA — CURRENT
+
+Branch: `feature/wp-9c-visual-accessibility-qa`
+
+Prove that completed CatX surfaces remain one coherent 3x-ui panel across
+themes, supported viewport sizes, LTR/RTL locales, and long-string locales.
+Fix only confirmed overflow, responsive, directionality, accessibility,
+contrast, focus, labeling, confirmation, or semantic translation defects.
+Do not modify backend, database, Xray, updater, release semantics, or `main`.
+
 # Operating Rules
 
 ## Branching
