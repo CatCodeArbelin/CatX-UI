@@ -26,8 +26,7 @@ test('renders disabled policy state without enabling management actions', async 
   } as never);
   render(<PolicyPage />, { wrapper: ({ children }) => <MemoryRouter>{children}</MemoryRouter> });
   await waitFor(() => expect(screen.getByText(i18n.t('fork.policy.labels.disabled'))).toBeTruthy());
-  expect(screen.getByRole('button', { name: i18n.t('fork.policy.newPolicy') })).toHaveProperty(
-    'disabled',
-    true,
-  );
+  expect(
+    screen.getByRole('button', { name: new RegExp(i18n.t('fork.policy.newPolicy')) }),
+  ).toHaveProperty('disabled', true);
 });

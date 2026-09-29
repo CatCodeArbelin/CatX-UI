@@ -2815,9 +2815,9 @@
       "loadFailed": "Policies could not be loaded.",
       "simulationFailed": "Simulation failed.",
       "noEffectivePolicy": "No effective policy.",
-      "editAria": "Edit {{name}}",
-      "deleteAria": "Delete {{name}}",
-      "tabs": { "policies": "Policies ({{count}})", "assignments": "Assignments ({{count}})", "overrides": "Overrides ({{count}})", "schedules": "Schedules ({{count}})" },
+      "editAria": "Edit {name}",
+      "deleteAria": "Delete {name}",
+      "tabs": { "policies": "Policies ({count})", "assignments": "Assignments ({count})", "overrides": "Overrides ({count})", "schedules": "Schedules ({count})" },
       "errors": { "specObject": "Policy spec must be a JSON object.", "specSyntax": "Policy spec must be valid JSON object syntax." },
       "scopes": { "policy": "Policy", "domain": "Domain", "service": "Service", "dns": "DNS", "quota": "Quota", "qos": "QoS", "quarantineRelease": "Quarantine release" },
     "labels": {

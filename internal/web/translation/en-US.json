@@ -2841,13 +2841,13 @@
       "loadFailed": "Policies could not be loaded.",
       "simulationFailed": "Simulation failed.",
       "noEffectivePolicy": "No effective policy.",
-      "editAria": "Edit {{name}}",
-      "deleteAria": "Delete {{name}}",
+      "editAria": "Edit {name}",
+      "deleteAria": "Delete {name}",
       "tabs": {
-        "policies": "Policies ({{count}})",
-        "assignments": "Assignments ({{count}})",
-        "overrides": "Overrides ({{count}})",
-        "schedules": "Schedules ({{count}})"
+        "policies": "Policies ({count})",
+        "assignments": "Assignments ({count})",
+        "overrides": "Overrides ({count})",
+        "schedules": "Schedules ({count})"
       },
       "errors": {
         "specObject": "Policy spec must be a JSON object.",
