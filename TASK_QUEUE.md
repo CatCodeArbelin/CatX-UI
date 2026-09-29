@@ -161,7 +161,7 @@ Do not create parallel upstream models.
 
 ---
 
-## WP-1B — access.log & Session Pipeline
+## WP-1B — access.log & Session Pipeline — DONE
 
 Recommended model: `Sol High`
 
@@ -462,6 +462,21 @@ fork-owned i18n namespaces, establish RTL and responsive foundations, and add
 contract tests. Completed on the feature branch with green Fork Verification
 run `36504762871` at SHA
 `d986386987a5645a2da12250595306f0d8b9578a`.
+
+## WP-9B — Full CatX Localization — DONE
+
+Branch: `feature/wp-9b-full-localization`
+
+Completed at `4a02a2edfefe48fa30a81acc9e47f521f3e2c8d1` after green Fork
+Verification run `36508672070`. The final translation audit confirmed 238
+CatX keys in English and every supported locale, with matching key trees,
+value types, placeholders, and only the documented technical-term
+English-identical allowlist.
+
+Translate the stabilized CatX `fork.*` namespace across all 12 non-English
+locales while preserving the WP-9A i18n contract, behavior, RTL foundation,
+and low-divergence upstream boundary. Do not merge until the package
+verification gate is green.
 
 # Operating Rules
 

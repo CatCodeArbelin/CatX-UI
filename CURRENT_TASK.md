@@ -2,46 +2,50 @@
 
 ## Work Package
 
-`WP-9A — Frontend Design System & i18n Foundation`
+`WP-9B — Full CatX Localization`
 
 ## Authorization and guardrails
 
-The first public CatX-UI RC is `0.1.0-rc.1`, tagged at
-`09f5432aacfb2c45f3df79cdca2e15e77bc9a8a6`. WP-9A starts from develop
-`0e6949831161db867630e3027db1a5a3d12fe95e`. `main` must remain untouched.
+WP-9A was merged into `develop` at `cc6b13aa` after green Fork Verification
+run `36504762871`. Work on branch
+`feature/wp-9b-full-localization`. `main` must remain untouched.
 
-Create and use branch `feature/wp-9a-frontend-design-i18n-foundation`.
-Do not merge this work package.
+Translate only the fork-owned `fork.*` tree in the 12 non-English supported
+locales. English (`en-US`) remains the source of truth. Preserve the exact
+CatX key tree, value types, interpolation placeholders, go-i18n compatibility,
+navigation/API-doc references, RTL behavior, and upstream translations.
 
-RC-2 must remain a low-divergence downstream qualification package. Preserve
-upstream behavior, CatX-UI modular boundaries, updater ownership, transactional rollback,
-feature-disabled compatibility, privacy limits, authentication contracts,
-migration safety, Xray boundaries, and generated frontend/API contracts.
+Do not change frontend behavior, backend behavior, database/schema, Xray,
+updater, release semantics, dependencies, or feature logic. Do not merge
+WP-9B.
 
-Production fleet mutation must remain disabled by default and may execute only
-when both the explicit fleet-update mutation setting and explicit admin
-confirmation are present. Dry-run never mutates. Only direct, eligible nodes
-may execute. A timeout after POST is ambiguous: reconcile node status before
-any retry and require positive evidence before redispatch. Never redispatch
-blindly or accept status belonging to another `runId`.
+## Required WP-9B behavior
 
-## Required WP-9A behavior
-
-- Preserve the upstream 3x-ui visual language and styling infrastructure.
-- Audit and align CatX pages, navigation, command palette, and API docs labels.
-- Normalize CatX translation keys under `fork.*` namespaces.
-- Add locale parity, placeholder, type-shape, navigation, and hardcoded-string
-  contract tests for all supported locales.
-- Establish document and Ant Design RTL direction for `ar-EG` and `fa-IR`.
-- Verify narrow responsive layouts without changing backend, database, Xray,
-  updater, or release-channel behavior.
+- Fully translate all 238 stabilized `fork.*` keys in `ar-EG`, `es-ES`,
+  `fa-IR`, `id-ID`, `ja-JP`, `pt-BR`, `ru-RU`, `tr-TR`, `uk-UA`, `vi-VN`,
+  `zh-CN`, and `zh-TW`.
+- Add and use `docs/26_LOCALIZATION_GLOSSARY.md` for consistent operator and
+  network terminology.
+- Reject unintended English-identical non-English values with a narrow,
+  justified technical-term allowlist.
+- Preserve placeholder parity, dead-key strictness, reserved-key safety,
+  locale shape parity, navigation/API-doc references, and RTL foundations.
+- Review operational language for update, rollback, abort, retry, delete,
+  revoke, quarantine, reset, dry run, unsupported, degraded, failure, and
+  unknown states.
+- Check RTL and representative long-string responsive layouts without
+  introducing duplicate or unrelated CSS.
 
 ## Verification and delivery
 
-No runtime state, database schema, Xray configuration, updater, release,
-production, or `main` changes are in scope. Before handoff require frontend
-format/lint/typecheck/tests, generated artifact checks, `make verify`,
-`make verify-fork`, and canonical CI green on the exact final WP-9A commit.
+Run JSON parsing, CatX parity/type/placeholder checks, the untranslated-English
+detector, reserved-key and dead-key checks, frontend format/lint/typecheck/
+tests, generated checks, `make verify`, and `make verify-fork`. Use canonical
+Linux CI for gates unavailable on Windows; do not modify dependencies to work
+around local native bindings.
+
+Push the branch and require green Fork Verification on the exact final SHA.
+Do not modify release workflows merely to trigger unrelated qualification.
 
 ## Authorized documents
 
@@ -56,3 +60,4 @@ format/lint/typecheck/tests, generated artifact checks, `make verify`,
 - `docs/23_RC2_RELEASE_NOTES.md`
 - `docs/24_FIRST_RC_PLAN.md`
 - `docs/25_FRONTEND_I18N_CONTRACT.md`
+- `docs/26_LOCALIZATION_GLOSSARY.md`
