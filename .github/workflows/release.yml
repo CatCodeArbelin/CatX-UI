@@ -580,7 +580,8 @@ jobs:
         run: |
           bash scripts/staging/build-legacy-binaries.sh legacy \
             7ef22f94c950ff09f0870e2295fa65ad5968742c production-baseline \
-            1c88ed18 pre-rc-develop
+            1c88ed18 pre-rc-develop \
+            09f5432aacfb2c45f3df79cdca2e15e77bc9a8a6 rc1-public
       - name: Download qualified artifacts
         uses: actions/download-artifact@v8
         with:
