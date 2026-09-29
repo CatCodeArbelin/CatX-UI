@@ -162,35 +162,38 @@ export default function PolicyPage() {
   const [simulation, setSimulation] = useState<Simulation | null>(null);
   const [simLoading, setSimLoading] = useState(false);
 
-  const load = useCallback(async (showLoading = true) => {
-    if (showLoading) setLoading(true);
-    setError('');
-    const [p, a, o, temporaryResponse, s] = await Promise.all([
-      HttpUtil.get<{ enabled: boolean; items: Policy[] }>('/panel/api/policies', undefined, {
-        silent: true,
-      }),
-      HttpUtil.get<{ items: Assignment[] }>('/panel/api/policies/assignments', undefined, {
-        silent: true,
-      }),
-      HttpUtil.get<{ items: Override[] }>('/panel/api/policies/overrides', undefined, {
-        silent: true,
-      }),
-      HttpUtil.get<{ items: Override[] }>('/panel/api/policies/temporary-overrides', undefined, {
-        silent: true,
-      }),
-      HttpUtil.get<{ items: Schedule[] }>('/panel/api/policies/schedules', undefined, {
-        silent: true,
-      }),
-    ]);
-    if (!p.success) setError(p.msg || t('fork.policy.loadFailed'));
-    setEnabled(p.obj?.enabled !== false);
-    setPolicies(p.obj?.items || []);
-    setAssignments(a.obj?.items || []);
-    setOverrides(o.obj?.items || []);
-    setTemporary(temporaryResponse.obj?.items || []);
-    setSchedules(s.obj?.items || []);
-    setLoading(false);
-  }, []);
+  const load = useCallback(
+    async (showLoading = true) => {
+      if (showLoading) setLoading(true);
+      setError('');
+      const [p, a, o, temporaryResponse, s] = await Promise.all([
+        HttpUtil.get<{ enabled: boolean; items: Policy[] }>('/panel/api/policies', undefined, {
+          silent: true,
+        }),
+        HttpUtil.get<{ items: Assignment[] }>('/panel/api/policies/assignments', undefined, {
+          silent: true,
+        }),
+        HttpUtil.get<{ items: Override[] }>('/panel/api/policies/overrides', undefined, {
+          silent: true,
+        }),
+        HttpUtil.get<{ items: Override[] }>('/panel/api/policies/temporary-overrides', undefined, {
+          silent: true,
+        }),
+        HttpUtil.get<{ items: Schedule[] }>('/panel/api/policies/schedules', undefined, {
+          silent: true,
+        }),
+      ]);
+      if (!p.success) setError(p.msg || t('fork.policy.loadFailed'));
+      setEnabled(p.obj?.enabled !== false);
+      setPolicies(p.obj?.items || []);
+      setAssignments(a.obj?.items || []);
+      setOverrides(o.obj?.items || []);
+      setTemporary(temporaryResponse.obj?.items || []);
+      setSchedules(s.obj?.items || []);
+      setLoading(false);
+    },
+    [t],
+  );
   useEffect(() => {
     const timer = window.setTimeout(() => void load(false), 0);
     return () => window.clearTimeout(timer);
