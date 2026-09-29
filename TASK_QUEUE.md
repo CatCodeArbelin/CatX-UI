@@ -463,6 +463,15 @@ contract tests. Completed on the feature branch with green Fork Verification
 run `36504762871` at SHA
 `d986386987a5645a2da12250595306f0d8b9578a`.
 
+## WP-9B — Full CatX Localization — CURRENT
+
+Branch: `feature/wp-9b-full-localization`
+
+Translate the stabilized CatX `fork.*` namespace across all 12 non-English
+locales while preserving the WP-9A i18n contract, behavior, RTL foundation,
+and low-divergence upstream boundary. Do not merge until the package
+verification gate is green.
+
 # Operating Rules
 
 ## Branching

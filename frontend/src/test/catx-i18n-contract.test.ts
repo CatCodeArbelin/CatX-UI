@@ -21,6 +21,19 @@ const locales = [
   'zh-TW',
 ];
 
+const englishIdenticalTechnicalKeys = new Set([
+  'fork.portal.subjectTypePlaceholder',
+  'fork.common.labels.sni',
+  'fork.policy.clientPlaceholder',
+  'fork.policy.groupPlaceholder',
+  'fork.policy.domainPlaceholder',
+  'fork.policy.ipPlaceholder',
+  'fork.policy.categoryPlaceholder',
+  'fork.policy.scopes.dns',
+  'fork.policy.scopes.qos',
+  'fork.policy.labels.ipCidr',
+]);
+
 type Json = string | number | boolean | null | Json[] | { [key: string]: Json };
 
 function flatten(value: Json, prefix = ''): Array<[string, Json]> {
@@ -91,6 +104,24 @@ describe('CatX frontend i18n contract', () => {
       expect(source).not.toContain(literal);
     }
     expect(source).not.toMatch(/t\(\s*['"]fork\.[^)]*,\s*['"]/);
+  });
+
+  it('rejects untranslated English CatX values outside the technical allowlist', () => {
+    const english = forkEntries('en-US');
+    for (const locale of locales.filter((item) => item !== 'en-US')) {
+      const current = forkEntries(locale);
+      const identical = [...english].filter(
+        ([key, value]) => current.get(key) === value && !englishIdenticalTechnicalKeys.has(key),
+      );
+      expect(identical, `${locale} has untranslated CatX values`).toEqual([]);
+      expect(
+        [...english]
+          .filter(([key, value]) => current.get(key) === value)
+          .map(([key]) => key)
+          .sort(),
+        `${locale} technical English-identical count`,
+      ).toEqual([...englishIdenticalTechnicalKeys].sort());
+    }
   });
 
   it('keeps every CatX page on the shared page shell', () => {
