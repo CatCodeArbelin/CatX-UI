@@ -11,6 +11,7 @@ English locale is the source of truth. Fork keys are namespaced below `fork`:
 - `fork.portal.*`
 - `fork.fleet.*`
 - `fork.fleetUpdate.*`
+- `fork.apiDocs.*`
 
 Every supported locale must contain the same CatX key tree as English. Tests
 reject missing keys, empty values, interpolation placeholder drift, JSON
