@@ -2771,6 +2771,45 @@
       "title": "クライアント ポータル",
       "token": "ポータル access token",
       "tokenHint": "管理者から提供されたポータルアクセストークンを使用してください。"
+    ,
+      "dependencyRequired": "{feature} を有効にする前に、{dependency} を有効にしてください。",       "features": {
+        "analytics": {
+          "name": "分析",
+          "details": "メタデータのみに基づくアクティビティ、DNS、セッション、トラフィックの情報を収集・表示します。"
+        },
+        "dnsIntelligence": {
+          "name": "DNS インテリジェンス",
+          "details": "DNS 観測とリゾルバー情報でアクティビティを補強します。"
+        },
+        "policies": {
+          "name": "ポリシーエンジン",
+          "details": "ポリシーを作成・割り当て、変更を加えない判定プレビューを表示します。"
+        },
+        "trafficControl": {
+          "name": "トラフィック制御 / QoS",
+          "details": "クライアントのトラフィック制限と固定期間の QoS 制御を適用します。"
+        },
+        "riskIntelligence": {
+          "name": "リスクインテリジェンス",
+          "details": "メタデータに基づくセキュリティと異常のシグナルを検出・確認します。"
+        },
+        "audit": {
+          "name": "監査",
+          "details": "メタデータのみの管理イベントを記録・確認します。"
+        },
+        "clientPortal": {
+          "name": "クライアントポータル",
+          "details": "クライアントにポータルとデバイスへの制御されたアクセスを提供します。"
+        },
+        "fleetUpdates": {
+          "name": "フリート更新",
+          "details": "管理対象ノードの更新を計画し、状態を収束させます。"
+        },
+        "productionFleetUpdates": {
+          "name": "本番フリート更新",
+          "details": "本番ノードへのフリート更新の配信を許可します。"
+        }
+      }
     },
     "common": {
       "labels": {

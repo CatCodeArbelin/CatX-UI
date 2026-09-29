@@ -7,6 +7,45 @@ type Feature = { key: string; enabled: boolean; requires?: string[]; restartRequ
 type FeatureResponse = { items: Feature[]; restartRequired: boolean };
 const path = '/panel/api/fork/settings/features';
 
+const featureCopy: Record<string, { nameKey: string; detailsKey: string }> = {
+  'analytics.enabled': {
+    nameKey: 'fork.settings.features.analytics.name',
+    detailsKey: 'fork.settings.features.analytics.details',
+  },
+  'dns_intelligence.enabled': {
+    nameKey: 'fork.settings.features.dnsIntelligence.name',
+    detailsKey: 'fork.settings.features.dnsIntelligence.details',
+  },
+  'policies.enabled': {
+    nameKey: 'fork.settings.features.policies.name',
+    detailsKey: 'fork.settings.features.policies.details',
+  },
+  'traffic_control.enabled': {
+    nameKey: 'fork.settings.features.trafficControl.name',
+    detailsKey: 'fork.settings.features.trafficControl.details',
+  },
+  'security_anomaly.enabled': {
+    nameKey: 'fork.settings.features.riskIntelligence.name',
+    detailsKey: 'fork.settings.features.riskIntelligence.details',
+  },
+  'audit.enabled': {
+    nameKey: 'fork.settings.features.audit.name',
+    detailsKey: 'fork.settings.features.audit.details',
+  },
+  'self_service.enabled': {
+    nameKey: 'fork.settings.features.clientPortal.name',
+    detailsKey: 'fork.settings.features.clientPortal.details',
+  },
+  'fleet_updates.enabled': {
+    nameKey: 'fork.settings.features.fleetUpdates.name',
+    detailsKey: 'fork.settings.features.fleetUpdates.details',
+  },
+  'fleet_updates.mutation.enabled': {
+    nameKey: 'fork.settings.features.productionFleetUpdates.name',
+    detailsKey: 'fork.settings.features.productionFleetUpdates.details',
+  },
+};
+
 export default function CatxFeaturesTab() {
   const { t } = useTranslation();
   const [items, setItems] = useState<Feature[]>([]);
@@ -45,6 +84,9 @@ export default function CatxFeaturesTab() {
       ),
     [items, values],
   );
+  const missingDependencies = (item: Feature) =>
+    (item.requires || []).filter((dependency) => !values[dependency]);
+  const featureName = (key: string) => t(featureCopy[key]?.nameKey || key);
   const dirty = JSON.stringify(values) !== JSON.stringify(savedValues);
 
   async function save() {
@@ -83,7 +125,20 @@ export default function CatxFeaturesTab() {
           type="warning"
           showIcon
           message={t('fork.settings.dependencyWarning')}
-          description={invalidDependencies.map((item) => item.key).join(', ')}
+          description={
+            <Space direction="vertical" size={2}>
+              {invalidDependencies.flatMap((item) =>
+                missingDependencies(item).map((dependency) => (
+                  <Typography.Text key={`${item.key}-${dependency}`}>
+                    {t('fork.settings.dependencyRequired', {
+                      feature: featureName(item.key),
+                      dependency: featureName(dependency),
+                    })}
+                  </Typography.Text>
+                )),
+              )}
+            </Space>
+          }
         />
       )}
       {error && <Alert type="error" showIcon message={error} />}
@@ -91,7 +146,8 @@ export default function CatxFeaturesTab() {
         <List
           dataSource={items}
           renderItem={(item) => {
-            const blocked = (item.requires || []).some((dependency) => !values[dependency]);
+            const missing = missingDependencies(item);
+            const blocked = missing.length > 0;
             return (
               <List.Item
                 actions={[
@@ -106,11 +162,28 @@ export default function CatxFeaturesTab() {
                 ]}
               >
                 <List.Item.Meta
-                  title={<Typography.Text code>{item.key}</Typography.Text>}
+                  title={
+                    <Space size="small">
+                      <Typography.Text>{featureName(item.key)}</Typography.Text>
+                      <Typography.Text type="secondary" code>
+                        {item.key}
+                      </Typography.Text>
+                    </Space>
+                  }
                   description={
-                    blocked ? (
-                      <Tag color="gold">{t('fork.settings.dependencyWarning')}</Tag>
-                    ) : undefined
+                    <Space direction="vertical" size={2}>
+                      <Typography.Text type="secondary">
+                        {t(featureCopy[item.key]?.detailsKey || item.key)}
+                      </Typography.Text>
+                      {blocked && (
+                        <Tag color="gold">
+                          {t('fork.settings.dependencyRequired', {
+                            feature: featureName(item.key),
+                            dependency: featureName(missing[0]),
+                          })}
+                        </Tag>
+                      )}
+                    </Space>
                   }
                 />
               </List.Item>

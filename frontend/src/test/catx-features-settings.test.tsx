@@ -55,6 +55,13 @@ test('reads feature flags, enforces dependencies, and saves with restart guidanc
 
   await waitFor(() => expect(get).toHaveBeenCalledOnce());
   expect(screen.getByText('Panel restart required')).toBeTruthy();
+  expect(screen.getByText('Analytics').tagName).not.toBe('CODE');
+  expect(
+    screen.getByText(
+      'Collect and show metadata-only activity, DNS, session, and traffic insights.',
+    ),
+  ).toBeTruthy();
+  expect(screen.getByText('analytics.enabled').tagName).toBe('CODE');
   const switches = screen.getAllByRole('switch');
   expect(switches[1].getAttribute('disabled')).not.toBeNull();
   fireEvent.click(switches[0]);
@@ -65,6 +72,25 @@ test('reads feature flags, enforces dependencies, and saves with restart guidanc
   expect(put.mock.calls[0][1]).toMatchObject({
     flags: { 'analytics.enabled': true, 'dns_intelligence.enabled': true },
   });
+});
+
+test('uses localized feature names in dependency warnings', async () => {
+  vi.spyOn(HttpUtil, 'get').mockResolvedValue(
+    new Msg(true, '', {
+      items: items.map((item) =>
+        item.key === 'dns_intelligence.enabled' ? { ...item, enabled: true } : item,
+      ),
+      restartRequired: true,
+    }),
+  );
+  renderWithProviders(
+    <MemoryRouter>
+      <CatxFeaturesTab />
+    </MemoryRouter>,
+  );
+
+  const message = await screen.findByText('Enable Analytics before enabling DNS intelligence.');
+  expect(message.closest('.ant-alert')?.textContent).not.toContain('analytics.enabled');
 });
 
 test('keeps webhook mutation controls hidden when the feature entrypoint is disabled', async () => {

@@ -2771,6 +2771,45 @@
       "title": "İstemci Portal",
       "token": "Portal erişim belirteci",
       "tokenHint": "Yöneticinizin sağladığı portal erişim belirtecini kullanın."
+    ,
+      "dependencyRequired": "{feature} etkinleştirilmeden önce {dependency} özelliğini etkinleştirin.",       "features": {
+        "analytics": {
+          "name": "Analitik",
+          "details": "Yalnızca meta verilere dayalı etkinlik, DNS, oturum ve trafik bilgilerini toplar ve gösterir."
+        },
+        "dnsIntelligence": {
+          "name": "DNS zekâsı",
+          "details": "Etkinliği DNS gözlemleri ve çözümleyici bilgileriyle zenginleştirir."
+        },
+        "policies": {
+          "name": "Politika motoru",
+          "details": "Politikalar oluşturur, atar ve değişiklik yapmadan karar önizlemesi sunar."
+        },
+        "trafficControl": {
+          "name": "Trafik kontrolü / QoS",
+          "details": "İstemci trafik sınırlarını ve sabit pencereli QoS denetimlerini uygular."
+        },
+        "riskIntelligence": {
+          "name": "Risk istihbaratı",
+          "details": "Meta verilere dayalı güvenlik ve anomali sinyallerini algılar ve inceler."
+        },
+        "audit": {
+          "name": "Denetim",
+          "details": "Yalnızca meta verilere dayalı yönetim olaylarını kaydeder ve inceler."
+        },
+        "clientPortal": {
+          "name": "İstemci portalı",
+          "details": "İstemcilere portallarına ve cihazlarına kontrollü erişim sağlar."
+        },
+        "fleetUpdates": {
+          "name": "Filo güncellemeleri",
+          "details": "Yönetilen düğümlerdeki güncellemeleri planlar ve uzlaştırır."
+        },
+        "productionFleetUpdates": {
+          "name": "Üretim filosu güncellemeleri",
+          "details": "Filo güncellemelerinin üretim düğümlerine gönderilmesine izin verir."
+        }
+      }
     },
     "common": {
       "labels": {

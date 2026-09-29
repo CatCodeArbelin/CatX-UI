@@ -2771,6 +2771,45 @@
       "title": "用戶端 入口網站",
       "token": "入口網站 access token",
       "tokenHint": "請使用管理員提供的入口網站存取權杖。"
+    ,
+      "dependencyRequired": "請先啟用{dependency}，再啟用{feature}。",       "features": {
+        "analytics": {
+          "name": "分析",
+          "details": "僅根據中繼資料收集並顯示活動、DNS、工作階段與流量資訊。"
+        },
+        "dnsIntelligence": {
+          "name": "DNS 智能",
+          "details": "透過 DNS 觀測與解析器資訊豐富活動資料。"
+        },
+        "policies": {
+          "name": "策略引擎",
+          "details": "建立與指派策略，並預覽不會修改設定的決策結果。"
+        },
+        "trafficControl": {
+          "name": "流量控制 / QoS",
+          "details": "套用用戶端流量限制與固定視窗 QoS 控制。"
+        },
+        "riskIntelligence": {
+          "name": "風險情報",
+          "details": "偵測並檢視根據中繼資料的安全與異常訊號。"
+        },
+        "audit": {
+          "name": "稽核",
+          "details": "記錄並檢視僅根據中繼資料的管理事件。"
+        },
+        "clientPortal": {
+          "name": "客戶入口網站",
+          "details": "為客戶提供受控的入口網站與裝置存取權限。"
+        },
+        "fleetUpdates": {
+          "name": "節點群組更新",
+          "details": "規劃並協調受管理節點的更新。"
+        },
+        "productionFleetUpdates": {
+          "name": "生產節點群組更新",
+          "details": "允許向生產節點發送群組更新。"
+        }
+      }
     },
     "common": {
       "labels": {

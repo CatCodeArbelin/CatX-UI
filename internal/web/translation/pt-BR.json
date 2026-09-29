@@ -2771,6 +2771,45 @@
       "title": "Cliente Portal",
       "token": "Token de acesso ao portal",
       "tokenHint": "Use o token de acesso ao portal fornecido pelo administrador."
+    ,
+      "dependencyRequired": "Ative {dependency} antes de ativar {feature}.",       "features": {
+        "analytics": {
+          "name": "Análise",
+          "details": "Coleta e exibe informações de atividade, DNS, sessões e tráfego baseadas apenas em metadados."
+        },
+        "dnsIntelligence": {
+          "name": "Inteligência de DNS",
+          "details": "Enriquece a atividade com observações de DNS e informações do resolvedor."
+        },
+        "policies": {
+          "name": "Mecanismo de políticas",
+          "details": "Cria e atribui políticas e permite visualizar decisões sem aplicar alterações."
+        },
+        "trafficControl": {
+          "name": "Controle de tráfego / QoS",
+          "details": "Aplica limites de tráfego por cliente e controles QoS de janela fixa."
+        },
+        "riskIntelligence": {
+          "name": "Inteligência de riscos",
+          "details": "Detecta e revisa sinais de segurança e anomalias baseados em metadados."
+        },
+        "audit": {
+          "name": "Auditoria",
+          "details": "Registra e revisa eventos administrativos baseados apenas em metadados."
+        },
+        "clientPortal": {
+          "name": "Portal do cliente",
+          "details": "Oferece aos clientes acesso controlado ao portal e aos dispositivos."
+        },
+        "fleetUpdates": {
+          "name": "Atualizações da frota",
+          "details": "Planeja e reconcilia atualizações nos nós gerenciados."
+        },
+        "productionFleetUpdates": {
+          "name": "Atualizações da frota em produção",
+          "details": "Permite enviar atualizações da frota aos nós de produção."
+        }
+      }
     },
     "common": {
       "labels": {
