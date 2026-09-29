@@ -2764,7 +2764,7 @@
       "hosts": "Conexão Hosts",
       "invalidToken": "Inválido Portal token.",
       "lastSeen": "Último seen",
-      "loginRequired": "Enter your Portal access token.",
+      "loginRequired": "Insira o token de acesso do portal.",
       "quota": "Cota",
       "renamePrompt": "Novo Dispositivo Nome",
       "signIn": "Entrar in",
@@ -2805,13 +2805,12 @@
     },
     "activity": {
       "labels": {
-      "ambiguous": "Ambíguo / conflitante","time":"Hora","domainIp":"Domínio / IP","service":"Serviço","category":"Categoria","asnCountry":"ASN / país","sourceProvenance":"Fonte / procedência","confidence":"Confiança","firstSeen":"Primeira ocorrência","lastSeen":"Última ocorrência","protocol":"Protocolo","observedDomain":"Domínio observado","resolvedIp":"IP resolvido","record":"Registro","timeline":"Linha do tempo","dnsObservations":"Observações DNS","enrichedDetails":"Detalhes enriquecidos","sessionHistory":"Histórico de sessões","trafficHistory":"Histórico de tráfego","events":"Eventos","dns":"DNS","sessions":"Sessões","range":"Intervalo","upload":"Upload","download":"Download","clients":"Clientes","inbounds":"Entradas","serviceCategory":"Serviço / categoria","observations":"Observações","metadataNote":"Linhas derivadas de metadados; os totais de bytes vêm da contabilidade de tráfego do painel.","aggregates":"Agregados","saveError":"Não foi possível salvar as configurações."
+      "ambiguous": "Ambíguo / conflitante","time":"Hora","domainIp":"Domínio / IP","service":"Serviço","category":"Categoria","asnCountry":"ASN / país","sourceProvenance":"Fonte / procedência","confidence":"Confiança","firstSeen":"Primeira ocorrência","lastSeen":"Última ocorrência","protocol":"Protocolo","observedDomain":"Domínio observado","resolvedIp":"IP resolvido","record":"Registro","timeline":"Linha do tempo","dnsObservations":"Observações DNS","enrichedDetails":"Detalhes enriquecidos","sessionHistory":"Histórico de sessões","trafficHistory":"Histórico de tráfego","events":"Eventos","dns":"DNS","sessions":"Sessões","range":"Intervalo","upload":"Envio","download":"Recebimento","clients":"Clientes","inbounds":"Entradas","serviceCategory":"Serviço / categoria","observations":"Observações","metadataNote":"Linhas derivadas de metadados; os totais de bytes vêm da contabilidade de tráfego do painel.","aggregates":"Agregados","saveError":"Não foi possível salvar as configurações."
       },
       "title": "Cliente Atividade & DNS Inteligência",
       "subtitle": "Observações somente de metadados de um cliente existente do painel.",
       "client": "Cliente email",
       "enter": "Enter a Cliente email to Visualizar Atividade.",
-      "disabled": "As análises estão desativadas. Ative-as para coletar e visualizar atividades.",
       "dnsDisabled": "A inteligência DNS está desativada. As análises principais continuam disponíveis.",
       "error": "Análises Atividade could not be loaded.",
       "privacy": "Privacidade: somente metadados. As classificações usam metadados visíveis e podem ser incertas; cargas, cookies, credenciais e cabeçalhos não são coletados.",
@@ -2873,7 +2872,6 @@
         "deleteAssignment": "Excluir this Atribuição?",
         "deleteOverride": "Excluir this Substituição?",
         "deleteSchedule": "Excluir this schedule?",
-        "disabled": "As políticas estão desativadas. O painel continua compatível com upstream e as simulações são no-op somente leitura.",
         "policy": "Política",
         "targetEmailGroup": "Alvo email or Grupo",
         "priority": "Prioridade",

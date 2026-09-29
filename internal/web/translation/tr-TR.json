@@ -2725,7 +2725,7 @@
     },
     "apiDocs": {
       "labels": {
-        "panelApi": "3X-UI panel API",
+        "panelApi": "3X-UI panel API'si",
         "websocket": "WebSocket Olaylar",
         "websocketDescription": "Çerez doğrulamalı yükseltmeden sonra",
         "websocketUpgrade": "her sunucu mesajı",
@@ -2764,7 +2764,7 @@
       "hosts": "Bağlantı Ana makineler",
       "invalidToken": "Geçersiz Portal token.",
       "lastSeen": "Son seen",
-      "loginRequired": "Enter your Portal access token.",
+      "loginRequired": "Panel erişim belirtecinizi girin.",
       "quota": "Kota",
       "renamePrompt": "Yeni Cihaz Ad",
       "signIn": "Giriş yap in",
@@ -2811,7 +2811,6 @@
       "subtitle": "Mevcut bir panel istemcisi için yalnızca üst veri gözlemleri.",
       "client": "İstemci email",
       "enter": "Enter a İstemci email to Görüntüle Etkinlik.",
-      "disabled": "Analitik devre dışı. Etkinlik toplamak ve görüntülemek için analitiği etkinleştirin.",
       "dnsDisabled": "DNS istihbaratı devre dışı. Temel analitik kullanılabilir olmaya devam eder.",
       "error": "Analitik Etkinlik could not be loaded.",
       "privacy": "Gizlilik: yalnızca üst veri. Sınıflandırmalar görünür üst veriyi kullanır ve kesin olmayabilir; payload, çerez, kimlik bilgisi veya başlık toplanmaz.",
@@ -2873,7 +2872,6 @@
         "deleteAssignment": "Sil this Atama?",
         "deleteOverride": "Sil this Geçersiz kılma?",
         "deleteSchedule": "Sil this schedule?",
-        "disabled": "İlkeler devre dışı. Panel upstream uyumluluğunu korur ve simülasyonlar salt okunur no-op işlemleridir.",
         "policy": "İlke",
         "targetEmailGroup": "Hedef email or Grup",
         "priority": "Öncelik",

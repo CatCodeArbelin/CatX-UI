@@ -2764,7 +2764,7 @@
       "hosts": "Koneksi Host",
       "invalidToken": "Tidak valid Portal token.",
       "lastSeen": "Terakhir seen",
-      "loginRequired": "Enter your Portal access token.",
+      "loginRequired": "Masukkan token akses portal Anda.",
       "quota": "Kuota",
       "renamePrompt": "Baru Perangkat Nama",
       "signIn": "Masuk in",
@@ -2805,13 +2805,12 @@
     },
     "activity": {
       "labels": {
-      "ambiguous": "Ambigu / bertentangan","time":"Waktu","domainIp":"Domain / IP","service":"Layanan","category":"Kategori","asnCountry":"ASN / negara","sourceProvenance":"Sumber / asal","confidence":"Keyakinan","firstSeen":"Pertama terlihat","lastSeen":"Terakhir terlihat","protocol":"Protokol","observedDomain":"Domain teramati","resolvedIp":"IP terurai","record":"Rekaman","timeline":"Linimasa","dnsObservations":"Pengamatan DNS","enrichedDetails":"Detail diperkaya","sessionHistory":"Riwayat sesi","trafficHistory":"Riwayat lalu lintas","events":"Peristiwa","dns":"DNS","sessions":"Sesi","range":"Rentang","upload":"Unggah","download":"Unduh","clients":"Klien","inbounds":"Inbound","serviceCategory":"Layanan / kategori","observations":"Pengamatan","metadataNote":"Baris berasal dari metadata; total byte berasal dari pencatatan lalu lintas panel.","aggregates":"Agregat","saveError":"Pengaturan tidak dapat disimpan."
+      "ambiguous": "Ambigu / bertentangan","time":"Waktu","domainIp":"Domain atau IP","service":"Layanan","category":"Kategori","asnCountry":"ASN / negara","sourceProvenance":"Sumber / asal","confidence":"Keyakinan","firstSeen":"Pertama terlihat","lastSeen":"Terakhir terlihat","protocol":"Protokol","observedDomain":"Domain teramati","resolvedIp":"IP terurai","record":"Rekaman","timeline":"Linimasa","dnsObservations":"Pengamatan DNS","enrichedDetails":"Detail diperkaya","sessionHistory":"Riwayat sesi","trafficHistory":"Riwayat lalu lintas","events":"Peristiwa","dns":"DNS","sessions":"Sesi","range":"Rentang","upload":"Unggah","download":"Unduh","clients":"Klien","inbounds":"Inbound","serviceCategory":"Layanan / kategori","observations":"Pengamatan","metadataNote":"Baris berasal dari metadata; total byte berasal dari pencatatan lalu lintas panel.","aggregates":"Agregat","saveError":"Pengaturan tidak dapat disimpan."
       },
       "title": "Klien Aktivitas & DNS Intelijen",
       "subtitle": "Observasi hanya metadata untuk satu klien panel yang sudah ada.",
       "client": "Klien email",
       "enter": "Enter a Klien email to Lihat Aktivitas.",
-      "disabled": "Analitik dinonaktifkan. Aktifkan analitik untuk mengumpulkan dan melihat aktivitas.",
       "dnsDisabled": "Intelijen DNS dinonaktifkan. Analitik inti tetap tersedia.",
       "error": "Analitik Aktivitas could not be loaded.",
       "privacy": "Privasi: hanya metadata. Klasifikasi menggunakan metadata yang terlihat dan mungkin tidak pasti; payload, cookie, kredensial, atau header tidak dikumpulkan.",
@@ -2873,7 +2872,6 @@
         "deleteAssignment": "Hapus this Penetapan?",
         "deleteOverride": "Hapus this Penimpaan?",
         "deleteSchedule": "Hapus this schedule?",
-        "disabled": "Kebijakan dinonaktifkan. Panel tetap kompatibel dengan upstream dan simulasi hanya-baca merupakan no-op.",
         "policy": "Kebijakan",
         "targetEmailGroup": "Target email or Grup",
         "priority": "Prioritas",
