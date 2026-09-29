@@ -4,6 +4,7 @@ set -euo pipefail
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 checker="$repo_root/scripts/inspect-release-artifacts.sh"
 source "$repo_root/internal/forkrelease/identity.env"
+CATX_RC_VERSION=$(tr -d '[:space:]' < "$repo_root/internal/forkrelease/rc_version")
 if command -v python3 >/dev/null 2>&1; then
     python_cmd=python3
 else
@@ -28,7 +29,7 @@ readonly CATX_RELEASE_OWNER="$CATX_RELEASE_OWNER"
 readonly CATX_RELEASE_REPOSITORY="$CATX_RELEASE_REPOSITORY"
 readonly CATX_ASSET_PREFIX="$CATX_ASSET_PREFIX"
 readonly CATX_DEV_RELEASE_TAG="$CATX_DEV_RELEASE_TAG"
-readonly CATX_RC_VERSION="0.1.0-rc.1"
+readonly CATX_RC_VERSION="$CATX_RC_VERSION"
 EOF
             chmod +x "$fixture/$name"
             ;;
@@ -79,7 +80,7 @@ done
 
 CATX_ARTIFACT_TEST_MODE=1 "$checker" "$fixture" fixture-commit
 
-sed -i 's/"releaseVersion":"dev+fixture-commit"/"releaseVersion":"0.1.0-rc.1"/; s/"releaseTag":"dev-latest"/"releaseTag":"v0.1.0-rc.1"/; s/"channel":"dev"/"channel":"rc"/; s#releases/tag/dev-latest#releases/tag/v0.1.0-rc.1#' "$fixture/${CATX_ASSET_PREFIX}-release-metadata.json"
+sed -i "s/\"releaseVersion\":\"dev+fixture-commit\"/\"releaseVersion\":\"${CATX_RC_VERSION}\"/; s/\"releaseTag\":\"dev-latest\"/\"releaseTag\":\"v${CATX_RC_VERSION}\"/; s/\"channel\":\"dev\"/\"channel\":\"rc\"/; s#releases/tag/dev-latest#releases/tag/v${CATX_RC_VERSION}#" "$fixture/${CATX_ASSET_PREFIX}-release-metadata.json"
 sha256sum "$fixture/${CATX_ASSET_PREFIX}-release-metadata.json" > "$fixture/${CATX_ASSET_PREFIX}-release-metadata.json.sha256"
 CATX_ARTIFACT_TEST_MODE=1 "$checker" "$fixture" fixture-commit
 

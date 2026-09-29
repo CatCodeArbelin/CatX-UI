@@ -8,9 +8,7 @@ on:
   push:
     branches:
       - main
-      - "feature/rc1-*"
-      - "feature/rc2-*"
-      - "feature/rc3-*"
+      - "feature/rc*-*"
     tags:
       - "v*.*.*"
       - "v*.*.*-*"
@@ -566,7 +564,7 @@ jobs:
 
   linux-staging-qualification:
     name: Disposable Linux install and upgrade rehearsal
-    if: startsWith(github.ref, 'refs/heads/feature/rc2-') || startsWith(github.ref, 'refs/heads/feature/rc3-') || startsWith(github.ref, 'refs/tags/')
+    if: startsWith(github.ref, 'refs/heads/feature/rc') || startsWith(github.ref, 'refs/tags/')
     needs: qualify-artifacts
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -608,7 +606,7 @@ jobs:
 
   postgres-staging-qualification:
     name: Disposable PostgreSQL migration qualification
-    if: startsWith(github.ref, 'refs/heads/feature/rc2-') || startsWith(github.ref, 'refs/heads/feature/rc3-') || startsWith(github.ref, 'refs/tags/')
+    if: startsWith(github.ref, 'refs/heads/feature/rc') || startsWith(github.ref, 'refs/tags/')
     needs: qualify-artifacts
     runs-on: ubuntu-latest
     services:

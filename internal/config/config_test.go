@@ -28,8 +28,8 @@ func TestGetPanelVersion(t *testing.T) {
 
 	buildCommit = ""
 	buildChannel = "rc"
-	if got := GetPanelVersion(); got != "0.1.0-rc.1" {
-		t.Fatalf("RC build: GetPanelVersion = %q, want %q", got, "0.1.0-rc.1")
+	if got := GetPanelVersion(); got != "0.1.0-rc.2" {
+		t.Fatalf("RC build: GetPanelVersion = %q, want %q", got, "0.1.0-rc.2")
 	}
 }
 

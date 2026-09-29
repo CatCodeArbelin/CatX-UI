@@ -478,7 +478,7 @@ locales while preserving the WP-9A i18n contract, behavior, RTL foundation,
 and low-divergence upstream boundary. Do not merge until the package
 verification gate is green.
 
-## WP-9C — Accessibility, RTL, Responsive & Visual QA — CURRENT
+## WP-9C — Accessibility, RTL, Responsive & Visual QA — DONE
 
 Branch: `feature/wp-9c-visual-accessibility-qa`
 
@@ -487,6 +487,21 @@ themes, supported viewport sizes, LTR/RTL locales, and long-string locales.
 Fix only confirmed overflow, responsive, directionality, accessibility,
 contrast, focus, labeling, confirmation, or semantic translation defects.
 Do not modify backend, database, Xray, updater, release semantics, or `main`.
+
+Completed at `954a1536a3c018eec48eb9b7a6146f8e1328fae0` after green Fork
+Verification run `36510971071`; merged into `develop` with merge SHA
+`8435466fe004f2488ad0be241fab7d898da84147`.
+
+## RC-4 — Second Public RC Qualification & Cut — CURRENT
+
+Branch: `feature/rc4-second-public-rc`
+
+Qualify and cut `v0.1.0-rc.2` without touching `main` or publishing stable
+`v0.1.0`. Preserve the explicit RC channel, verify the one-time `rc.1 → rc.2`
+operator path, generalize future RC discovery and branch qualification, and
+retain the full artifact, Linux, PostgreSQL, upgrade, rollback, and publication
+evidence. After publication the next phase is release observation and stable
+qualification, not feature development.
 
 # Operating Rules
 

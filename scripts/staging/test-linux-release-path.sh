@@ -202,9 +202,9 @@ EOF
             fi
             jq -e --arg run "$run_id" ".runId == \$run and .state == \"success\" and (.runId | type == \"string\") and .exitCode == 0 and .rolledBack == false and .rollbackHealthy == false" /etc/x-ui/update-status.json >/dev/null
             grep -Fq "product=CatX-UI" <(/usr/local/x-ui/x-ui release-info)
-            if [[ "$release_tag" == v0.1.0-rc.1 ]]; then
+            if [[ "$release_tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-rc\.[1-9][0-9]*$ ]]; then
                 grep -Fxq "channel=rc" <(/usr/local/x-ui/x-ui release-info)
-                grep -Fxq "release_version=0.1.0-rc.1" <(/usr/local/x-ui/x-ui release-info)
+                grep -Fxq "release_version=${release_tag#v}" <(/usr/local/x-ui/x-ui release-info)
             elif [[ "$release_tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
                 grep -Fxq "channel=stable" <(/usr/local/x-ui/x-ui release-info)
             else

@@ -6,6 +6,7 @@ cd "$repo_root"
 
 # shellcheck source=/dev/null
 source internal/forkrelease/identity.env
+CATX_RC_VERSION=$(tr -d '[:space:]' < internal/forkrelease/rc_version)
 expected_slug="${CATX_RELEASE_OWNER}/${CATX_RELEASE_REPOSITORY}"
 
 for file in update.sh install.sh x-ui.sh scripts/catx-update-transaction.sh; do
@@ -13,7 +14,7 @@ for file in update.sh install.sh x-ui.sh scripts/catx-update-transaction.sh; do
     grep -Fq "CATX_RELEASE_REPOSITORY=\"${CATX_RELEASE_REPOSITORY}\"" "$file"
     grep -Fq "CATX_ASSET_PREFIX=\"${CATX_ASSET_PREFIX}\"" "$file"
     grep -Fq "CATX_DEV_RELEASE_TAG=\"${CATX_DEV_RELEASE_TAG}\"" "$file"
-    grep -Fq 'CATX_RC_VERSION="0.1.0-rc.1"' "$file"
+    grep -Fq "CATX_RC_VERSION=\"${CATX_RC_VERSION}\"" "$file"
 done
 
 if grep -En 'https?://(api\.github\.com/repos/|github\.com/|raw\.githubusercontent\.com/)[Mm][Hh][Ss]anaei/3x-ui' \
