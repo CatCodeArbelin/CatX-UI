@@ -39,7 +39,7 @@ export default function AuditPage() {
       { silent: true },
     );
     if (result.success && result.obj) setRows(result.obj.items);
-    else setError(result.msg || t('fork.audit.error', 'Audit events could not be loaded.'));
+    else setError(result.msg || t('fork.audit.labels.error'));
   }, [eventType, t]);
   useEffect(() => {
     const timer = window.setTimeout(() => void load(), 0);
@@ -47,62 +47,71 @@ export default function AuditPage() {
   }, [load]);
   const columns: ColumnsType<AuditEvent> = [
     {
-      title: 'Time',
+      title: t('fork.audit.labels.time'),
       dataIndex: 'createdAt',
       render: (value: string) => new Date(value).toLocaleString(),
     },
-    { title: 'Action', dataIndex: 'eventType' },
+    { title: t('fork.audit.labels.action'), dataIndex: 'eventType' },
     {
-      title: 'Outcome',
+      title: t('fork.audit.labels.outcome'),
       dataIndex: 'outcome',
       render: (value: string) => <Tag color={value === 'success' ? 'green' : 'red'}>{value}</Tag>,
     },
-    { title: 'Actor', render: (_, row) => row.actorName || row.actorType },
-    { title: 'Target', render: (_, row) => row.targetType || '—' },
+    { title: t('fork.audit.labels.actor'), render: (_, row) => row.actorName || row.actorType },
+    { title: t('fork.audit.labels.target'), render: (_, row) => row.targetType || '—' },
     { title: 'Node', render: (_, row) => row.nodeScope || 'local' },
-    { title: 'Request', dataIndex: 'requestId', ellipsis: true },
+    { title: t('fork.audit.labels.request'), dataIndex: 'requestId', ellipsis: true },
     {
       title: t('fork.audit.details'),
       render: (_, row) => (
-        <Button onClick={() => setSelected(row)}>{t('fork.audit.view', 'View')}</Button>
+        <Button onClick={() => setSelected(row)}>{t('fork.audit.labels.view')}</Button>
       ),
     },
   ];
   return (
-    <Card>
-      <Space direction="vertical" style={{ width: '100%' }} size="large">
-        <div>
-          <Typography.Title level={2}>{t('fork.audit.title')}</Typography.Title>
-          <Typography.Text type="secondary">{t('fork.audit.summary')}</Typography.Text>
-        </div>
-        <Space>
-          <Input
-            placeholder={t('fork.audit.eventType', 'Event type')}
-            value={eventType}
-            onChange={(e) => setEventType(e.target.value)}
-            onPressEnter={() => void load()}
-          />
-          <Button type="primary" onClick={() => void load()}>
-            {t('fork.audit.filter')}
-          </Button>
-        </Space>
-        {error && <Alert type="error" message={error} />}
-        {rows.length ? (
-          <Table rowKey="id" columns={columns} dataSource={rows} pagination={{ pageSize: 25 }} />
-        ) : (
-          <Empty description={t('fork.audit.empty')} />
-        )}
-      </Space>
-      <Drawer
-        title={t('fork.audit.event', 'Audit event')}
-        open={Boolean(selected)}
-        onClose={() => setSelected(null)}
-        width={520}
-      >
-        <pre style={{ whiteSpace: 'pre-wrap' }}>
-          {selected ? JSON.stringify(selected, null, 2) : ''}
-        </pre>
-      </Drawer>
-    </Card>
+    <div className="audit-page">
+      <div className="content-area">
+        <Card>
+          <Space direction="vertical" style={{ width: '100%' }} size="large">
+            <div>
+              <Typography.Title level={2}>{t('fork.audit.title')}</Typography.Title>
+              <Typography.Text type="secondary">{t('fork.audit.summary')}</Typography.Text>
+            </div>
+            <Space>
+              <Input
+                placeholder={t('fork.audit.labels.eventType')}
+                value={eventType}
+                onChange={(e) => setEventType(e.target.value)}
+                onPressEnter={() => void load()}
+              />
+              <Button type="primary" onClick={() => void load()}>
+                {t('fork.audit.filter')}
+              </Button>
+            </Space>
+            {error && <Alert type="error" message={error} />}
+            {rows.length ? (
+              <Table
+                rowKey="id"
+                columns={columns}
+                dataSource={rows}
+                pagination={{ pageSize: 25 }}
+              />
+            ) : (
+              <Empty description={t('fork.audit.empty')} />
+            )}
+          </Space>
+          <Drawer
+            title={t('fork.audit.labels.event')}
+            open={Boolean(selected)}
+            onClose={() => setSelected(null)}
+            width={520}
+          >
+            <pre style={{ whiteSpace: 'pre-wrap' }}>
+              {selected ? JSON.stringify(selected, null, 2) : ''}
+            </pre>
+          </Drawer>
+        </Card>
+      </div>
+    </div>
   );
 }

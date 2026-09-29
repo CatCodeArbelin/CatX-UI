@@ -5,14 +5,19 @@ import SwaggerUI from 'swagger-ui-react';
 import 'swagger-ui-react/swagger-ui.css';
 
 import { useTheme } from '@/hooks/useTheme';
+import { i18n } from '@/i18n/react';
 import AppSidebar from '@/layouts/AppSidebar';
 import { EXAMPLES } from '@/generated/examples';
 import { buildWebSocketEvents } from './websocket-events';
+import { forkApiSections } from '@/forkext/registry';
 import './ApiDocsPage.css';
 
 const basePath = window.X_UI_BASE_PATH || '';
 const openApiUrl = `${basePath}panel/api/openapi.json`;
 const websocketEvents = buildWebSocketEvents(EXAMPLES);
+const forkApiTitleKeys = new Map(
+  forkApiSections.map((section) => [section.title, section.translationKey]),
+);
 
 interface TaggedOperations {
   keySeq: () => { first: () => string | undefined };
@@ -40,7 +45,10 @@ function SectionTabs({ specSelectors, layoutSelectors, layoutActions }: SectionT
         size="small"
         activeKey={layoutSelectors.currentFilter() || tags[0]}
         onChange={layoutActions.updateFilter}
-        items={tags.map((tag) => ({ key: tag, label: tag }))}
+        items={tags.map((tag) => ({
+          key: tag,
+          label: i18n.t(forkApiTitleKeys.get(tag) || tag),
+        }))}
       />
     </div>
   );
@@ -91,7 +99,7 @@ export default function ApiDocsPage() {
               items={[
                 {
                   key: 'panel-api',
-                  label: '3X-UI Panel API',
+                  label: t('fork.apiDocs.labels.panelApi'),
                   children: (
                     <div className="docs-wrapper" role="region" aria-label={t('menu.apiDocs')}>
                       <SwaggerUI
@@ -107,15 +115,15 @@ export default function ApiDocsPage() {
                 },
                 {
                   key: 'websocket-events',
-                  label: 'WebSocket events',
+                  label: t('fork.apiDocs.labels.websocket'),
                   children: (
                     <section className="websocket-events">
                       <Typography.Paragraph>
-                        After the cookie-authenticated{' '}
-                        <Typography.Text code>GET /ws</Typography.Text> upgrade, every server
-                        message uses{' '}
+                        {t('fork.apiDocs.labels.websocketDescription')}{' '}
+                        <Typography.Text code>GET /ws</Typography.Text>{' '}
+                        {t('fork.apiDocs.labels.websocketUpgrade')}{' '}
                         <Typography.Text code>{'{ type, payload, time }'}</Typography.Text>. The
-                        time value is Unix milliseconds.
+                        {t('fork.apiDocs.labels.websocketTime')}
                       </Typography.Paragraph>
                       <Row gutter={[12, 12]}>
                         {websocketEvents.map((event) => (

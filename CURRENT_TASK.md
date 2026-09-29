@@ -2,15 +2,16 @@
 
 ## Work Package
 
-`RC-3 — Prerelease Versioning & First Public RC Cut`
+`WP-9A — Frontend Design System & i18n Foundation`
 
 ## Authorization and guardrails
 
-CatX-UI production baseline is `7ef22f94c950ff09f0870e2295fa65ad5968742c`.
-RC-2 was qualified at `2dea48fb4aae02f82378490e6a3a2dfd5fe9298e` and merged
-normally into `develop` with merge commit `8440b8a0`. RC-3 starts from that
-exact post-RC2 develop head. No release tag, `main` update, production update,
-or GitHub release is authorized.
+The first public CatX-UI RC is `0.1.0-rc.1`, tagged at
+`09f5432aacfb2c45f3df79cdca2e15e77bc9a8a6`. WP-9A starts from develop
+`0e6949831161db867630e3027db1a5a3d12fe95e`. `main` must remain untouched.
+
+Create and use branch `feature/wp-9a-frontend-design-i18n-foundation`.
+Do not merge this work package.
 
 RC-2 must remain a low-divergence downstream qualification package. Preserve
 upstream behavior, CatX-UI modular boundaries, updater ownership, transactional rollback,
@@ -24,28 +25,23 @@ may execute. A timeout after POST is ambiguous: reconcile node status before
 any retry and require positive evidence before redispatch. Never redispatch
 blindly or accept status belonging to another `runId`.
 
-## Required RC-3 behavior
+## Required WP-9A behavior
 
-- Accept the checked-in prerelease version `0.1.0-rc.1` and reject malformed
-  or unapproved prerelease tags.
-- Keep stable resolution limited to stable `releases/latest` metadata and keep
-  `dev-latest` behavior unchanged.
-- Resolve RC releases explicitly, publish them as `prerelease=true` and
-  `latest=false`, and preserve identity/checksum/rollback guarantees.
-- Re-run relevant artifact, updater, Linux staging, PostgreSQL, and failure
-  qualification for the prerelease path.
-- Preserve upstream behavior, feature-disabled compatibility, privacy limits,
-  authentication contracts, migration safety, Xray boundaries, and generated
-  frontend/API contracts.
+- Preserve the upstream 3x-ui visual language and styling infrastructure.
+- Audit and align CatX pages, navigation, command palette, and API docs labels.
+- Normalize CatX translation keys under `fork.*` namespaces.
+- Add locale parity, placeholder, type-shape, navigation, and hardcoded-string
+  contract tests for all supported locales.
+- Establish document and Ant Design RTL direction for `ar-EG` and `fa-IR`.
+- Verify narrow responsive layouts without changing backend, database, Xray,
+  updater, or release-channel behavior.
 
 ## Verification and delivery
 
-Use snapshot → validate → apply → healthcheck → commit for risky state
-changes. On failure, restore the previous known-good state, reload/restart as
-required, healthcheck, and report/audit the failure. Before the RC-3 branch is
-handed off, require `make verify`, `make verify-fork`, all applicable staging
-checks, and canonical CI green on the exact final RC-3 commit. Keep `main`,
-tags, releases, and production untouched throughout RC-3.
+No runtime state, database schema, Xray configuration, updater, release,
+production, or `main` changes are in scope. Before handoff require frontend
+format/lint/typecheck/tests, generated artifact checks, `make verify`,
+`make verify-fork`, and canonical CI green on the exact final WP-9A commit.
 
 ## Authorized documents
 
@@ -59,3 +55,4 @@ tags, releases, and production untouched throughout RC-3.
 - `docs/22_RC2_STAGING_RELEASE_QUALIFICATION.md`
 - `docs/23_RC2_RELEASE_NOTES.md`
 - `docs/24_FIRST_RC_PLAN.md`
+- `docs/25_FRONTEND_I18N_CONTRACT.md`

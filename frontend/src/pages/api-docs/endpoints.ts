@@ -62,6 +62,7 @@ export interface SubscriptionHeader {
 export interface Section {
   id: string;
   title: string;
+  translationKey?: string;
   description?: string;
   subHeader?: SubscriptionHeader[];
   endpoints: Endpoint[];
@@ -2960,6 +2961,7 @@ export const sections: readonly Section[] = [
   {
     id: 'fork-policies',
     title: 'Policies (CatX-UI)',
+    translationKey: 'fork.apiDocs.policies',
     description:
       'Policy data and explainable WP-4B enforcement capabilities. Quarantine is safety state; only a bounded quarantine-release temporary override can release it. Managed DNS and SafeSearch apply only to supported Xray-observed DNS paths.',
     endpoints: [
@@ -3167,6 +3169,7 @@ export const sections: readonly Section[] = [
   {
     id: 'traffic-control',
     title: 'Traffic control',
+    translationKey: 'fork.apiDocs.traffic',
     description:
       'Capability and reconciliation endpoints for the CatX shaping substrate. WP-6A does not define speed-limit policy.',
     endpoints: [

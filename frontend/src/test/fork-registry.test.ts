@@ -6,13 +6,13 @@ describe('fork registries', () => {
   it('registers the client activity page through the fork boundary', () => {
     expect(forkRoutes).toHaveLength(7);
     expect(forkNavigationItems).toEqual([
-      { key: 'fleet-updates', label: 'Fleet updates', path: '/fleet-updates' },
-      { key: 'portal-access', label: 'Portal access', path: '/portal-access' },
-      { key: 'fleet', label: 'Fleet', path: '/fleet' },
-      { key: 'client-activity', label: 'Client activity', path: '/activity' },
-      { key: 'policy-engine', label: 'Policy engine', path: '/policies' },
-      { key: 'audit', label: 'Audit', path: '/audit' },
-      { key: 'webhooks', label: 'Webhooks', path: '/webhooks' },
+      { key: 'fleet-updates', labelKey: 'fork.fleetUpdate.title', path: '/fleet-updates' },
+      { key: 'portal-access', labelKey: 'fork.portal.adminTitle', path: '/portal-access' },
+      { key: 'fleet', labelKey: 'fork.fleet.title', path: '/fleet' },
+      { key: 'client-activity', labelKey: 'fork.activity.title', path: '/activity' },
+      { key: 'policy-engine', labelKey: 'fork.policy.title', path: '/policies' },
+      { key: 'audit', labelKey: 'fork.audit.title', path: '/audit' },
+      { key: 'webhooks', labelKey: 'fork.webhooks.title', path: '/webhooks' },
     ]);
     const risk = forkApiSections.find((section) => section.id === 'risk-intelligence');
     expect(risk?.endpoints).toHaveLength(7);

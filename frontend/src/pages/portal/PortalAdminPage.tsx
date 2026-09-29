@@ -67,144 +67,143 @@ export default function PortalAdminPage() {
     await load();
   }
   return (
-    <Space direction="vertical" style={{ width: '100%' }} size="large">
-      <Card>
-        <Typography.Title level={2}>
-          {t('fork.portal.adminTitle', 'Portal access')}
-        </Typography.Title>
-        {error && <Alert type="error" message={error} />}
-        {token && (
-          <Alert
-            type="warning"
-            message={t('fork.portal.tokenOnce', 'Copy this token now. It will not be shown again.')}
-            description={<Input.TextArea value={token} readOnly autoSize />}
-          />
-        )}
-        <Space>
-          {t('fork.portal.enabled', 'Self-service enabled')}
-          <Switch
-            checked={enabled}
-            onChange={async (value) => {
-              const result = await HttpUtil.post('/panel/api/portal/settings', { enabled: value });
-              if (result.success) setEnabled(value);
-              else setError(result.msg);
-            }}
-          />
+    <div className="portal-admin-page">
+      <div className="content-area">
+        <Space direction="vertical" style={{ width: '100%' }} size="large">
+          <Card>
+            <Typography.Title level={2}>{t('fork.portal.adminTitle')}</Typography.Title>
+            {error && <Alert type="error" message={error} />}
+            {token && (
+              <Alert
+                type="warning"
+                message={t('fork.portal.tokenOnce')}
+                description={<Input.TextArea value={token} readOnly autoSize />}
+              />
+            )}
+            <Space>
+              {t('fork.portal.enabled')}
+              <Switch
+                checked={enabled}
+                onChange={async (value) => {
+                  const result = await HttpUtil.post('/panel/api/portal/settings', {
+                    enabled: value,
+                  });
+                  if (result.success) setEnabled(value);
+                  else setError(result.msg);
+                }}
+              />
+            </Space>
+            <Form
+              layout="inline"
+              onFinish={(values: { clientId: number }) => void issue(values.clientId)}
+            >
+              <Form.Item
+                name="clientId"
+                label={t('fork.portal.clientId')}
+                rules={[{ required: true }]}
+              >
+                <InputNumber min={1} />
+              </Form.Item>
+              <Button htmlType="submit" type="primary">
+                {t('fork.portal.issue')}
+              </Button>
+            </Form>
+            <Table
+              rowKey="id"
+              dataSource={credentials}
+              columns={[
+                { title: t('fork.portal.clientId'), dataIndex: 'clientId' },
+                {
+                  title: t('fork.common.status'),
+                  render: (_, row) =>
+                    row.enabled ? t('fork.common.enabled') : t('fork.common.disabled'),
+                },
+                {
+                  title: t('fork.portal.lastUsed'),
+                  render: (_, row) =>
+                    row.lastUsed ? new Date(row.lastUsed).toLocaleString() : '—',
+                },
+                {
+                  title: t('fork.common.actions'),
+                  render: (_, row) => (
+                    <Space>
+                      <Button onClick={() => void issue(row.clientId)}>
+                        {t('fork.portal.rotate')}
+                      </Button>
+                      <Button
+                        danger
+                        onClick={() =>
+                          void HttpUtil.post(
+                            `/panel/api/portal/credentials/${row.clientId}/revoke`,
+                          ).then(load)
+                        }
+                      >
+                        {t('fork.portal.revoke')}
+                      </Button>
+                    </Space>
+                  ),
+                },
+              ]}
+              pagination={false}
+            />
+          </Card>
+          <Card>
+            <Typography.Title level={3}>{t('fork.portal.grants')}</Typography.Title>
+            <Form
+              layout="inline"
+              onFinish={(values: { subjectType: string; subjectId: number; hostId: number }) =>
+                void grant(values)
+              }
+            >
+              <Form.Item
+                name="subjectType"
+                initialValue="client"
+                label={t('fork.portal.subjectType')}
+              >
+                <Input placeholder={t('fork.portal.subjectTypePlaceholder')} />
+              </Form.Item>
+              <Form.Item
+                name="subjectId"
+                label={t('fork.portal.subjectId')}
+                rules={[{ required: true }]}
+              >
+                <InputNumber min={1} />
+              </Form.Item>
+              <Form.Item name="hostId" label={t('fork.portal.hostId')} rules={[{ required: true }]}>
+                <InputNumber min={1} />
+              </Form.Item>
+              <Button htmlType="submit" type="primary">
+                {t('fork.portal.grant')}
+              </Button>
+            </Form>
+            <Table
+              rowKey="id"
+              dataSource={grants}
+              columns={[
+                {
+                  title: t('fork.portal.subject'),
+                  render: (_, row) => `${row.subjectType}:${row.subjectId}`,
+                },
+                { title: t('fork.portal.hostId'), dataIndex: 'hostId' },
+                {
+                  title: t('fork.common.actions'),
+                  render: (_, row) => (
+                    <Button
+                      danger
+                      onClick={() =>
+                        void HttpUtil.delete(`/panel/api/portal/host-grants/${row.id}`).then(load)
+                      }
+                    >
+                      {t('fork.common.delete')}
+                    </Button>
+                  ),
+                },
+              ]}
+              pagination={false}
+            />
+          </Card>
         </Space>
-        <Form
-          layout="inline"
-          onFinish={(values: { clientId: number }) => void issue(values.clientId)}
-        >
-          <Form.Item
-            name="clientId"
-            label={t('fork.portal.clientId', 'Client ID')}
-            rules={[{ required: true }]}
-          >
-            <InputNumber min={1} />
-          </Form.Item>
-          <Button htmlType="submit" type="primary">
-            {t('fork.portal.issue', 'Issue token')}
-          </Button>
-        </Form>
-        <Table
-          rowKey="id"
-          dataSource={credentials}
-          columns={[
-            { title: t('fork.portal.clientId', 'Client ID'), dataIndex: 'clientId' },
-            {
-              title: t('status', 'Status'),
-              render: (_, row) =>
-                row.enabled ? t('enabled', 'Enabled') : t('disabled', 'Disabled'),
-            },
-            {
-              title: t('fork.portal.lastUsed', 'Last used'),
-              render: (_, row) => (row.lastUsed ? new Date(row.lastUsed).toLocaleString() : '—'),
-            },
-            {
-              title: t('actions', 'Actions'),
-              render: (_, row) => (
-                <Space>
-                  <Button onClick={() => void issue(row.clientId)}>
-                    {t('fork.portal.rotate', 'Rotate')}
-                  </Button>
-                  <Button
-                    danger
-                    onClick={() =>
-                      void HttpUtil.post(
-                        `/panel/api/portal/credentials/${row.clientId}/revoke`,
-                      ).then(load)
-                    }
-                  >
-                    {t('fork.portal.revoke', 'Revoke')}
-                  </Button>
-                </Space>
-              ),
-            },
-          ]}
-          pagination={false}
-        />
-      </Card>
-      <Card>
-        <Typography.Title level={3}>
-          {t('fork.portal.grants', 'Host visibility grants')}
-        </Typography.Title>
-        <Form
-          layout="inline"
-          onFinish={(values: { subjectType: string; subjectId: number; hostId: number }) =>
-            void grant(values)
-          }
-        >
-          <Form.Item
-            name="subjectType"
-            initialValue="client"
-            label={t('fork.portal.subjectType', 'Subject type')}
-          >
-            <Input placeholder="client/group" />
-          </Form.Item>
-          <Form.Item
-            name="subjectId"
-            label={t('fork.portal.subjectId', 'Subject ID')}
-            rules={[{ required: true }]}
-          >
-            <InputNumber min={1} />
-          </Form.Item>
-          <Form.Item
-            name="hostId"
-            label={t('fork.portal.hostId', 'Host ID')}
-            rules={[{ required: true }]}
-          >
-            <InputNumber min={1} />
-          </Form.Item>
-          <Button htmlType="submit" type="primary">
-            {t('fork.portal.grant', 'Grant')}
-          </Button>
-        </Form>
-        <Table
-          rowKey="id"
-          dataSource={grants}
-          columns={[
-            {
-              title: t('fork.portal.subject', 'Subject'),
-              render: (_, row) => `${row.subjectType}:${row.subjectId}`,
-            },
-            { title: t('fork.portal.hostId', 'Host ID'), dataIndex: 'hostId' },
-            {
-              title: t('actions', 'Actions'),
-              render: (_, row) => (
-                <Button
-                  danger
-                  onClick={() =>
-                    void HttpUtil.delete(`/panel/api/portal/host-grants/${row.id}`).then(load)
-                  }
-                >
-                  {t('delete', 'Delete')}
-                </Button>
-              ),
-            },
-          ]}
-          pagination={false}
-        />
-      </Card>
-    </Space>
+      </div>
+    </div>
   );
 }

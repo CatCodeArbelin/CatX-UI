@@ -229,3 +229,121 @@ body.dark .ant-dropdown-menu-item-divider {
     padding: 8px;
   }
 }
+
+/* CatX pages intentionally opt into the same shell as upstream pages. */
+.activity-page,
+.policy-page,
+.audit-page,
+.webhooks-page,
+.fleet-page,
+.fleet-update-page,
+.portal-admin-page,
+.portal-page {
+  --bg-page: #e6e8ec;
+  --bg-card: #ffffff;
+  min-height: 100vh;
+  background: var(--bg-page);
+}
+
+.activity-page.is-dark,
+.policy-page.is-dark,
+.audit-page.is-dark,
+.webhooks-page.is-dark,
+.fleet-page.is-dark,
+.fleet-update-page.is-dark,
+.portal-admin-page.is-dark,
+.portal-page.is-dark {
+  --bg-page: #1a1b1f;
+  --bg-card: #23252b;
+}
+
+.activity-page.is-dark.is-ultra,
+.policy-page.is-dark.is-ultra,
+.audit-page.is-dark.is-ultra,
+.webhooks-page.is-dark.is-ultra,
+.fleet-page.is-dark.is-ultra,
+.fleet-update-page.is-dark.is-ultra,
+.portal-admin-page.is-dark.is-ultra,
+.portal-page.is-dark.is-ultra {
+  --bg-page: #000;
+  --bg-card: #101013;
+}
+
+.activity-page .ant-layout,
+.activity-page .ant-layout-content,
+.policy-page .ant-layout,
+.policy-page .ant-layout-content,
+.audit-page .ant-layout,
+.audit-page .ant-layout-content,
+.webhooks-page .ant-layout,
+.webhooks-page .ant-layout-content,
+.fleet-page .ant-layout,
+.fleet-page .ant-layout-content,
+.fleet-update-page .ant-layout,
+.fleet-update-page .ant-layout-content,
+.portal-admin-page .ant-layout,
+.portal-admin-page .ant-layout-content,
+.portal-page .ant-layout,
+.portal-page .ant-layout-content {
+  background: transparent;
+}
+
+.activity-page .content-area,
+.policy-page .content-area,
+.audit-page .content-area,
+.webhooks-page .content-area,
+.fleet-page .content-area,
+.fleet-update-page .content-area,
+.portal-admin-page .content-area,
+.portal-page .content-area {
+  padding: 24px;
+}
+
+body.dark .activity-page,
+body.dark .policy-page,
+body.dark .audit-page,
+body.dark .webhooks-page,
+body.dark .fleet-page,
+body.dark .fleet-update-page,
+body.dark .portal-admin-page,
+body.dark .portal-page {
+  --bg-page: #1a1b1f;
+  --bg-card: #23252b;
+}
+
+html[data-theme='ultra-dark'] body .activity-page,
+html[data-theme='ultra-dark'] body .policy-page,
+html[data-theme='ultra-dark'] body .audit-page,
+html[data-theme='ultra-dark'] body .webhooks-page,
+html[data-theme='ultra-dark'] body .fleet-page,
+html[data-theme='ultra-dark'] body .fleet-update-page,
+html[data-theme='ultra-dark'] body .portal-admin-page,
+html[data-theme='ultra-dark'] body .portal-page {
+  --bg-page: #000;
+  --bg-card: #101013;
+}
+
+@media (max-width: 768px) {
+  .activity-page .content-area,
+  .policy-page .content-area,
+  .audit-page .content-area,
+  .webhooks-page .content-area,
+  .fleet-page .content-area,
+  .fleet-update-page .content-area,
+  .portal-admin-page .content-area,
+  .portal-page .content-area {
+    padding: 8px;
+  }
+}
+
+.portal-login-shell {
+  max-width: 520px;
+  margin-inline: auto;
+  padding-block-start: 8rem !important;
+}
+
+@media (max-width: 768px) {
+  .portal-login-shell {
+    padding-block-start: 2rem !important;
+  }
+}
