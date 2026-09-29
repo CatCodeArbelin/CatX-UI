@@ -2799,12 +2799,12 @@
       "email": "E-posta",
       "never": "Hiçbir zaman",
       "noItems": "Öğe yok",
-      "featureOffTitle": "Özellik devre dışı",
+      "featureOffTitle": "«{feature}» özelliği devre dışı",
       "featureOffDescription": "Bu CatX-UI özelliği devre dışı. Bu sayfayı kullanmak için sunucunun özellik ayarlarından etkinleştirin."
     },
     "activity": {
       "labels": {
-        "ambiguous": "Belirsiz / çelişkili"
+      "ambiguous": "Belirsiz / çelişkili","time":"Zaman","domainIp":"Alan adı / IP","service":"Hizmet","category":"Kategori","asnCountry":"ASN / ülke","sourceProvenance":"Kaynak / köken","confidence":"Güven","firstSeen":"İlk görülme","lastSeen":"Son görülme","protocol":"Protokol","observedDomain":"Gözlemlenen alan adı","resolvedIp":"Çözümlenen IP","record":"Kayıt","timeline":"Zaman çizelgesi","dnsObservations":"DNS gözlemleri","enrichedDetails":"Zenginleştirilmiş ayrıntılar","sessionHistory":"Oturum geçmişi","trafficHistory":"Trafik geçmişi","events":"Olaylar","dns":"DNS","sessions":"Oturumlar","range":"Aralık","upload":"Yükleme","download":"İndirme","clients":"İstemciler","inbounds":"Gelen bağlantılar","serviceCategory":"Hizmet / kategori","observations":"Gözlemler","metadataNote":"Satırlar meta verilerden türetilir; bayt toplamları panel trafik hesabından gelir.","rawEvents":"Ham olaylar","dnsRetention":"DNS gözlemleri","sessionsRetention":"Oturumlar","aggregates":"Toplamlar","saveError":"Ayarlar kaydedilemedi."
       },
       "title": "İstemci Etkinlik & DNS İstihbarat",
       "subtitle": "Mevcut bir panel istemcisi için yalnızca üst veri gözlemleri.",
@@ -2999,6 +2999,7 @@
       "replay": "Yeniden oynat",
       "destinations": "Hedefler",
       "deliveries": "Teslimatlar ve başarısız iletiler"
-    }
+},
+    "settings": {"title":"CatX-UI Özellikleri","description":"Yalnızca ihtiyacınız olan fork modüllerini etkinleştirin. Bağımlılıklar açıkça doğrulanır ve değişiklikler panelin yeniden başlatılmasını gerektirir.","save":"Özellikleri kaydet","saved":"Özellikler kaydedildi. Modül değişikliklerini uygulamak için paneli yeniden başlatın.","loadFailed":"Özellikler yüklenemedi.","saveFailed":"Özellikler kaydedilemedi.","restartRequired":"Panel yeniden başlatılmalı","restartRequiredDescription":"Çoğu CatX modülü başlangıçta başlatılır. Bayrakları kaydedin ve değiştirilen modülü kullanmadan önce paneli yeniden başlatın.","dependencyWarning":"Önce gerekli bağımlılığı etkinleştirin. Bağımlılıklar otomatik olarak etkinleştirilmez."}
   }
 }

@@ -56,3 +56,51 @@ func TestSettingsUnknownFlagRejected(t *testing.T) {
 		t.Fatal("Set() accepted an unknown flag")
 	}
 }
+
+func TestManagedFeatureSettingsExcludeReservedFlagsAndValidateDependencies(t *testing.T) {
+	db, err := gorm.Open(sqlite.Open("file:forkext-managed-settings?mode=memory&cache=shared"), &gorm.Config{})
+	if err != nil {
+		t.Fatalf("open sqlite: %v", err)
+	}
+	if err := db.AutoMigrate(&model.Setting{}); err != nil {
+		t.Fatalf("migrate settings: %v", err)
+	}
+	settings := NewSettings(db)
+	items, err := settings.FeatureFlags()
+	if err != nil {
+		t.Fatalf("FeatureFlags() error = %v", err)
+	}
+	if len(items) != 9 {
+		t.Fatalf("managed feature count = %d, want 9", len(items))
+	}
+	for _, item := range items {
+		if item.Key == FlagWebhooks || item.Key == FlagMetrics {
+			t.Fatalf("reserved flag %q was exposed", item.Key)
+		}
+		if item.Enabled || !item.RestartRequired {
+			t.Fatalf("unexpected default descriptor: %+v", item)
+		}
+	}
+	if err := settings.UpdateFeatures(map[Flag]bool{FlagDNSIntelligence: true}); err == nil {
+		t.Fatal("DNS intelligence enabled without analytics dependency")
+	}
+	if enabled, _ := settings.Enabled(FlagDNSIntelligence); enabled {
+		t.Fatal("invalid dependency update was persisted")
+	}
+	if err := settings.UpdateFeatures(map[Flag]bool{
+		FlagAnalytics:       true,
+		FlagDNSIntelligence: true,
+		FlagSecurityAnomaly: true,
+	}); err != nil {
+		t.Fatalf("valid analytics dependency update: %v", err)
+	}
+	if err := settings.UpdateFeatures(map[Flag]bool{FlagFleetMutation: true}); err == nil {
+		t.Fatal("fleet mutation enabled without fleet updates dependency")
+	}
+	if err := settings.UpdateFeatures(map[Flag]bool{
+		FlagFleetUpdates:  true,
+		FlagFleetMutation: true,
+	}); err != nil {
+		t.Fatalf("valid fleet dependency update: %v", err)
+	}
+}

@@ -91,7 +91,11 @@ export default function PortalAdminPage() {
       <Space direction="vertical" style={{ width: '100%' }} size="large">
         <Card size="small">
           <Typography.Title level={2}>{t('fork.portal.adminTitle')}</Typography.Title>
-          {featureOff ? <FeatureOffState /> : error && <Alert type="error" message={error} />}
+          {featureOff ? (
+            <FeatureOffState feature="self_service" />
+          ) : (
+            error && <Alert type="error" message={error} />
+          )}
           {token && (
             <Alert
               type="warning"

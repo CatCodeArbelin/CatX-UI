@@ -2799,12 +2799,12 @@
       "email": "Surel",
       "never": "Tidak pernah",
       "noItems": "Tidak ada item",
-      "featureOffTitle": "Fitur dinonaktifkan",
+      "featureOffTitle": "Fitur «{feature}» dinonaktifkan",
       "featureOffDescription": "Fitur CatX-UI ini dinonaktifkan. Aktifkan di pengaturan fitur server untuk menggunakan halaman ini."
     },
     "activity": {
       "labels": {
-        "ambiguous": "Ambigu / bertentangan"
+      "ambiguous": "Ambigu / bertentangan","time":"Waktu","domainIp":"Domain / IP","service":"Layanan","category":"Kategori","asnCountry":"ASN / negara","sourceProvenance":"Sumber / asal","confidence":"Keyakinan","firstSeen":"Pertama terlihat","lastSeen":"Terakhir terlihat","protocol":"Protokol","observedDomain":"Domain teramati","resolvedIp":"IP terurai","record":"Rekaman","timeline":"Linimasa","dnsObservations":"Pengamatan DNS","enrichedDetails":"Detail diperkaya","sessionHistory":"Riwayat sesi","trafficHistory":"Riwayat lalu lintas","events":"Peristiwa","dns":"DNS","sessions":"Sesi","range":"Rentang","upload":"Unggah","download":"Unduh","clients":"Klien","inbounds":"Inbound","serviceCategory":"Layanan / kategori","observations":"Pengamatan","metadataNote":"Baris berasal dari metadata; total byte berasal dari pencatatan lalu lintas panel.","rawEvents":"Peristiwa mentah","dnsRetention":"Pengamatan DNS","sessionsRetention":"Sesi","aggregates":"Agregat","saveError":"Pengaturan tidak dapat disimpan."
       },
       "title": "Klien Aktivitas & DNS Intelijen",
       "subtitle": "Observasi hanya metadata untuk satu klien panel yang sudah ada.",
@@ -2999,6 +2999,7 @@
       "replay": "Putar ulang",
       "destinations": "Tujuan",
       "deliveries": "Pengiriman dan pesan gagal"
-    }
+},
+    "settings": {"title":"Fitur CatX-UI","description":"Aktifkan hanya modul fork yang diperlukan. Dependensi diperiksa secara eksplisit dan perubahan memerlukan panel dimulai ulang.","save":"Simpan fitur","saved":"Fitur tersimpan. Mulai ulang panel untuk menerapkan perubahan modul.","loadFailed":"Fitur tidak dapat dimuat.","saveFailed":"Fitur tidak dapat disimpan.","restartRequired":"Panel harus dimulai ulang","restartRequiredDescription":"Sebagian besar modul CatX diinisialisasi saat mulai. Simpan flag, lalu mulai ulang panel sebelum memakai modul yang diubah.","dependencyWarning":"Aktifkan dependensi yang diperlukan terlebih dahulu. Dependensi tidak pernah diaktifkan otomatis."}
   }
 }

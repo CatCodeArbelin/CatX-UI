@@ -2799,12 +2799,12 @@
       "email": "E-mail",
       "never": "Nunca",
       "noItems": "Nenhum item",
-      "featureOffTitle": "Recurso desativado",
+      "featureOffTitle": "O recurso «{feature}» está desativado",
       "featureOffDescription": "Este recurso do CatX-UI está desativado. Ative-o nas configurações de recursos do servidor para usar esta página."
     },
     "activity": {
       "labels": {
-        "ambiguous": "Ambíguo / conflitante"
+      "ambiguous": "Ambíguo / conflitante","time":"Hora","domainIp":"Domínio / IP","service":"Serviço","category":"Categoria","asnCountry":"ASN / país","sourceProvenance":"Fonte / procedência","confidence":"Confiança","firstSeen":"Primeira ocorrência","lastSeen":"Última ocorrência","protocol":"Protocolo","observedDomain":"Domínio observado","resolvedIp":"IP resolvido","record":"Registro","timeline":"Linha do tempo","dnsObservations":"Observações DNS","enrichedDetails":"Detalhes enriquecidos","sessionHistory":"Histórico de sessões","trafficHistory":"Histórico de tráfego","events":"Eventos","dns":"DNS","sessions":"Sessões","range":"Intervalo","upload":"Upload","download":"Download","clients":"Clientes","inbounds":"Entradas","serviceCategory":"Serviço / categoria","observations":"Observações","metadataNote":"Linhas derivadas de metadados; os totais de bytes vêm da contabilidade de tráfego do painel.","rawEvents":"Eventos brutos","dnsRetention":"Observações DNS","sessionsRetention":"Sessões","aggregates":"Agregados","saveError":"Não foi possível salvar as configurações."
       },
       "title": "Cliente Atividade & DNS Inteligência",
       "subtitle": "Observações somente de metadados de um cliente existente do painel.",
@@ -2999,6 +2999,7 @@
       "replay": "Repetir",
       "destinations": "Destinos",
       "deliveries": "Entregas e mensagens não entregues"
-    }
+},
+    "settings": {"title":"Recursos do CatX-UI","description":"Ative apenas os módulos necessários. As dependências são verificadas explicitamente e as alterações exigem reiniciar o painel.","save":"Salvar recursos","saved":"Recursos salvos. Reinicie o painel para aplicar as alterações dos módulos.","loadFailed":"Não foi possível carregar os recursos.","saveFailed":"Não foi possível salvar os recursos.","restartRequired":"É necessário reiniciar o painel","restartRequiredDescription":"A maioria dos módulos CatX é inicializada no início. Salve os sinalizadores e reinicie o painel antes de usar um módulo alterado.","dependencyWarning":"Ative primeiro a dependência necessária. Dependências nunca são ativadas automaticamente."}
   }
 }

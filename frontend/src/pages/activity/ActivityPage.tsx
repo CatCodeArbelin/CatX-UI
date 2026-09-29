@@ -22,6 +22,7 @@ import type { ColumnsType } from 'antd/es/table';
 import { SearchOutlined } from '@ant-design/icons';
 import { HttpUtil } from '@/utils';
 import ForkAdminPageShell from '@/components/fork/ForkAdminPageShell';
+import FeatureOffState from '@/components/fork/FeatureOffState';
 import { i18n } from '@/i18n/react';
 import { useTranslation } from 'react-i18next';
 import './ActivityPage.css';
@@ -237,21 +238,24 @@ export default function ActivityPage() {
       { silent: true },
     );
     if (result.success && result.obj) setSettings(result.obj);
-    else setSettingsError(result.msg || 'Settings could not be saved.');
+    else setSettingsError(result.msg || t('fork.activity.labels.saveError'));
   };
 
   const eventColumns: ColumnsType<Event> = [
-    { title: 'Time', dataIndex: 'observedAt', render: time },
-    { title: 'Domain / IP', render: (_, row) => row.domain || row.destinationIp || '—' },
-    { title: 'Service', render: (_, row) => row.service || '—' },
-    { title: 'Category', render: (_, row) => row.category || 'unknown' },
+    { title: t('fork.activity.labels.time'), dataIndex: 'observedAt', render: time },
     {
-      title: 'ASN / country',
+      title: t('fork.activity.labels.domainIp'),
+      render: (_, row) => row.domain || row.destinationIp || '—',
+    },
+    { title: t('fork.activity.labels.service'), render: (_, row) => row.service || '—' },
+    { title: t('fork.activity.labels.category'), render: (_, row) => row.category || 'unknown' },
+    {
+      title: t('fork.activity.labels.asnCountry'),
       render: (_, row) =>
         [row.asn ? `AS${row.asn}` : '', row.country].filter(Boolean).join(' · ') || '—',
     },
     {
-      title: 'Source / provenance',
+      title: t('fork.activity.labels.sourceProvenance'),
       render: (_, row) =>
         provenance(
           row.classificationSource || row.source,
@@ -259,7 +263,7 @@ export default function ActivityPage() {
         ),
     },
     {
-      title: 'Confidence',
+      title: t('fork.activity.labels.confidence'),
       render: (_, row) =>
         confidence(
           row.classificationLevel,
@@ -273,13 +277,19 @@ export default function ActivityPage() {
       (event) => event.domain === row.domain || event.destinationIp === row.resolvedIp,
     );
   const dnsColumns: ColumnsType<DNS> = [
-    { title: 'Time', dataIndex: 'observedAt', render: time },
-    { title: 'Observed domain', dataIndex: 'domain' },
-    { title: 'Resolved IP', render: (_, row) => row.resolvedIp || '—' },
-    { title: 'Service', render: (_, row) => enrichmentFor(row)?.service || '—' },
-    { title: 'Category', render: (_, row) => enrichmentFor(row)?.category || 'unknown' },
+    { title: t('fork.activity.labels.time'), dataIndex: 'observedAt', render: time },
+    { title: t('fork.activity.labels.observedDomain'), dataIndex: 'domain' },
+    { title: t('fork.activity.labels.resolvedIp'), render: (_, row) => row.resolvedIp || '—' },
     {
-      title: 'ASN / country',
+      title: t('fork.activity.labels.service'),
+      render: (_, row) => enrichmentFor(row)?.service || '—',
+    },
+    {
+      title: t('fork.activity.labels.category'),
+      render: (_, row) => enrichmentFor(row)?.category || 'unknown',
+    },
+    {
+      title: t('fork.activity.labels.asnCountry'),
       render: (_, row) => {
         const event = enrichmentFor(row);
         return (
@@ -287,15 +297,28 @@ export default function ActivityPage() {
         );
       },
     },
-    { title: 'Record', render: (_, row) => row.recordType || '—' },
-    { title: 'Source / provenance', render: (_, row) => provenance(row.source, row.provenance) },
-    { title: 'Confidence', render: (_, row) => confidence(undefined, row.confidence) },
+    { title: t('fork.activity.labels.record'), render: (_, row) => row.recordType || '—' },
+    {
+      title: t('fork.activity.labels.sourceProvenance'),
+      render: (_, row) => provenance(row.source, row.provenance),
+    },
+    {
+      title: t('fork.activity.labels.confidence'),
+      render: (_, row) => confidence(undefined, row.confidence),
+    },
   ];
   const sessionColumns: ColumnsType<Session> = [
-    { title: 'First seen', dataIndex: 'firstSeen', render: time },
-    { title: 'Last seen', dataIndex: 'lastSeen', render: time },
-    { title: 'Protocol', dataIndex: 'protocol', render: (value) => value || '—' },
-    { title: 'Source / provenance', render: (_, row) => provenance(row.source, row.provenance) },
+    { title: t('fork.activity.labels.firstSeen'), dataIndex: 'firstSeen', render: time },
+    { title: t('fork.activity.labels.lastSeen'), dataIndex: 'lastSeen', render: time },
+    {
+      title: t('fork.activity.labels.protocol'),
+      dataIndex: 'protocol',
+      render: (value) => value || '—',
+    },
+    {
+      title: t('fork.activity.labels.sourceProvenance'),
+      render: (_, row) => provenance(row.source, row.provenance),
+    },
   ];
   const analyticsDisabled = events?.enabled === false || sessions?.enabled === false;
   const dnsDisabled = dns?.enabled === false || settings?.dnsIntelligence === false;
@@ -311,53 +334,61 @@ export default function ActivityPage() {
             </Typography.Paragraph>
             <Alert type="info" showIcon message={t('fork.activity.privacy')} />
           </div>
-          <Space wrap>
-            <Input
-              aria-label={t('fork.activity.client')}
-              placeholder={t('fork.activity.client')}
-              value={input}
-              onChange={(event) => setInput(event.target.value)}
-              onPressEnter={submit}
-              style={{ width: 280 }}
-            />
-            <DatePicker.RangePicker
-              showTime
-              value={range}
-              onChange={(next) => {
-                if (next?.[0] && next?.[1]) {
-                  setRange([next[0], next[1]]);
-                  setPage(1);
-                  if (email) setLoading(true);
-                }
-              }}
-            />
-            <Button type="primary" icon={<SearchOutlined />} onClick={submit}>
-              {t('fork.common.labels.search')}
-            </Button>
-          </Space>
-          {!email && <Empty description={t('fork.activity.enter')} />}
-          {analyticsDisabled && (
-            <Alert type="info" showIcon message={t('fork.activity.disabled')} />
+          {!analyticsDisabled && (
+            <>
+              <Space wrap>
+                <Input
+                  aria-label={t('fork.activity.client')}
+                  placeholder={t('fork.activity.client')}
+                  value={input}
+                  onChange={(event) => setInput(event.target.value)}
+                  onPressEnter={submit}
+                  style={{ width: 280 }}
+                />
+                <DatePicker.RangePicker
+                  showTime
+                  value={range}
+                  onChange={(next) => {
+                    if (next?.[0] && next?.[1]) {
+                      setRange([next[0], next[1]]);
+                      setPage(1);
+                      if (email) setLoading(true);
+                    }
+                  }}
+                />
+                <Button type="primary" icon={<SearchOutlined />} onClick={submit}>
+                  {t('fork.common.labels.search')}
+                </Button>
+              </Space>
+              {!email && <Empty description={t('fork.activity.enter')} />}
+            </>
           )}
+          {analyticsDisabled && <FeatureOffState feature="analytics" />}
           {email && !analyticsDisabled && dnsDisabled && (
-            <Alert type="warning" showIcon message={t('fork.activity.dnsDisabled')} />
+            <FeatureOffState feature="dns_intelligence" />
           )}
           {error && <Alert type="error" showIcon message={error} />}
           {email && !analyticsDisabled && (
             <Spin spinning={loading}>
               <div className="activity-summary">
-                <Tag>Events: {events?.total || 0}</Tag>
-                <Tag>DNS: {dns?.total || 0}</Tag>
-                <Tag>Sessions: {sessions?.total || 0}</Tag>
                 <Tag>
-                  Range: {time(params.from)} – {time(params.to)}
+                  {t('fork.activity.labels.events')}: {events?.total || 0}
+                </Tag>
+                <Tag>
+                  {t('fork.activity.labels.dns')}: {dns?.total || 0}
+                </Tag>
+                <Tag>
+                  {t('fork.activity.labels.sessions')}: {sessions?.total || 0}
+                </Tag>
+                <Tag>
+                  {t('fork.activity.labels.range')}: {time(params.from)} – {time(params.to)}
                 </Tag>
               </div>
               <Tabs
                 items={[
                   {
                     key: 'timeline',
-                    label: 'Timeline',
+                    label: t('fork.activity.labels.timeline'),
                     children: events?.items.length ? (
                       <Timeline
                         items={events.items.map((event) => ({
@@ -388,7 +419,7 @@ export default function ActivityPage() {
                   },
                   {
                     key: 'dns',
-                    label: 'DNS observations',
+                    label: t('fork.activity.labels.dnsObservations'),
                     children: dnsDisabled ? (
                       <Empty description={t('fork.activity.dnsDisabled')} />
                     ) : (
@@ -408,7 +439,7 @@ export default function ActivityPage() {
                   },
                   {
                     key: 'details',
-                    label: 'Enriched details',
+                    label: t('fork.activity.labels.enrichedDetails'),
                     children: (
                       <Table<Event>
                         rowKey="id"
@@ -423,7 +454,7 @@ export default function ActivityPage() {
                   },
                   {
                     key: 'sessions',
-                    label: 'Session history',
+                    label: t('fork.activity.labels.sessionHistory'),
                     children: (
                       <Table<Session>
                         rowKey="sessionKey"
@@ -443,22 +474,33 @@ export default function ActivityPage() {
                   },
                   {
                     key: 'traffic',
-                    label: 'Traffic history',
+                    label: t('fork.activity.labels.trafficHistory'),
                     children: traffic?.history ? (
                       <Space direction="vertical" style={{ width: '100%' }}>
                         <div className="activity-summary">
-                          <Tag>Upload: {bytes(traffic.history.up)}</Tag>
-                          <Tag>Download: {bytes(traffic.history.down)}</Tag>
-                          <Tag>Clients: {traffic.history.clients}</Tag>
-                          <Tag>Inbounds: {traffic.history.inbounds}</Tag>
+                          <Tag>
+                            {t('fork.activity.labels.upload')}: {bytes(traffic.history.up)}
+                          </Tag>
+                          <Tag>
+                            {t('fork.activity.labels.download')}: {bytes(traffic.history.down)}
+                          </Tag>
+                          <Tag>
+                            {t('fork.activity.labels.clients')}: {traffic.history.clients}
+                          </Tag>
+                          <Tag>
+                            {t('fork.activity.labels.inbounds')}: {traffic.history.inbounds}
+                          </Tag>
                           <Tag>Nodes: {traffic.history.nodes}</Tag>
                         </div>
                         <Table<TrafficBreakdown>
                           rowKey="name"
                           columns={[
-                            { title: 'Service / category', dataIndex: 'name' },
-                            { title: 'Observations', dataIndex: 'observations' },
-                            { title: 'Sessions', dataIndex: 'sessions' },
+                            { title: t('fork.activity.labels.serviceCategory'), dataIndex: 'name' },
+                            {
+                              title: t('fork.activity.labels.observations'),
+                              dataIndex: 'observations',
+                            },
+                            { title: t('fork.activity.labels.sessions'), dataIndex: 'sessions' },
                           ]}
                           dataSource={[
                             ...traffic.history.serviceBreakdown,
@@ -470,8 +512,7 @@ export default function ActivityPage() {
                           }}
                         />
                         <Typography.Text type="secondary">
-                          Service and category rows are metadata-derived observations and sessions;
-                          byte totals come only from upstream traffic accounting.
+                          {t('fork.activity.labels.metadataNote')}
                         </Typography.Text>
                       </Space>
                     ) : (
@@ -482,7 +523,7 @@ export default function ActivityPage() {
               />
             </Spin>
           )}
-          {settings && (
+          {settings && !analyticsDisabled && (
             <Card size="small" title={t('fork.activity.retention')}>
               <Space direction="vertical" style={{ width: '100%' }}>
                 <Typography.Text type="secondary">{t('fork.activity.privacy')}</Typography.Text>
@@ -525,7 +566,7 @@ export default function ActivityPage() {
                   <InputNumber
                     min={1}
                     max={3650}
-                    addonBefore="Sessions"
+                    addonBefore={t('fork.activity.labels.sessions')}
                     value={settings.retention.sessions}
                     onChange={(value) =>
                       setSettings({
@@ -537,7 +578,7 @@ export default function ActivityPage() {
                   <InputNumber
                     min={1}
                     max={3650}
-                    addonBefore="Aggregates"
+                    addonBefore={t('fork.activity.labels.aggregates')}
                     value={settings.retention.aggregates}
                     onChange={(value) =>
                       setSettings({

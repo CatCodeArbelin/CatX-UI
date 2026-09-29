@@ -2799,12 +2799,12 @@
       "email": "電子郵件",
       "never": "永不",
       "noItems": "沒有項目",
-      "featureOffTitle": "功能已停用",
+      "featureOffTitle": "功能「{feature}」已停用",
       "featureOffDescription": "此 CatX-UI 功能已停用。請在伺服器功能設定中啟用後再使用此頁面。"
     },
     "activity": {
       "labels": {
-        "ambiguous": "模糊 / 衝突"
+      "ambiguous": "模糊 / 衝突","time":"時間","domainIp":"網域 / IP","service":"服務","category":"分類","asnCountry":"ASN / 國家","sourceProvenance":"來源 / 依據","confidence":"信心度","firstSeen":"首次發現","lastSeen":"最近發現","protocol":"通訊協定","observedDomain":"觀測網域","resolvedIp":"解析 IP","record":"記錄","timeline":"時間軸","dnsObservations":"DNS 觀測","enrichedDetails":"增強詳細資料","sessionHistory":"工作階段歷史","trafficHistory":"流量歷史","events":"事件","dns":"DNS","sessions":"工作階段","range":"範圍","upload":"上傳","download":"下載","clients":"用戶端","inbounds":"輸入連線","serviceCategory":"服務 / 分類","observations":"觀測數","metadataNote":"這些列來自中繼資料；位元組總量來自面板流量統計。","rawEvents":"原始事件","dnsRetention":"DNS 觀測","sessionsRetention":"工作階段","aggregates":"彙總","saveError":"無法儲存設定。"
       },
       "title": "用戶端 活動 & DNS 智慧",
       "subtitle": "僅記錄一個現有面板用戶端的中繼資料觀測。",
@@ -2999,6 +2999,7 @@
       "replay": "重播",
       "destinations": "目的地",
       "deliveries": "傳遞與死信"
-    }
+},
+    "settings": {"title":"CatX-UI 功能","description":"只啟用需要的分支模組。依賴關係會明確驗證，變更後需要重新啟動面板。","save":"儲存功能設定","saved":"功能設定已儲存。請重新啟動面板以套用模組變更。","loadFailed":"無法載入功能設定。","saveFailed":"無法儲存功能設定。","restartRequired":"需要重新啟動面板","restartRequiredDescription":"大多數 CatX 模組會在啟動時初始化。儲存開關後，請先重新啟動面板再使用已變更的模組。","dependencyWarning":"請先啟用所需依賴。依賴不會自動啟用。"}
   }
 }

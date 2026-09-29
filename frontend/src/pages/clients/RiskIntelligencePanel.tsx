@@ -74,7 +74,7 @@ export default function RiskIntelligencePanel({ email }: { email: string }) {
     await load();
   };
 
-  if (featureOff && !loading) return <FeatureOffState />;
+  if (featureOff && !loading) return <FeatureOffState feature="risk" />;
   if ((!summary || !summary.enabled) && !loading) return null;
   if (!summary) return <Card loading size="small" />;
 

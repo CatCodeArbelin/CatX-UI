@@ -94,7 +94,11 @@ export default function AuditPage() {
               {t('fork.audit.filter')}
             </Button>
           </Space>
-          {featureOff ? <FeatureOffState /> : error && <Alert type="error" message={error} />}
+          {featureOff ? (
+            <FeatureOffState feature="audit" />
+          ) : (
+            error && <Alert type="error" message={error} />
+          )}
           {!featureOff && rows.length ? (
             <Table rowKey="id" columns={columns} dataSource={rows} pagination={{ pageSize: 25 }} />
           ) : !featureOff ? (

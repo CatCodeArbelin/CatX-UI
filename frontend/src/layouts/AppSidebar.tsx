@@ -305,6 +305,11 @@ export default function AppSidebar() {
         label: t('pages.settings.securitySettings'),
       },
       {
+        key: '/settings#catx-features',
+        icon: <ApiOutlined />,
+        label: t('fork.settings.title'),
+      },
+      {
         key: '/settings#telegram',
         icon: <MessageOutlined />,
         label: t('pages.settings.TGBotSettings'),

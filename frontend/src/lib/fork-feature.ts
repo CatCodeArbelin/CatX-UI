@@ -1,6 +1,8 @@
 export type FeatureResponse = { status?: number; msg?: string; featureDisabled?: boolean };
 
 export type ForkFeature =
+  | 'analytics'
+  | 'dns_intelligence'
   | 'audit'
   | 'webhooks'
   | 'self_service'
@@ -25,6 +27,8 @@ export function isKnownForkFeatureUnavailable(
     return true;
   }
   const featureOwnedEntrypoint = new Set<ForkFeature>([
+    'analytics',
+    'dns_intelligence',
     'audit',
     'webhooks',
     'self_service',

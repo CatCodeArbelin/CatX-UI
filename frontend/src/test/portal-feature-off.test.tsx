@@ -22,4 +22,5 @@ test('renders explicit self-service disabled state as informational UX', async (
 
   await waitFor(() => expect(view.container.querySelector('.ant-alert-info')).not.toBeNull());
   expect(view.container.querySelector('.ant-alert-error')).toBeNull();
+  expect(view.getByRole('button', { name: 'CatX-UI Features' })).toBeTruthy();
 });

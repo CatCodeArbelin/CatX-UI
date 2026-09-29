@@ -2799,12 +2799,12 @@
       "email": "Thư điện tử",
       "never": "Không bao giờ",
       "noItems": "Không có mục nào",
-      "featureOffTitle": "Tính năng đã tắt",
+      "featureOffTitle": "Tính năng «{feature}» đã tắt",
       "featureOffDescription": "Tính năng CatX-UI này đang tắt. Hãy bật tính năng này trong cài đặt tính năng của máy chủ để sử dụng trang này."
     },
     "activity": {
       "labels": {
-        "ambiguous": "Mơ hồ / xung đột"
+      "ambiguous": "Mơ hồ / xung đột","time":"Thời gian","domainIp":"Miền / IP","service":"Dịch vụ","category":"Danh mục","asnCountry":"ASN / quốc gia","sourceProvenance":"Nguồn / xuất xứ","confidence":"Độ tin cậy","firstSeen":"Thấy lần đầu","lastSeen":"Thấy lần cuối","protocol":"Giao thức","observedDomain":"Miền quan sát","resolvedIp":"IP đã phân giải","record":"Bản ghi","timeline":"Dòng thời gian","dnsObservations":"Quan sát DNS","enrichedDetails":"Chi tiết mở rộng","sessionHistory":"Lịch sử phiên","trafficHistory":"Lịch sử lưu lượng","events":"Sự kiện","dns":"DNS","sessions":"Phiên","range":"Phạm vi","upload":"Tải lên","download":"Tải xuống","clients":"Máy khách","inbounds":"Kết nối vào","serviceCategory":"Dịch vụ / danh mục","observations":"Số quan sát","metadataNote":"Các dòng được suy ra từ siêu dữ liệu; tổng byte lấy từ phần kế toán lưu lượng của bảng điều khiển.","rawEvents":"Sự kiện thô","dnsRetention":"Quan sát DNS","sessionsRetention":"Phiên","aggregates":"Tổng hợp","saveError":"Không thể lưu cài đặt."
       },
       "title": "Máy khách Hoạt động & DNS Thông tin chuyên sâu",
       "subtitle": "Chỉ quan sát siêu dữ liệu của một máy khách bảng điều khiển hiện có.",
@@ -2999,6 +2999,7 @@
       "replay": "Phát lại",
       "destinations": "Đích",
       "deliveries": "Lần gửi và thư không gửi được"
-    }
+},
+    "settings": {"title":"Tính năng CatX-UI","description":"Chỉ bật các mô-đun fork cần thiết. Phụ thuộc được kiểm tra rõ ràng và thay đổi yêu cầu khởi động lại bảng điều khiển.","save":"Lưu tính năng","saved":"Đã lưu tính năng. Khởi động lại bảng điều khiển để áp dụng thay đổi mô-đun.","loadFailed":"Không thể tải tính năng.","saveFailed":"Không thể lưu tính năng.","restartRequired":"Cần khởi động lại bảng điều khiển","restartRequiredDescription":"Hầu hết mô-đun CatX được khởi tạo khi khởi động. Lưu cờ rồi khởi động lại bảng điều khiển trước khi dùng mô-đun đã đổi.","dependencyWarning":"Trước tiên hãy bật phần phụ thuộc bắt buộc. Phần phụ thuộc không được bật tự động."}
   }
 }

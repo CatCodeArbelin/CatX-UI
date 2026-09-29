@@ -131,50 +131,56 @@ export default function WebhooksPage() {
         <Card size="small">
           <Typography.Title level={2}>{t('fork.webhooks.title')}</Typography.Title>
           <Typography.Text type="secondary">{t('fork.webhooks.summary')}</Typography.Text>
-          <Form
-            form={form}
-            layout="vertical"
-            onFinish={(value) => void create(value)}
-            style={{ marginTop: 24 }}
-          >
-            <Space wrap align="start" className="webhooks-form-grid">
-              <Form.Item
-                name="name"
-                label={t('fork.webhooks.labels.name')}
-                rules={[{ required: true }]}
-              >
-                <Input />
-              </Form.Item>
-              <Form.Item
-                name="url"
-                label={t('fork.webhooks.labels.url')}
-                rules={[{ required: true, type: 'url' }]}
-              >
-                <Input style={{ width: 300 }} />
-              </Form.Item>
-              <Form.Item
-                name="secret"
-                label={t('fork.webhooks.labels.secret')}
-                rules={[{ required: true }]}
-              >
-                <Input.Password />
-              </Form.Item>
-              <Form.Item
-                name="eventTypes"
-                label={t('fork.webhooks.labels.events')}
-                rules={[{ required: true }]}
-              >
-                <Input placeholder="* or auth.login,http.POST" />
-              </Form.Item>
-              <Form.Item>
-                <Button type="primary" htmlType="submit">
-                  {t('fork.webhooks.create')}
-                </Button>
-              </Form.Item>
-            </Space>
-          </Form>
+          {!featureOff && (
+            <Form
+              form={form}
+              layout="vertical"
+              onFinish={(value) => void create(value)}
+              style={{ marginTop: 24 }}
+            >
+              <Space wrap align="start" className="webhooks-form-grid">
+                <Form.Item
+                  name="name"
+                  label={t('fork.webhooks.labels.name')}
+                  rules={[{ required: true }]}
+                >
+                  <Input />
+                </Form.Item>
+                <Form.Item
+                  name="url"
+                  label={t('fork.webhooks.labels.url')}
+                  rules={[{ required: true, type: 'url' }]}
+                >
+                  <Input style={{ width: 300 }} />
+                </Form.Item>
+                <Form.Item
+                  name="secret"
+                  label={t('fork.webhooks.labels.secret')}
+                  rules={[{ required: true }]}
+                >
+                  <Input.Password />
+                </Form.Item>
+                <Form.Item
+                  name="eventTypes"
+                  label={t('fork.webhooks.labels.events')}
+                  rules={[{ required: true }]}
+                >
+                  <Input placeholder="* or auth.login,http.POST" />
+                </Form.Item>
+                <Form.Item>
+                  <Button type="primary" htmlType="submit">
+                    {t('fork.webhooks.create')}
+                  </Button>
+                </Form.Item>
+              </Space>
+            </Form>
+          )}
         </Card>
-        {featureOff ? <FeatureOffState /> : error && <Alert type="error" message={error} />}
+        {featureOff ? (
+          <FeatureOffState feature="webhooks" />
+        ) : (
+          error && <Alert type="error" message={error} />
+        )}
         {!featureOff && (
           <Card size="small" title={t('fork.webhooks.destinations')}>
             <Table

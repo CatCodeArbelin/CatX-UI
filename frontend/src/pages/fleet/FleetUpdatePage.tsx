@@ -91,7 +91,11 @@ export default function FleetUpdatePage() {
     <ForkAdminPageShell pageClass="fleet-update-page">
       <Space direction="vertical" style={{ width: '100%' }} size="large">
         <Card size="small" title={t('fork.fleetUpdate.title')}>
-          {featureOff ? <FeatureOffState /> : error && <Alert type="error" message={error} />}
+          {featureOff ? (
+            <FeatureOffState feature="fleet_updates" />
+          ) : (
+            error && <Alert type="error" message={error} />
+          )}
           {!featureOff && (
             <Form
               className="fleet-update-form"

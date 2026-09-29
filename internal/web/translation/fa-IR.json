@@ -2799,12 +2799,12 @@
       "email": "ایمیل",
       "never": "هرگز",
       "noItems": "موردی وجود ندارد",
-      "featureOffTitle": "ویژگی غیرفعال است",
+      "featureOffTitle": "قابلیت «{feature}» غیرفعال است",
       "featureOffDescription": "این ویژگی CatX-UI غیرفعال است. برای استفاده از این صفحه آن را در تنظیمات ویژگی‌های سرور فعال کنید."
     },
     "activity": {
       "labels": {
-        "ambiguous": "مبهم / متناقض"
+      "ambiguous": "مبهم / متناقض","time":"زمان","domainIp":"دامنه / IP","service":"سرویس","category":"دسته‌بندی","asnCountry":"ASN / کشور","sourceProvenance":"منبع / منشأ","confidence":"اطمینان","firstSeen":"اولین مشاهده","lastSeen":"آخرین مشاهده","protocol":"پروتکل","observedDomain":"دامنه مشاهده‌شده","resolvedIp":"IP حل‌شده","record":"رکورد","timeline":"خط زمانی","dnsObservations":"مشاهدات DNS","enrichedDetails":"جزئیات غنی‌شده","sessionHistory":"تاریخچه نشست","trafficHistory":"تاریخچه ترافیک","events":"رویدادها","dns":"DNS","sessions":"نشست‌ها","range":"بازه","upload":"ارسال","download":"دریافت","clients":"کلاینت‌ها","inbounds":"ورودی‌ها","serviceCategory":"سرویس / دسته‌بندی","observations":"مشاهدات","metadataNote":"ردیف‌ها از فراداده ساخته شده‌اند؛ مجموع بایت‌ها از حساب ترافیک پنل است.","rawEvents":"رویدادهای خام","dnsRetention":"مشاهدات DNS","sessionsRetention":"نشست‌ها","aggregates":"تجمیع‌ها","saveError":"ذخیره تنظیمات انجام نشد."
       },
       "title": "کلاینت فعالیت & DNS هوشمندی",
       "subtitle": "مشاهدات فقط‌فراداده‌ای برای یک کلاینت موجود پنل.",
@@ -2999,6 +2999,7 @@
       "replay": "پخش مجدد",
       "destinations": "مقصدها",
       "deliveries": "تحویل‌ها و پیام‌های مرده"
-    }
+},
+    "settings": {"title":"قابلیت‌های CatX-UI","description":"فقط ماژول‌های موردنیاز را فعال کنید. وابستگی‌ها به‌صورت صریح بررسی می‌شوند و تغییرات به راه‌اندازی دوباره پنل نیاز دارند.","save":"ذخیره قابلیت‌ها","saved":"قابلیت‌ها ذخیره شدند. برای اعمال تغییرات ماژول‌ها پنل را دوباره راه‌اندازی کنید.","loadFailed":"بارگیری قابلیت‌ها انجام نشد.","saveFailed":"ذخیره قابلیت‌ها انجام نشد.","restartRequired":"راه‌اندازی دوباره پنل لازم است","restartRequiredDescription":"بیشتر ماژول‌های CatX هنگام شروع راه‌اندازی می‌شوند. پس از ذخیره پرچم‌ها، پیش از استفاده از ماژول تغییرکرده پنل را دوباره راه‌اندازی کنید.","dependencyWarning":"ابتدا وابستگی لازم را فعال کنید. وابستگی‌ها به‌صورت خودکار فعال نمی‌شوند."}
   }
 }

@@ -2799,12 +2799,12 @@
       "email": "البريد الإلكتروني",
       "never": "أبدًا",
       "noItems": "لا توجد عناصر",
-      "featureOffTitle": "الميزة معطلة",
+      "featureOffTitle": "الميزة «{feature}» معطلة",
       "featureOffDescription": "هذه الميزة في CatX-UI معطلة. فعّلها من إعدادات ميزات الخادم لاستخدام هذه الصفحة."
     },
     "activity": {
       "labels": {
-        "ambiguous": "ملتبس / متعارض"
+      "ambiguous": "ملتبس / متعارض","time":"الوقت","domainIp":"النطاق / IP","service":"الخدمة","category":"الفئة","asnCountry":"ASN / الدولة","sourceProvenance":"المصدر / الأصل","confidence":"الثقة","firstSeen":"أول ظهور","lastSeen":"آخر ظهور","protocol":"البروتوكول","observedDomain":"النطاق المرصود","resolvedIp":"IP المحلل","record":"السجل","timeline":"الخط الزمني","dnsObservations":"ملاحظات DNS","enrichedDetails":"تفاصيل موسعة","sessionHistory":"سجل الجلسات","trafficHistory":"سجل حركة المرور","events":"الأحداث","dns":"DNS","sessions":"الجلسات","range":"النطاق الزمني","upload":"رفع","download":"تنزيل","clients":"العملاء","inbounds":"الاتصالات الواردة","serviceCategory":"الخدمة / الفئة","observations":"الملاحظات","metadataNote":"صفوف مشتقة من البيانات الوصفية؛ إجمالي البايتات من محاسبة الحركة.","rawEvents":"الأحداث الخام","dnsRetention":"ملاحظات DNS","sessionsRetention":"الجلسات","aggregates":"التجميعات","saveError":"تعذر حفظ الإعدادات."
       },
       "title": "نشاط العميل وذكاء DNS",
       "subtitle": "ملاحظات عن البيانات الوصفية فقط لعميل موجود في اللوحة.",
@@ -2999,6 +2999,7 @@
       "replay": "إعادة التشغيل",
       "destinations": "الوجهات",
       "deliveries": "عمليات التسليم والرسائل الفاشلة"
-    }
+},
+    "settings": {"title":"ميزات CatX-UI","description":"فعّل وحدات CatX التي تحتاج إليها فقط. يتم التحقق من التبعيات صراحةً ويتطلب تغييرها إعادة تشغيل اللوحة.","save":"حفظ إعدادات الميزات","saved":"تم حفظ إعدادات الميزات. أعد تشغيل اللوحة لتطبيق تغييرات الوحدات.","loadFailed":"تعذر تحميل إعدادات الميزات.","saveFailed":"تعذر حفظ إعدادات الميزات.","restartRequired":"إعادة تشغيل اللوحة مطلوبة","restartRequiredDescription":"تبدأ معظم وحدات CatX عند التشغيل. احفظ العلامات ثم أعد تشغيل اللوحة قبل استخدام وحدة تم تغييرها.","dependencyWarning":"فعّل التبعية المطلوبة أولاً. لا يتم تفعيل التبعيات تلقائياً."}
   }
 }

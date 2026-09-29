@@ -2799,12 +2799,12 @@
       "email": "Correo",
       "never": "Nunca",
       "noItems": "Sin elementos",
-      "featureOffTitle": "Función desactivada",
+      "featureOffTitle": "La función «{feature}» está desactivada",
       "featureOffDescription": "Esta función de CatX-UI está desactivada. Actívela en la configuración de funciones del servidor para usar esta página."
     },
     "activity": {
       "labels": {
-        "ambiguous": "Ambiguo / conflictivo"
+      "ambiguous": "Ambiguo / conflictivo","time":"Hora","domainIp":"Dominio / IP","service":"Servicio","category":"Categoría","asnCountry":"ASN / país","sourceProvenance":"Origen / procedencia","confidence":"Confianza","firstSeen":"Primera detección","lastSeen":"Última detección","protocol":"Protocolo","observedDomain":"Dominio observado","resolvedIp":"IP resuelta","record":"Registro","timeline":"Línea temporal","dnsObservations":"Observaciones DNS","enrichedDetails":"Detalles enriquecidos","sessionHistory":"Historial de sesiones","trafficHistory":"Historial de tráfico","events":"Eventos","dns":"DNS","sessions":"Sesiones","range":"Rango","upload":"Subida","download":"Descarga","clients":"Clientes","inbounds":"Entradas","serviceCategory":"Servicio / categoría","observations":"Observaciones","metadataNote":"Filas derivadas de metadatos; los bytes provienen de la contabilidad del panel.","rawEvents":"Eventos sin procesar","dnsRetention":"Observaciones DNS","sessionsRetention":"Sesiones","aggregates":"Agregados","saveError":"No se pudieron guardar los ajustes."
       },
       "title": "Actividad del cliente e inteligencia DNS",
       "subtitle": "Observaciones únicamente de metadatos de un cliente existente del panel.",
@@ -2999,6 +2999,7 @@
       "replay": "Repetir",
       "destinations": "Destinos",
       "deliveries": "Entregas y mensajes fallidos"
-    }
+},
+    "settings": {"title":"Funciones de CatX-UI","description":"Activa solo los módulos que necesites. Las dependencias se comprueban de forma explícita y los cambios requieren reiniciar el panel.","save":"Guardar funciones","saved":"Funciones guardadas. Reinicia el panel para aplicar los cambios.","loadFailed":"No se pudieron cargar las funciones.","saveFailed":"No se pudieron guardar las funciones.","restartRequired":"Es necesario reiniciar el panel","restartRequiredDescription":"La mayoría de los módulos de CatX se inicializan al arrancar. Guarda los indicadores y reinicia el panel antes de usar un módulo cambiado.","dependencyWarning":"Activa primero la dependencia requerida. Las dependencias nunca se activan automáticamente."}
   }
 }

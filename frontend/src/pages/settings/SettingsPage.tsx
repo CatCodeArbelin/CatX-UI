@@ -31,6 +31,7 @@ import DiscordTab from './DiscordTab';
 import SubscriptionGeneralTab from './SubscriptionGeneralTab';
 import SubscriptionFormatsTab from './SubscriptionFormatsTab';
 import SubscriptionBalancersTab from './SubscriptionBalancersTab';
+import CatxFeaturesTab from './CatxFeaturesTab';
 import './SettingsPage.css';
 
 interface ApiMsg {
@@ -46,6 +47,7 @@ const tabSlugs = [
   'subscription',
   'subscription-formats',
   'subscription-balancers',
+  'catx-features',
 ];
 
 function isIp(h: string): boolean {
@@ -227,6 +229,8 @@ export default function SettingsPage() {
         return <SubscriptionFormatsTab allSetting={allSetting} updateSetting={updateSetting} />;
       case 'subscription-balancers':
         return <SubscriptionBalancersTab allSetting={allSetting} updateSetting={updateSetting} />;
+      case 'catx-features':
+        return <CatxFeaturesTab />;
       default:
         return <GeneralTab allSetting={allSetting} updateSetting={updateSetting} />;
     }

@@ -179,7 +179,7 @@ export default function PortalPage() {
         <div className={`portal-page${isDark ? ' is-dark' : ''}${isUltra ? ' is-ultra' : ''}`}>
           <div className="content-area portal-login-shell">
             <Card size="small">
-              <FeatureOffState />
+              <FeatureOffState feature="self_service" />
             </Card>
           </div>
         </div>

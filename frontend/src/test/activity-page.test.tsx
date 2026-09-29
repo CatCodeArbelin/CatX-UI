@@ -19,7 +19,7 @@ test('shows the analytics-disabled state without rendering activity data', async
       <ActivityPage />
     </MemoryRouter>,
   );
-  await waitFor(() => expect(screen.getByText(/Analytics is disabled/)).toBeTruthy());
+  await waitFor(() => expect(screen.getByText(/Client activity.*disabled/i)).toBeTruthy());
   expect(screen.queryByText('example.com')).toBeNull();
 });
 

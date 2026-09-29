@@ -2799,12 +2799,12 @@
       "email": "メール",
       "never": "なし",
       "noItems": "項目はありません",
-      "featureOffTitle": "機能が無効です",
+      "featureOffTitle": "「{feature}」は無効です",
       "featureOffDescription": "この CatX-UI 機能は無効です。このページを使うにはサーバーの機能設定で有効にしてください。"
     },
     "activity": {
       "labels": {
-        "ambiguous": "不明瞭 / 矛盾"
+      "ambiguous": "不明瞭 / 矛盾","time":"時刻","domainIp":"ドメイン / IP","service":"サービス","category":"カテゴリ","asnCountry":"ASN / 国","sourceProvenance":"ソース / 出所","confidence":"信頼度","firstSeen":"初回確認","lastSeen":"最終確認","protocol":"プロトコル","observedDomain":"観測ドメイン","resolvedIp":"解決済み IP","record":"レコード","timeline":"タイムライン","dnsObservations":"DNS 観測","enrichedDetails":"詳細情報","sessionHistory":"セッション履歴","trafficHistory":"トラフィック履歴","events":"イベント","dns":"DNS","sessions":"セッション","range":"範囲","upload":"アップロード","download":"ダウンロード","clients":"クライアント","inbounds":"インバウンド","serviceCategory":"サービス / カテゴリ","observations":"観測数","metadataNote":"メタデータから作成した行です。バイト合計はパネルのトラフィック集計を使用します。","rawEvents":"生イベント","dnsRetention":"DNS 観測","sessionsRetention":"セッション","aggregates":"集計","saveError":"設定を保存できませんでした。"
       },
       "title": "クライアント アクティビティ & DNS インテリジェンス",
       "subtitle": "既存のパネルクライアント1件に対するメタデータのみの観測。",
@@ -2999,6 +2999,7 @@
       "replay": "再実行",
       "destinations": "宛先",
       "deliveries": "配信と不達メッセージ"
-    }
+},
+    "settings": {"title":"CatX-UI 機能","description":"必要なフォークモジュールだけを有効にします。依存関係は明示的に検証され、変更にはパネルの再起動が必要です。","save":"機能設定を保存","saved":"機能設定を保存しました。モジュールの変更を適用するにはパネルを再起動してください。","loadFailed":"機能設定を読み込めませんでした。","saveFailed":"機能設定を保存できませんでした。","restartRequired":"パネルの再起動が必要です","restartRequiredDescription":"ほとんどのCatXモジュールは起動時に初期化されます。フラグを保存し、変更したモジュールを使う前にパネルを再起動してください。","dependencyWarning":"先に必要な依存機能を有効にしてください。依存機能は自動で有効になりません。"}
   }
 }

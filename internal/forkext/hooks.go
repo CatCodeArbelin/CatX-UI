@@ -139,6 +139,7 @@ func RegisterRoutes(api *gin.RouterGroup) {
 	audit.RegisterRoutes(api)
 	analytics.RegisterActivityRoutes(api)
 	registerAnalyticsSettingsRoutes(api)
+	registerFeatureSettingsRoutes(api)
 	policy.RegisterRoutes(api)
 	policysim.RegisterRoutes(api)
 	groupquota.RegisterRoutes(api)
