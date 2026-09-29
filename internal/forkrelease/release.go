@@ -23,8 +23,10 @@ const (
 	ChannelDev    Channel = "dev"
 )
 
-var stableTagPattern = regexp.MustCompile(`^v[0-9]+\.[0-9]+\.[0-9]+$`)
-var rcTagPattern = regexp.MustCompile(`^v[0-9]+\.[0-9]+\.[0-9]+-rc\.[1-9][0-9]*$`)
+var (
+	stableTagPattern = regexp.MustCompile(`^v[0-9]+\.[0-9]+\.[0-9]+$`)
+	rcTagPattern     = regexp.MustCompile(`^v[0-9]+\.[0-9]+\.[0-9]+-rc\.[1-9][0-9]*$`)
+)
 
 type Asset struct {
 	Name               string `json:"name"`
