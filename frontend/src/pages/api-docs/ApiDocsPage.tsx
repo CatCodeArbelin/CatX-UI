@@ -119,11 +119,11 @@ export default function ApiDocsPage() {
                   children: (
                     <section className="websocket-events">
                       <Typography.Paragraph>
-                        After the cookie-authenticated{' '}
-                        <Typography.Text code>GET /ws</Typography.Text> upgrade, every server
-                        message uses{' '}
+                        {t('fork.apiDocs.labels.websocketDescription')}{' '}
+                        <Typography.Text code>GET /ws</Typography.Text>{' '}
+                        {t('fork.apiDocs.labels.websocketUpgrade')}{' '}
                         <Typography.Text code>{'{ type, payload, time }'}</Typography.Text>. The
-                        time value is Unix milliseconds.
+                        {t('fork.apiDocs.labels.websocketTime')}
                       </Typography.Paragraph>
                       <Row gutter={[12, 12]}>
                         {websocketEvents.map((event) => (

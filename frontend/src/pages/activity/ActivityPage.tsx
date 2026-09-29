@@ -331,7 +331,7 @@ export default function ActivityPage() {
                 }}
               />
               <Button type="primary" icon={<SearchOutlined />} onClick={submit}>
-                Search
+                {t('fork.common.labels.search')}
               </Button>
             </Space>
             {!email && <Empty description={t('fork.activity.enter')} />}
@@ -493,14 +493,14 @@ export default function ActivityPage() {
                       onChange={(checked) => setSettings({ ...settings, dnsIntelligence: checked })}
                     />
                     <Button onClick={() => void saveSettings(settings)}>
-                      {t('fork.activity.labels.save')}
+                      {t('fork.common.labels.save')}
                     </Button>
                   </Space>
                   <Space wrap>
                     <InputNumber
                       min={1}
                       max={3650}
-                      addonBefore="Raw"
+                      addonBefore={t('fork.common.labels.raw')}
                       value={settings.retention.rawEvents}
                       onChange={(value) =>
                         setSettings({

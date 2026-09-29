@@ -8,7 +8,9 @@ export function directionForLanguage(language: string): PanelDirection {
 
 export function applyDocumentDirection(language: string): PanelDirection {
   const direction = directionForLanguage(language);
-  document.documentElement.dir = direction;
-  document.body.dir = direction;
+  if (typeof document !== 'undefined') {
+    document.documentElement.dir = direction;
+    document.body.dir = direction;
+  }
   return direction;
 }

@@ -107,14 +107,15 @@ type Simulation = {
 };
 
 const parseSpec = (value: string): Record<string, unknown> => {
+  let parsed: unknown;
   try {
-    const parsed: unknown = JSON.parse(value || '{}');
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed))
-      throw new Error('Policy spec must be a JSON object.');
-    return parsed as Record<string, unknown>;
+    parsed = JSON.parse(value || '{}');
   } catch {
-    throw new Error('Policy spec must be valid JSON object syntax.');
+    throw new Error(i18n.t('fork.policy.errors.specSyntax'));
   }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed))
+    throw new Error(i18n.t('fork.policy.errors.specObject'));
+  return parsed as Record<string, unknown>;
 };
 const POLICY_CATEGORIES = [
   'social',
@@ -131,6 +132,14 @@ const POLICY_CATEGORIES = [
 
 const formatMinute = (value: number) =>
   `${String(Math.floor(value / 60)).padStart(2, '0')}:${String(value % 60).padStart(2, '0')}`;
+
+const targetTypeLabel = (value: string) =>
+  i18n.t(`fork.policy.labels.${value}`, { defaultValue: value });
+
+const scopeLabel = (value: string) =>
+  i18n.t(`fork.policy.scopes.${value === 'quarantine-release' ? 'quarantineRelease' : value}`, {
+    defaultValue: value,
+  });
 
 export default function PolicyPage() {
   const { t } = useTranslation();
@@ -156,7 +165,7 @@ export default function PolicyPage() {
   const load = useCallback(async (showLoading = true) => {
     if (showLoading) setLoading(true);
     setError('');
-    const [p, a, o, t, s] = await Promise.all([
+    const [p, a, o, temporaryResponse, s] = await Promise.all([
       HttpUtil.get<{ enabled: boolean; items: Policy[] }>('/panel/api/policies', undefined, {
         silent: true,
       }),
@@ -173,12 +182,12 @@ export default function PolicyPage() {
         silent: true,
       }),
     ]);
-    if (!p.success) setError(p.msg || 'Policies could not be loaded.');
+    if (!p.success) setError(p.msg || t('fork.policy.loadFailed'));
     setEnabled(p.obj?.enabled !== false);
     setPolicies(p.obj?.items || []);
     setAssignments(a.obj?.items || []);
     setOverrides(o.obj?.items || []);
-    setTemporary(t.obj?.items || []);
+    setTemporary(temporaryResponse.obj?.items || []);
     setSchedules(s.obj?.items || []);
     setLoading(false);
   }, []);
@@ -257,21 +266,23 @@ export default function PolicyPage() {
       silent: true,
     });
     if (result.success && result.obj) setSimulation(result.obj);
-    else message.error(result.msg || 'Simulation failed.');
+    else message.error(result.msg || t('fork.policy.simulationFailed'));
     setSimLoading(false);
   };
 
   const policyColumns: ColumnsType<Policy> = [
-    { title: 'Name', dataIndex: 'name' },
-    { title: 'Priority', dataIndex: 'priority' },
+    { title: t('fork.common.labels.name'), dataIndex: 'name' },
+    { title: t('fork.policy.labels.priority'), dataIndex: 'priority' },
     {
-      title: 'State',
+      title: t('fork.common.labels.status'),
       render: (_, row) => (
-        <Tag color={row.enabled ? 'green' : 'default'}>{row.enabled ? 'Enabled' : 'Disabled'}</Tag>
+        <Tag color={row.enabled ? 'green' : 'default'}>
+          {row.enabled ? t('fork.common.labels.enabled') : t('fork.common.labels.disabled')}
+        </Tag>
       ),
     },
     {
-      title: 'Specification',
+      title: t('fork.policy.labels.specification'),
       render: (_, row) => (
         <Typography.Text code ellipsis={{ tooltip: row.spec }}>
           {row.spec}
@@ -279,11 +290,11 @@ export default function PolicyPage() {
       ),
     },
     {
-      title: 'Actions',
+      title: t('fork.common.labels.actions'),
       render: (_, row) => (
         <Space>
           <Button
-            aria-label={`Edit ${row.name}`}
+            aria-label={t('fork.policy.editAria', { name: row.name })}
             icon={<EditOutlined />}
             onClick={() => openPolicy(row)}
           />
@@ -291,7 +302,11 @@ export default function PolicyPage() {
             title={t('fork.policy.deleteConfirm')}
             onConfirm={() => void deletePolicy(row.id)}
           >
-            <Button danger aria-label={`Delete ${row.name}`} icon={<DeleteOutlined />} />
+            <Button
+              danger
+              aria-label={t('fork.policy.deleteAria', { name: row.name })}
+              icon={<DeleteOutlined />}
+            />
           </Popconfirm>
         </Space>
       ),
@@ -299,13 +314,16 @@ export default function PolicyPage() {
   ];
   const assignmentColumns: ColumnsType<Assignment> = [
     {
-      title: 'Policy',
+      title: t('fork.policy.labels.policy'),
       render: (_, row) => policies.find((p) => p.id === row.policyId)?.name || `#${row.policyId}`,
     },
-    { title: 'Target', render: (_, row) => `${row.targetType}: ${row.targetRef}` },
-    { title: 'Priority', dataIndex: 'priority' },
     {
-      title: 'Actions',
+      title: t('fork.policy.labels.target'),
+      render: (_, row) => `${targetTypeLabel(row.targetType)}: ${row.targetRef}`,
+    },
+    { title: t('fork.policy.labels.priority'), dataIndex: 'priority' },
+    {
+      title: t('fork.common.labels.actions'),
       render: (_, row) => (
         <Popconfirm
           title={t('fork.policy.labels.deleteAssignment')}
@@ -318,14 +336,17 @@ export default function PolicyPage() {
   ];
   const overrideColumns = (path: string): ColumnsType<Override> => [
     {
-      title: 'Policy',
+      title: t('fork.policy.labels.policy'),
       render: (_, row) => policies.find((p) => p.id === row.policyId)?.name || `#${row.policyId}`,
     },
-    { title: 'Target', render: (_, row) => `${row.targetType}: ${row.targetRef}` },
-    { title: 'Scope', dataIndex: 'scope' },
-    { title: 'Priority', dataIndex: 'priority' },
     {
-      title: 'Actions',
+      title: t('fork.policy.labels.target'),
+      render: (_, row) => `${targetTypeLabel(row.targetType)}: ${row.targetRef}`,
+    },
+    { title: t('fork.policy.labels.scope'), dataIndex: 'scope', render: scopeLabel },
+    { title: t('fork.policy.labels.priority'), dataIndex: 'priority' },
+    {
+      title: t('fork.common.labels.actions'),
       render: (_, row) => (
         <Popconfirm
           title={t('fork.policy.labels.deleteOverride')}
@@ -338,23 +359,25 @@ export default function PolicyPage() {
   ];
   const scheduleColumns: ColumnsType<Schedule> = [
     {
-      title: 'Policy',
+      title: t('fork.policy.labels.policy'),
       render: (_, row) => policies.find((p) => p.id === row.policyId)?.name || `#${row.policyId}`,
     },
-    { title: 'Timezone', dataIndex: 'timezone' },
-    { title: 'Weekdays', dataIndex: 'weekdays' },
+    { title: t('fork.policy.labels.ianaTimezone'), dataIndex: 'timezone' },
+    { title: t('fork.policy.labels.weekdays'), dataIndex: 'weekdays' },
     {
-      title: 'Local window',
+      title: t('fork.policy.labels.localWindow'),
       render: (_, row) => `${formatMinute(row.startMinute)}–${formatMinute(row.endMinute)}`,
     },
     {
-      title: 'State',
+      title: t('fork.common.labels.status'),
       render: (_, row) => (
-        <Tag color={row.active ? 'green' : 'default'}>{row.active ? 'Active' : 'Inactive'}</Tag>
+        <Tag color={row.active ? 'green' : 'default'}>
+          {row.active ? t('fork.policy.labels.active') : t('fork.policy.labels.inactive')}
+        </Tag>
       ),
     },
     {
-      title: 'Actions',
+      title: t('fork.common.labels.actions'),
       render: (_, row) => (
         <Popconfirm
           title={t('fork.policy.labels.deleteSchedule')}
@@ -375,7 +398,7 @@ export default function PolicyPage() {
               <div>
                 <Typography.Title level={2}>{t('fork.policy.title')}</Typography.Title>
                 <Typography.Paragraph type="secondary">
-                  Manage durable policies and inspect decisions without applying changes.
+                  {t('fork.policy.manageDescription')}
                 </Typography.Paragraph>
               </div>
               <Button
@@ -384,7 +407,7 @@ export default function PolicyPage() {
                 disabled={!enabled}
                 onClick={() => openPolicy()}
               >
-                New policy
+                {t('fork.policy.newPolicy')}
               </Button>
             </div>
             {!enabled && <Alert type="info" showIcon message={t('fork.policy.labels.disabled')} />}
@@ -394,7 +417,7 @@ export default function PolicyPage() {
                 items={[
                   {
                     key: 'policies',
-                    label: `Policies (${policies.length})`,
+                    label: t('fork.policy.tabs.policies', { count: policies.length }),
                     children: policies.length ? (
                       <Table
                         rowKey="id"
@@ -408,7 +431,7 @@ export default function PolicyPage() {
                   },
                   {
                     key: 'assignments',
-                    label: `Assignments (${assignments.length})`,
+                    label: t('fork.policy.tabs.assignments', { count: assignments.length }),
                     children: (
                       <Space direction="vertical" style={{ width: '100%' }}>
                         <Form
@@ -432,8 +455,8 @@ export default function PolicyPage() {
                           <Form.Item name="targetType" initialValue="client">
                             <Select
                               options={[
-                                { value: 'client', label: 'Client' },
-                                { value: 'group', label: 'Group' },
+                                { value: 'client', label: t('fork.policy.labels.client') },
+                                { value: 'group', label: t('fork.policy.labels.group') },
                               ]}
                             />
                           </Form.Item>
@@ -444,7 +467,7 @@ export default function PolicyPage() {
                             <InputNumber placeholder={t('fork.policy.labels.priority')} />
                           </Form.Item>
                           <Button type="primary" htmlType="submit">
-                            Assign
+                            {t('fork.policy.assign')}
                           </Button>
                         </Form>
                         <Table
@@ -461,7 +484,9 @@ export default function PolicyPage() {
                   },
                   {
                     key: 'overrides',
-                    label: `Overrides (${overrides.length + temporary.length})`,
+                    label: t('fork.policy.tabs.overrides', {
+                      count: overrides.length + temporary.length,
+                    }),
                     children: (
                       <Space direction="vertical" style={{ width: '100%' }}>
                         <Typography.Title level={4}>
@@ -492,8 +517,8 @@ export default function PolicyPage() {
                           <Form.Item name="targetType" initialValue="client">
                             <Select
                               options={[
-                                { value: 'client', label: 'Client' },
-                                { value: 'group', label: 'Group' },
+                                { value: 'client', label: t('fork.policy.labels.client') },
+                                { value: 'group', label: t('fork.policy.labels.group') },
                               ]}
                             />
                           </Form.Item>
@@ -503,7 +528,10 @@ export default function PolicyPage() {
                           <Form.Item name="scope" initialValue="domain">
                             <Select
                               options={['policy', 'domain', 'service', 'dns', 'quota', 'qos'].map(
-                                (value) => ({ value, label: value }),
+                                (value) => ({
+                                  value,
+                                  label: t(`fork.policy.scopes.${value}`),
+                                }),
                               )}
                             />
                           </Form.Item>
@@ -511,7 +539,7 @@ export default function PolicyPage() {
                             <Input placeholder={t('fork.policy.labels.valueJson')} />
                           </Form.Item>
                           <Button type="primary" htmlType="submit">
-                            Add override
+                            {t('fork.policy.addOverride')}
                           </Button>
                         </Form>
                         <Table
@@ -551,8 +579,8 @@ export default function PolicyPage() {
                           <Form.Item name="targetType" initialValue="client">
                             <Select
                               options={[
-                                { value: 'client', label: 'Client' },
-                                { value: 'group', label: 'Group' },
+                                { value: 'client', label: t('fork.policy.labels.client') },
+                                { value: 'group', label: t('fork.policy.labels.group') },
                               ]}
                             />
                           </Form.Item>
@@ -561,10 +589,11 @@ export default function PolicyPage() {
                           </Form.Item>
                           <Form.Item name="scope" initialValue="policy">
                             <Select
-                              options={['policy', 'domain', 'service', 'quarantine-release'].map(
+                              options={['policy', 'domain', 'service', 'quarantineRelease'].map(
                                 (value) => ({
-                                  value,
-                                  label: value,
+                                  value:
+                                    value === 'quarantineRelease' ? 'quarantine-release' : value,
+                                  label: t(`fork.policy.scopes.${value}`),
                                 }),
                               )}
                             />
@@ -579,7 +608,7 @@ export default function PolicyPage() {
                             <Input placeholder={t('fork.policy.labels.valueJson')} />
                           </Form.Item>
                           <Button type="primary" htmlType="submit">
-                            Add temporary
+                            {t('fork.policy.addTemporary')}
                           </Button>
                         </Form>
                         <Table
@@ -598,7 +627,7 @@ export default function PolicyPage() {
                   },
                   {
                     key: 'schedules',
-                    label: `Schedules (${schedules.length})`,
+                    label: t('fork.policy.tabs.schedules', { count: schedules.length }),
                     children: (
                       <Space direction="vertical" style={{ width: '100%' }}>
                         <Form
@@ -644,7 +673,7 @@ export default function PolicyPage() {
                             <InputNumber placeholder={t('fork.policy.labels.endMinute')} />
                           </Form.Item>
                           <Button type="primary" htmlType="submit">
-                            Add schedule
+                            {t('fork.policy.addSchedule')}
                           </Button>
                         </Form>
                         <Table
@@ -661,7 +690,7 @@ export default function PolicyPage() {
                   },
                   {
                     key: 'simulator',
-                    label: t('fork.policy.labels.simulator'),
+                    label: t('fork.policy.simulator'),
                     children: (
                       <Card size="small" title={t('fork.policy.simulation')}>
                         <Form
@@ -675,19 +704,19 @@ export default function PolicyPage() {
                               label={t('fork.policy.labels.clientEmail')}
                               rules={[{ required: true }]}
                             >
-                              <Input placeholder={t('fork.policy.labels.clientPlaceholder')} />
+                              <Input placeholder={t('fork.policy.clientPlaceholder')} />
                             </Form.Item>
                             <Form.Item name="groupName" label={t('fork.policy.labels.group')}>
-                              <Input placeholder={t('fork.policy.labels.groupPlaceholder')} />
+                              <Input placeholder={t('fork.policy.groupPlaceholder')} />
                             </Form.Item>
                             <Form.Item name="domain" label={t('fork.policy.labels.domain')}>
-                              <Input placeholder={t('fork.policy.labels.domainPlaceholder')} />
+                              <Input placeholder={t('fork.policy.domainPlaceholder')} />
                             </Form.Item>
                             <Form.Item name="ip" label={t('fork.policy.labels.ipCidr')}>
-                              <Input placeholder={t('fork.policy.labels.ipPlaceholder')} />
+                              <Input placeholder={t('fork.policy.ipPlaceholder')} />
                             </Form.Item>
                             <Form.Item name="category" label={t('fork.policy.labels.category')}>
-                              <Input placeholder={t('fork.policy.labels.categoryPlaceholder')} />
+                              <Input placeholder={t('fork.policy.categoryPlaceholder')} />
                             </Form.Item>
                             <Form.Item name="service" label={t('fork.policy.labels.service')}>
                               <Input placeholder={t('fork.policy.labels.exampleService')} />
@@ -699,7 +728,7 @@ export default function PolicyPage() {
                             icon={<SearchOutlined />}
                             loading={simLoading}
                           >
-                            {t('fork.policy.labels.simulate')}
+                            {t('fork.policy.simulate')}
                           </Button>
                         </Form>
                         {simulation && <SimulationView value={simulation} />}
@@ -713,8 +742,8 @@ export default function PolicyPage() {
         </Card>
         <Modal
           open={policyModal}
-          title={editing ? t('fork.policy.labels.editPolicy') : t('fork.policy.labels.newPolicy')}
-          okText={t('fork.policy.labels.save')}
+          title={editing ? t('fork.policy.editPolicy') : t('fork.policy.newPolicy')}
+          okText={t('fork.policy.save')}
           onCancel={() => setPolicyModal(false)}
           onOk={() => form.submit()}
           destroyOnClose
@@ -753,7 +782,7 @@ export default function PolicyPage() {
               type="info"
               showIcon
               message={t('fork.policy.labels.capabilities')}
-              description={t('fork.policy.labels.capabilitiesDescription')}
+              description={t('fork.policy.capabilitiesDescription')}
             />
             <Form.Item name="categories" label={t('fork.policy.labels.knownCategories')}>
               <Select
@@ -778,28 +807,30 @@ function SimulationView({ value }: { value: Simulation }) {
       <Alert
         className="policy-result"
         type="info"
-        message={value.noOpReason || 'No effective policy.'}
+        message={value.noOpReason || i18n.t('fork.policy.noEffectivePolicy')}
       />
     );
   }
   const decisionColumns: ColumnsType<NonNullable<Simulation['decision']>['explanations'][number]> =
     [
-      { title: 'Source', render: (_, row) => row.candidate.source },
-      { title: 'Target', render: (_, row) => row.candidate.targetRef },
-      { title: 'Priority', render: (_, row) => row.candidate.priority },
+      { title: i18n.t('fork.policy.labels.source'), render: (_, row) => row.candidate.source },
+      { title: i18n.t('fork.policy.labels.target'), render: (_, row) => row.candidate.targetRef },
+      { title: i18n.t('fork.policy.labels.priority'), render: (_, row) => row.candidate.priority },
       {
-        title: 'Result',
+        title: i18n.t('fork.policy.labels.result'),
         render: (_, row) => (
-          <Tag color={row.won ? 'green' : 'default'}>{row.won ? 'Winner' : row.reason}</Tag>
+          <Tag color={row.won ? 'green' : 'default'}>
+            {row.won ? i18n.t('fork.policy.labels.winner') : row.reason}
+          </Tag>
         ),
       },
     ];
   const routeColumns: ColumnsType<RoutePreview> = [
-    { title: i18n.t('fork.policy.labels.rule'), dataIndex: 'ruleTag' },
-    { title: i18n.t('fork.policy.labels.destination'), dataIndex: 'destination' },
-    { title: i18n.t('fork.policy.labels.outbound'), dataIndex: 'outboundTag' },
+    { title: i18n.t('fork.policy.rule'), dataIndex: 'ruleTag' },
+    { title: i18n.t('fork.policy.destination'), dataIndex: 'destination' },
+    { title: i18n.t('fork.policy.outbound'), dataIndex: 'outboundTag' },
     {
-      title: i18n.t('fork.policy.labels.match'),
+      title: i18n.t('fork.policy.match'),
       render: (_, row) =>
         row.matched ? (
           <Tag color="green">{i18n.t('fork.policy.labels.matched')}</Tag>
@@ -808,11 +839,9 @@ function SimulationView({ value }: { value: Simulation }) {
         ),
     },
     {
-      title: i18n.t('fork.policy.labels.emission'),
+      title: i18n.t('fork.policy.emission'),
       render: (_, row) =>
-        row.emitted
-          ? i18n.t('fork.policy.labels.wouldEmit')
-          : row.reason || i18n.t('fork.policy.labels.noOp'),
+        row.emitted ? i18n.t('fork.policy.wouldEmit') : row.reason || i18n.t('fork.policy.noOp'),
     },
   ];
   return (
