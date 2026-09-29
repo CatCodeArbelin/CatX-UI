@@ -2771,45 +2771,6 @@
       "title": "クライアント ポータル",
       "token": "ポータル access token",
       "tokenHint": "管理者から提供されたポータルアクセストークンを使用してください。"
-    ,
-      "dependencyRequired": "{feature} を有効にする前に、{dependency} を有効にしてください。",       "features": {
-        "analytics": {
-          "name": "分析",
-          "details": "メタデータのみに基づくアクティビティ、DNS、セッション、トラフィックの情報を収集・表示します。"
-        },
-        "dnsIntelligence": {
-          "name": "DNS インテリジェンス",
-          "details": "DNS 観測とリゾルバー情報でアクティビティを補強します。"
-        },
-        "policies": {
-          "name": "ポリシーエンジン",
-          "details": "ポリシーを作成・割り当て、変更を加えない判定プレビューを表示します。"
-        },
-        "trafficControl": {
-          "name": "トラフィック制御 / QoS",
-          "details": "クライアントのトラフィック制限と固定期間の QoS 制御を適用します。"
-        },
-        "riskIntelligence": {
-          "name": "リスクインテリジェンス",
-          "details": "メタデータに基づくセキュリティと異常のシグナルを検出・確認します。"
-        },
-        "audit": {
-          "name": "監査",
-          "details": "メタデータのみの管理イベントを記録・確認します。"
-        },
-        "clientPortal": {
-          "name": "クライアントポータル",
-          "details": "クライアントにポータルとデバイスへの制御されたアクセスを提供します。"
-        },
-        "fleetUpdates": {
-          "name": "フリート更新",
-          "details": "管理対象ノードの更新を計画し、状態を収束させます。"
-        },
-        "productionFleetUpdates": {
-          "name": "本番フリート更新",
-          "details": "本番ノードへのフリート更新の配信を許可します。"
-        }
-      }
     },
     "common": {
       "labels": {
@@ -3038,6 +2999,45 @@
       "destinations": "宛先",
       "deliveries": "配信と不達メッセージ"
 },
-    "settings": {"title":"CatX-UI 機能","intro":"必要なフォークモジュールだけを有効にします。依存関係は明示的に検証され、変更にはパネルの再起動が必要です。","save":"機能設定を保存","saved":"機能設定を保存しました。モジュールの変更を適用するにはパネルを再起動してください。","loadFailed":"機能設定を読み込めませんでした。","saveFailed":"機能設定を保存できませんでした。","restartRequired":"パネルの再起動が必要です","restartRequiredDescription":"ほとんどのCatXモジュールは起動時に初期化されます。フラグを保存し、変更したモジュールを使う前にパネルを再起動してください。","dependencyWarning":"先に必要な依存機能を有効にしてください。依存機能は自動で有効になりません。"}
+    "settings": {"title":"CatX-UI 機能","intro":"必要なフォークモジュールだけを有効にします。依存関係は明示的に検証され、変更にはパネルの再起動が必要です。","save":"機能設定を保存","saved":"機能設定を保存しました。モジュールの変更を適用するにはパネルを再起動してください。","loadFailed":"機能設定を読み込めませんでした。","saveFailed":"機能設定を保存できませんでした。","restartRequired":"パネルの再起動が必要です","restartRequiredDescription":"ほとんどのCatXモジュールは起動時に初期化されます。フラグを保存し、変更したモジュールを使う前にパネルを再起動してください。","dependencyWarning":"先に必要な依存機能を有効にしてください。依存機能は自動で有効になりません。",
+      "dependencyRequired": "{feature} を有効にする前に、{dependency} を有効にしてください。",       "features": {
+        "analytics": {
+          "name": "分析",
+          "details": "メタデータのみに基づくアクティビティ、DNS、セッション、トラフィックの情報を収集・表示します。"
+        },
+        "dnsIntelligence": {
+          "name": "DNS インテリジェンス",
+          "details": "DNS 観測とリゾルバー情報でアクティビティを補強します。"
+        },
+        "policies": {
+          "name": "ポリシーエンジン",
+          "details": "ポリシーを作成・割り当て、変更を加えない判定プレビューを表示します。"
+        },
+        "trafficControl": {
+          "name": "トラフィック制御 / QoS",
+          "details": "クライアントのトラフィック制限と固定期間の QoS 制御を適用します。"
+        },
+        "riskIntelligence": {
+          "name": "リスクインテリジェンス",
+          "details": "メタデータに基づくセキュリティと異常のシグナルを検出・確認します。"
+        },
+        "audit": {
+          "name": "監査",
+          "details": "メタデータのみの管理イベントを記録・確認します。"
+        },
+        "clientPortal": {
+          "name": "クライアントポータル",
+          "details": "クライアントにポータルとデバイスへの制御されたアクセスを提供します。"
+        },
+        "fleetUpdates": {
+          "name": "フリート更新",
+          "details": "管理対象ノードの更新を計画し、状態を収束させます。"
+        },
+        "productionFleetUpdates": {
+          "name": "本番フリート更新",
+          "details": "本番ノードへのフリート更新の配信を許可します。"
+        }
+      }
+    }
   }
 }

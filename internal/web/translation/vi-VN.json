@@ -2771,45 +2771,6 @@
       "title": "Máy khách Cổng thông tin",
       "token": "Cổng thông tin access token",
       "tokenHint": "Sử dụng token truy cập cổng thông tin do quản trị viên cung cấp."
-    ,
-      "dependencyRequired": "Hãy bật {dependency} trước khi bật {feature}.",       "features": {
-        "analytics": {
-          "name": "Phân tích",
-          "details": "Thu thập và hiển thị thông tin hoạt động, DNS, phiên và lưu lượng chỉ dựa trên siêu dữ liệu."
-        },
-        "dnsIntelligence": {
-          "name": "Trí tuệ DNS",
-          "details": "Bổ sung quan sát DNS và thông tin trình phân giải cho hoạt động."
-        },
-        "policies": {
-          "name": "Bộ máy chính sách",
-          "details": "Tạo, gán chính sách và xem trước quyết định mà không thay đổi cấu hình."
-        },
-        "trafficControl": {
-          "name": "Kiểm soát lưu lượng / QoS",
-          "details": "Áp dụng giới hạn lưu lượng cho máy khách và kiểm soát QoS theo cửa sổ cố định."
-        },
-        "riskIntelligence": {
-          "name": "Phân tích rủi ro",
-          "details": "Phát hiện và xem xét tín hiệu bảo mật, bất thường dựa trên siêu dữ liệu."
-        },
-        "audit": {
-          "name": "Kiểm toán",
-          "details": "Ghi lại và xem xét sự kiện quản trị chỉ dựa trên siêu dữ liệu."
-        },
-        "clientPortal": {
-          "name": "Cổng khách hàng",
-          "details": "Cung cấp quyền truy cập có kiểm soát vào cổng và thiết bị cho khách hàng."
-        },
-        "fleetUpdates": {
-          "name": "Cập nhật cụm máy chủ",
-          "details": "Lập kế hoạch và đồng bộ cập nhật trên các nút được quản lý."
-        },
-        "productionFleetUpdates": {
-          "name": "Cập nhật cụm máy chủ sản xuất",
-          "details": "Cho phép gửi cập nhật cụm máy chủ đến các nút sản xuất."
-        }
-      }
     },
     "common": {
       "labels": {
@@ -3038,6 +2999,45 @@
       "destinations": "Đích",
       "deliveries": "Lần gửi và thư không gửi được"
 },
-    "settings": {"title":"Tính năng CatX-UI","intro":"Chỉ bật các mô-đun fork cần thiết. Phụ thuộc được kiểm tra rõ ràng và thay đổi yêu cầu khởi động lại bảng điều khiển.","save":"Lưu tính năng","saved":"Đã lưu tính năng. Khởi động lại bảng điều khiển để áp dụng thay đổi mô-đun.","loadFailed":"Không thể tải tính năng.","saveFailed":"Không thể lưu tính năng.","restartRequired":"Cần khởi động lại bảng điều khiển","restartRequiredDescription":"Hầu hết mô-đun CatX được khởi tạo khi khởi động. Lưu cờ rồi khởi động lại bảng điều khiển trước khi dùng mô-đun đã đổi.","dependencyWarning":"Trước tiên hãy bật phần phụ thuộc bắt buộc. Phần phụ thuộc không được bật tự động."}
+    "settings": {"title":"Tính năng CatX-UI","intro":"Chỉ bật các mô-đun fork cần thiết. Phụ thuộc được kiểm tra rõ ràng và thay đổi yêu cầu khởi động lại bảng điều khiển.","save":"Lưu tính năng","saved":"Đã lưu tính năng. Khởi động lại bảng điều khiển để áp dụng thay đổi mô-đun.","loadFailed":"Không thể tải tính năng.","saveFailed":"Không thể lưu tính năng.","restartRequired":"Cần khởi động lại bảng điều khiển","restartRequiredDescription":"Hầu hết mô-đun CatX được khởi tạo khi khởi động. Lưu cờ rồi khởi động lại bảng điều khiển trước khi dùng mô-đun đã đổi.","dependencyWarning":"Trước tiên hãy bật phần phụ thuộc bắt buộc. Phần phụ thuộc không được bật tự động.",
+      "dependencyRequired": "Hãy bật {dependency} trước khi bật {feature}.",       "features": {
+        "analytics": {
+          "name": "Phân tích",
+          "details": "Thu thập và hiển thị thông tin hoạt động, DNS, phiên và lưu lượng chỉ dựa trên siêu dữ liệu."
+        },
+        "dnsIntelligence": {
+          "name": "Trí tuệ DNS",
+          "details": "Bổ sung quan sát DNS và thông tin trình phân giải cho hoạt động."
+        },
+        "policies": {
+          "name": "Bộ máy chính sách",
+          "details": "Tạo, gán chính sách và xem trước quyết định mà không thay đổi cấu hình."
+        },
+        "trafficControl": {
+          "name": "Kiểm soát lưu lượng / QoS",
+          "details": "Áp dụng giới hạn lưu lượng cho máy khách và kiểm soát QoS theo cửa sổ cố định."
+        },
+        "riskIntelligence": {
+          "name": "Phân tích rủi ro",
+          "details": "Phát hiện và xem xét tín hiệu bảo mật, bất thường dựa trên siêu dữ liệu."
+        },
+        "audit": {
+          "name": "Kiểm toán",
+          "details": "Ghi lại và xem xét sự kiện quản trị chỉ dựa trên siêu dữ liệu."
+        },
+        "clientPortal": {
+          "name": "Cổng khách hàng",
+          "details": "Cung cấp quyền truy cập có kiểm soát vào cổng và thiết bị cho khách hàng."
+        },
+        "fleetUpdates": {
+          "name": "Cập nhật cụm máy chủ",
+          "details": "Lập kế hoạch và đồng bộ cập nhật trên các nút được quản lý."
+        },
+        "productionFleetUpdates": {
+          "name": "Cập nhật cụm máy chủ sản xuất",
+          "details": "Cho phép gửi cập nhật cụm máy chủ đến các nút sản xuất."
+        }
+      }
+    }
   }
 }

@@ -2771,45 +2771,6 @@
       "title": "Cliente Portal",
       "token": "Token de acesso ao portal",
       "tokenHint": "Use o token de acesso ao portal fornecido pelo administrador."
-    ,
-      "dependencyRequired": "Ative {dependency} antes de ativar {feature}.",       "features": {
-        "analytics": {
-          "name": "Análise",
-          "details": "Coleta e exibe informações de atividade, DNS, sessões e tráfego baseadas apenas em metadados."
-        },
-        "dnsIntelligence": {
-          "name": "Inteligência de DNS",
-          "details": "Enriquece a atividade com observações de DNS e informações do resolvedor."
-        },
-        "policies": {
-          "name": "Mecanismo de políticas",
-          "details": "Cria e atribui políticas e permite visualizar decisões sem aplicar alterações."
-        },
-        "trafficControl": {
-          "name": "Controle de tráfego / QoS",
-          "details": "Aplica limites de tráfego por cliente e controles QoS de janela fixa."
-        },
-        "riskIntelligence": {
-          "name": "Inteligência de riscos",
-          "details": "Detecta e revisa sinais de segurança e anomalias baseados em metadados."
-        },
-        "audit": {
-          "name": "Auditoria",
-          "details": "Registra e revisa eventos administrativos baseados apenas em metadados."
-        },
-        "clientPortal": {
-          "name": "Portal do cliente",
-          "details": "Oferece aos clientes acesso controlado ao portal e aos dispositivos."
-        },
-        "fleetUpdates": {
-          "name": "Atualizações da frota",
-          "details": "Planeja e reconcilia atualizações nos nós gerenciados."
-        },
-        "productionFleetUpdates": {
-          "name": "Atualizações da frota em produção",
-          "details": "Permite enviar atualizações da frota aos nós de produção."
-        }
-      }
     },
     "common": {
       "labels": {
@@ -3038,6 +2999,45 @@
       "destinations": "Destinos",
       "deliveries": "Entregas e mensagens não entregues"
 },
-    "settings": {"title":"Recursos do CatX-UI","intro":"Ative apenas os módulos necessários. As dependências são verificadas explicitamente e as alterações exigem reiniciar o painel.","save":"Salvar recursos","saved":"Recursos salvos. Reinicie o painel para aplicar as alterações dos módulos.","loadFailed":"Não foi possível carregar os recursos.","saveFailed":"Não foi possível salvar os recursos.","restartRequired":"É necessário reiniciar o painel","restartRequiredDescription":"A maioria dos módulos CatX é inicializada no início. Salve os sinalizadores e reinicie o painel antes de usar um módulo alterado.","dependencyWarning":"Ative primeiro a dependência necessária. Dependências nunca são ativadas automaticamente."}
+    "settings": {"title":"Recursos do CatX-UI","intro":"Ative apenas os módulos necessários. As dependências são verificadas explicitamente e as alterações exigem reiniciar o painel.","save":"Salvar recursos","saved":"Recursos salvos. Reinicie o painel para aplicar as alterações dos módulos.","loadFailed":"Não foi possível carregar os recursos.","saveFailed":"Não foi possível salvar os recursos.","restartRequired":"É necessário reiniciar o painel","restartRequiredDescription":"A maioria dos módulos CatX é inicializada no início. Salve os sinalizadores e reinicie o painel antes de usar um módulo alterado.","dependencyWarning":"Ative primeiro a dependência necessária. Dependências nunca são ativadas automaticamente.",
+      "dependencyRequired": "Ative {dependency} antes de ativar {feature}.",       "features": {
+        "analytics": {
+          "name": "Análise",
+          "details": "Coleta e exibe informações de atividade, DNS, sessões e tráfego baseadas apenas em metadados."
+        },
+        "dnsIntelligence": {
+          "name": "Inteligência de DNS",
+          "details": "Enriquece a atividade com observações de DNS e informações do resolvedor."
+        },
+        "policies": {
+          "name": "Mecanismo de políticas",
+          "details": "Cria e atribui políticas e permite visualizar decisões sem aplicar alterações."
+        },
+        "trafficControl": {
+          "name": "Controle de tráfego / QoS",
+          "details": "Aplica limites de tráfego por cliente e controles QoS de janela fixa."
+        },
+        "riskIntelligence": {
+          "name": "Inteligência de riscos",
+          "details": "Detecta e revisa sinais de segurança e anomalias baseados em metadados."
+        },
+        "audit": {
+          "name": "Auditoria",
+          "details": "Registra e revisa eventos administrativos baseados apenas em metadados."
+        },
+        "clientPortal": {
+          "name": "Portal do cliente",
+          "details": "Oferece aos clientes acesso controlado ao portal e aos dispositivos."
+        },
+        "fleetUpdates": {
+          "name": "Atualizações da frota",
+          "details": "Planeja e reconcilia atualizações nos nós gerenciados."
+        },
+        "productionFleetUpdates": {
+          "name": "Atualizações da frota em produção",
+          "details": "Permite enviar atualizações da frota aos nós de produção."
+        }
+      }
+    }
   }
 }

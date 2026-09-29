@@ -2771,45 +2771,6 @@
       "title": "Klien Portal",
       "token": "Token akses portal",
       "tokenHint": "Gunakan token akses portal yang diberikan oleh administrator Anda."
-    ,
-      "dependencyRequired": "Aktifkan {dependency} sebelum mengaktifkan {feature}.",       "features": {
-        "analytics": {
-          "name": "Analitik",
-          "details": "Mengumpulkan dan menampilkan wawasan aktivitas, DNS, sesi, dan lalu lintas yang hanya berbasis metadata."
-        },
-        "dnsIntelligence": {
-          "name": "Intelijen DNS",
-          "details": "Memperkaya aktivitas dengan observasi DNS dan informasi resolver."
-        },
-        "policies": {
-          "name": "Mesin kebijakan",
-          "details": "Membuat dan menetapkan kebijakan serta melihat pratinjau keputusannya tanpa perubahan."
-        },
-        "trafficControl": {
-          "name": "Kontrol lalu lintas / QoS",
-          "details": "Menerapkan batas lalu lintas klien dan kontrol QoS dengan jendela tetap."
-        },
-        "riskIntelligence": {
-          "name": "Intelijen risiko",
-          "details": "Mendeteksi dan meninjau sinyal keamanan serta anomali berbasis metadata."
-        },
-        "audit": {
-          "name": "Audit",
-          "details": "Mencatat dan meninjau peristiwa administratif yang hanya berbasis metadata."
-        },
-        "clientPortal": {
-          "name": "Portal klien",
-          "details": "Memberikan klien akses terkontrol ke portal dan perangkat mereka."
-        },
-        "fleetUpdates": {
-          "name": "Pembaruan armada",
-          "details": "Merencanakan dan menyelaraskan pembaruan di node yang dikelola."
-        },
-        "productionFleetUpdates": {
-          "name": "Pembaruan armada produksi",
-          "details": "Mengizinkan pengiriman pembaruan armada ke node produksi."
-        }
-      }
     },
     "common": {
       "labels": {
@@ -3038,6 +2999,45 @@
       "destinations": "Tujuan",
       "deliveries": "Pengiriman dan pesan gagal"
 },
-    "settings": {"title":"Fitur CatX-UI","intro":"Aktifkan hanya modul fork yang diperlukan. Dependensi diperiksa secara eksplisit dan perubahan memerlukan panel dimulai ulang.","save":"Simpan fitur","saved":"Fitur tersimpan. Mulai ulang panel untuk menerapkan perubahan modul.","loadFailed":"Fitur tidak dapat dimuat.","saveFailed":"Fitur tidak dapat disimpan.","restartRequired":"Panel harus dimulai ulang","restartRequiredDescription":"Sebagian besar modul CatX diinisialisasi saat mulai. Simpan flag, lalu mulai ulang panel sebelum memakai modul yang diubah.","dependencyWarning":"Aktifkan dependensi yang diperlukan terlebih dahulu. Dependensi tidak pernah diaktifkan otomatis."}
+    "settings": {"title":"Fitur CatX-UI","intro":"Aktifkan hanya modul fork yang diperlukan. Dependensi diperiksa secara eksplisit dan perubahan memerlukan panel dimulai ulang.","save":"Simpan fitur","saved":"Fitur tersimpan. Mulai ulang panel untuk menerapkan perubahan modul.","loadFailed":"Fitur tidak dapat dimuat.","saveFailed":"Fitur tidak dapat disimpan.","restartRequired":"Panel harus dimulai ulang","restartRequiredDescription":"Sebagian besar modul CatX diinisialisasi saat mulai. Simpan flag, lalu mulai ulang panel sebelum memakai modul yang diubah.","dependencyWarning":"Aktifkan dependensi yang diperlukan terlebih dahulu. Dependensi tidak pernah diaktifkan otomatis.",
+      "dependencyRequired": "Aktifkan {dependency} sebelum mengaktifkan {feature}.",       "features": {
+        "analytics": {
+          "name": "Analitik",
+          "details": "Mengumpulkan dan menampilkan wawasan aktivitas, DNS, sesi, dan lalu lintas yang hanya berbasis metadata."
+        },
+        "dnsIntelligence": {
+          "name": "Intelijen DNS",
+          "details": "Memperkaya aktivitas dengan observasi DNS dan informasi resolver."
+        },
+        "policies": {
+          "name": "Mesin kebijakan",
+          "details": "Membuat dan menetapkan kebijakan serta melihat pratinjau keputusannya tanpa perubahan."
+        },
+        "trafficControl": {
+          "name": "Kontrol lalu lintas / QoS",
+          "details": "Menerapkan batas lalu lintas klien dan kontrol QoS dengan jendela tetap."
+        },
+        "riskIntelligence": {
+          "name": "Intelijen risiko",
+          "details": "Mendeteksi dan meninjau sinyal keamanan serta anomali berbasis metadata."
+        },
+        "audit": {
+          "name": "Pengauditan",
+          "details": "Mencatat dan meninjau peristiwa administratif yang hanya berbasis metadata."
+        },
+        "clientPortal": {
+          "name": "Portal klien",
+          "details": "Memberikan klien akses terkontrol ke portal dan perangkat mereka."
+        },
+        "fleetUpdates": {
+          "name": "Pembaruan armada",
+          "details": "Merencanakan dan menyelaraskan pembaruan di node yang dikelola."
+        },
+        "productionFleetUpdates": {
+          "name": "Pembaruan armada produksi",
+          "details": "Mengizinkan pengiriman pembaruan armada ke node produksi."
+        }
+      }
+    }
   }
 }

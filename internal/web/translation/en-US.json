@@ -2771,45 +2771,6 @@
       "title": "Client portal",
       "token": "Portal access token",
       "tokenHint": "Use the portal access token provided by your administrator."
-    ,
-      "dependencyRequired": "Enable {dependency} before enabling {feature}.",       "features": {
-        "analytics": {
-          "name": "Analytics",
-          "details": "Collect and show metadata-only activity, DNS, session, and traffic insights."
-        },
-        "dnsIntelligence": {
-          "name": "DNS intelligence",
-          "details": "Enrich activity with DNS observations and resolver intelligence."
-        },
-        "policies": {
-          "name": "Policy engine",
-          "details": "Create and assign policies and preview their non-mutating decisions."
-        },
-        "trafficControl": {
-          "name": "Traffic control / QoS",
-          "details": "Apply client traffic limits and fixed-window QoS controls."
-        },
-        "riskIntelligence": {
-          "name": "Risk intelligence",
-          "details": "Detect and review metadata-based security and anomaly signals."
-        },
-        "audit": {
-          "name": "Audit",
-          "details": "Record and review metadata-only administrative events."
-        },
-        "clientPortal": {
-          "name": "Client portal",
-          "details": "Provide clients with controlled access to their portal and devices."
-        },
-        "fleetUpdates": {
-          "name": "Fleet updates",
-          "details": "Plan and reconcile updates across managed nodes."
-        },
-        "productionFleetUpdates": {
-          "name": "Production fleet updates",
-          "details": "Allow dispatching fleet updates to production nodes."
-        }
-      }
     },
    "common": {
     "labels": {
@@ -3049,6 +3010,45 @@
       "restartRequired": "Panel restart required",
       "restartRequiredDescription": "Most CatX modules initialize at startup. Save the flags, then restart the panel before using a changed module.",
       "dependencyWarning": "Enable the required dependency first. Dependencies are never enabled automatically."
+    ,
+      "dependencyRequired": "Enable {dependency} before enabling {feature}.",       "features": {
+        "analytics": {
+          "name": "Analytics",
+          "details": "Collect and show metadata-only activity, DNS, session, and traffic insights."
+        },
+        "dnsIntelligence": {
+          "name": "DNS intelligence",
+          "details": "Enrich activity with DNS observations and resolver intelligence."
+        },
+        "policies": {
+          "name": "Policy engine",
+          "details": "Create and assign policies and preview their non-mutating decisions."
+        },
+        "trafficControl": {
+          "name": "Traffic control / QoS",
+          "details": "Apply client traffic limits and fixed-window QoS controls."
+        },
+        "riskIntelligence": {
+          "name": "Risk intelligence",
+          "details": "Detect and review metadata-based security and anomaly signals."
+        },
+        "audit": {
+          "name": "Audit",
+          "details": "Record and review metadata-only administrative events."
+        },
+        "clientPortal": {
+          "name": "Client portal",
+          "details": "Provide clients with controlled access to their portal and devices."
+        },
+        "fleetUpdates": {
+          "name": "Fleet updates",
+          "details": "Plan and reconcile updates across managed nodes."
+        },
+        "productionFleetUpdates": {
+          "name": "Production fleet updates",
+          "details": "Allow dispatching fleet updates to production nodes."
+        }
+      }
     }
   }
 }
