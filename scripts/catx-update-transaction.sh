@@ -8,7 +8,7 @@ readonly CATX_RELEASE_REPOSITORY="CatX-UI"
 readonly CATX_RELEASE_SLUG="${CATX_RELEASE_OWNER}/${CATX_RELEASE_REPOSITORY}"
 readonly CATX_ASSET_PREFIX="catx-ui"
 readonly CATX_DEV_RELEASE_TAG="dev-latest"
-readonly CATX_RC_VERSION="0.1.0-rc.1"
+readonly CATX_RC_VERSION="0.1.0-rc.2"
 CATX_RELEASE_WEB="https://github.com/${CATX_RELEASE_SLUG}"
 if [[ "${CATX_TEST_RELEASE_MODE:-0}" == 1 && "${CI:-}" == true ]]; then
     : "${CATX_TEST_RELEASE_BASE_URL:?CATX_TEST_RELEASE_BASE_URL is required in test mode}"

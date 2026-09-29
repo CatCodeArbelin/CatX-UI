@@ -2,6 +2,7 @@
 set -u
 
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+source "$repo_root/internal/forkrelease/identity.env"
 # shellcheck source=catx-update-transaction.sh
 source "$repo_root/scripts/catx-update-transaction.sh"
 
@@ -69,7 +70,7 @@ make_binary() {
     local release_channel=stable release_version=0.1.0
     if [[ "$version" == rc ]]; then
         release_channel=rc
-        release_version=0.1.0-rc.1
+        release_version="$CATX_RC_VERSION"
     fi
     cat > "$path" <<EOF
 #!/usr/bin/env bash

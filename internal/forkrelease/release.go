@@ -23,7 +23,10 @@ const (
 	ChannelDev    Channel = "dev"
 )
 
-var stableTagPattern = regexp.MustCompile(`^v[0-9]+\.[0-9]+\.[0-9]+$`)
+var (
+	stableTagPattern = regexp.MustCompile(`^v[0-9]+\.[0-9]+\.[0-9]+$`)
+	rcTagPattern     = regexp.MustCompile(`^v[0-9]+\.[0-9]+\.[0-9]+-rc\.[1-9][0-9]*$`)
+)
 
 type Asset struct {
 	Name               string `json:"name"`
@@ -68,7 +71,7 @@ func (p Provider) releaseURL(channel Channel) (string, error) {
 	case ChannelStable:
 		return strings.TrimRight(p.APIBaseURL, "/") + "/releases/latest", nil
 	case ChannelRC:
-		return strings.TrimRight(p.APIBaseURL, "/") + "/releases/tags/" + url.PathEscape(p.Identity.RCReleaseTag()), nil
+		return strings.TrimRight(p.APIBaseURL, "/") + "/releases?per_page=100", nil
 	case ChannelDev:
 		return strings.TrimRight(p.APIBaseURL, "/") + "/releases/tags/" + url.PathEscape(p.Identity.DevReleaseTag), nil
 	default:
@@ -94,14 +97,21 @@ func (p Provider) Fetch(ctx context.Context, channel Channel) (*Release, error) 
 		return nil, err
 	}
 	defer resp.Body.Close()
-	if resp.Request == nil || !strings.HasPrefix(resp.Request.URL.String(), strings.TrimRight(p.APIBaseURL, "/")+"/releases/") {
+	if resp.Request == nil || !trustedReleaseAPIURL(resp.Request.URL.String(), p.APIBaseURL) {
 		return nil, fmt.Errorf("release provider redirected outside trusted repository")
 	}
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("release provider returned HTTP %d", resp.StatusCode)
 	}
-	var release Release
 	decoder := json.NewDecoder(io.LimitReader(resp.Body, 2<<20))
+	if channel == ChannelRC {
+		var releases []Release
+		if err := decoder.Decode(&releases); err != nil {
+			return nil, fmt.Errorf("decode RC release metadata: %w", err)
+		}
+		return p.selectRCRelease(releases)
+	}
+	var release Release
 	if err := decoder.Decode(&release); err != nil {
 		return nil, fmt.Errorf("decode release metadata: %w", err)
 	}
@@ -109,6 +119,36 @@ func (p Provider) Fetch(ctx context.Context, channel Channel) (*Release, error) 
 		return nil, err
 	}
 	return &release, nil
+}
+
+func (p Provider) selectRCRelease(releases []Release) (*Release, error) {
+	currentTag := p.Identity.RCReleaseTag()
+	var selected *Release
+	for index := range releases {
+		release := &releases[index]
+		if err := p.ValidateRelease(release, ChannelRC); err != nil {
+			// GitHub's collection endpoint can contain unrelated, malformed, or
+			// draft entries. They are never candidates for the trusted RC channel.
+			continue
+		}
+		if comparison, ok := CompareVersionStrings(release.TagName, currentTag); !ok || comparison < 0 {
+			// The RC channel is monotonic: an older release must never become an
+			// automatic downgrade target when a newer binary is running.
+			continue
+		}
+		if selected == nil {
+			selected = release
+			continue
+		}
+		comparison, ok := CompareVersionStrings(release.TagName, selected.TagName)
+		if ok && comparison > 0 {
+			selected = release
+		}
+	}
+	if selected == nil {
+		return nil, fmt.Errorf("no approved CatX RC release at or above %q", currentTag)
+	}
+	return selected, nil
 }
 
 func (p Provider) ValidateRelease(release *Release, channel Channel) error {
@@ -133,11 +173,8 @@ func (p Provider) ValidateRelease(release *Release, channel Channel) error {
 		if !release.Prerelease {
 			return fmt.Errorf("RC channel requires prerelease %q", release.TagName)
 		}
-		if release.TagName != p.Identity.RCReleaseTag() {
-			return fmt.Errorf("RC release tag %q does not match %q", release.TagName, p.Identity.RCReleaseTag())
-		}
-		if _, err := ParseReleaseTag(release.TagName); err != nil {
-			return fmt.Errorf("RC release tag %q is malformed: %w", release.TagName, err)
+		if !isApprovedRCTag(release.TagName) {
+			return fmt.Errorf("RC release tag %q is not an approved CatX RC tag", release.TagName)
 		}
 	case ChannelDev:
 		if release.TagName != p.Identity.DevReleaseTag {
@@ -150,8 +187,7 @@ func (p Provider) ValidateRelease(release *Release, channel Channel) error {
 		return fmt.Errorf("unsupported release channel %q", channel)
 	}
 
-	apiPrefix := strings.TrimRight(p.APIBaseURL, "/") + "/releases/"
-	if !strings.HasPrefix(release.APIURL, apiPrefix) {
+	if !trustedReleaseAPIURL(release.APIURL, p.APIBaseURL) {
 		return fmt.Errorf("release API URL is outside trusted repository: %q", release.APIURL)
 	}
 	wantHTML := strings.TrimRight(p.WebBaseURL, "/") + "/releases/tag/" + url.PathEscape(release.TagName)
@@ -159,6 +195,34 @@ func (p Provider) ValidateRelease(release *Release, channel Channel) error {
 		return fmt.Errorf("release page is outside trusted repository: %q", release.HTMLURL)
 	}
 	return nil
+}
+
+func trustedReleaseAPIURL(rawURL, baseURL string) bool {
+	raw, err := url.Parse(rawURL)
+	if err != nil {
+		return false
+	}
+	base, err := url.Parse(strings.TrimRight(baseURL, "/"))
+	if err != nil || raw.Scheme != base.Scheme || raw.Host != base.Host {
+		return false
+	}
+	releasesPath := strings.TrimRight(base.Path, "/") + "/releases"
+	return raw.Path == releasesPath || strings.HasPrefix(raw.Path, releasesPath+"/")
+}
+
+func isApprovedRCTag(tag string) bool {
+	if !rcTagPattern.MatchString(tag) {
+		return false
+	}
+	candidate, err := ParseReleaseTag(tag)
+	if err != nil || len(candidate.Prerelease) != 2 || candidate.Prerelease[0].Value != "rc" || !candidate.Prerelease[1].Numeric {
+		return false
+	}
+	stable, err := ParseVersion(ForkVersion())
+	if err != nil || len(stable.Prerelease) != 0 {
+		return false
+	}
+	return candidate.Major == stable.Major && candidate.Minor == stable.Minor && candidate.Patch == stable.Patch
 }
 
 func (p Provider) FindAsset(release *Release, name string) (Asset, error) {

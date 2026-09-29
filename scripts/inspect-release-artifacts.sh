@@ -198,7 +198,7 @@ check_checksum "${CATX_ASSET_PREFIX}-changelog.txt"
 
 for name in "${CATX_ASSET_PREFIX}-update.sh" "${CATX_ASSET_PREFIX}-install.sh" "${CATX_ASSET_PREFIX}.sh" "${CATX_ASSET_PREFIX}-update-lib.sh"; do
     path="$artifact_dir/$name"
-    grep -Fq 'CATX_RC_VERSION="0.1.0-rc.1"' "$path" || fail "$name has wrong RC version"
+    grep -Fq "CATX_RC_VERSION=\"${rc_version}\"" "$path" || fail "$name has wrong RC version"
     grep -Fq "CATX_RELEASE_OWNER=\"$CATX_RELEASE_OWNER\"" "$path" || fail "$name has wrong release owner"
     grep -Fq "CATX_RELEASE_REPOSITORY=\"$CATX_RELEASE_REPOSITORY\"" "$path" || fail "$name has wrong release repository"
     grep -Fq "CATX_ASSET_PREFIX=\"$CATX_ASSET_PREFIX\"" "$path" || fail "$name has wrong asset prefix"

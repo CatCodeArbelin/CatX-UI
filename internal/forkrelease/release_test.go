@@ -99,9 +99,15 @@ func TestProviderEnforcesChannels(t *testing.T) {
 		t.Fatal("RC channel accepted a non-prerelease release")
 	}
 	rc.Prerelease = true
-	rc.TagName = "v0.1.0-rc.2"
+	rc.TagName = "v0.1.0-rc.3"
+	rc.HTMLURL = p.WebBaseURL + "/releases/tag/" + rc.TagName
+	if err := p.ValidateRelease(rc, ChannelRC); err != nil {
+		t.Fatalf("approved future RC release rejected: %v", err)
+	}
+	rc.TagName = "v0.1.0-rc"
+	rc.HTMLURL = p.WebBaseURL + "/releases/tag/" + rc.TagName
 	if err := p.ValidateRelease(rc, ChannelRC); err == nil {
-		t.Fatal("RC channel accepted an unapproved RC tag")
+		t.Fatal("RC channel accepted a malformed RC tag")
 	}
 }
 
@@ -118,8 +124,60 @@ func TestProviderUsesSeparateStableAndRCEndpoints(t *testing.T) {
 	if err != nil {
 		t.Fatalf("RC release URL: %v", err)
 	}
-	if !strings.HasSuffix(rcURL, "/releases/tags/v0.1.0-rc.1") {
-		t.Fatalf("RC release URL = %q, want exact RC tag", rcURL)
+	if !strings.HasSuffix(rcURL, "/releases?per_page=100") {
+		t.Fatalf("RC release URL = %q, want CatX release collection", rcURL)
+	}
+}
+
+func TestProviderDiscoversHighestApprovedRCWithoutDowngrade(t *testing.T) {
+	var server *httptest.Server
+	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		base := AssetBaseForTest(server.URL, Current)
+		if r.URL.Path != "/api/releases" {
+			http.NotFound(w, r)
+			return
+		}
+		fmt.Fprintf(w, `[
+{"url":%q,"html_url":%q,"tag_name":"v0.1.0-rc.1","draft":false,"prerelease":true},
+{"url":%q,"html_url":%q,"tag_name":"v0.1.0-rc.3","draft":true,"prerelease":true},
+{"url":%q,"html_url":%q,"tag_name":"v0.1.0-rc.10","draft":false,"prerelease":true},
+{"url":%q,"html_url":%q,"tag_name":"v0.1.0-rc.2","draft":false,"prerelease":true},
+{"url":%q,"html_url":%q,"tag_name":"v0.1.0-rc.2+build","draft":false,"prerelease":true},
+{"url":%q,"html_url":%q,"tag_name":"v0.1.0","draft":false,"prerelease":false},
+{"url":"https://api.github.com/repos/other-owner/other-repo/releases/99","html_url":"https://github.com/other-owner/other-repo/releases/tag/v0.1.0-rc.99","tag_name":"v0.1.0-rc.99","draft":false,"prerelease":true}
+]`,
+			server.URL+"/api/releases/1", base+"/releases/tag/v0.1.0-rc.1",
+			server.URL+"/api/releases/3", base+"/releases/tag/v0.1.0-rc.3",
+			server.URL+"/api/releases/10", base+"/releases/tag/v0.1.0-rc.10",
+			server.URL+"/api/releases/2", base+"/releases/tag/v0.1.0-rc.2",
+			server.URL+"/api/releases/20", base+"/releases/tag/v0.1.0-rc.2+build",
+			server.URL+"/api/releases/stable", base+"/releases/tag/v0.1.0")
+	}))
+	defer server.Close()
+
+	base := AssetBaseForTest(server.URL, Current)
+	provider := Provider{Identity: Current, Client: server.Client(), APIBaseURL: server.URL + "/api", WebBaseURL: base, AssetBaseURL: base}
+	release, err := provider.Fetch(context.Background(), ChannelRC)
+	if err != nil {
+		t.Fatalf("discover RC release: %v", err)
+	}
+	if release.TagName != "v0.1.0-rc.10" {
+		t.Fatalf("discovered RC = %q, want highest approved non-draft RC", release.TagName)
+	}
+}
+
+func TestProviderRejectsRCDowngradeWhenOnlyOlderReleaseExists(t *testing.T) {
+	var server *httptest.Server
+	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		base := AssetBaseForTest(server.URL, Current)
+		fmt.Fprintf(w, `[{"url":%q,"html_url":%q,"tag_name":"v0.1.0-rc.1","draft":false,"prerelease":true}]`,
+			server.URL+"/api/releases/1", base+"/releases/tag/v0.1.0-rc.1")
+	}))
+	defer server.Close()
+	base := AssetBaseForTest(server.URL, Current)
+	provider := Provider{Identity: Current, Client: server.Client(), APIBaseURL: server.URL + "/api", WebBaseURL: base, AssetBaseURL: base}
+	if _, err := provider.Fetch(context.Background(), ChannelRC); err == nil {
+		t.Fatal("RC discovery accepted an automatic downgrade")
 	}
 }
 
