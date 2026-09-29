@@ -2720,6 +2720,9 @@
     "settings": "Configurações"
   },
   "fork": {
+    "operations": {
+      "title": "Operações"
+    },
     "apiDocs": {
       "labels": {
         "panelApi": "API do painel 3X-UI",
@@ -2794,7 +2797,10 @@
       "delete": "Excluir",
       "rename": "Renomear",
       "email": "E-mail",
-      "never": "Nunca"
+      "never": "Nunca",
+      "noItems": "Nenhum item",
+      "featureOffTitle": "Recurso desativado",
+      "featureOffDescription": "Este recurso do CatX-UI está desativado. Ative-o nas configurações de recursos do servidor para usar esta página."
     },
     "activity": {
       "labels": {

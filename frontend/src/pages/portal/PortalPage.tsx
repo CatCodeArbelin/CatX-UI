@@ -4,6 +4,7 @@ import {
   Button,
   Card,
   Descriptions,
+  Empty,
   Input,
   Modal,
   Space,
@@ -14,6 +15,8 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import { useTranslation } from 'react-i18next';
 import { HttpUtil } from '@/utils';
+import FeatureOffState from '@/components/fork/FeatureOffState';
+import { isKnownForkFeatureUnavailable } from '@/lib/fork-feature';
 
 type PortalClient = {
   id: number;
@@ -63,6 +66,7 @@ export default function PortalPage() {
   const [hosts, setHosts] = useState<Host[]>([]);
   const [traffic, setTraffic] = useState<Traffic | null>(null);
   const [error, setError] = useState('');
+  const [featureOff, setFeatureOff] = useState(false);
 
   const load = useCallback(async () => {
     const [me, deviceResult, hostResult, trafficResult, csrfResult] = await Promise.all([
@@ -73,6 +77,11 @@ export default function PortalPage() {
       HttpUtil.get<string>(portalPath('/portal/csrf'), undefined, { silent: true }),
     ]);
     if (!me.success) {
+      if (isKnownForkFeatureUnavailable(me, 'self_service')) {
+        setFeatureOff(true);
+        setError('');
+        return;
+      }
       setClient(null);
       setError(me.msg || t('fork.portal.loginRequired'));
       return;
@@ -158,6 +167,17 @@ export default function PortalPage() {
     [mutate, t],
   );
 
+  if (featureOff)
+    return (
+      <div className="portal-page">
+        <div className="content-area portal-login-shell">
+          <Card>
+            <FeatureOffState />
+          </Card>
+        </div>
+      </div>
+    );
+
   if (!client)
     return (
       <div className="portal-page">
@@ -222,7 +242,13 @@ export default function PortalPage() {
                   key: 'devices',
                   label: t('fork.portal.devices'),
                   children: (
-                    <Table rowKey="id" columns={columns} dataSource={devices} pagination={false} />
+                    <Table
+                      rowKey="id"
+                      columns={columns}
+                      dataSource={devices}
+                      pagination={false}
+                      locale={{ emptyText: <Empty description={t('fork.common.noItems')} /> }}
+                    />
                   ),
                 },
                 {
@@ -255,6 +281,7 @@ export default function PortalPage() {
                       ]}
                       dataSource={hosts}
                       pagination={false}
+                      locale={{ emptyText: <Empty description={t('fork.common.noItems')} /> }}
                     />
                   ),
                 },

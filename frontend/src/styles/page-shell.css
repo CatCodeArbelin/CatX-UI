@@ -339,7 +339,30 @@ html[data-theme='ultra-dark'] body .portal-page {
 .portal-login-shell {
   max-width: 520px;
   margin-inline: auto;
-  padding-block-start: 8rem !important;
+  padding-block-start: 4rem !important;
+}
+
+/* Fork pages use the same compact operational rhythm as upstream forms. */
+.fleet-update-form,
+.webhooks-form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(160px, 1fr));
+  gap: 12px 16px;
+  align-items: end;
+}
+
+.fleet-update-form .ant-form-item,
+.webhooks-form-grid .ant-form-item {
+  min-width: 0;
+  margin-inline-end: 0;
+}
+
+.fleet-update-form .ant-input-number,
+.fleet-update-form .ant-select,
+.fleet-update-form .ant-input,
+.webhooks-form-grid .ant-input,
+.webhooks-form-grid .ant-input-password {
+  width: 100%;
 }
 
 /* CatX keeps the upstream page shell but must allow wide operational tables
@@ -406,5 +429,10 @@ html[data-theme='ultra-dark'] body .portal-page {
 @media (max-width: 768px) {
   .portal-login-shell {
     padding-block-start: 2rem !important;
+  }
+
+  .fleet-update-form,
+  .webhooks-form-grid {
+    grid-template-columns: 1fr;
   }
 }

@@ -71,6 +71,8 @@ describe('CatX frontend i18n contract', () => {
   it('keeps fork navigation fully localized', () => {
     expect(forkNavigationItems.every((item) => item.labelKey.startsWith('fork.'))).toBe(true);
     expect(forkNavigationItems).toHaveLength(7);
+    expect(new Set(forkNavigationItems.map((item) => item.icon)).size).toBe(7);
+    expect(forkNavigationItems.filter((item) => item.group === 'operations')).toHaveLength(2);
     expect(forkApiSections.every((section) => section.translationKey?.startsWith('fork.'))).toBe(
       true,
     );
@@ -121,6 +123,28 @@ describe('CatX frontend i18n contract', () => {
           .sort(),
         `${locale} technical English-identical count`,
       ).toEqual([...englishIdenticalTechnicalKeys].sort());
+    }
+  });
+
+  it('guards the reviewed Russian CatX surface against known mixed-language regressions', () => {
+    const ru = JSON.parse(readFileSync(resolve(translationDir, 'ru-RU.json'), 'utf8')) as {
+      fork: Json;
+    };
+    const values = flatten(ru.fork)
+      .filter(([, value]) => typeof value === 'string')
+      .map(([, value]) => String(value));
+    for (const broken of [
+      'Парк Обновления',
+      'Кампания Имя',
+      'Канареечный count',
+      'Пакет size',
+      'Plan Пробный run',
+      'Пробный run (Нет mutation)',
+      'Confirm production Обновление',
+      'Enable DNS Интеллект',
+      'Risk Интеллект',
+    ]) {
+      expect(values).not.toContain(broken);
     }
   });
 

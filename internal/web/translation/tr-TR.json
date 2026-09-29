@@ -2720,6 +2720,9 @@
     "settings": "Ayarlar"
   },
   "fork": {
+    "operations": {
+      "title": "İşlemler"
+    },
     "apiDocs": {
       "labels": {
         "panelApi": "3X-UI panel API",
@@ -2794,7 +2797,10 @@
       "delete": "Sil",
       "rename": "Yeniden adlandır",
       "email": "E-posta",
-      "never": "Hiçbir zaman"
+      "never": "Hiçbir zaman",
+      "noItems": "Öğe yok",
+      "featureOffTitle": "Özellik devre dışı",
+      "featureOffDescription": "Bu CatX-UI özelliği devre dışı. Bu sayfayı kullanmak için sunucunun özellik ayarlarından etkinleştirin."
     },
     "activity": {
       "labels": {

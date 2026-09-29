@@ -74,3 +74,12 @@ test('labels the palette shortcut with the modifier the platform actually uses',
   const chip = view.container.querySelector('.sidebar-command-kbd');
   expect(chip?.textContent).toBe('CtrlK');
 });
+
+test('groups fork destinations into upstream navigation and removes Sponsors from primary menu', async () => {
+  await renderSidebar();
+  expect(screen.getByText('Clients')).toBeTruthy();
+  expect(screen.getByText('Nodes')).toBeTruthy();
+  expect(screen.getByText('Routing')).toBeTruthy();
+  expect(screen.getByText('Operations')).toBeTruthy();
+  expect(screen.queryByText('Sponsors')).toBeNull();
+});

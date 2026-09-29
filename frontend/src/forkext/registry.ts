@@ -4,6 +4,8 @@ export interface ForkNavigationItem {
   key: string;
   labelKey: string;
   path: string;
+  group: 'clients' | 'nodes' | 'routing' | 'operations';
+  icon: 'activity' | 'portal' | 'fleet' | 'fleet-updates' | 'policy' | 'audit' | 'webhooks';
 }
 
 export const forkRoutes: readonly RouteObject[] = [
@@ -37,14 +39,57 @@ export const forkRoutes: readonly RouteObject[] = [
   },
 ];
 export const forkNavigationItems: readonly ForkNavigationItem[] = [
-  { key: 'fleet-updates', labelKey: 'fork.fleetUpdate.title', path: '/fleet-updates' },
-  { key: 'portal-access', labelKey: 'fork.portal.adminTitle', path: '/portal-access' },
-  { key: 'fleet', labelKey: 'fork.fleet.title', path: '/fleet' },
-  { key: 'client-activity', labelKey: 'fork.activity.title', path: '/activity' },
-  { key: 'policy-engine', labelKey: 'fork.policy.title', path: '/policies' },
-  { key: 'audit', labelKey: 'fork.audit.title', path: '/audit' },
-  { key: 'webhooks', labelKey: 'fork.webhooks.title', path: '/webhooks' },
+  {
+    key: 'client-activity',
+    labelKey: 'fork.activity.title',
+    path: '/activity',
+    group: 'clients',
+    icon: 'activity',
+  },
+  {
+    key: 'portal-access',
+    labelKey: 'fork.portal.adminTitle',
+    path: '/portal-access',
+    group: 'clients',
+    icon: 'portal',
+  },
+  { key: 'fleet', labelKey: 'fork.fleet.title', path: '/fleet', group: 'nodes', icon: 'fleet' },
+  {
+    key: 'fleet-updates',
+    labelKey: 'fork.fleetUpdate.title',
+    path: '/fleet-updates',
+    group: 'nodes',
+    icon: 'fleet-updates',
+  },
+  {
+    key: 'policy-engine',
+    labelKey: 'fork.policy.title',
+    path: '/policies',
+    group: 'routing',
+    icon: 'policy',
+  },
+  {
+    key: 'audit',
+    labelKey: 'fork.audit.title',
+    path: '/audit',
+    group: 'operations',
+    icon: 'audit',
+  },
+  {
+    key: 'webhooks',
+    labelKey: 'fork.webhooks.title',
+    path: '/webhooks',
+    group: 'operations',
+    icon: 'webhooks',
+  },
 ];
+
+export const forkNavigationGroups = {
+  clients: ['client-activity', 'portal-access'],
+  nodes: ['fleet', 'fleet-updates'],
+  routing: ['policy-engine'],
+  operations: ['audit', 'webhooks'],
+} as const;
 // Keep the fork contract registry as the single source for generated API verification.
 export const forkApiSections = [
   {

@@ -492,7 +492,7 @@ Completed at `954a1536a3c018eec48eb9b7a6146f8e1328fae0` after green Fork
 Verification run `36510971071`; merged into `develop` with merge SHA
 `8435466fe004f2488ad0be241fab7d898da84147`.
 
-## RC-4 — Second Public RC Qualification & Cut — CURRENT
+## RC-4 — Second Public RC Qualification & Cut — DONE
 
 Branch: `feature/rc4-second-public-rc`
 
@@ -502,6 +502,25 @@ operator path, generalize future RC discovery and branch qualification, and
 retain the full artifact, Linux, PostgreSQL, upgrade, rollback, and publication
 evidence. After publication the next phase is release observation and stable
 qualification, not feature development.
+
+RC-4 release engineering was technically qualified at
+`e780d9b87e7bb2fcb3cdeab6e33f11b893d9e68b`; Fork Verification
+`36514812058` and Release CatX-UI `36514812043` were green. The public
+`v0.1.0-rc.2` cut was intentionally deferred because manual smoke testing
+found product UX/localization blockers. No public tag or release was created.
+RC-4 merged into `develop` with `b66ac15f79d411b5a0b2386e8770b05e88254bc2`,
+and its feature branch was deleted. `main` was not changed.
+
+## WP-9D — Product UX Integration & Human QA — CURRENT
+
+Branch: `feature/wp-9d-product-ux-integration`
+
+Group CatX destinations into existing upstream sidebar submenus, use semantic
+Ant Design icons, remove Sponsors from primary navigation without deleting its
+implementation, improve shared page composition and empty states, make
+feature-off states explicit and localized, and complete the Russian and
+narrow non-Russian leakage review. Preserve direct routes and stop before
+merge pending human visual approval.
 
 # Operating Rules
 

@@ -2720,6 +2720,9 @@
     "settings": "設定"
   },
   "fork": {
+    "operations": {
+      "title": "運用"
+    },
     "apiDocs": {
       "labels": {
         "panelApi": "3X-UI パネル API",
@@ -2794,7 +2797,10 @@
       "delete": "削除",
       "rename": "名前を変更",
       "email": "メール",
-      "never": "なし"
+      "never": "なし",
+      "noItems": "項目はありません",
+      "featureOffTitle": "機能が無効です",
+      "featureOffDescription": "この CatX-UI 機能は無効です。このページを使うにはサーバーの機能設定で有効にしてください。"
     },
     "activity": {
       "labels": {

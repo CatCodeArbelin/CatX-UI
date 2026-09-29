@@ -2720,6 +2720,9 @@
     "settings": "Налаштування"
   },
   "fork": {
+    "operations": {
+      "title": "Операції"
+    },
     "apiDocs": {
       "labels": {
         "panelApi": "API панелі 3X-UI",
@@ -2794,7 +2797,10 @@
       "delete": "Видалити",
       "rename": "Перейменувати",
       "email": "Електронна пошта",
-      "never": "Ніколи"
+      "never": "Ніколи",
+      "noItems": "Немає елементів",
+      "featureOffTitle": "Функцію вимкнено",
+      "featureOffDescription": "Цю функцію CatX-UI вимкнено. Увімкніть її в налаштуваннях функцій сервера, щоб використовувати цю сторінку."
     },
     "activity": {
       "labels": {

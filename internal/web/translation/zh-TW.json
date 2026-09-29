@@ -2720,6 +2720,9 @@
     "settings": "設定"
   },
   "fork": {
+    "operations": {
+      "title": "營運"
+    },
     "apiDocs": {
       "labels": {
         "panelApi": "3X-UI 面板 API",
@@ -2794,7 +2797,10 @@
       "delete": "刪除",
       "rename": "重新命名",
       "email": "電子郵件",
-      "never": "永不"
+      "never": "永不",
+      "noItems": "沒有項目",
+      "featureOffTitle": "功能已停用",
+      "featureOffDescription": "此 CatX-UI 功能已停用。請在伺服器功能設定中啟用後再使用此頁面。"
     },
     "activity": {
       "labels": {

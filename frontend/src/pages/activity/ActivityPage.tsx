@@ -150,7 +150,8 @@ export default function ActivityPage() {
     });
     if (!email) {
       void settingsRequest.then((result) => {
-        if (!cancelled && result.success && result.obj?.retention) setSettings(result.obj);
+        if (cancelled) return;
+        if (result.success && result.obj?.retention) setSettings(result.obj);
       });
       return () => {
         cancelled = true;

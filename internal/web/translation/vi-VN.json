@@ -2720,6 +2720,9 @@
     "settings": "Cài đặt"
   },
   "fork": {
+    "operations": {
+      "title": "Vận hành"
+    },
     "apiDocs": {
       "labels": {
         "panelApi": "API bảng điều khiển 3X-UI",
@@ -2794,7 +2797,10 @@
       "delete": "Xóa",
       "rename": "Đổi tên",
       "email": "Thư điện tử",
-      "never": "Không bao giờ"
+      "never": "Không bao giờ",
+      "noItems": "Không có mục nào",
+      "featureOffTitle": "Tính năng đã tắt",
+      "featureOffDescription": "Tính năng CatX-UI này đang tắt. Hãy bật tính năng này trong cài đặt tính năng của máy chủ để sử dụng trang này."
     },
     "activity": {
       "labels": {

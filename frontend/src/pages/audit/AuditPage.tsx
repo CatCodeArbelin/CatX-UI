@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { Alert, Button, Card, Drawer, Empty, Input, Space, Table, Tag, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { HttpUtil } from '@/utils';
+import FeatureOffState from '@/components/fork/FeatureOffState';
+import { isKnownForkFeatureUnavailable } from '@/lib/fork-feature';
 import { useTranslation } from 'react-i18next';
 
 type AuditEvent = {
@@ -29,6 +31,7 @@ export default function AuditPage() {
   const [eventType, setEventType] = useState('');
   const [selected, setSelected] = useState<AuditEvent | null>(null);
   const [error, setError] = useState('');
+  const [featureOff, setFeatureOff] = useState(false);
   const load = useCallback(async () => {
     const result = await HttpUtil.get<{ items: AuditEvent[] }>(
       '/panel/api/fork/audit/events',
@@ -38,7 +41,10 @@ export default function AuditPage() {
       },
       { silent: true },
     );
-    if (result.success && result.obj) setRows(result.obj.items);
+    if (isKnownForkFeatureUnavailable(result, 'audit')) {
+      setFeatureOff(true);
+      setError('');
+    } else if (result.success && result.obj) setRows(result.obj.items);
     else setError(result.msg || t('fork.audit.labels.error'));
   }, [eventType, t]);
   useEffect(() => {
@@ -88,17 +94,17 @@ export default function AuditPage() {
                 {t('fork.audit.filter')}
               </Button>
             </Space>
-            {error && <Alert type="error" message={error} />}
-            {rows.length ? (
+            {featureOff ? <FeatureOffState /> : error && <Alert type="error" message={error} />}
+            {!featureOff && rows.length ? (
               <Table
                 rowKey="id"
                 columns={columns}
                 dataSource={rows}
                 pagination={{ pageSize: 25 }}
               />
-            ) : (
+            ) : !featureOff ? (
               <Empty description={t('fork.audit.empty')} />
-            )}
+            ) : null}
           </Space>
           <Drawer
             title={t('fork.audit.labels.event')}

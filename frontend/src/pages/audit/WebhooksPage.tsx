@@ -1,7 +1,21 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, Button, Card, Form, Input, Modal, Space, Table, Tag, Typography } from 'antd';
+import {
+  Alert,
+  Button,
+  Card,
+  Empty,
+  Form,
+  Input,
+  Modal,
+  Space,
+  Table,
+  Tag,
+  Typography,
+} from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { HttpUtil } from '@/utils';
+import FeatureOffState from '@/components/fork/FeatureOffState';
+import { isKnownForkFeatureUnavailable } from '@/lib/fork-feature';
 import { useTranslation } from 'react-i18next';
 
 type Endpoint = { id: string; name: string; url: string; eventTypes: string; enabled: boolean };
@@ -19,6 +33,7 @@ export default function WebhooksPage() {
   const [endpoints, setEndpoints] = useState<Endpoint[]>([]);
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
   const [error, setError] = useState('');
+  const [featureOff, setFeatureOff] = useState(false);
   const [form] = Form.useForm();
   const load = useCallback(async () => {
     const [endpointResult, deliveryResult] = await Promise.all([
@@ -29,6 +44,14 @@ export default function WebhooksPage() {
         { silent: true },
       ),
     ]);
+    if (
+      isKnownForkFeatureUnavailable(endpointResult, 'webhooks') ||
+      isKnownForkFeatureUnavailable(deliveryResult, 'webhooks')
+    ) {
+      setFeatureOff(true);
+      setError('');
+      return;
+    }
     if (endpointResult.success && endpointResult.obj) setEndpoints(endpointResult.obj);
     if (deliveryResult.success && deliveryResult.obj) setDeliveries(deliveryResult.obj.items);
     if (!endpointResult.success || !deliveryResult.success)
@@ -114,7 +137,7 @@ export default function WebhooksPage() {
               onFinish={(value) => void create(value)}
               style={{ marginTop: 24 }}
             >
-              <Space wrap align="start">
+              <Space wrap align="start" className="webhooks-form-grid">
                 <Form.Item
                   name="name"
                   label={t('fork.webhooks.labels.name')}
@@ -151,23 +174,29 @@ export default function WebhooksPage() {
               </Space>
             </Form>
           </Card>
-          {error && <Alert type="error" message={error} />}
-          <Card title={t('fork.webhooks.destinations')}>
-            <Table
-              rowKey="id"
-              columns={endpointColumns}
-              dataSource={endpoints}
-              pagination={false}
-            />
-          </Card>
-          <Card title={t('fork.webhooks.deliveries')}>
-            <Table
-              rowKey="id"
-              columns={deliveryColumns}
-              dataSource={deliveries}
-              pagination={{ pageSize: 25 }}
-            />
-          </Card>
+          {featureOff ? <FeatureOffState /> : error && <Alert type="error" message={error} />}
+          {!featureOff && (
+            <Card title={t('fork.webhooks.destinations')}>
+              <Table
+                rowKey="id"
+                columns={endpointColumns}
+                dataSource={endpoints}
+                pagination={false}
+                locale={{ emptyText: <Empty description={t('fork.common.noItems')} /> }}
+              />
+            </Card>
+          )}
+          {!featureOff && (
+            <Card title={t('fork.webhooks.deliveries')}>
+              <Table
+                rowKey="id"
+                columns={deliveryColumns}
+                dataSource={deliveries}
+                pagination={{ pageSize: 25 }}
+                locale={{ emptyText: <Empty description={t('fork.common.noItems')} /> }}
+              />
+            </Card>
+          )}
         </Space>
       </div>
     </div>

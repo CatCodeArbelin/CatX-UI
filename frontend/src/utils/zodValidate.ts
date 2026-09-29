@@ -20,5 +20,5 @@ export function parseMsg<T extends z.ZodType>(
     if (options.strict) throw new Error(`${context} response failed validation`);
     return msg as Msg<z.infer<T>>;
   }
-  return new Msg<z.infer<T>>(msg.success, msg.msg, result.data);
+  return new Msg<z.infer<T>>(msg.success, msg.msg, result.data, msg.status, msg.featureDisabled);
 }

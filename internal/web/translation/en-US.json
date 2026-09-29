@@ -2720,6 +2720,9 @@
     "settings": "Settings"
   },
   "fork": {
+    "operations": {
+      "title": "Operations"
+    },
    "apiDocs": {
     "labels": {
       "panelApi": "3X-UI Panel API",
@@ -2794,7 +2797,10 @@
       "delete": "Delete",
       "rename": "Rename",
       "email": "Email",
-      "never": "Never"
+      "never": "Never",
+      "noItems": "No items",
+      "featureOffTitle": "Feature disabled",
+      "featureOffDescription": "This CatX-UI feature is disabled. Enable it in the server's feature settings to use this page."
     },
    "activity": {
     "labels": {

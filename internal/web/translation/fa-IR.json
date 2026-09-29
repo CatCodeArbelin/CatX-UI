@@ -2720,6 +2720,9 @@
     "settings": "تنظیمات"
   },
   "fork": {
+    "operations": {
+      "title": "عملیات"
+    },
     "apiDocs": {
       "labels": {
         "panelApi": "API پنل 3X-UI",
@@ -2794,7 +2797,10 @@
       "delete": "حذف",
       "rename": "تغییر نام",
       "email": "ایمیل",
-      "never": "هرگز"
+      "never": "هرگز",
+      "noItems": "موردی وجود ندارد",
+      "featureOffTitle": "ویژگی غیرفعال است",
+      "featureOffDescription": "این ویژگی CatX-UI غیرفعال است. برای استفاده از این صفحه آن را در تنظیمات ویژگی‌های سرور فعال کنید."
     },
     "activity": {
       "labels": {
