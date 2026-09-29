@@ -35,6 +35,15 @@ Required gates before this package can be considered ready for human review:
 - disposable local preview instructions for manual light/dark/ultra-dark,
   responsive, RTL, and long-string review.
 
+## WP-9D review checkpoint
+
+The first human visual review failed at `a37a804ab7534fefb6cf408d2d71b0f7bc7a8773`.
+The branch remains unmerged and no RC tag was created. Corrective work stays on
+this same branch and is limited to restoring upstream root destinations,
+composing CatX admin pages with the native themed shell, improving page
+composition, explicit self-service feature-off UX, contextual client access,
+and the associated regression coverage.
+
 ## WP-9D implementation evidence
 
 - `npm run format:check`, `npm run lint`, `npm run typecheck`, and

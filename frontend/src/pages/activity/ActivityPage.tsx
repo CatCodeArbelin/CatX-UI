@@ -21,6 +21,7 @@ import {
 import type { ColumnsType } from 'antd/es/table';
 import { SearchOutlined } from '@ant-design/icons';
 import { HttpUtil } from '@/utils';
+import ForkAdminPageShell from '@/components/fork/ForkAdminPageShell';
 import { i18n } from '@/i18n/react';
 import { useTranslation } from 'react-i18next';
 import './ActivityPage.css';
@@ -300,260 +301,258 @@ export default function ActivityPage() {
   const dnsDisabled = dns?.enabled === false || settings?.dnsIntelligence === false;
 
   return (
-    <div className="activity-page">
-      <div className="content-area">
-        <Card>
-          <Space direction="vertical" size="large" style={{ width: '100%' }}>
-            <div>
-              <Typography.Title level={2}>{t('fork.activity.title')}</Typography.Title>
-              <Typography.Paragraph type="secondary">
-                {t('fork.activity.subtitle')}
-              </Typography.Paragraph>
-              <Alert type="info" showIcon message={t('fork.activity.privacy')} />
-            </div>
-            <Space wrap>
-              <Input
-                aria-label={t('fork.activity.client')}
-                placeholder={t('fork.activity.client')}
-                value={input}
-                onChange={(event) => setInput(event.target.value)}
-                onPressEnter={submit}
-                style={{ width: 280 }}
-              />
-              <DatePicker.RangePicker
-                showTime
-                value={range}
-                onChange={(next) => {
-                  if (next?.[0] && next?.[1]) {
-                    setRange([next[0], next[1]]);
-                    setPage(1);
-                    if (email) setLoading(true);
-                  }
-                }}
-              />
-              <Button type="primary" icon={<SearchOutlined />} onClick={submit}>
-                {t('fork.common.labels.search')}
-              </Button>
-            </Space>
-            {!email && <Empty description={t('fork.activity.enter')} />}
-            {analyticsDisabled && (
-              <Alert type="info" showIcon message={t('fork.activity.disabled')} />
-            )}
-            {email && !analyticsDisabled && dnsDisabled && (
-              <Alert type="warning" showIcon message={t('fork.activity.dnsDisabled')} />
-            )}
-            {error && <Alert type="error" showIcon message={error} />}
-            {email && !analyticsDisabled && (
-              <Spin spinning={loading}>
-                <div className="activity-summary">
-                  <Tag>Events: {events?.total || 0}</Tag>
-                  <Tag>DNS: {dns?.total || 0}</Tag>
-                  <Tag>Sessions: {sessions?.total || 0}</Tag>
-                  <Tag>
-                    Range: {time(params.from)} – {time(params.to)}
-                  </Tag>
-                </div>
-                <Tabs
-                  items={[
-                    {
-                      key: 'timeline',
-                      label: 'Timeline',
-                      children: events?.items.length ? (
-                        <Timeline
-                          items={events.items.map((event) => ({
-                            key: event.id,
-                            children: (
-                              <div>
-                                <Typography.Text strong>
-                                  {event.domain || event.destinationIp || '—'}
-                                </Typography.Text>{' '}
-                                · {event.service || 'unknown'} · {event.category || 'unknown'}{' '}
-                                {confidence(
-                                  event.classificationLevel,
-                                  event.classificationConfidence ?? event.confidence,
-                                  event.classificationConflict,
-                                )}
-                                <br />
-                                <Typography.Text type="secondary">
-                                  {time(event.observedAt)} ·{' '}
-                                  {event.classificationReason || event.source}
-                                </Typography.Text>
-                              </div>
-                            ),
-                          }))}
-                        />
-                      ) : (
-                        <Empty description={t('fork.activity.noActivity')} />
-                      ),
-                    },
-                    {
-                      key: 'dns',
-                      label: 'DNS observations',
-                      children: dnsDisabled ? (
-                        <Empty description={t('fork.activity.dnsDisabled')} />
-                      ) : (
-                        <Table<DNS>
-                          rowKey="id"
-                          columns={dnsColumns}
-                          dataSource={dns?.items || []}
-                          pagination={{
-                            current: page,
-                            pageSize: SIZE,
-                            total: dns?.total || 0,
-                            onChange: setPage,
-                          }}
-                          locale={{ emptyText: <Empty description={t('fork.activity.noDns')} /> }}
-                        />
-                      ),
-                    },
-                    {
-                      key: 'details',
-                      label: 'Enriched details',
-                      children: (
-                        <Table<Event>
-                          rowKey="id"
-                          columns={eventColumns}
-                          dataSource={events?.items || []}
+    <ForkAdminPageShell pageClass="activity-page">
+      <Card size="small">
+        <Space direction="vertical" size="large" style={{ width: '100%' }}>
+          <div>
+            <Typography.Title level={2}>{t('fork.activity.title')}</Typography.Title>
+            <Typography.Paragraph type="secondary">
+              {t('fork.activity.subtitle')}
+            </Typography.Paragraph>
+            <Alert type="info" showIcon message={t('fork.activity.privacy')} />
+          </div>
+          <Space wrap>
+            <Input
+              aria-label={t('fork.activity.client')}
+              placeholder={t('fork.activity.client')}
+              value={input}
+              onChange={(event) => setInput(event.target.value)}
+              onPressEnter={submit}
+              style={{ width: 280 }}
+            />
+            <DatePicker.RangePicker
+              showTime
+              value={range}
+              onChange={(next) => {
+                if (next?.[0] && next?.[1]) {
+                  setRange([next[0], next[1]]);
+                  setPage(1);
+                  if (email) setLoading(true);
+                }
+              }}
+            />
+            <Button type="primary" icon={<SearchOutlined />} onClick={submit}>
+              {t('fork.common.labels.search')}
+            </Button>
+          </Space>
+          {!email && <Empty description={t('fork.activity.enter')} />}
+          {analyticsDisabled && (
+            <Alert type="info" showIcon message={t('fork.activity.disabled')} />
+          )}
+          {email && !analyticsDisabled && dnsDisabled && (
+            <Alert type="warning" showIcon message={t('fork.activity.dnsDisabled')} />
+          )}
+          {error && <Alert type="error" showIcon message={error} />}
+          {email && !analyticsDisabled && (
+            <Spin spinning={loading}>
+              <div className="activity-summary">
+                <Tag>Events: {events?.total || 0}</Tag>
+                <Tag>DNS: {dns?.total || 0}</Tag>
+                <Tag>Sessions: {sessions?.total || 0}</Tag>
+                <Tag>
+                  Range: {time(params.from)} – {time(params.to)}
+                </Tag>
+              </div>
+              <Tabs
+                items={[
+                  {
+                    key: 'timeline',
+                    label: 'Timeline',
+                    children: events?.items.length ? (
+                      <Timeline
+                        items={events.items.map((event) => ({
+                          key: event.id,
+                          children: (
+                            <div>
+                              <Typography.Text strong>
+                                {event.domain || event.destinationIp || '—'}
+                              </Typography.Text>{' '}
+                              · {event.service || 'unknown'} · {event.category || 'unknown'}{' '}
+                              {confidence(
+                                event.classificationLevel,
+                                event.classificationConfidence ?? event.confidence,
+                                event.classificationConflict,
+                              )}
+                              <br />
+                              <Typography.Text type="secondary">
+                                {time(event.observedAt)} ·{' '}
+                                {event.classificationReason || event.source}
+                              </Typography.Text>
+                            </div>
+                          ),
+                        }))}
+                      />
+                    ) : (
+                      <Empty description={t('fork.activity.noActivity')} />
+                    ),
+                  },
+                  {
+                    key: 'dns',
+                    label: 'DNS observations',
+                    children: dnsDisabled ? (
+                      <Empty description={t('fork.activity.dnsDisabled')} />
+                    ) : (
+                      <Table<DNS>
+                        rowKey="id"
+                        columns={dnsColumns}
+                        dataSource={dns?.items || []}
+                        pagination={{
+                          current: page,
+                          pageSize: SIZE,
+                          total: dns?.total || 0,
+                          onChange: setPage,
+                        }}
+                        locale={{ emptyText: <Empty description={t('fork.activity.noDns')} /> }}
+                      />
+                    ),
+                  },
+                  {
+                    key: 'details',
+                    label: 'Enriched details',
+                    children: (
+                      <Table<Event>
+                        rowKey="id"
+                        columns={eventColumns}
+                        dataSource={events?.items || []}
+                        pagination={false}
+                        locale={{
+                          emptyText: <Empty description={t('fork.activity.noActivity')} />,
+                        }}
+                      />
+                    ),
+                  },
+                  {
+                    key: 'sessions',
+                    label: 'Session history',
+                    children: (
+                      <Table<Session>
+                        rowKey="sessionKey"
+                        columns={sessionColumns}
+                        dataSource={sessions?.items || []}
+                        pagination={{
+                          current: page,
+                          pageSize: SIZE,
+                          total: sessions?.total || 0,
+                          onChange: setPage,
+                        }}
+                        locale={{
+                          emptyText: <Empty description={t('fork.activity.noSessions')} />,
+                        }}
+                      />
+                    ),
+                  },
+                  {
+                    key: 'traffic',
+                    label: 'Traffic history',
+                    children: traffic?.history ? (
+                      <Space direction="vertical" style={{ width: '100%' }}>
+                        <div className="activity-summary">
+                          <Tag>Upload: {bytes(traffic.history.up)}</Tag>
+                          <Tag>Download: {bytes(traffic.history.down)}</Tag>
+                          <Tag>Clients: {traffic.history.clients}</Tag>
+                          <Tag>Inbounds: {traffic.history.inbounds}</Tag>
+                          <Tag>Nodes: {traffic.history.nodes}</Tag>
+                        </div>
+                        <Table<TrafficBreakdown>
+                          rowKey="name"
+                          columns={[
+                            { title: 'Service / category', dataIndex: 'name' },
+                            { title: 'Observations', dataIndex: 'observations' },
+                            { title: 'Sessions', dataIndex: 'sessions' },
+                          ]}
+                          dataSource={[
+                            ...traffic.history.serviceBreakdown,
+                            ...traffic.history.categoryBreakdown,
+                          ]}
                           pagination={false}
                           locale={{
-                            emptyText: <Empty description={t('fork.activity.noActivity')} />,
+                            emptyText: <Empty description={t('fork.activity.noTraffic')} />,
                           }}
                         />
-                      ),
-                    },
-                    {
-                      key: 'sessions',
-                      label: 'Session history',
-                      children: (
-                        <Table<Session>
-                          rowKey="sessionKey"
-                          columns={sessionColumns}
-                          dataSource={sessions?.items || []}
-                          pagination={{
-                            current: page,
-                            pageSize: SIZE,
-                            total: sessions?.total || 0,
-                            onChange: setPage,
-                          }}
-                          locale={{
-                            emptyText: <Empty description={t('fork.activity.noSessions')} />,
-                          }}
-                        />
-                      ),
-                    },
-                    {
-                      key: 'traffic',
-                      label: 'Traffic history',
-                      children: traffic?.history ? (
-                        <Space direction="vertical" style={{ width: '100%' }}>
-                          <div className="activity-summary">
-                            <Tag>Upload: {bytes(traffic.history.up)}</Tag>
-                            <Tag>Download: {bytes(traffic.history.down)}</Tag>
-                            <Tag>Clients: {traffic.history.clients}</Tag>
-                            <Tag>Inbounds: {traffic.history.inbounds}</Tag>
-                            <Tag>Nodes: {traffic.history.nodes}</Tag>
-                          </div>
-                          <Table<TrafficBreakdown>
-                            rowKey="name"
-                            columns={[
-                              { title: 'Service / category', dataIndex: 'name' },
-                              { title: 'Observations', dataIndex: 'observations' },
-                              { title: 'Sessions', dataIndex: 'sessions' },
-                            ]}
-                            dataSource={[
-                              ...traffic.history.serviceBreakdown,
-                              ...traffic.history.categoryBreakdown,
-                            ]}
-                            pagination={false}
-                            locale={{
-                              emptyText: <Empty description={t('fork.activity.noTraffic')} />,
-                            }}
-                          />
-                          <Typography.Text type="secondary">
-                            Service and category rows are metadata-derived observations and
-                            sessions; byte totals come only from upstream traffic accounting.
-                          </Typography.Text>
-                        </Space>
-                      ) : (
-                        <Empty description={t('fork.activity.noTraffic')} />
-                      ),
-                    },
-                  ]}
-                />
-              </Spin>
-            )}
-            {settings && (
-              <Card size="small" title={t('fork.activity.retention')}>
-                <Space direction="vertical" style={{ width: '100%' }}>
-                  <Typography.Text type="secondary">{t('fork.activity.privacy')}</Typography.Text>
-                  <Space wrap>
-                    <Typography.Text>{t('fork.common.labels.enableDns')}</Typography.Text>
-                    <Switch
-                      checked={settings.dnsIntelligence}
-                      disabled={!settings.enabled}
-                      onChange={(checked) => setSettings({ ...settings, dnsIntelligence: checked })}
-                    />
-                    <Button onClick={() => void saveSettings(settings)}>
-                      {t('fork.common.labels.save')}
-                    </Button>
-                  </Space>
-                  <Space wrap>
-                    <InputNumber
-                      min={1}
-                      max={3650}
-                      addonBefore={t('fork.common.labels.raw')}
-                      value={settings.retention.rawEvents}
-                      onChange={(value) =>
-                        setSettings({
-                          ...settings,
-                          retention: { ...settings.retention, rawEvents: value || 1 },
-                        })
-                      }
-                    />
-                    <InputNumber
-                      min={1}
-                      max={3650}
-                      addonBefore="DNS"
-                      value={settings.retention.dnsObservations}
-                      onChange={(value) =>
-                        setSettings({
-                          ...settings,
-                          retention: { ...settings.retention, dnsObservations: value || 1 },
-                        })
-                      }
-                    />
-                    <InputNumber
-                      min={1}
-                      max={3650}
-                      addonBefore="Sessions"
-                      value={settings.retention.sessions}
-                      onChange={(value) =>
-                        setSettings({
-                          ...settings,
-                          retention: { ...settings.retention, sessions: value || 1 },
-                        })
-                      }
-                    />
-                    <InputNumber
-                      min={1}
-                      max={3650}
-                      addonBefore="Aggregates"
-                      value={settings.retention.aggregates}
-                      onChange={(value) =>
-                        setSettings({
-                          ...settings,
-                          retention: { ...settings.retention, aggregates: value || 1 },
-                        })
-                      }
-                    />
-                  </Space>
-                  {settingsError && <Alert type="error" message={settingsError} />}
+                        <Typography.Text type="secondary">
+                          Service and category rows are metadata-derived observations and sessions;
+                          byte totals come only from upstream traffic accounting.
+                        </Typography.Text>
+                      </Space>
+                    ) : (
+                      <Empty description={t('fork.activity.noTraffic')} />
+                    ),
+                  },
+                ]}
+              />
+            </Spin>
+          )}
+          {settings && (
+            <Card size="small" title={t('fork.activity.retention')}>
+              <Space direction="vertical" style={{ width: '100%' }}>
+                <Typography.Text type="secondary">{t('fork.activity.privacy')}</Typography.Text>
+                <Space wrap>
+                  <Typography.Text>{t('fork.common.labels.enableDns')}</Typography.Text>
+                  <Switch
+                    checked={settings.dnsIntelligence}
+                    disabled={!settings.enabled}
+                    onChange={(checked) => setSettings({ ...settings, dnsIntelligence: checked })}
+                  />
+                  <Button onClick={() => void saveSettings(settings)}>
+                    {t('fork.common.labels.save')}
+                  </Button>
                 </Space>
-              </Card>
-            )}
-          </Space>
-        </Card>
-      </div>
-    </div>
+                <Space wrap>
+                  <InputNumber
+                    min={1}
+                    max={3650}
+                    addonBefore={t('fork.common.labels.raw')}
+                    value={settings.retention.rawEvents}
+                    onChange={(value) =>
+                      setSettings({
+                        ...settings,
+                        retention: { ...settings.retention, rawEvents: value || 1 },
+                      })
+                    }
+                  />
+                  <InputNumber
+                    min={1}
+                    max={3650}
+                    addonBefore="DNS"
+                    value={settings.retention.dnsObservations}
+                    onChange={(value) =>
+                      setSettings({
+                        ...settings,
+                        retention: { ...settings.retention, dnsObservations: value || 1 },
+                      })
+                    }
+                  />
+                  <InputNumber
+                    min={1}
+                    max={3650}
+                    addonBefore="Sessions"
+                    value={settings.retention.sessions}
+                    onChange={(value) =>
+                      setSettings({
+                        ...settings,
+                        retention: { ...settings.retention, sessions: value || 1 },
+                      })
+                    }
+                  />
+                  <InputNumber
+                    min={1}
+                    max={3650}
+                    addonBefore="Aggregates"
+                    value={settings.retention.aggregates}
+                    onChange={(value) =>
+                      setSettings({
+                        ...settings,
+                        retention: { ...settings.retention, aggregates: value || 1 },
+                      })
+                    }
+                  />
+                </Space>
+                {settingsError && <Alert type="error" message={settingsError} />}
+              </Space>
+            </Card>
+          )}
+        </Space>
+      </Card>
+    </ForkAdminPageShell>
   );
 }

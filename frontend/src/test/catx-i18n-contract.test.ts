@@ -175,6 +175,25 @@ describe('CatX frontend i18n contract', () => {
       )
       .join('\n');
     for (const name of expectedClasses) expect(source).toContain(name);
+    for (const [directory, file] of pageFiles.slice(0, -1)) {
+      expect(
+        readFileSync(resolve(process.cwd(), 'src/pages', directory, file), 'utf8'),
+        `${directory}/${file}`,
+      ).toContain('ForkAdminPageShell');
+    }
+    const portalPage = readFileSync(
+      resolve(process.cwd(), 'src/pages/portal/PortalPage.tsx'),
+      'utf8',
+    );
+    expect(portalPage).not.toContain('ForkAdminPageShell');
+    expect(portalPage).not.toContain('@/layouts/AppSidebar');
+    const adminShell = readFileSync(
+      resolve(process.cwd(), 'src/components/fork/ForkAdminPageShell.tsx'),
+      'utf8',
+    );
+    expect(adminShell).toContain('ConfigProvider');
+    expect(adminShell).toContain('AppSidebar');
+    expect(adminShell).toContain('content-shell');
     expect(readFileSync(resolve(process.cwd(), 'src/styles/page-shell.css'), 'utf8')).toContain(
       'activity-page',
     );
@@ -185,7 +204,7 @@ describe('CatX frontend i18n contract', () => {
 
   it('keeps CatX narrow-layout and RTL safeguards in the shared styles', () => {
     const shell = readFileSync(resolve(process.cwd(), 'src/styles/page-shell.css'), 'utf8');
-    expect(shell).toContain('.activity-page .ant-table-wrapper');
+    expect(shell).toContain('.fork-admin-page .ant-table-wrapper');
     expect(shell).toContain('overflow-x: auto');
     expect(shell).toContain('.catx-technical-value');
     expect(shell).toContain('prefers-reduced-motion: reduce');

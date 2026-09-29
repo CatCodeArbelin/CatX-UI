@@ -520,7 +520,10 @@ Ant Design icons, remove Sponsors from primary navigation without deleting its
 implementation, improve shared page composition and empty states, make
 feature-off states explicit and localized, and complete the Russian and
 narrow non-Russian leakage review. Preserve direct routes and stop before
-merge pending human visual approval.
+merge pending human visual approval. The first visual review at
+`a37a804ab7534fefb6cf408d2d71b0f7bc7a8773` failed because upstream root
+destinations were hidden and CatX admin pages bypassed the native themed shell;
+the corrective pass continues on this branch.
 
 # Operating Rules
 

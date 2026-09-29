@@ -244,16 +244,36 @@ export default function AppSidebar() {
   const currentTheme: 'light' | 'dark' = isDark ? 'dark' : 'light';
   const panelVersion = window.X_UI_CUR_VER || '';
 
-  const tabs = useMemo<{ key: string; icon: IconName; title: string; forkGroup?: string }[]>(
+  const tabs = useMemo<
+    { key: string; icon: IconName; title: string; forkGroup?: string; menuKey?: string }[]
+  >(
     () => [
       { key: '/', icon: 'dashboard', title: t('menu.dashboard') },
       { key: '/inbounds', icon: 'inbound', title: t('menu.inbounds') },
-      { key: '/clients', icon: 'team', title: t('menu.clients'), forkGroup: 'clients' },
+      {
+        key: '/clients',
+        icon: 'team',
+        title: t('menu.clients'),
+        forkGroup: 'clients',
+        menuKey: '__fork-group-clients',
+      },
       { key: '/groups', icon: 'groups', title: t('menu.groups') },
-      { key: '/nodes', icon: 'cluster', title: t('menu.nodes'), forkGroup: 'nodes' },
+      {
+        key: '/nodes',
+        icon: 'cluster',
+        title: t('menu.nodes'),
+        forkGroup: 'nodes',
+        menuKey: '__fork-group-nodes',
+      },
       { key: '/hosts', icon: 'hosts', title: t('menu.hosts') },
       { key: '/outbound', icon: 'outbound', title: t('menu.outbounds') },
-      { key: '/routing', icon: 'routing', title: t('menu.routing'), forkGroup: 'routing' },
+      {
+        key: '/routing',
+        icon: 'routing',
+        title: t('menu.routing'),
+        forkGroup: 'routing',
+        menuKey: '__fork-group-routing',
+      },
       { key: '/settings', icon: 'setting', title: t('menu.settings') },
       { key: '/xray', icon: 'tool', title: t('menu.xray') },
       { key: '/api-docs', icon: 'apidocs', title: t('menu.apiDocs') },
@@ -262,6 +282,7 @@ export default function AppSidebar() {
         icon: 'tool',
         title: t('fork.operations.title'),
         forkGroup: 'operations',
+        menuKey: '__fork-group-operations',
       },
       { key: LOGOUT_KEY, icon: 'logout', title: t('logout') },
     ],
@@ -347,7 +368,7 @@ export default function AppSidebar() {
     ? '/settings'
     : xrayActive
       ? '/xray'
-      : activeForkGroup?.key || null;
+      : activeForkGroup?.menuKey || null;
   const [openKeys, setOpenKeys] = useState<string[]>(() => (openSubmenu ? [openSubmenu] : []));
   if (openSubmenu && !openKeys.includes(openSubmenu)) {
     setOpenKeys([...openKeys, openSubmenu]);
@@ -364,14 +385,24 @@ export default function AppSidebar() {
           return { key: tab.key, icon: <Icon />, label: tab.title, children: xrayChildren };
         }
         if (tab.forkGroup) {
-          const children = forkNavigationItems
-            .filter((item) => item.group === tab.forkGroup)
-            .map((item) => ({
-              key: item.path,
-              icon: createElement(iconByName[item.icon]),
-              label: t(item.labelKey),
-            }));
-          return { key: tab.key, icon: <Icon />, label: tab.title, children };
+          const Icon = iconByName[tab.icon];
+          const rootDestination =
+            tab.key === '/operations' ? [] : [{ key: tab.key, icon: <Icon />, label: tab.title }];
+          const children = rootDestination.concat(
+            forkNavigationItems
+              .filter((item) => item.group === tab.forkGroup)
+              .map((item) => ({
+                key: item.path,
+                icon: createElement(iconByName[item.icon]),
+                label: t(item.labelKey),
+              })),
+          );
+          return {
+            key: tab.menuKey || tab.key,
+            icon: <Icon />,
+            label: tab.title,
+            children,
+          };
         }
         return { key: tab.key, icon: <Icon />, label: tab.title, title: '' };
       }),
@@ -385,7 +416,7 @@ export default function AppSidebar() {
         window.location.href = window.X_UI_BASE_PATH || '/';
         return;
       }
-      if (key !== '/operations') navigate(key);
+      if (!key.startsWith('__fork-group-')) navigate(key);
     },
     [navigate],
   );

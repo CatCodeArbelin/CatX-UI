@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button, Divider, Modal, Popover, Tag, Tooltip, message } from 'antd';
+import { useNavigate } from 'react-router';
+import { Button, Divider, Modal, Popover, Space, Tag, Tooltip, message } from 'antd';
 import {
   CopyOutlined,
   DownloadOutlined,
@@ -101,6 +102,7 @@ export default function ClientInfoModal({
   subSettings = DEFAULT_SUB,
   onOpenChange,
 }: ClientInfoModalProps) {
+  const navigate = useNavigate();
   const { datepicker } = useDatepicker();
   const { t } = useTranslation();
   const expiryLabel = (ts?: number) => {
@@ -289,15 +291,37 @@ export default function ClientInfoModal({
     if (clientHwids.length === 0) void loadHwids();
   }
 
+  function openClientActivity() {
+    if (!client) return;
+    onOpenChange(false);
+    navigate(`/activity?email=${encodeURIComponent(client.email)}`);
+  }
+
+  function openPortalAccess() {
+    if (!client || client.id == null) return;
+    onOpenChange(false);
+    navigate(`/portal-access?clientId=${encodeURIComponent(String(client.id))}`);
+  }
+
   return (
     <>
       {messageContextHolder}
       <Modal
         open={open}
         title={
-          client
-            ? `${t('pages.clients.clientInfo')} — ${client.email}`
-            : t('pages.clients.clientInfo')
+          client ? (
+            <Space wrap>
+              <span>{`${t('pages.clients.clientInfo')} — ${client.email}`}</span>
+              <Button size="small" onClick={openClientActivity}>
+                {t('fork.activity.title')}
+              </Button>
+              <Button size="small" onClick={openPortalAccess}>
+                {t('fork.portal.adminTitle')}
+              </Button>
+            </Space>
+          ) : (
+            t('pages.clients.clientInfo')
+          )
         }
         footer={null}
         width={640}

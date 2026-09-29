@@ -32,4 +32,11 @@ describe('fork feature-off classification', () => {
   it('accepts an explicit feature-disabled envelope', () => {
     expect(isKnownForkFeatureUnavailable({ featureDisabled: true }, 'webhooks')).toBe(true);
   });
+
+  it('accepts the explicit self-service disabled response without masking other errors', () => {
+    expect(isKnownForkFeatureUnavailable({ msg: 'self-service is disabled' }, 'self_service')).toBe(
+      true,
+    );
+    expect(isKnownForkFeatureUnavailable({ msg: 'invalid token' }, 'self_service')).toBe(false);
+  });
 });

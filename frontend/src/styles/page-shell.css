@@ -230,107 +230,19 @@ body.dark .ant-dropdown-menu-item-divider {
   }
 }
 
-/* CatX pages intentionally opt into the same shell as upstream pages. */
-.activity-page,
-.policy-page,
-.audit-page,
-.webhooks-page,
-.fleet-page,
-.fleet-update-page,
-.portal-admin-page,
+.fork-admin-page,
 .portal-page {
-  --bg-page: #e6e8ec;
-  --bg-card: #ffffff;
   min-height: 100vh;
-  background: var(--bg-page);
+  background: var(--ant-color-bg-layout);
 }
 
-.activity-page.is-dark,
-.policy-page.is-dark,
-.audit-page.is-dark,
-.webhooks-page.is-dark,
-.fleet-page.is-dark,
-.fleet-update-page.is-dark,
-.portal-admin-page.is-dark,
-.portal-page.is-dark {
-  --bg-page: #1a1b1f;
-  --bg-card: #23252b;
-}
-
-.activity-page.is-dark.is-ultra,
-.policy-page.is-dark.is-ultra,
-.audit-page.is-dark.is-ultra,
-.webhooks-page.is-dark.is-ultra,
-.fleet-page.is-dark.is-ultra,
-.fleet-update-page.is-dark.is-ultra,
-.portal-admin-page.is-dark.is-ultra,
-.portal-page.is-dark.is-ultra {
-  --bg-page: #000;
-  --bg-card: #101013;
-}
-
-.activity-page .ant-layout,
-.activity-page .ant-layout-content,
-.policy-page .ant-layout,
-.policy-page .ant-layout-content,
-.audit-page .ant-layout,
-.audit-page .ant-layout-content,
-.webhooks-page .ant-layout,
-.webhooks-page .ant-layout-content,
-.fleet-page .ant-layout,
-.fleet-page .ant-layout-content,
-.fleet-update-page .ant-layout,
-.fleet-update-page .ant-layout-content,
-.portal-admin-page .ant-layout,
-.portal-admin-page .ant-layout-content,
-.portal-page .ant-layout,
-.portal-page .ant-layout-content {
-  background: transparent;
-}
-
-.activity-page .content-area,
-.policy-page .content-area,
-.audit-page .content-area,
-.webhooks-page .content-area,
-.fleet-page .content-area,
-.fleet-update-page .content-area,
-.portal-admin-page .content-area,
+.fork-admin-page .content-area,
 .portal-page .content-area {
   padding: 24px;
 }
 
-body.dark .activity-page,
-body.dark .policy-page,
-body.dark .audit-page,
-body.dark .webhooks-page,
-body.dark .fleet-page,
-body.dark .fleet-update-page,
-body.dark .portal-admin-page,
-body.dark .portal-page {
-  --bg-page: #1a1b1f;
-  --bg-card: #23252b;
-}
-
-html[data-theme='ultra-dark'] body .activity-page,
-html[data-theme='ultra-dark'] body .policy-page,
-html[data-theme='ultra-dark'] body .audit-page,
-html[data-theme='ultra-dark'] body .webhooks-page,
-html[data-theme='ultra-dark'] body .fleet-page,
-html[data-theme='ultra-dark'] body .fleet-update-page,
-html[data-theme='ultra-dark'] body .portal-admin-page,
-html[data-theme='ultra-dark'] body .portal-page {
-  --bg-page: #000;
-  --bg-card: #101013;
-}
-
 @media (max-width: 768px) {
-  .activity-page .content-area,
-  .policy-page .content-area,
-  .audit-page .content-area,
-  .webhooks-page .content-area,
-  .fleet-page .content-area,
-  .fleet-update-page .content-area,
-  .portal-admin-page .content-area,
+  .fork-admin-page .content-area,
   .portal-page .content-area {
     padding: 8px;
   }
@@ -357,6 +269,16 @@ html[data-theme='ultra-dark'] body .portal-page {
   margin-inline-end: 0;
 }
 
+.fork-admin-page .ant-form-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+
+.fork-admin-page .ant-form-inline .ant-form-item {
+  margin-inline-end: 0;
+}
+
 .fleet-update-form .ant-input-number,
 .fleet-update-form .ant-select,
 .fleet-update-form .ant-input,
@@ -365,33 +287,15 @@ html[data-theme='ultra-dark'] body .portal-page {
   width: 100%;
 }
 
-/* CatX keeps the upstream page shell but must allow wide operational tables
-   to remain usable on phones and in long-string locales. */
-.activity-page .content-area,
-.policy-page .content-area,
-.audit-page .content-area,
-.webhooks-page .content-area,
-.fleet-page .content-area,
-.fleet-update-page .content-area,
-.portal-admin-page .content-area,
+/* Keep long operational tables usable without changing the upstream shell. */
+.fork-admin-page .content-area,
+.fork-admin-page .ant-card,
 .portal-page .content-area,
-.activity-page .ant-card,
-.policy-page .ant-card,
-.audit-page .ant-card,
-.webhooks-page .ant-card,
-.fleet-page .ant-card,
-.fleet-update-page .ant-card,
-.portal-admin-page .ant-card,
 .portal-page .ant-card {
   min-width: 0;
 }
 
-.activity-page .ant-table-wrapper,
-.policy-page .ant-table-wrapper,
-.audit-page .ant-table-wrapper,
-.webhooks-page .ant-table-wrapper,
-.fleet-update-page .ant-table-wrapper,
-.portal-admin-page .ant-table-wrapper,
+.fork-admin-page .ant-table-wrapper,
 .portal-page .ant-table-wrapper {
   max-width: 100%;
   overflow-x: auto;
@@ -410,13 +314,7 @@ html[data-theme='ultra-dark'] body .portal-page {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .activity-page *,
-  .policy-page *,
-  .audit-page *,
-  .webhooks-page *,
-  .fleet-page *,
-  .fleet-update-page *,
-  .portal-admin-page *,
+  .fork-admin-page *,
   .portal-page *,
   .api-docs-page * {
     animation-duration: 0.001ms !important;

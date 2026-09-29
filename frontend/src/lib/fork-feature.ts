@@ -18,6 +18,12 @@ export function isKnownForkFeatureUnavailable(
   feature: ForkFeature,
 ): boolean {
   if (response?.featureDisabled === true) return true;
+  if (
+    feature === 'self_service' &&
+    response?.msg?.trim().toLowerCase() === 'self-service is disabled'
+  ) {
+    return true;
+  }
   const featureOwnedEntrypoint = new Set<ForkFeature>([
     'audit',
     'webhooks',

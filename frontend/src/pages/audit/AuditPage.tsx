@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Alert, Button, Card, Drawer, Empty, Input, Space, Table, Tag, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { HttpUtil } from '@/utils';
+import ForkAdminPageShell from '@/components/fork/ForkAdminPageShell';
 import FeatureOffState from '@/components/fork/FeatureOffState';
 import { isKnownForkFeatureUnavailable } from '@/lib/fork-feature';
 import { useTranslation } from 'react-i18next';
@@ -75,49 +76,42 @@ export default function AuditPage() {
     },
   ];
   return (
-    <div className="audit-page">
-      <div className="content-area">
-        <Card>
-          <Space direction="vertical" style={{ width: '100%' }} size="large">
-            <div>
-              <Typography.Title level={2}>{t('fork.audit.title')}</Typography.Title>
-              <Typography.Text type="secondary">{t('fork.audit.summary')}</Typography.Text>
-            </div>
-            <Space>
-              <Input
-                placeholder={t('fork.audit.labels.eventType')}
-                value={eventType}
-                onChange={(e) => setEventType(e.target.value)}
-                onPressEnter={() => void load()}
-              />
-              <Button type="primary" onClick={() => void load()}>
-                {t('fork.audit.filter')}
-              </Button>
-            </Space>
-            {featureOff ? <FeatureOffState /> : error && <Alert type="error" message={error} />}
-            {!featureOff && rows.length ? (
-              <Table
-                rowKey="id"
-                columns={columns}
-                dataSource={rows}
-                pagination={{ pageSize: 25 }}
-              />
-            ) : !featureOff ? (
-              <Empty description={t('fork.audit.empty')} />
-            ) : null}
+    <ForkAdminPageShell pageClass="audit-page">
+      <Card size="small">
+        <Space direction="vertical" style={{ width: '100%' }} size="large">
+          <div>
+            <Typography.Title level={2}>{t('fork.audit.title')}</Typography.Title>
+            <Typography.Text type="secondary">{t('fork.audit.summary')}</Typography.Text>
+          </div>
+          <Space>
+            <Input
+              placeholder={t('fork.audit.labels.eventType')}
+              value={eventType}
+              onChange={(e) => setEventType(e.target.value)}
+              onPressEnter={() => void load()}
+            />
+            <Button type="primary" onClick={() => void load()}>
+              {t('fork.audit.filter')}
+            </Button>
           </Space>
-          <Drawer
-            title={t('fork.audit.labels.event')}
-            open={Boolean(selected)}
-            onClose={() => setSelected(null)}
-            width={520}
-          >
-            <pre style={{ whiteSpace: 'pre-wrap' }}>
-              {selected ? JSON.stringify(selected, null, 2) : ''}
-            </pre>
-          </Drawer>
-        </Card>
-      </div>
-    </div>
+          {featureOff ? <FeatureOffState /> : error && <Alert type="error" message={error} />}
+          {!featureOff && rows.length ? (
+            <Table rowKey="id" columns={columns} dataSource={rows} pagination={{ pageSize: 25 }} />
+          ) : !featureOff ? (
+            <Empty description={t('fork.audit.empty')} />
+          ) : null}
+        </Space>
+        <Drawer
+          title={t('fork.audit.labels.event')}
+          open={Boolean(selected)}
+          onClose={() => setSelected(null)}
+          width={520}
+        >
+          <pre style={{ whiteSpace: 'pre-wrap' }}>
+            {selected ? JSON.stringify(selected, null, 2) : ''}
+          </pre>
+        </Drawer>
+      </Card>
+    </ForkAdminPageShell>
   );
 }
