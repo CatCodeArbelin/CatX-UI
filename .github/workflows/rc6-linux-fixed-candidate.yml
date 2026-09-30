@@ -31,7 +31,11 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install --yes --no-install-recommends curl jq iproute2 nftables unzip
-          sudo modprobe ifb numifbs=8 || true
+          sudo modprobe ifb numifbs=8
+          sudo modprobe sch_htb
+          sudo modprobe sch_ingress
+          sudo modprobe cls_flower
+          sudo modprobe act_mirred
       - name: Run focused Traffic Control and race coverage
         run: |
           go test -count=1 ./internal/forkext/trafficcontrol
