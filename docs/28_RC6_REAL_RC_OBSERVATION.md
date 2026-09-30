@@ -65,6 +65,7 @@ evidence.
 - Linux namespace capability probe: PASS; disposable netns test ran with `CATX_TC_NETNS_TEST=1`
 - Linux Traffic Control capabilities: PASS; `tc`, nftables, managed dummy interface, and `CAP_NET_ADMIN` were ready, while `UserAttribution=false` remained honest
 - Linux Traffic Control substrate apply: BLOCKED; public RC-2 returned `Parent Qdisc doesn't exists` while installing its ingress redirect filter because it never creates the required ingress qdisc
+- Confirmation after source fix: hosted run [36743235005](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/36743235005) used the same immutable public RC-2 assets and reproduced the same failure, confirming the published binary—not the runner—is the blocker
 - Linux quota/policy lifecycle and feature-disable cleanup: NOT RUN after the source blocker
 - Linux host reboot persistence: NOT RUN; GitHub Actions cannot reboot its host without invalidating the runner
 - Local Docker Linux observation: NOT RUN; Docker Desktop Linux engine was unavailable and no local repair was pursued
