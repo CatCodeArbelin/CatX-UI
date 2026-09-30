@@ -70,6 +70,7 @@ finish() {
     exit "$exit_code"
 }
 trap finish EXIT
+trap 'rc=$?; printf "%s ERROR: command failed at shell line %s (status %s)\n" "$(date -u +%FT%TZ)" "$LINENO" "$rc" | tee -a "$RUN_LOG"; exit "$rc"' ERR
 
 [[ "$(id -u)" == 0 ]] || fail "Linux observation must run as root for CAP_NET_ADMIN"
 for command in curl jq ip tc nft sha256sum tar pgrep pkill sed grep; do require_command "$command"; done

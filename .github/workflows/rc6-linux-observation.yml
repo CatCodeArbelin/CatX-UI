@@ -36,6 +36,18 @@ jobs:
         env:
           CATX_RC6_EVIDENCE_DIR: ${{ runner.temp }}/catx-rc6-linux-evidence
         run: sudo --preserve-env=CATX_RC6_EVIDENCE_DIR bash scripts/staging/observe-rc2-linux.sh
+      - name: Summarize sanitized observation evidence
+        if: always()
+        run: |
+          evidence="${RUNNER_TEMP}/catx-rc6-linux-evidence"
+          if [ -d "$evidence" ]; then
+            find "$evidence" -maxdepth 1 -type f -printf '%f\n' | sort
+            if [ -f "$evidence/observation.log" ]; then
+              cat "$evidence/observation.log"
+            fi
+          else
+            echo "No sanitized observation evidence directory was produced."
+          fi
       - name: Upload sanitized RC-6 Linux evidence
         if: always()
         uses: actions/upload-artifact@v4
