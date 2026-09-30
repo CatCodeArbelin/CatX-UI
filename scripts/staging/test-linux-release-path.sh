@@ -56,6 +56,11 @@ live=/usr/local/x-ui
 pid_file=/tmp/catx-x-ui-service.pid
 service_log=/tmp/catx-x-ui-service.log
 evidence_file=${CATX_STAGING_ROLLBACK_EVIDENCE_FILE:-/tmp/catx-staging-rollback.log}
+shim_log=/tmp/catx-staging-systemctl.log
+
+shim_log_line() {
+  printf 'systemctl: %s\n' "$*" >> "$shim_log"
+}
 
 binary_sha() {
   sha256sum "$live/x-ui" | cut -d " " -f1
@@ -69,9 +74,11 @@ service_running() {
 }
 
 stop_service() {
+  shim_log_line "stop begin pid_file=$pid_file"
   if service_running; then
     local pid
     pid=$(cat "$pid_file")
+    shim_log_line "stop pid=$pid"
     kill "$pid" 2>/dev/null || true
     for _ in $(seq 1 30); do
       kill -0 "$pid" 2>/dev/null || break
@@ -80,31 +87,40 @@ stop_service() {
     kill -9 "$pid" 2>/dev/null || true
   fi
   rm -f "$pid_file"
+  shim_log_line "stop done"
 }
 
 start_service() {
   local current_sha
   current_sha=$(binary_sha)
+  shim_log_line "start sha=$current_sha runtime=${CATX_STAGING_RUNTIME:-0} inject=${CATX_STAGING_ROLLBACK_INJECT:-0}"
   if [[ "${CATX_STAGING_RUNTIME:-0}" == 1 && "${CATX_STAGING_ROLLBACK_INJECT:-0}" == 1 && \
         "$current_sha" == "${CATX_STAGING_ROLLBACK_CANDIDATE_SHA:-}" && \
         ! -e /tmp/catx-staging-candidate-failure-injected ]]; then
     printf "candidate-activated=%s failure=service-start\n" "$current_sha" >> "$evidence_file"
     : > /tmp/catx-staging-candidate-failure-injected
     printf "staging: candidate activated before injected service-start failure sha=%s\n" "$current_sha" >> "$evidence_file"
+    shim_log_line "start injected-failure sha=$current_sha"
     return 42
   fi
   stop_service
   (cd "$live" && XUI_PORT=28080 ./x-ui run) >> "$service_log" 2>&1 &
   echo "$!" > "$pid_file"
+  shim_log_line "start launched pid=$(cat "$pid_file")"
   for _ in $(seq 1 30); do
     if curl -fsS http://127.0.0.1:28080/staging/ >/dev/null 2>&1; then
+      shim_log_line "start healthy pid=$(cat "$pid_file")"
       return 0
     fi
     if ! service_running; then
+      shim_log_line "start process-exited"
+      tail -n 40 "$service_log" >> "$shim_log" 2>/dev/null || true
       return 1
     fi
     sleep 1
   done
+  shim_log_line "start timeout"
+  tail -n 40 "$service_log" >> "$shim_log" 2>/dev/null || true
   return 1
 }
 
@@ -355,6 +371,8 @@ EOF
         set -e
         echo "staging: post-activation rollback updater exit=$rollback_rc"
         tail -n 80 /tmp/update-post-activation-rollback.log >&2 || true
+        sed 's/^/staging: rollback /' /tmp/catx-staging-systemctl.log >&2 2>/dev/null || true
+        sed 's/^/staging: rollback /' /tmp/catx-x-ui-service.log >&2 2>/dev/null || true
         cat "$rollback_evidence" >&2
         grep -Fq "candidate-activated=$candidate_sha" "$rollback_evidence"
         grep -Fq "failure=service-start" "$rollback_evidence"
