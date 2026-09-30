@@ -6,6 +6,7 @@ on:
       - feature/rc6-rc2-observation-stable-readiness
     paths:
       - "internal/forkext/trafficcontrol/**"
+      - "internal/config/**"
       - "scripts/staging/observe-rc2-linux.sh"
       - ".github/workflows/rc6-linux-fixed-candidate.yml"
   workflow_dispatch:
@@ -39,6 +40,7 @@ jobs:
         env:
           CANDIDATE_BINARY: ${{ runner.temp }}/catx-candidate-x-ui
           CANDIDATE_XRAY: ${{ runner.temp }}/xray-linux-amd64
+          CANDIDATE_XRAY_ASSETS: ${{ runner.temp }}/xray-assets
         run: |
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
@@ -48,8 +50,11 @@ jobs:
           curl --fail --location --retry 4 --retry-all-errors --retry-delay 2 \
             -o "$RUNNER_TEMP/xray.zip" \
             "https://github.com/XTLS/Xray-core/releases/download/v26.9.9/Xray-linux-64.zip"
-          unzip -q "$RUNNER_TEMP/xray.zip" xray -d "$RUNNER_TEMP/xray-unpacked"
+          unzip -q "$RUNNER_TEMP/xray.zip" xray geoip.dat geosite.dat -d "$RUNNER_TEMP/xray-unpacked"
           install -m 0755 "$RUNNER_TEMP/xray-unpacked/xray" "$CANDIDATE_XRAY"
+          mkdir -p "$CANDIDATE_XRAY_ASSETS"
+          install -m 0644 "$RUNNER_TEMP/xray-unpacked/geoip.dat" "$CANDIDATE_XRAY_ASSETS/geoip.dat"
+          install -m 0644 "$RUNNER_TEMP/xray-unpacked/geosite.dat" "$CANDIDATE_XRAY_ASSETS/geosite.dat"
           sha256sum "$CANDIDATE_BINARY" | tee "$RUNNER_TEMP/candidate.sha256"
           "$CANDIDATE_BINARY" release-info | tee "$RUNNER_TEMP/candidate-release-info.txt"
           grep -F "build_commit=$GITHUB_SHA" "$RUNNER_TEMP/candidate-release-info.txt"
@@ -57,6 +62,7 @@ jobs:
         env:
           CATX_RC6_CANDIDATE_BINARY: ${{ runner.temp }}/catx-candidate-x-ui
           CATX_RC6_CANDIDATE_XRAY_BINARY: ${{ runner.temp }}/xray-linux-amd64
+          CATX_RC6_CANDIDATE_XRAY_ASSET_DIR: ${{ runner.temp }}/xray-assets
           CATX_RC6_CANDIDATE_COMMIT: ${{ github.sha }}
           CATX_RC6_EVIDENCE_DIR: ${{ runner.temp }}/catx-rc6-fixed-linux-evidence
         run: |
@@ -66,6 +72,7 @@ jobs:
           sudo env \
             "CATX_RC6_CANDIDATE_BINARY=$CATX_RC6_CANDIDATE_BINARY" \
             "CATX_RC6_CANDIDATE_XRAY_BINARY=$CATX_RC6_CANDIDATE_XRAY_BINARY" \
+            "CATX_RC6_CANDIDATE_XRAY_ASSET_DIR=$CATX_RC6_CANDIDATE_XRAY_ASSET_DIR" \
             "CATX_RC6_CANDIDATE_COMMIT=$CATX_RC6_CANDIDATE_COMMIT" \
             "CATX_RC6_CANDIDATE_SHA256=$candidate_sha256" \
             "CATX_RC6_EVIDENCE_DIR=$CATX_RC6_EVIDENCE_DIR" \

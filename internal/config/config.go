@@ -82,18 +82,19 @@ func GetBuildDate() string {
 	return strings.TrimSpace(buildDate)
 }
 
-// IsDevBuild reports whether this binary is a CI per-commit (dev channel) build,
-// detected by the injected commit. Stable releases and local builds return false.
+// IsDevBuild reports whether this binary is a CI per-commit (dev channel) build.
+// RC candidates may also carry an exact build commit for qualification, but the
+// explicit RC channel keeps those builds out of the dev channel.
 func IsDevBuild() bool {
-	return GetBuildCommit() != ""
+	return GetBuildCommit() != "" && strings.TrimSpace(buildChannel) != string(forkrelease.ChannelRC)
 }
 
 func GetReleaseChannel() forkrelease.Channel {
-	if IsDevBuild() {
-		return forkrelease.ChannelDev
-	}
 	if strings.TrimSpace(buildChannel) == string(forkrelease.ChannelRC) {
 		return forkrelease.ChannelRC
+	}
+	if IsDevBuild() {
+		return forkrelease.ChannelDev
 	}
 	return forkrelease.ChannelStable
 }

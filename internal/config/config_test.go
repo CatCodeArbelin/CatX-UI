@@ -3,6 +3,8 @@ package config
 import (
 	"os"
 	"testing"
+
+	"github.com/mhsanaei/3x-ui/v3/internal/forkrelease"
 )
 
 func TestGetPanelVersion(t *testing.T) {
@@ -30,6 +32,11 @@ func TestGetPanelVersion(t *testing.T) {
 	buildChannel = "rc"
 	if got := GetPanelVersion(); got != "0.1.0-rc.3" {
 		t.Fatalf("RC build: GetPanelVersion = %q, want %q", got, "0.1.0-rc.3")
+	}
+
+	buildCommit = "1d1128cf945c4615efa05cf41ba7fa766e2ee428"
+	if got := GetPanelVersion(); got != "0.1.0-rc.3" || IsDevBuild() || GetReleaseChannel() != forkrelease.ChannelRC {
+		t.Fatalf("stamped RC build = %q, dev=%t, channel=%q; want RC identity", got, IsDevBuild(), GetReleaseChannel())
 	}
 }
 
