@@ -163,6 +163,13 @@ stop_panel() {
     fi
     PANEL_PID=""
     pkill -f "$APP_DIR/bin/xray-linux-amd64" 2>/dev/null || true
+    CLIENT_XRAY_PID=""
+}
+
+start_client_xray() {
+    "$APP_DIR/bin/xray-linux-amd64" run -c "$RUN_DIR/client-xray.json" > "$RUN_DIR/xray-client.log" 2>&1 &
+    CLIENT_XRAY_PID=$!
+    sleep 2
 }
 
 wait_panel() {
@@ -266,9 +273,7 @@ cat > "$RUN_DIR/client-xray.json" <<EOF
   "outbounds": [{"tag":"proxy","protocol":"vless","settings":{"vnext":[{"address":"127.0.0.1","port":${INBOUND_PORT},"users":[{"id":"${CLIENT_UUID}","encryption":"none"}]}]},"streamSettings":{"network":"tcp","security":"none"}}]
 }
 EOF
-"$APP_DIR/bin/xray-linux-amd64" run -c "$RUN_DIR/client-xray.json" > "$RUN_DIR/xray-client.log" 2>&1 &
-CLIENT_XRAY_PID=$!
-sleep 2
+start_client_xray
 proxy_code=$(curl --fail --silent --show-error --socks5-hostname "127.0.0.1:${SOCKS_PORT}" -o "$RUN_DIR/proxy-response.html" -w '%{http_code}' https://example.com || true)
 [[ "$proxy_code" == 200 ]] || { tail -n 80 "$RUN_DIR/xray-client.log" >&2 || true; fail "VLESS proxy probe returned HTTP $proxy_code"; }
 log "PASS: synthetic VLESS client reached example.com through Xray (HTTP 200)"
@@ -352,6 +357,7 @@ api_mutate PUT "/traffic-control/clients/${CLIENT_EMAIL}/policy" "$policy_body" 
 api_get "/traffic-control/clients/${CLIENT_EMAIL}/policy" "$RUN_DIR/policy-before.json"
 jq -e '.obj.enforcement == "unsupported" and (.obj.enforcementNote | contains("generic Xray users"))' "$RUN_DIR/policy-before.json" >/dev/null || fail "generic per-client enforcement was not reported honestly"
 
+[[ -n "$CLIENT_XRAY_PID" ]] || start_client_xray
 api_get "/clients/traffic/${CLIENT_EMAIL}" "$RUN_DIR/traffic-before.json"
 traffic_before=$(jq -er '(.obj.up // 0) + (.obj.down // 0)' "$RUN_DIR/traffic-before.json")
 for _ in $(seq 1 3); do
