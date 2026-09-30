@@ -4,6 +4,11 @@ on:
   push:
     tags:
       - "v0.1.0-rc.3"
+    branches:
+      - feature/rc6-rc2-observation-stable-readiness
+    paths:
+      - ".github/workflows/rc6-linux-rc3-observation.yml"
+      - "scripts/staging/observe-rc2-linux.sh"
   workflow_dispatch:
     inputs:
       release_tag:
@@ -27,19 +32,28 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ github.event_name == 'push' && github.ref || inputs.release_commit }}
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.release_commit || 'v0.1.0-rc.3' }}
       - name: Install Linux observation dependencies
         run: |
           sudo apt-get update
           sudo apt-get install --yes --no-install-recommends curl jq iproute2 nftables unzip
-          sudo modprobe ifb numifbs=8 || true
+          sudo modprobe ifb numifbs=8
+          sudo modprobe sch_htb
+          sudo modprobe sch_ingress
+          sudo modprobe cls_flower
+          sudo modprobe cls_fw
+          sudo modprobe act_mirred
       - name: Wait for the tagged release assets
         env:
-          RELEASE_TAG: ${{ github.event_name == 'push' && github.ref_name || inputs.release_tag }}
+          RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || 'v0.1.0-rc.3' }}
+          RELEASE_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          for attempt in $(seq 1 30); do
-            if curl --fail --silent --show-error "https://api.github.com/repos/CatCodeArbelin/CatX-UI/releases/tags/${RELEASE_TAG}" > "$RUNNER_TEMP/release.json"; then
+          for attempt in $(seq 1 120); do
+            if curl --fail --silent --show-error \
+              -H "Authorization: Bearer $RELEASE_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/CatCodeArbelin/CatX-UI/releases/tags/${RELEASE_TAG}" > "$RUNNER_TEMP/release.json"; then
               if jq -e --arg a catx-ui-linux-amd64.tar.gz --arg b catx-ui-release-metadata.json '(.draft == false and .prerelease == true and ([.assets[].name] | index($a)) != null and ([.assets[].name] | index($b)) != null)' "$RUNNER_TEMP/release.json" >/dev/null; then
                 exit 0
               fi
@@ -50,17 +64,22 @@ jobs:
           exit 1
       - name: Observe the actual published RC-3 payload
         env:
-          CATX_RC6_PUBLIC_TAG: ${{ github.event_name == 'push' && github.ref_name || inputs.release_tag }}
-          CATX_RC6_PUBLIC_VERSION: ${{ github.event_name == 'push' && github.ref_name || inputs.release_tag }}
-          CATX_RC6_PUBLIC_COMMIT: ${{ github.event_name == 'push' && github.sha || inputs.release_commit }}
+          CATX_RC6_PUBLIC_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || 'v0.1.0-rc.3' }}
+          CATX_RC6_PUBLIC_VERSION: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || 'v0.1.0-rc.3' }}
+          CATX_RC6_QUALIFIED_COMMIT: ${{ github.event_name == 'workflow_dispatch' && inputs.release_commit || '' }}
           CATX_RC6_EVIDENCE_DIR: ${{ runner.temp }}/catx-rc6-rc3-linux-evidence
         run: |
           set -euo pipefail
           public_version="${CATX_RC6_PUBLIC_VERSION#v}"
+          public_commit="$CATX_RC6_QUALIFIED_COMMIT"
+          if [[ -z "$public_commit" ]]; then
+            git fetch --force --tags origin "refs/tags/${CATX_RC6_PUBLIC_TAG}:refs/tags/${CATX_RC6_PUBLIC_TAG}"
+            public_commit=$(git rev-parse "${CATX_RC6_PUBLIC_TAG}^{commit}")
+          fi
           sudo env \
             "CATX_RC6_PUBLIC_TAG=$CATX_RC6_PUBLIC_TAG" \
             "CATX_RC6_PUBLIC_VERSION=$public_version" \
-            "CATX_RC6_PUBLIC_COMMIT=$CATX_RC6_PUBLIC_COMMIT" \
+            "CATX_RC6_PUBLIC_COMMIT=$public_commit" \
             "CATX_RC6_EVIDENCE_DIR=$CATX_RC6_EVIDENCE_DIR" \
             bash scripts/staging/observe-rc2-linux.sh
       - name: Summarize sanitized RC-3 evidence
