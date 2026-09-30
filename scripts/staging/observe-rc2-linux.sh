@@ -364,17 +364,16 @@ jq -e '.obj.enforcement == "unsupported" and (.obj.enforcementNote | contains("g
 sleep 6
 api_get "/clients/traffic/${CLIENT_EMAIL}" "$RUN_DIR/traffic-before.json"
 traffic_before=$(jq -er '(.obj.up // 0) + (.obj.down // 0)' "$RUN_DIR/traffic-before.json")
-for _ in $(seq 1 3); do
+traffic_after=$traffic_before
+for _ in $(seq 1 18); do
     curl --fail --silent --show-error --socks5-hostname "127.0.0.1:${SOCKS_PORT}" -o /dev/null https://example.com
-done
-traffic_after=0
-for _ in $(seq 1 90); do
+    sleep 1
     api_get "/clients/traffic/${CLIENT_EMAIL}" "$RUN_DIR/traffic-after.json"
     traffic_after=$(jq -er '(.obj.up // 0) + (.obj.down // 0)' "$RUN_DIR/traffic-after.json")
     if (( traffic_after > traffic_before )); then
         break
     fi
-    sleep 1
+    sleep 4
 done
 (( traffic_after > traffic_before )) || fail "public RC-2 traffic counters did not advance after VLESS traffic"
 api_get "/traffic-control/clients/${CLIENT_EMAIL}/policy" "$RUN_DIR/policy-after-traffic.json"

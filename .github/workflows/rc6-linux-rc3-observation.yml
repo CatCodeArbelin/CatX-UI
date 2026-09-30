@@ -32,7 +32,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.release_commit || 'v0.1.0-rc.3' }}
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.release_commit || github.sha }}
       - name: Install Linux observation dependencies
         run: |
           sudo apt-get update
