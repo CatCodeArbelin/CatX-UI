@@ -358,7 +358,9 @@ func ifbName(iface string) string {
 	n := "catx-" + iface
 	if len(n) > 15 {
 		sum := sha256.Sum256([]byte(iface))
-		n = "catx-ifb" + fmt.Sprintf("%x", sum[:])[:8]
+		// Linux IFNAMSIZ allows at most 15 visible characters. Keep the
+		// deterministic collision-resistant suffix within that limit.
+		n = "catx-ifb" + fmt.Sprintf("%x", sum[:])[:7]
 	}
 	return n
 }

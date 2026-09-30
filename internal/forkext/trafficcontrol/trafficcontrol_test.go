@@ -181,6 +181,16 @@ func TestConfigureDisabledCleansOwnedState(t *testing.T) {
 	}
 }
 
+func TestIFBNameStaysWithinLinuxInterfaceLimit(t *testing.T) {
+	name := ifbName("catxrc6dummy0")
+	if len(name) > 15 {
+		t.Fatalf("IFB name %q is %d characters; Linux limit is 15", name, len(name))
+	}
+	if name != ifbName("catxrc6dummy0") {
+		t.Fatalf("IFB name is not deterministic: %q", name)
+	}
+}
+
 type fakeRemote struct {
 	capability []byte
 	response   []byte
