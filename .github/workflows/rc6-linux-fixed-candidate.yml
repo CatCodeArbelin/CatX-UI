@@ -35,6 +35,7 @@ jobs:
           sudo modprobe sch_htb
           sudo modprobe sch_ingress
           sudo modprobe cls_flower
+          sudo modprobe cls_fw
           sudo modprobe act_mirred
       - name: Run focused Traffic Control and race coverage
         run: |
