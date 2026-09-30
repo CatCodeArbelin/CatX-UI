@@ -1,0 +1,46 @@
+name: RC-6 Linux public RC observation
+
+on:
+  push:
+    branches:
+      - feature/rc6-rc2-observation-stable-readiness
+    paths:
+      - "scripts/staging/observe-rc2-linux.sh"
+      - "internal/forkext/trafficcontrol/**"
+      - ".github/workflows/rc6-linux-observation.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  observe-public-rc2:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Install Linux observation dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends curl jq iproute2 nftables
+          sudo modprobe ifb numifbs=8 || true
+      - name: Run privileged Traffic Control namespace coverage
+        env:
+          CATX_TC_NETNS_TEST: "1"
+        run: sudo --preserve-env=CATX_TC_NETNS_TEST go test ./internal/forkext/trafficcontrol -run '^TestPrivilegedNetworkNamespaceCapabilityProbe$' -count=1 -v
+      - name: Observe the published RC-2 payload on disposable Linux state
+        env:
+          CATX_RC6_EVIDENCE_DIR: ${{ runner.temp }}/catx-rc6-linux-evidence
+        run: sudo --preserve-env=CATX_RC6_EVIDENCE_DIR bash scripts/staging/observe-rc2-linux.sh
+      - name: Upload sanitized RC-6 Linux evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rc6-linux-observation-${{ github.run_id }}
+          path: ${{ runner.temp }}/catx-rc6-linux-evidence
+          if-no-files-found: warn
+          retention-days: 14

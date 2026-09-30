@@ -130,6 +130,57 @@ func TestBackendApplyUsesStructuredCommandsAndRollback(t *testing.T) {
 	}
 }
 
+type lifecycleExecutor struct {
+	qdisc bool
+	nft   bool
+}
+
+func (e *lifecycleExecutor) Run(_ context.Context, name string, args []string, _ []byte) (CommandResult, error) {
+	if name == "tc" && len(args) >= 2 && args[0] == "qdisc" && args[1] == "show" {
+		if e.qdisc {
+			return CommandResult{Stdout: []byte("qdisc htb 1: root")}, nil
+		}
+		return CommandResult{Stdout: []byte("qdisc noqueue 0: root")}, nil
+	}
+	if name == "tc" && len(args) >= 2 && args[0] == "qdisc" && args[1] == "replace" {
+		e.qdisc = true
+	}
+	if name == "tc" && len(args) >= 2 && args[0] == "qdisc" && args[1] == "del" {
+		e.qdisc = false
+	}
+	if name == "ip" && len(args) >= 3 && args[0] == "link" && args[1] == "show" {
+		return CommandResult{}, nil
+	}
+	if name == "nft" && len(args) >= 2 && args[0] == "list" {
+		if e.nft {
+			return CommandResult{Stdout: []byte("table inet catx_traffic_control { comment \"catx-managed-v1\"; }")}, nil
+		}
+		return CommandResult{}, errors.New("table does not exist")
+	}
+	if name == "nft" && len(args) >= 1 && args[0] == "-f" {
+		e.nft = true
+	}
+	if name == "nft" && len(args) >= 2 && args[0] == "delete" {
+		e.nft = false
+	}
+	return CommandResult{}, nil
+}
+
+func TestConfigureDisabledCleansOwnedState(t *testing.T) {
+	e := &lifecycleExecutor{}
+	b := NewBackend(e, "linux", []string{"eth0"})
+	rule := DesiredRule{NodeKey: "n", ClientKey: "c", Interface: "eth0", Mark: 10, UploadRateBps: 8000, DownloadRateBps: 8000, Selectors: []string{"192.0.2.1/32"}}
+	if _, err := b.Reconcile(context.Background(), []DesiredRule{rule}); err != nil {
+		t.Fatalf("apply owned state: %v", err)
+	}
+	SetBackendForTests(b)
+	t.Cleanup(func() { Configure(false) })
+	Configure(false)
+	if e.qdisc || e.nft {
+		t.Fatalf("disable left owned state behind: qdisc=%v nft=%v", e.qdisc, e.nft)
+	}
+}
+
 type fakeRemote struct {
 	capability []byte
 	response   []byte

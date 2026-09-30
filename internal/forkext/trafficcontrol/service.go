@@ -31,10 +31,18 @@ func configuredInterfaces() []string {
 
 func Configure(enabled bool) {
 	service.mu.Lock()
+	previous := service.backend
 	service.enabled = enabled
 	service.backend = NewBackend(nil, "", configuredInterfaces())
 	service.status = Status{}
 	service.mu.Unlock()
+	// A feature restart replaces the backend, so give the previous instance
+	// one last chance to remove the CatX-owned kernel state it remembers. This
+	// keeps disabling traffic_control safe across the normal settings restart
+	// boundary without touching administrator-owned qdiscs or nftables tables.
+	if !enabled && previous != nil {
+		_, _ = previous.Reconcile(context.Background(), []DesiredRule{})
+	}
 }
 
 func SetBackendForTests(b *Backend) {
