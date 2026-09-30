@@ -44,9 +44,9 @@ jobs:
             find "$evidence" -maxdepth 1 -type f -printf '%f\n' | sort
             if [ -f "$evidence/observation.log" ]; then
               cat "$evidence/observation.log"
-              while IFS= read -r line; do
+              tail -n 20 "$evidence/observation.log" | while IFS= read -r line; do
                 echo "::notice title=RC-6 sanitized observation::$line"
-              done < "$evidence/observation.log"
+              done
             fi
           else
             echo "No sanitized observation evidence directory was produced."
