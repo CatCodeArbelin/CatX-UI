@@ -206,15 +206,20 @@ api_get "/inbounds/get/$INBOUND_ID" "$RUN_DIR/inbound.json"
 api_mutate POST "/server/restartXrayService" '{}' "$RUN_DIR/xray-restart.json"
 api_mutate POST "/setting/all" '{}' "$RUN_DIR/settings.json"
 SUB_URI=$(jq -er '.obj.subURI' "$RUN_DIR/settings.json")
+SUB_HOST=$(sed -E 's#^(https?://[^/]+).*$#\1#' <<<"$SUB_URI")
+SUB_PATH_LENGTH=$((${#SUB_URI} - ${#SUB_HOST}))
+log "INFO: resolved subscription endpoint host=$SUB_HOST path_length=$SUB_PATH_LENGTH"
 log "PASS: created synthetic VLESS inbound/client and restarted Xray"
 
+subscription_code=000
 for _ in $(seq 1 30); do
-    if curl --fail --silent --show-error -o "$RUN_DIR/subscription.txt" "${SUB_URI%/}/$CLIENT_SUB_ID"; then
-        [[ -s "$RUN_DIR/subscription.txt" ]] && break
+    subscription_code=$(curl --connect-timeout 2 --max-time 5 --silent --show-error -o "$RUN_DIR/subscription.txt" -w '%{http_code}' "${SUB_URI%/}/$CLIENT_SUB_ID" || true)
+    if [[ "$subscription_code" == 200 ]] && [[ -s "$RUN_DIR/subscription.txt" ]]; then
+        break
     fi
     sleep 1
 done
-[[ -s "$RUN_DIR/subscription.txt" ]] || fail "public RC-2 subscription endpoint did not return data"
+[[ -s "$RUN_DIR/subscription.txt" ]] || fail "public RC-2 subscription endpoint did not return data (HTTP $subscription_code)"
 log "PASS: fetched synthetic client subscription from the public RC-2 panel"
 
 cat > "$RUN_DIR/client-xray.json" <<EOF
