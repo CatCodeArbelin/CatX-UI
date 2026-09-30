@@ -264,13 +264,18 @@ cp -f "$RUN_DIR/capabilities-on.json" "$EVIDENCE_DIR/capabilities-on.json"
 log "PASS: public RC-2 Linux capabilities ready; generic user attribution remained false"
 
 substrate_rule=$(jq -nc --arg iface "$MANAGED_INTERFACE" '{rules:[{nodeKey:"rc6-linux-node",clientKey:"rc6-substrate",interface:$iface,mark:60001,uploadRateBps:1000000,downloadRateBps:1000000,selectors:["127.0.0.1/32"]}]}')
+log "INFO: applying owned Linux Traffic Control substrate rule"
 api_mutate POST "/traffic-control/reconcile" "$substrate_rule" "$RUN_DIR/reconcile-apply-1.json"
+log "INFO: first substrate reconcile returned successfully"
 api_mutate POST "/traffic-control/reconcile" "$substrate_rule" "$RUN_DIR/reconcile-apply-2.json"
-tc qdisc show dev "$MANAGED_INTERFACE" > "$EVIDENCE_DIR/tc-after-apply.txt"
-nft list table inet catx_traffic_control > "$EVIDENCE_DIR/nft-after-apply.txt"
+log "INFO: second substrate reconcile returned successfully"
+tc qdisc show dev "$MANAGED_INTERFACE" > "$EVIDENCE_DIR/tc-after-apply.txt" || fail "tc qdisc inspection failed after substrate apply"
+nft list table inet catx_traffic_control > "$EVIDENCE_DIR/nft-after-apply.txt" || fail "nft inspection failed after substrate apply"
+log "INFO: inspecting applied tc/nft ownership succeeded"
 api_mutate POST "/traffic-control/reconcile" '{"rules":[]}' "$RUN_DIR/reconcile-remove-1.json"
 api_mutate POST "/traffic-control/reconcile" '{"rules":[]}' "$RUN_DIR/reconcile-remove-2.json"
-tc qdisc show dev "$MANAGED_INTERFACE" > "$EVIDENCE_DIR/tc-after-remove.txt"
+log "INFO: explicit empty reconciles returned successfully"
+tc qdisc show dev "$MANAGED_INTERFACE" > "$EVIDENCE_DIR/tc-after-remove.txt" || fail "tc qdisc inspection failed after substrate remove"
 if nft list table inet catx_traffic_control > "$EVIDENCE_DIR/nft-after-remove.txt" 2>/dev/null; then
     fail "CatX nft table remained after explicit empty reconcile"
 fi
