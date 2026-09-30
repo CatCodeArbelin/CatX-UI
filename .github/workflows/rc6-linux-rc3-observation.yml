@@ -57,8 +57,11 @@ jobs:
         run: |
           set -euo pipefail
           public_version="${CATX_RC6_PUBLIC_VERSION#v}"
-          CATX_RC6_PUBLIC_VERSION="$public_version" \
-            sudo --preserve-env=CATX_RC6_PUBLIC_TAG,CATX_RC6_PUBLIC_VERSION,CATX_RC6_PUBLIC_COMMIT,CATX_RC6_EVIDENCE_DIR \
+          sudo env \
+            "CATX_RC6_PUBLIC_TAG=$CATX_RC6_PUBLIC_TAG" \
+            "CATX_RC6_PUBLIC_VERSION=$public_version" \
+            "CATX_RC6_PUBLIC_COMMIT=$CATX_RC6_PUBLIC_COMMIT" \
+            "CATX_RC6_EVIDENCE_DIR=$CATX_RC6_EVIDENCE_DIR" \
             bash scripts/staging/observe-rc2-linux.sh
       - name: Summarize sanitized RC-3 evidence
         if: always()

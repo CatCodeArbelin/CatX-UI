@@ -63,8 +63,12 @@ jobs:
           set -euo pipefail
           candidate_sha256=$(cut -d ' ' -f1 "$RUNNER_TEMP/candidate.sha256")
           test -n "$candidate_sha256"
-          CATX_RC6_CANDIDATE_SHA256="$candidate_sha256" \
-            sudo --preserve-env=CATX_RC6_CANDIDATE_BINARY,CATX_RC6_CANDIDATE_XRAY_BINARY,CATX_RC6_CANDIDATE_COMMIT,CATX_RC6_CANDIDATE_SHA256,CATX_RC6_EVIDENCE_DIR \
+          sudo env \
+            "CATX_RC6_CANDIDATE_BINARY=$CATX_RC6_CANDIDATE_BINARY" \
+            "CATX_RC6_CANDIDATE_XRAY_BINARY=$CATX_RC6_CANDIDATE_XRAY_BINARY" \
+            "CATX_RC6_CANDIDATE_COMMIT=$CATX_RC6_CANDIDATE_COMMIT" \
+            "CATX_RC6_CANDIDATE_SHA256=$candidate_sha256" \
+            "CATX_RC6_EVIDENCE_DIR=$CATX_RC6_EVIDENCE_DIR" \
             bash scripts/staging/observe-rc2-linux.sh
       - name: Publish sanitized candidate evidence
         if: always()
