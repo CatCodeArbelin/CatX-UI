@@ -263,7 +263,9 @@ jq -e '.obj.state == "ready" and .obj.platform == "linux" and .obj.tc == true an
 cp -f "$RUN_DIR/capabilities-on.json" "$EVIDENCE_DIR/capabilities-on.json"
 log "PASS: public RC-2 Linux capabilities ready; generic user attribution remained false"
 
-substrate_rule=$(jq -nc --arg iface "$MANAGED_INTERFACE" '{rules:[{nodeKey:"rc6-linux-node",clientKey:"rc6-substrate",interface:$iface,mark:60001,uploadRateBps:1000000,downloadRateBps:1000000,selectors:["127.0.0.1/32"]}]}')
+log "INFO: preparing owned Linux Traffic Control substrate rule"
+substrate_rule=$(jq -nc --arg iface "$MANAGED_INTERFACE" '{rules:[{nodeKey:"rc6-linux-node",clientKey:"rc6-substrate",interface:$iface,mark:60001,uploadRateBps:1000000,downloadRateBps:1000000,selectors:["127.0.0.1/32"]}]}') || fail "could not encode substrate rule"
+log "INFO: substrate rule encoded"
 log "INFO: applying owned Linux Traffic Control substrate rule"
 api_mutate POST "/traffic-control/reconcile" "$substrate_rule" "$RUN_DIR/reconcile-apply-1.json"
 log "INFO: first substrate reconcile returned successfully"
