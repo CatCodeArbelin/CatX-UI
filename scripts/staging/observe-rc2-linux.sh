@@ -358,6 +358,10 @@ api_get "/traffic-control/clients/${CLIENT_EMAIL}/policy" "$RUN_DIR/policy-befor
 jq -e '.obj.enforcement == "unsupported" and (.obj.enforcementNote | contains("generic Xray users"))' "$RUN_DIR/policy-before.json" >/dev/null || fail "generic per-client enforcement was not reported honestly"
 
 [[ -n "$CLIENT_XRAY_PID" ]] || start_client_xray
+# The first Xray stats poll after a panel restart establishes baselines. Let
+# that poll complete before generating the traffic whose delta this observation
+# measures.
+sleep 6
 api_get "/clients/traffic/${CLIENT_EMAIL}" "$RUN_DIR/traffic-before.json"
 traffic_before=$(jq -er '(.obj.up // 0) + (.obj.down // 0)' "$RUN_DIR/traffic-before.json")
 for _ in $(seq 1 3); do
