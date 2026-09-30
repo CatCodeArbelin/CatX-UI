@@ -59,7 +59,7 @@ evidence_file=${CATX_STAGING_ROLLBACK_EVIDENCE_FILE:-/tmp/catx-staging-rollback.
 shim_log=/tmp/catx-staging-systemctl.log
 
 shim_log_line() {
-  printf 'systemctl: %s\n' "$*" >> "$shim_log"
+  printf "systemctl: %s\n" "$*" >> "$shim_log"
 }
 
 binary_sha() {
@@ -371,8 +371,8 @@ EOF
         set -e
         echo "staging: post-activation rollback updater exit=$rollback_rc"
         tail -n 80 /tmp/update-post-activation-rollback.log >&2 || true
-        sed 's/^/staging: rollback /' /tmp/catx-staging-systemctl.log >&2 2>/dev/null || true
-        sed 's/^/staging: rollback /' /tmp/catx-x-ui-service.log >&2 2>/dev/null || true
+        sed "s/^/staging: rollback /" /tmp/catx-staging-systemctl.log >&2 2>/dev/null || true
+        sed "s/^/staging: rollback /" /tmp/catx-x-ui-service.log >&2 2>/dev/null || true
         cat "$rollback_evidence" >&2
         grep -Fq "candidate-activated=$candidate_sha" "$rollback_evidence"
         grep -Fq "failure=service-start" "$rollback_evidence"
