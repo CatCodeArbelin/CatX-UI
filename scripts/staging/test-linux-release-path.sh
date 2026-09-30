@@ -371,8 +371,14 @@ EOF
         set -e
         echo "staging: post-activation rollback updater exit=$rollback_rc"
         tail -n 80 /tmp/update-post-activation-rollback.log >&2 || true
-        sed "s/^/staging: rollback /" /tmp/catx-staging-systemctl.log >&2 2>/dev/null || true
-        sed "s/^/staging: rollback /" /tmp/catx-x-ui-service.log >&2 2>/dev/null || true
+        echo "staging: rollback systemctl-tail=$(tail -n 12 /tmp/catx-staging-systemctl.log 2>/dev/null | tr "\n" ";" || true)"
+        rollback_pid=$(cat /tmp/catx-x-ui-service.pid 2>/dev/null || true)
+        rollback_alive=no
+        if [[ -n "$rollback_pid" ]] && kill -0 "$rollback_pid" 2>/dev/null; then rollback_alive=yes; fi
+        echo "staging: rollback service-pid=$rollback_pid alive=$rollback_alive log-bytes=$(wc -c < /tmp/catx-x-ui-service.log 2>/dev/null || echo 0)"
+        if [[ -s /tmp/catx-x-ui-service.log ]]; then
+            tail -n 20 /tmp/catx-x-ui-service.log | while IFS= read -r line; do echo "staging: rollback service-log $line"; done
+        fi
         cat "$rollback_evidence" >&2
         grep -Fq "candidate-activated=$candidate_sha" "$rollback_evidence"
         grep -Fq "failure=service-start" "$rollback_evidence"
