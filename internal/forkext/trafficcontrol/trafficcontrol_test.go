@@ -106,6 +106,35 @@ func TestBackendRejectsAdminOwnedQdisc(t *testing.T) {
 	}
 }
 
+func TestBackendRejectsAdminOwnedIngressQdisc(t *testing.T) {
+	e := &qdiscExecutor{stdout: "qdisc noqueue 0: root\nqdisc ingress ffff: parent ffff:fff1"}
+	b := NewBackend(e, "linux", []string{"eth0"})
+	status, err := b.Reconcile(context.Background(), []DesiredRule{{NodeKey: "n", ClientKey: "c", Interface: "eth0", Mark: 10, UploadRateBps: 8000, DownloadRateBps: 8000, Selectors: []string{"192.0.2.1/32"}}})
+	if err == nil || status.State != State(stateDegraded) {
+		t.Fatalf("expected ingress refusal: %+v err=%v", status, err)
+	}
+	for _, call := range e.calls {
+		if call.name == "tc" && len(call.args) > 1 && call.args[0] == "qdisc" && call.args[1] == "replace" {
+			t.Fatal("admin ingress qdisc was replaced")
+		}
+	}
+}
+
+func TestBackendCreatesIngressQdiscForRedirect(t *testing.T) {
+	e := &qdiscExecutor{stdout: "qdisc noqueue 0: root"}
+	b := NewBackend(e, "linux", []string{"eth0"})
+	_, err := b.Reconcile(context.Background(), []DesiredRule{{NodeKey: "n", ClientKey: "c", Interface: "eth0", Mark: 10, UploadRateBps: 8000, DownloadRateBps: 8000, Selectors: []string{"192.0.2.1/32"}}})
+	if err != nil {
+		t.Fatalf("reconcile: %v", err)
+	}
+	for _, call := range e.calls {
+		if call.name == "tc" && len(call.args) >= 7 && call.args[0] == "qdisc" && call.args[1] == "replace" && call.args[2] == "dev" && call.args[3] == "eth0" && call.args[4] == "handle" && call.args[5] == "ffff:" && call.args[6] == "ingress" {
+			return
+		}
+	}
+	t.Fatal("reconcile did not create the ingress qdisc required by the redirect filter")
+}
+
 func TestBackendApplyUsesStructuredCommandsAndRollback(t *testing.T) {
 	f := &fakeExecutor{failNftApply: true}
 	b := NewBackend(f, "linux", []string{"eth0"})

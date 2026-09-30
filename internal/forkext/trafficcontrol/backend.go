@@ -225,11 +225,15 @@ func (b *Backend) reconcileInterface(ctx context.Context, iface string, rules []
 	}
 	q := string(qdisc.Stdout)
 	managed := strings.Contains(q, "noqueue")
+	owned, _ := b.ownedTable(ctx)
 	if !managed {
-		managed, _ = b.ownedTable(ctx)
+		managed = owned
 	}
 	if !managed {
 		return fmt.Errorf("refusing admin-owned qdisc on %s", iface)
+	}
+	if (strings.Contains(q, "qdisc ingress") || strings.Contains(q, "qdisc clsact")) && !owned {
+		return fmt.Errorf("refusing admin-owned ingress qdisc on %s", iface)
 	}
 	if err := b.execSimple(ctx, "tc", []string{"qdisc", "replace", "dev", iface, "root", "handle", "1:", "htb", "default", "1"}); err != nil {
 		return err
@@ -247,6 +251,9 @@ func (b *Backend) reconcileInterface(ctx context.Context, iface string, rules []
 		return err
 	}
 	if err := b.execSimple(ctx, "tc", []string{"class", "replace", "dev", ifbName(iface), "parent", "1:", "classid", "1:1", "htb", "rate", "1gbit"}); err != nil {
+		return err
+	}
+	if err := b.execSimple(ctx, "tc", []string{"qdisc", "replace", "dev", iface, "handle", "ffff:", "ingress"}); err != nil {
 		return err
 	}
 	for _, rule := range rules {
@@ -317,7 +324,7 @@ func (b *Backend) rollback(ctx context.Context, iface string) error {
 			continue
 		}
 		if !strings.Contains(string(qdisc.Stdout), "noqueue") {
-			for _, cmd := range [][]string{{"tc", "qdisc", "del", "dev", managedIface, "root"}, {"tc", "qdisc", "del", "dev", ifbName(managedIface), "root"}, {"ip", "link", "del", ifbName(managedIface)}} {
+			for _, cmd := range [][]string{{"tc", "qdisc", "del", "dev", managedIface, "root"}, {"tc", "qdisc", "del", "dev", managedIface, "ingress"}, {"tc", "qdisc", "del", "dev", ifbName(managedIface), "root"}, {"ip", "link", "del", ifbName(managedIface)}} {
 				if err := b.execSimple(ctx, cmd[0], cmd[1:]); err != nil && first == nil {
 					first = err
 				}

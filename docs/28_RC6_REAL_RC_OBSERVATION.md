@@ -10,7 +10,7 @@ publish `v0.1.0`.
 - Immutable commit: `4d8feae2e62db914d3146504340d9b9f802088b2`
 - Public release: <https://github.com/CatCodeArbelin/CatX-UI/releases/tag/v0.1.0-rc.2>
 - Test data: synthetic identities and disposable storage only
-- Host: isolated disposable Windows observation environment; no production node or data
+- Hosts: isolated disposable Windows observation environment and GitHub-hosted disposable Ubuntu runner; no production node or data
 
 ## Evidence rules
 
@@ -46,9 +46,9 @@ evidence.
 - [x] Activity/DNS/history endpoints return enabled, metadata-only empty views; service/Xray evidence is healthy
 - [x] Feature settings are default-off; enabled flags survive restart
 - [x] Policy create, assign, deny/allow simulation, schedule, and managed-DNS explanation paths
-- [ ] Traffic Control quota, rolling window, and speed/throttle paths — Linux is required and the Windows capability response is `unsupported`
+- [ ] Traffic Control quota, rolling window, and speed/throttle paths — Linux capability detection passed, but public RC-2 substrate apply is source-blocked
 - [x] Audit events, retention, bounded metrics, portal token/profile/traffic, and fleet RC dry-run paths
-- [ ] Feature disablement after enablement and restart
+- [ ] Feature disablement after enablement and restart — not reached after the Linux substrate blocker
 - [x] Retained evidence contains synthetic identities and sanitized metadata only
 
 ### Actual observation result
@@ -59,7 +59,15 @@ evidence.
 - Proxy exercise: 30/30 status-plus-VLESS samples passed; each sample received HTTP 200 through the local VLESS client
 - Stability window: 2026-09-30 13:24:38Z–13:39:43Z, 15m 05s
 - Observation log: `C:\Users\user\AppData\Local\Temp\catx-ui-rc6-observation-window-d572de2a07a54e67af94f61b771fee37.log`
-- Linux observation: not completed because the local Docker Desktop Linux engine remained unavailable after a clean restart; no disposable Linux host was available in this environment
+- Linux observation workflow: `RC-6 Linux public RC observation`, run [36742297152](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/36742297152), commit `96396546c567a7dcf0c94ad4622cbbd02e231c9e`
+- Linux public payload and metadata sidecars: PASS; exact RC-2 identity and commit `4d8feae2e62db914d3146504340d9b9f802088b2` matched
+- Linux feature-off baseline: PASS; panel, SQLite, login, Xray, synthetic VLESS inbound/client, computed subscription endpoint, and VLESS proxy to `example.com` (HTTP 200)
+- Linux namespace capability probe: PASS; disposable netns test ran with `CATX_TC_NETNS_TEST=1`
+- Linux Traffic Control capabilities: PASS; `tc`, nftables, managed dummy interface, and `CAP_NET_ADMIN` were ready, while `UserAttribution=false` remained honest
+- Linux Traffic Control substrate apply: BLOCKED; public RC-2 returned `Parent Qdisc doesn't exists` while installing its ingress redirect filter because it never creates the required ingress qdisc
+- Linux quota/policy lifecycle and feature-disable cleanup: NOT RUN after the source blocker
+- Linux host reboot persistence: NOT RUN; GitHub Actions cannot reboot its host without invalidating the runner
+- Local Docker Linux observation: NOT RUN; Docker Desktop Linux engine was unavailable and no local repair was pursued
 
 ### Docker verification result
 
@@ -85,8 +93,9 @@ Record actual observations only:
 
 ## Decision
 
-- Source-level stable blocker: none observed in the completed Windows observation
-- Release-only/infrastructure blocker: mandatory Linux observation and Linux-only Traffic Control coverage remain unverified; Docker Desktop Linux engine unavailable
+- Source-level blocker: confirmed in public `v0.1.0-rc.2`; Traffic Control redirect setup omits the required ingress qdisc, so a focused fix and new fully-qualified `v0.1.0-rc.3` are required
+- Current-branch focused fix: the backend now creates the owned ingress qdisc, refuses a pre-existing administrator-owned ingress/clsact qdisc, and removes the owned ingress qdisc during rollback/disable cleanup; focused Traffic Control tests pass
+- Release-only/infrastructure blocker: host reboot persistence remains `NOT RUN` because a GitHub-hosted workflow cannot reboot its runner; this is separate from the RC-2 source blocker
 - Stable-qualification evidence package: not started
 
 If a source-level blocker is confirmed, require a focused fix and a new
