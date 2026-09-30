@@ -14,6 +14,13 @@ RC-5 was merged into `develop` with merge SHA
 The immutable public RC tag `v0.1.0-rc.2` remains exactly at
 `4d8feae2e62db914d3146504340d9b9f802088b2`.
 
+RC-6 is now complete: focused Traffic Control fix, hosted exact-SHA
+qualification, public `v0.1.0-rc.3`, and post-publication Linux observation all
+passed. RC-3 is at exact SHA `437d5e2f5bb835118ba6628ea62059b27721cfa3`.
+Status: `RC-6 COMPLETE — READY TO START STABLE QUALIFICATION`. Stop here;
+Stable Qualification has not started, stable `v0.1.0` is not published, and
+`main` remains untouched.
+
 ## Required reading
 
 For RC-6, read only these canonical documents in addition to `AGENTS.md` and

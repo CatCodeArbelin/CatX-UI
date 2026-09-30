@@ -98,8 +98,8 @@ Record actual observations only:
 - Current-branch focused fix: the backend now creates the owned ingress qdisc, refuses a pre-existing administrator-owned root/ingress/clsact qdisc without destructive rollback, tracks the first CatX mutation, and removes only CatX-owned qdisc/IFB/nft state during rollback/disable cleanup; focused Traffic Control tests pass
 - Hosted candidate path: `.github/workflows/rc6-linux-fixed-candidate.yml` builds the exact checked-out SHA, verifies the embedded commit and binary checksum, exercises apply/second reconcile/cleanup, and runs a separate admin-owned qdisc no-clobber check; publication is not performed by this candidate workflow
 - Release-only/infrastructure blocker: host reboot persistence remains `NOT RUN` because a GitHub-hosted workflow cannot reboot its runner; this is separate from the RC-2 source blocker
-- RC-3 exact-SHA qualification and public-asset observation: pending hosted candidate and release gates
+- RC-3 exact-SHA qualification: PASS on `437d5e2f5bb835118ba6628ea62059b27721cfa3`; hosted candidate run [36780855090](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/36780855090), Fork verification run [36780855060](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/36780855060), and tagged release `v0.1.0-rc.3` passed release artifact/staging gates
+- RC-3 post-publication Linux observation: PASS using actual public assets and metadata; run [36783109006](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/36783109006) verified checksum/identity, Xray, Traffic Control apply/reconcile/remove, administrator-owned qdisc no-clobber, traffic/quota lifecycle, and feature-disable cleanup
 
-If the fixed exact-SHA RC-3 is published and its real observation is green,
-close RC-6 as ready to start Stable Qualification and stop. Do not publish
-stable `v0.1.0` or change `main` in RC-6.
+RC-6 COMPLETE — READY TO START STABLE QUALIFICATION. Stable Qualification has
+not started. Do not publish stable `v0.1.0` or change `main` in RC-6.

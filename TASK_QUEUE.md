@@ -570,6 +570,14 @@ qualification/publication, and actual RC-3 observation within RC-6. If that
 observation is green, record `RC-6 COMPLETE — READY TO START STABLE
 QUALIFICATION` and stop before Stable Qualification.
 
+## RC-6 completion record
+
+RC-6 completed on exact SHA `437d5e2f5bb835118ba6628ea62059b27721cfa3`.
+Hosted candidate qualification, Fork verification, public `v0.1.0-rc.3`
+release qualification, and post-publication Linux observation passed. Stable
+Qualification is the next roadmap step but has not started. No RC-7 branch or
+work package was created; stable `v0.1.0` and `main` remain untouched.
+
 # Operating Rules
 
 ## Branching
