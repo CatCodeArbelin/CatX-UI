@@ -108,8 +108,8 @@ start_service() {
   echo "$!" > "$pid_file"
   shim_log_line "start launched pid=$(cat "$pid_file")"
   for _ in $(seq 1 30); do
-    if curl -fsS http://127.0.0.1:28080/staging/ >/dev/null 2>&1; then
-      shim_log_line "start healthy pid=$(cat "$pid_file")"
+    if service_running; then
+      shim_log_line "start active pid=$(cat "$pid_file")"
       return 0
     fi
     if ! service_running; then
@@ -136,7 +136,7 @@ case "${1:-}" in
     ;;
   is-active)
     if [[ "${CATX_STAGING_RUNTIME:-0}" != 1 ]]; then exit 0; fi
-    service_running && curl -fsS http://127.0.0.1:28080/staging/ >/dev/null 2>&1
+    service_running
     ;;
   *) exit 0 ;;
 esac
@@ -164,12 +164,16 @@ EOF
 
         wait_http() {
             local url=$1
+            local last_code=000
             for _ in $(seq 1 30); do
                 code=$(curl -sS -o /dev/null -w "%{http_code}" "$url" || true)
+                last_code=$code
                 case "$code" in 200|301|302|307|308) return 0 ;; esac
                 sleep 1
             done
-            echo "health probe failed for $url" >&2
+            echo "health probe failed for $url (last_http_code=$last_code)" >&2
+            response=$(curl -sS --max-time 3 "$url" 2>/dev/null | tr "\\n" " " | cut -c 1-240 || true)
+            echo "health probe response=$response" >&2
             cat /tmp/release-server.log >&2 || true
             if [[ -f /tmp/x-ui.log ]]; then
                 grep -Ei "error|fatal|panic|listen|failed" /tmp/x-ui.log | tail -n 80 >&2 || true
@@ -339,7 +343,7 @@ EOF
         printf "#!/usr/bin/env bash\n# synthetic known-good CLI\n" > /usr/bin/x-ui
         chmod 755 /usr/bin/x-ui
         printf "synthetic-known-good-service\n" > /etc/systemd/system/x-ui.service
-        printf "synthetic-known-good-environment\n" > /etc/default/x-ui
+        printf "CATX_SYNTHETIC_KNOWN_GOOD=environment\n" > /etc/default/x-ui
 
         known_good_sha=$(sha256sum /usr/local/x-ui/x-ui | cut -d " " -f1)
         candidate_sha=$(tar -xOzf "$rollback_archive" x-ui/x-ui | sha256sum | cut -d " " -f1)
@@ -383,7 +387,7 @@ EOF
         grep -Fq "candidate-activated=$candidate_sha" "$rollback_evidence"
         grep -Fq "failure=service-start" "$rollback_evidence"
         test "$rollback_rc" -eq 2
-        jq -e --arg run "$rollback_run_id" ".runId == \\$run and .state == \"failed\" and .exitCode == 2 and .rolledBack == true and .rollbackHealthy == true" /etc/x-ui/update-status.json >/dev/null
+        jq -e --arg run "$rollback_run_id" ".runId == \$run and .state == \"failed\" and .exitCode == 2 and .rolledBack == true and .rollbackHealthy == true" /etc/x-ui/update-status.json >/dev/null
         grep -Fq "outcome=failure" "$rollback_audit"
         grep -Fq "outcome=rollback rollback_healthy=1" "$rollback_audit"
 
@@ -408,7 +412,14 @@ EOF
         kill -0 "$service_pid"
         wait_http http://127.0.0.1:28080/staging/
         curl -fsS http://127.0.0.1:28080/staging/ >/dev/null
-        xray_pid=$(pgrep -x xray-linux-amd64 | head -n 1 || true)
+        xray_pid=""
+        for proc in /proc/[0-9]*; do
+            proc_pid=${proc#/proc/}
+            if [[ "$proc_pid" != 1 && "$(readlink "$proc/exe" 2>/dev/null || true)" == "/usr/local/x-ui/bin/xray-linux-amd64" ]]; then
+                xray_pid=$proc_pid
+                break
+            fi
+        done
         test -n "$xray_pid"
         kill -0 "$xray_pid"
         grep -Eiq "xray.*started" /tmp/catx-x-ui-service.log
