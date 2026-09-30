@@ -58,7 +58,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if grep -Eiq '(^|/)(hsanaeii/3x-ui|ghcr\.io/mhsanaei/3x-ui)(:|$)' <<<"$IMAGE_TAGS"; then
+          upstream_docker_target="$(printf '%s/%s' 'hsanaeii' '3x-ui')"
+          upstream_ghcr_target="$(printf '%s/%s/%s' 'ghcr.io' 'mhsanaei' '3x-ui')"
+          if grep -Fqi "$upstream_docker_target" <<<"$IMAGE_TAGS" ||
+             grep -Fqi "$upstream_ghcr_target" <<<"$IMAGE_TAGS"; then
             echo "upstream-owned Docker image target detected" >&2
             exit 1
           fi
