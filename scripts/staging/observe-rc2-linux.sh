@@ -162,16 +162,27 @@ login() {
 }
 
 api_get() {
-    local path=$1 target=$2
-    curl --fail --silent --show-error -b "$COOKIE_FILE" "$BASE_URL/panel/api$path" > "$target"
+    local path=$1 target=$2 status summary
+    status=$(curl --silent --show-error -b "$COOKIE_FILE" -o "$target" -w '%{http_code}' \
+        "$BASE_URL/panel/api$path" || true)
+    if [[ "$status" != 2* ]]; then
+        summary=$(jq -c '{success,msg}' "$target" 2>/dev/null || printf '%s' '<unparseable response>')
+        log "API GET $path returned HTTP $status response=$summary"
+        fail "GET $path failed"
+    fi
     jq -e '.success == true' "$target" >/dev/null || fail "GET $path returned an unsuccessful API envelope"
 }
 
 api_mutate() {
-    local method=$1 path=$2 body=$3 target=$4
-    curl --fail --silent --show-error -b "$COOKIE_FILE" -c "$COOKIE_FILE" -X "$method" \
+    local method=$1 path=$2 body=$3 target=$4 status summary
+    status=$(curl --silent --show-error -b "$COOKIE_FILE" -c "$COOKIE_FILE" -X "$method" \
         -H "Content-Type: application/json" -H "X-CSRF-Token: $CSRF_TOKEN" \
-        --data "$body" "$BASE_URL/panel/api$path" > "$target"
+        --data "$body" -o "$target" -w '%{http_code}' "$BASE_URL/panel/api$path" || true)
+    if [[ "$status" != 2* ]]; then
+        summary=$(jq -c '{success,msg}' "$target" 2>/dev/null || printf '%s' '<unparseable response>')
+        log "API $method $path returned HTTP $status response=$summary"
+        fail "$method $path failed"
+    fi
     jq -e '.success == true' "$target" >/dev/null || {
         log "API $method $path response was unsuccessful"
         jq -c '{success,msg}' "$target" >&2 || true
