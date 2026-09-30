@@ -204,10 +204,12 @@ CLIENT_UUID=$(jq -er '.obj.client.uuid' "$RUN_DIR/client.json")
 CLIENT_SUB_ID=$(jq -er '.obj.client.subId' "$RUN_DIR/client.json")
 api_get "/inbounds/get/$INBOUND_ID" "$RUN_DIR/inbound.json"
 api_mutate POST "/server/restartXrayService" '{}' "$RUN_DIR/xray-restart.json"
+api_mutate POST "/setting/all" '{}' "$RUN_DIR/settings.json"
+SUB_URI=$(jq -er '.obj.subURI' "$RUN_DIR/settings.json")
 log "PASS: created synthetic VLESS inbound/client and restarted Xray"
 
 for _ in $(seq 1 30); do
-    if curl --fail --silent --show-error -o "$RUN_DIR/subscription.txt" "$SUB_URL/sub/$CLIENT_SUB_ID"; then
+    if curl --fail --silent --show-error -o "$RUN_DIR/subscription.txt" "${SUB_URI%/}/$CLIENT_SUB_ID"; then
         [[ -s "$RUN_DIR/subscription.txt" ]] && break
     fi
     sleep 1
