@@ -350,11 +350,11 @@ EOF
         export CATX_STAGING_ROLLBACK_CANDIDATE_SHA="$candidate_sha"
         export CATX_STAGING_ROLLBACK_EVIDENCE_FILE="$rollback_evidence"
         set +e
-        XUI_UPDATE_RUN_ID="$rollback_run_id" XUI_UPDATE_TAG="$release_tag" CATX_UPDATE_AUDIT_FILE="$rollback_audit" bash /tmp/staging-update.sh >/tmp/update-post-activation-rollback.log 2>&1 < /dev/null
+        XUI_UPDATE_RUN_ID="$rollback_run_id" XUI_UPDATE_TAG="$release_tag" CATX_UPDATE_AUDIT_FILE="$rollback_audit" env -u CATX_RELEASE_OWNER -u CATX_RELEASE_REPOSITORY -u CATX_RELEASE_SLUG bash /tmp/staging-update.sh >/tmp/update-post-activation-rollback.log 2>&1 < /dev/null
         rollback_rc=$?
         set -e
         echo "staging: post-activation rollback updater exit=$rollback_rc"
-        sed -n '1,240p' /tmp/update-post-activation-rollback.log >&2 || true
+        tail -n 80 /tmp/update-post-activation-rollback.log >&2 || true
         cat "$rollback_evidence" >&2
         grep -Fq "candidate-activated=$candidate_sha" "$rollback_evidence"
         grep -Fq "failure=service-start" "$rollback_evidence"
