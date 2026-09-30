@@ -310,7 +310,7 @@ func (b *Backend) reconcileInterface(ctx context.Context, iface string, rules []
 			return mutation, err
 		}
 	}
-	if err := apply("tc", []string{"filter", "replace", "dev", iface, "ingress", "protocol", "all", "pref", "10", "flower", "action", "mirred", "egress", "redirect", "dev", mutation.ifb}); err != nil {
+	if err := apply("tc", []string{"filter", "replace", "dev", iface, "ingress", "protocol", "all", "pref", "10", "handle", "1", "flower", "action", "mirred", "egress", "redirect", "dev", mutation.ifb}); err != nil {
 		return mutation, err
 	}
 	return mutation, nil

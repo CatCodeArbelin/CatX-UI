@@ -169,6 +169,10 @@ func TestBackendCreatesIngressQdiscForRedirect(t *testing.T) {
 	if redirectIndex < 0 || ingressIndex > redirectIndex {
 		t.Fatalf("ingress qdisc must exist before redirect filter: ingress=%d redirect=%d", ingressIndex, redirectIndex)
 	}
+	redirect := e.calls[redirectIndex]
+	if !strings.Contains(strings.Join(redirect.args, " "), " handle 1 ") {
+		t.Fatalf("redirect filter must use a stable handle for idempotent replacement: %v", redirect.args)
+	}
 }
 
 func TestBackendApplyUsesStructuredCommandsAndRollback(t *testing.T) {
