@@ -204,8 +204,8 @@ CLIENT_UUID=$(jq -er '.obj.client.uuid' "$RUN_DIR/client.json")
 CLIENT_SUB_ID=$(jq -er '.obj.client.subId' "$RUN_DIR/client.json")
 api_get "/inbounds/get/$INBOUND_ID" "$RUN_DIR/inbound.json"
 api_mutate POST "/server/restartXrayService" '{}' "$RUN_DIR/xray-restart.json"
-api_mutate POST "/setting/all" '{}' "$RUN_DIR/settings.json"
-SUB_URI=$(jq -er '.obj.subURI' "$RUN_DIR/settings.json")
+api_mutate POST "/setting/defaultSettings" '{}' "$RUN_DIR/settings-defaults.json"
+SUB_URI=$(jq -er '.obj.subURI' "$RUN_DIR/settings-defaults.json")
 SUB_HOST=$(sed -E 's#^(https?://[^/]+).*$#\1#' <<<"$SUB_URI")
 SUB_PATH_LENGTH=$((${#SUB_URI} - ${#SUB_HOST}))
 log "INFO: resolved subscription endpoint host=$SUB_HOST path_length=$SUB_PATH_LENGTH"
