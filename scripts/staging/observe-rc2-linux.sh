@@ -1,17 +1,23 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-# RC-6 observes the already-published RC-2 payload. It does not build,
-# install, update, or publish CatX-UI and uses synthetic data only.
+# RC-6 observes published RC assets by default, or a locally supplied exact-
+# SHA candidate. It does not build, install, update, or publish CatX-UI and
+# uses synthetic data only.
 readonly RELEASE_REPOSITORY="CatCodeArbelin/CatX-UI"
-readonly RELEASE_TAG="v0.1.0-rc.2"
-readonly RELEASE_VERSION="0.1.0-rc.2"
-readonly RELEASE_COMMIT="4d8feae2e62db914d3146504340d9b9f802088b2"
+readonly RELEASE_TAG="${CATX_RC6_PUBLIC_TAG:-v0.1.0-rc.2}"
+readonly RELEASE_VERSION="${CATX_RC6_PUBLIC_VERSION:-0.1.0-rc.2}"
+readonly RELEASE_COMMIT="${CATX_RC6_PUBLIC_COMMIT:-4d8feae2e62db914d3146504340d9b9f802088b2}"
+readonly CANDIDATE_BINARY="${CATX_RC6_CANDIDATE_BINARY:-}"
+readonly CANDIDATE_XRAY_BINARY="${CATX_RC6_CANDIDATE_XRAY_BINARY:-}"
+readonly CANDIDATE_COMMIT="${CATX_RC6_CANDIDATE_COMMIT:-}"
+readonly CANDIDATE_BINARY_SHA256="${CATX_RC6_CANDIDATE_SHA256:-}"
 readonly ASSET_PREFIX="catx-ui"
 readonly PANEL_PORT="${CATX_RC6_PANEL_PORT:-19185}"
 readonly SUB_PORT="${CATX_RC6_SUB_PORT:-2096}"
 readonly BASE_PATH="/rc6-observe/"
 readonly MANAGED_INTERFACE="rc6dummy0"
+readonly ADMIN_INTERFACE="rc6adm0"
 readonly ADMIN_USER="rc6-observer"
 readonly ADMIN_PASSWORD="rc6-observer-password"
 readonly CLIENT_EMAIL="rc6-linux-client@example.invalid"
@@ -65,6 +71,7 @@ finish() {
     [[ -z "$PANEL_PID" ]] || kill "$PANEL_PID" 2>/dev/null || true
     pkill -f "$RUN_DIR/payload/x-ui/bin/xray-linux-amd64" 2>/dev/null || true
     ip link show dev "$MANAGED_INTERFACE" >/dev/null 2>&1 && ip link delete "$MANAGED_INTERFACE" 2>/dev/null || true
+    ip link show dev "$ADMIN_INTERFACE" >/dev/null 2>&1 && ip link delete "$ADMIN_INTERFACE" 2>/dev/null || true
     rm -f "$COOKIE_FILE"
     rm -rf "$RUN_DIR"
     exit "$exit_code"
@@ -84,23 +91,37 @@ download_verified_asset() {
     log "PASS: verified public asset $name"
 }
 
-download_verified_asset "${ASSET_PREFIX}-linux-amd64.tar.gz"
-download_verified_asset "${ASSET_PREFIX}-release-metadata.json"
-jq -e \
-    --arg product "CatX-UI" --arg repository "$RELEASE_REPOSITORY" \
-    --arg fork "0.1.0" --arg upstream "3.8.5" --arg xray "26.9.9" \
-    --arg channel "rc" --arg version "$RELEASE_VERSION" --arg tag "$RELEASE_TAG" \
-    --arg commit "$RELEASE_COMMIT" \
-    '.product == $product and .repository == $repository and .forkVersion == $fork and
-     .upstreamBaseVersion == $upstream and .bundledXrayVersion == $xray and
-     .channel == $channel and .releaseVersion == $version and .releaseTag == $tag and
-     .prerelease == true and .latest == false and .buildCommit == $commit' \
-    "$ASSET_DIR/${ASSET_PREFIX}-release-metadata.json" >/dev/null ||
-    fail "public RC-2 metadata identity did not match the qualified release"
-cp -f "$ASSET_DIR/${ASSET_PREFIX}-release-metadata.json" "$EVIDENCE_DIR/release-metadata.json"
-log "PASS: public RC-2 metadata identity matched $RELEASE_COMMIT"
-
-tar -xzf "$ASSET_DIR/${ASSET_PREFIX}-linux-amd64.tar.gz" -C "$PAYLOAD_DIR"
+if [[ -n "$CANDIDATE_BINARY" ]]; then
+    [[ -x "$CANDIDATE_BINARY" ]] || fail "candidate x-ui binary is unavailable"
+    [[ -x "$CANDIDATE_XRAY_BINARY" ]] || fail "candidate Xray binary is unavailable"
+    [[ -n "$CANDIDATE_COMMIT" && -n "$CANDIDATE_BINARY_SHA256" ]] || fail "candidate identity inputs are incomplete"
+    actual_candidate_sha256=$(sha256sum "$CANDIDATE_BINARY" | awk '{print $1}')
+    [[ "$actual_candidate_sha256" == "$CANDIDATE_BINARY_SHA256" ]] || fail "candidate binary checksum did not match the expected exact-SHA artifact"
+    mkdir -p "$PAYLOAD_DIR/x-ui/bin"
+    cp -f "$CANDIDATE_BINARY" "$PAYLOAD_DIR/x-ui/x-ui"
+    cp -f "$CANDIDATE_XRAY_BINARY" "$PAYLOAD_DIR/x-ui/bin/xray-linux-amd64"
+    chmod +x "$PAYLOAD_DIR/x-ui/x-ui" "$PAYLOAD_DIR/x-ui/bin/xray-linux-amd64"
+    "$PAYLOAD_DIR/x-ui/x-ui" release-info > "$EVIDENCE_DIR/candidate-release-info.txt"
+    grep -Fq "build_commit=$CANDIDATE_COMMIT" "$EVIDENCE_DIR/candidate-release-info.txt" || fail "candidate release identity did not contain the expected exact commit"
+    log "PASS: exact hosted candidate identity matched commit=$CANDIDATE_COMMIT binary_sha256=$actual_candidate_sha256"
+else
+    download_verified_asset "${ASSET_PREFIX}-linux-amd64.tar.gz"
+    download_verified_asset "${ASSET_PREFIX}-release-metadata.json"
+    jq -e \
+        --arg product "CatX-UI" --arg repository "$RELEASE_REPOSITORY" \
+        --arg fork "0.1.0" --arg upstream "3.8.5" --arg xray "26.9.9" \
+        --arg channel "rc" --arg version "$RELEASE_VERSION" --arg tag "$RELEASE_TAG" \
+        --arg commit "$RELEASE_COMMIT" \
+        '.product == $product and .repository == $repository and .forkVersion == $fork and
+         .upstreamBaseVersion == $upstream and .bundledXrayVersion == $xray and
+         .channel == $channel and .releaseVersion == $version and .releaseTag == $tag and
+         .prerelease == true and .latest == false and .buildCommit == $commit' \
+        "$ASSET_DIR/${ASSET_PREFIX}-release-metadata.json" >/dev/null ||
+        fail "public ${RELEASE_VERSION} metadata identity did not match the qualified release"
+    cp -f "$ASSET_DIR/${ASSET_PREFIX}-release-metadata.json" "$EVIDENCE_DIR/release-metadata.json"
+    log "PASS: public ${RELEASE_VERSION} metadata identity matched $RELEASE_COMMIT"
+    tar -xzf "$ASSET_DIR/${ASSET_PREFIX}-linux-amd64.tar.gz" -C "$PAYLOAD_DIR"
+fi
 readonly APP_DIR="$PAYLOAD_DIR/x-ui"
 [[ -x "$APP_DIR/x-ui" ]] || fail "Linux archive did not contain executable x-ui"
 [[ -x "$APP_DIR/bin/xray-linux-amd64" ]] || fail "Linux archive did not contain Xray 26.9.9"
@@ -283,6 +304,38 @@ if nft list table inet catx_traffic_control > "$EVIDENCE_DIR/nft-after-remove.tx
 fi
 grep -q 'noqueue' "$EVIDENCE_DIR/tc-after-remove.txt" || fail "managed qdisc was not removed"
 log "PASS: Linux Traffic Control reconcile/apply/remove was idempotent and cleaned its owned state"
+
+if [[ -n "$CANDIDATE_BINARY" || "$RELEASE_TAG" == "v0.1.0-rc.3" ]]; then
+    ip link show dev "$ADMIN_INTERFACE" >/dev/null 2>&1 && ip link delete "$ADMIN_INTERFACE" 2>/dev/null || true
+    ip link add "$ADMIN_INTERFACE" type dummy
+    ip link set dev "$ADMIN_INTERFACE" up
+    tc qdisc replace dev "$ADMIN_INTERFACE" root handle 8000: fq_codel
+    tc qdisc show dev "$ADMIN_INTERFACE" > "$EVIDENCE_DIR/admin-qdisc-before.txt"
+    export CATX_TRAFFIC_CONTROL_INTERFACES="$MANAGED_INTERFACE,$ADMIN_INTERFACE"
+    stop_panel
+    start_panel
+    wait_panel
+    login
+    admin_reconcile_status=$(curl --silent --show-error -b "$COOKIE_FILE" -c "$COOKIE_FILE" -X POST \
+        -H "Content-Type: application/json" -H "X-CSRF-Token: $CSRF_TOKEN" \
+        --data "$substrate_rule" -o "$RUN_DIR/admin-reconcile.json" -w '%{http_code}' \
+        "$BASE_URL/panel/api/traffic-control/reconcile" || true)
+    [[ "$admin_reconcile_status" == 500 ]] || fail "admin-owned qdisc refusal returned HTTP $admin_reconcile_status instead of 500"
+    jq -e '.success == false' "$RUN_DIR/admin-reconcile.json" >/dev/null || fail "admin-owned qdisc refusal returned an invalid API envelope"
+    tc qdisc show dev "$ADMIN_INTERFACE" > "$EVIDENCE_DIR/admin-qdisc-after.txt"
+    cmp -s "$EVIDENCE_DIR/admin-qdisc-before.txt" "$EVIDENCE_DIR/admin-qdisc-after.txt" || fail "admin-owned qdisc changed during refusal"
+    if nft list table inet catx_traffic_control > "$EVIDENCE_DIR/admin-nft-after.txt" 2>/dev/null; then
+        fail "admin-owned qdisc refusal unexpectedly left CatX nft state"
+    fi
+    log "PASS: hosted admin-owned qdisc refusal left the separate safe interface unchanged"
+    stop_panel
+    tc qdisc del dev "$ADMIN_INTERFACE" root
+    ip link delete "$ADMIN_INTERFACE"
+    export CATX_TRAFFIC_CONTROL_INTERFACES="$MANAGED_INTERFACE"
+    start_panel
+    wait_panel
+    login
+fi
 
 group_body=$(jq -nc '{quotaBytes:1073741824,multiplierPpm:1000000,resetPeriod:"never",resetDay:1}')
 api_mutate PUT "/clients/groups/quota/${CLIENT_GROUP}" "$group_body" "$RUN_DIR/group-save.json"

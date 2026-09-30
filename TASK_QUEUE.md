@@ -558,14 +558,17 @@ Branch: `feature/rc6-rc2-observation-stable-readiness`
 Observe the already-published `v0.1.0-rc.2` on isolated/test infrastructure.
 Establish a feature-off upstream baseline before incrementally exercising
 representative CatX Analytics, DNS Intelligence, Policy, Traffic Control, and
-Operations flows. Audit and isolate the Docker release path from upstream
-image namespaces. Close only confirmed release blockers, do not add new
-product features, do not publish stable `v0.1.0`, and prepare evidence for a
-later Stable Qualification package. `main` remains untouched.
+Operations flows. If the source blocker is confirmed, carry only its focused
+fix, qualify and publish `v0.1.0-rc.3`, then repeat observation with the actual
+RC-3 assets. This remains one RC-6 package; do not create an RC-7 branch or
+work package. Audit and isolate the Docker release path from upstream image
+namespaces, do not add product features, do not publish stable `v0.1.0`, and
+keep `main` untouched.
 
-If a source-level stable blocker is found, require a focused fix and a new
-fully qualified `v0.1.0-rc.3`. If no source-level blocker is found, report RC-6
-observation success and stop before starting Stable Qualification.
+If a source-level blocker is found, finish the focused fix, exact-SHA RC-3
+qualification/publication, and actual RC-3 observation within RC-6. If that
+observation is green, record `RC-6 COMPLETE — READY TO START STABLE
+QUALIFICATION` and stop before Stable Qualification.
 
 # Operating Rules
 

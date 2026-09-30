@@ -28,9 +28,10 @@ this file:
 
 Observe the already-published `v0.1.0-rc.2` on an isolated disposable or test
 Linux host, establish the feature-off upstream baseline first, then exercise
-representative CatX capabilities incrementally. Close only confirmed
-release blockers and prepare evidence for a later Stable Qualification
-package.
+representative CatX capabilities incrementally. If observation confirms a
+source blocker, this same RC-6 package carries only the focused fix, hosted
+candidate proof, exact-SHA qualification, `v0.1.0-rc.3` publication, and
+post-publication observation. There is no separate RC-7 work package.
 
 This package must not:
 
@@ -46,7 +47,7 @@ behavior where practical.
 
 ## Observation decision
 
-If a source-level stable blocker is found, stop stable preparation and require
-a focused fix plus a new fully qualified `v0.1.0-rc.3`. If no source-level
-stable blocker is found, report RC-6 observation success and stop before
-starting the separate Stable Qualification & `v0.1.0` Cut package.
+If a source-level stable blocker is found, complete the focused fix and
+fully qualify/publish `v0.1.0-rc.3`, then repeat real observation with the
+actual RC-3 assets. When that observation is green, close RC-6 as ready to
+start Stable Qualification and stop. Stable `v0.1.0` is outside this package.
