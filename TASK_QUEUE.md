@@ -537,17 +537,35 @@ WP-9D was merged into `develop` with merge SHA
 `17588b4ed90798979ee2a3953ed5d1d8430afd6e`; its feature branch was deleted
 locally and remotely.
 
-## RC-5 — Final Second Public RC Qualification & Cut — CURRENT
+## RC-5 — Final Second Public RC Qualification & Cut — DONE
 
 Branch: `feature/rc5-final-second-public-rc`
 
-Start from exact post-WP-9D `develop` SHA
-`17588b4ed90798979ee2a3953ed5d1d8430afd6e`. Re-run release qualification and,
-only after every pre-tag gate passes, target `v0.1.0-rc.2`, preserving the RC-4
-release-engineering improvements. After the tag, perform real published-asset
-smoke checks on disposable installations. Do not touch stable `v0.1.0` and do
-not perform repository productization in RC-5. The RC-5 required-reading set is
-defined in `CURRENT_TASK.md`; no `v0.1.0-rc.2` tag or release exists yet.
+RC-5 merged into `develop` with merge SHA
+`a0cd0499d1423025ae2b8085fa3fd15db71380c3` after the exact-SHA Fork
+Verification and Release CatX-UI gates passed. The public prerelease tag is
+`v0.1.0-rc.2`, and its immutable release SHA is
+`4d8feae2e62db914d3146504340d9b9f802088b2`. The canonical tagged Release
+workflow `36674096974` passed. Post-publication clean install, actual
+published-asset RC1-to-RC2 transition, rollback, checksum, panel/Xray, and
+Russian/RTL smoke qualification passed. Stable `v0.1.0` was not published and
+`main` was not changed.
+
+## RC-6 — Real RC Observation & Stable Readiness — CURRENT
+
+Branch: `feature/rc6-rc2-observation-stable-readiness`
+
+Observe the already-published `v0.1.0-rc.2` on isolated/test infrastructure.
+Establish a feature-off upstream baseline before incrementally exercising
+representative CatX Analytics, DNS Intelligence, Policy, Traffic Control, and
+Operations flows. Audit and isolate the Docker release path from upstream
+image namespaces. Close only confirmed release blockers, do not add new
+product features, do not publish stable `v0.1.0`, and prepare evidence for a
+later Stable Qualification package. `main` remains untouched.
+
+If a source-level stable blocker is found, require a focused fix and a new
+fully qualified `v0.1.0-rc.3`. If no source-level blocker is found, report RC-6
+observation success and stop before starting Stable Qualification.
 
 # Operating Rules
 
