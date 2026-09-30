@@ -601,7 +601,7 @@ jobs:
             } >> "$GITHUB_STEP_SUMMARY"
             while IFS= read -r line; do
               echo "::error title=Linux staging diagnostic::$line"
-            done < <(grep -E 'staging:|credential|binary|health probe|checksum|archive|rollback|qualification:|update-' "$RUNNER_TEMP/linux-staging.log" || true)
+            done < <(grep -E 'staging: (post-activation rollback|rollback (systemctl|service|candidate|known-good|database|restored|panel|xray)|candidate-activated|failure=service-start)|outcome=(failure|rollback)|CRITICAL|readonly variable|updater exit' "$RUNNER_TEMP/linux-staging.log" | tail -n 80 || true)
           fi
           exit "$status"
 

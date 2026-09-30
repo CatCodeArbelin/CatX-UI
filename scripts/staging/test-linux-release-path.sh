@@ -29,8 +29,8 @@ docker run --rm \
     -e DEBIAN_FRONTEND=noninteractive \
     debian:bookworm-slim bash -euo pipefail -c '
         apt-get update -qq
-        apt-get install -y -qq --no-install-recommends curl jq python3 sqlite3 tar > /dev/null || true
-        for required in curl jq python3 sqlite3 tar sha256sum; do
+        apt-get install -y -qq --no-install-recommends curl jq procps python3 sqlite3 tar > /dev/null || true
+        for required in curl jq pgrep python3 sqlite3 tar sha256sum; do
             command -v "$required" >/dev/null || {
                 echo "required staging tool is unavailable: $required" >&2
                 exit 1
@@ -50,8 +50,94 @@ docker run --rm \
         # systemd, while preserving every transactional boundary.
         cat > /usr/local/bin/systemctl <<"EOF"
 #!/usr/bin/env bash
+set -euo pipefail
+
+live=/usr/local/x-ui
+pid_file=/tmp/catx-x-ui-service.pid
+service_log=/tmp/catx-x-ui-service.log
+evidence_file=${CATX_STAGING_ROLLBACK_EVIDENCE_FILE:-/tmp/catx-staging-rollback.log}
+shim_log=/tmp/catx-staging-systemctl.log
+
+shim_log_line() {
+  printf "systemctl: %s\n" "$*" >> "$shim_log"
+}
+
+binary_sha() {
+  sha256sum "$live/x-ui" | cut -d " " -f1
+}
+
+service_running() {
+  [[ -s "$pid_file" ]] || return 1
+  local pid
+  pid=$(cat "$pid_file")
+  kill -0 "$pid" 2>/dev/null
+}
+
+stop_service() {
+  shim_log_line "stop begin pid_file=$pid_file"
+  if service_running; then
+    local pid
+    pid=$(cat "$pid_file")
+    shim_log_line "stop pid=$pid"
+    kill "$pid" 2>/dev/null || true
+    for _ in $(seq 1 30); do
+      kill -0 "$pid" 2>/dev/null || break
+      sleep 1
+    done
+    kill -9 "$pid" 2>/dev/null || true
+  fi
+  rm -f "$pid_file"
+  shim_log_line "stop done"
+}
+
+start_service() {
+  local current_sha
+  current_sha=$(binary_sha)
+  shim_log_line "start sha=$current_sha runtime=${CATX_STAGING_RUNTIME:-0} inject=${CATX_STAGING_ROLLBACK_INJECT:-0}"
+  if [[ "${CATX_STAGING_RUNTIME:-0}" == 1 && "${CATX_STAGING_ROLLBACK_INJECT:-0}" == 1 && \
+        "$current_sha" == "${CATX_STAGING_ROLLBACK_CANDIDATE_SHA:-}" && \
+        ! -e /tmp/catx-staging-candidate-failure-injected ]]; then
+    printf "candidate-activated=%s failure=service-start\n" "$current_sha" >> "$evidence_file"
+    : > /tmp/catx-staging-candidate-failure-injected
+    printf "staging: candidate activated before injected service-start failure sha=%s\n" "$current_sha" >> "$evidence_file"
+    shim_log_line "start injected-failure sha=$current_sha"
+    return 42
+  fi
+  stop_service
+  (cd "$live" && XUI_PORT=28080 ./x-ui run) >> "$service_log" 2>&1 &
+  echo "$!" > "$pid_file"
+  shim_log_line "start launched pid=$(cat "$pid_file")"
+  for _ in $(seq 1 30); do
+    if service_running; then
+      shim_log_line "start active pid=$(cat "$pid_file")"
+      return 0
+    fi
+    if ! service_running; then
+      shim_log_line "start process-exited"
+      tail -n 40 "$service_log" >> "$shim_log" 2>/dev/null || true
+      return 1
+    fi
+    sleep 1
+  done
+  shim_log_line "start timeout"
+  tail -n 40 "$service_log" >> "$shim_log" 2>/dev/null || true
+  return 1
+}
+
 case "${1:-}" in
-  is-active) exit 0 ;;
+  daemon-reload|enable) exit 0 ;;
+  start)
+    if [[ "${CATX_STAGING_RUNTIME:-0}" != 1 ]]; then exit 0; fi
+    start_service
+    ;;
+  stop)
+    if [[ "${CATX_STAGING_RUNTIME:-0}" != 1 ]]; then exit 0; fi
+    stop_service
+    ;;
+  is-active)
+    if [[ "${CATX_STAGING_RUNTIME:-0}" != 1 ]]; then exit 0; fi
+    service_running
+    ;;
   *) exit 0 ;;
 esac
 EOF
@@ -78,12 +164,16 @@ EOF
 
         wait_http() {
             local url=$1
+            local last_code=000
             for _ in $(seq 1 30); do
                 code=$(curl -sS -o /dev/null -w "%{http_code}" "$url" || true)
+                last_code=$code
                 case "$code" in 200|301|302|307|308) return 0 ;; esac
                 sleep 1
             done
-            echo "health probe failed for $url" >&2
+            echo "health probe failed for $url (last_http_code=$last_code)" >&2
+            response=$(curl -sS --max-time 3 "$url" 2>/dev/null | tr "\\n" " " | cut -c 1-240 || true)
+            echo "health probe response=$response" >&2
             cat /tmp/release-server.log >&2 || true
             if [[ -f /tmp/x-ui.log ]]; then
                 grep -Ei "error|fatal|panic|listen|failed" /tmp/x-ui.log | tail -n 80 >&2 || true
@@ -222,6 +312,121 @@ EOF
                 wait "$panel_pid" 2>/dev/null || true
             done
         done
+
+        # Exercise the real post-activation rollback path.  The candidate is
+        # the exact archive downloaded by the release workflow; only the
+        # disposable systemctl shim injects a failure after the live swap.
+        rollback_archive="/srv/release/CatCodeArbelin/CatX-UI/releases/download/$release_tag/catx-ui-linux-amd64.tar.gz"
+        rollback_run_id=900719925474099312348
+        rollback_evidence=/tmp/catx-staging-rollback.log
+        rollback_audit=/tmp/catx-staging-update-audit.log
+        rm -f "$rollback_evidence" "$rollback_audit" /tmp/catx-staging-candidate-failure-injected
+        echo "staging: post-activation rollback case begin"
+        pkill -x xray-linux-amd64 >/dev/null 2>&1 || true
+        rm -rf /usr/local/x-ui /etc/x-ui
+        mkdir -p /usr/local/x-ui /etc/x-ui /etc/systemd/system
+        cp -a /tmp/populated-db/. /etc/x-ui/
+        cp /legacy/rc1-public/x-ui /usr/local/x-ui/x-ui
+        cp /assets/catx-ui.sh /usr/local/x-ui/x-ui.sh
+        cp /assets/catx-ui-update-lib.sh /usr/local/x-ui/catx-update-lib.sh
+        cp /assets/catx-ui-update.sh /usr/local/x-ui/update.sh
+        cp /repo/x-ui.service.debian /usr/local/x-ui/x-ui.service.debian
+        chmod +x /usr/local/x-ui/x-ui /usr/local/x-ui/x-ui.sh /usr/local/x-ui/update.sh
+        mkdir -p /usr/local/x-ui/bin
+        for runtime_asset in xray-linux-amd64 geoip.dat geosite.dat geoip_IR.dat geosite_IR.dat geoip_RU.dat geosite_RU.dat; do
+            tar -xOzf "$rollback_archive" "x-ui/bin/$runtime_asset" > "/usr/local/x-ui/bin/$runtime_asset"
+        done
+        chmod +x /usr/local/x-ui/bin/xray-linux-amd64
+
+        # These synthetic external files make restoration observable without
+        # introducing credentials or relying on a host service manager.
+        printf "#!/usr/bin/env bash\n# synthetic known-good CLI\n" > /usr/bin/x-ui
+        chmod 755 /usr/bin/x-ui
+        printf "synthetic-known-good-service\n" > /etc/systemd/system/x-ui.service
+        printf "CATX_SYNTHETIC_KNOWN_GOOD=environment\n" > /etc/default/x-ui
+
+        known_good_sha=$(sha256sum /usr/local/x-ui/x-ui | cut -d " " -f1)
+        candidate_sha=$(tar -xOzf "$rollback_archive" x-ui/x-ui | sha256sum | cut -d " " -f1)
+        candidate_release_info=$(cat "/srv/release/CatCodeArbelin/CatX-UI/releases/download/$release_tag/catx-ui-release-metadata.json")
+        known_good_release_info=$(/usr/local/x-ui/x-ui release-info 2>/dev/null || true)
+        if [[ -n "$known_good_release_info" ]]; then
+            known_good_identity="$known_good_release_info"
+        else
+            known_good_identity="binary-sha=$known_good_sha"
+        fi
+        db_marker_before=$(sqlite3 /etc/x-ui/x-ui.db "SELECT value FROM catx_rc2_fixture WHERE key = \"synthetic-client\";")
+        cli_before=$(sha256sum /usr/bin/x-ui | cut -d " " -f1)
+        service_before=$(sha256sum /etc/systemd/system/x-ui.service | cut -d " " -f1)
+        environment_before=$(sha256sum /etc/default/x-ui | cut -d " " -f1)
+        echo "staging: rollback known-good binary sha=$known_good_sha"
+        echo "staging: rollback candidate binary sha=$candidate_sha"
+        echo "staging: rollback candidate identity=$candidate_release_info"
+        echo "staging: rollback known-good identity=$known_good_identity"
+        echo "staging: rollback database marker before=$db_marker_before"
+        test "$known_good_sha" != "$candidate_sha"
+
+        export CATX_STAGING_RUNTIME=1
+        export CATX_STAGING_ROLLBACK_INJECT=1
+        export CATX_STAGING_ROLLBACK_CANDIDATE_SHA="$candidate_sha"
+        export CATX_STAGING_ROLLBACK_EVIDENCE_FILE="$rollback_evidence"
+        set +e
+        XUI_UPDATE_RUN_ID="$rollback_run_id" XUI_UPDATE_TAG="$release_tag" CATX_UPDATE_AUDIT_FILE="$rollback_audit" env -u CATX_RELEASE_OWNER -u CATX_RELEASE_REPOSITORY -u CATX_RELEASE_SLUG bash /tmp/staging-update.sh >/tmp/update-post-activation-rollback.log 2>&1 < /dev/null
+        rollback_rc=$?
+        set -e
+        echo "staging: post-activation rollback updater exit=$rollback_rc"
+        tail -n 80 /tmp/update-post-activation-rollback.log >&2 || true
+        echo "staging: rollback systemctl-tail=$(tail -n 12 /tmp/catx-staging-systemctl.log 2>/dev/null | tr "\n" ";" || true)"
+        rollback_pid=$(cat /tmp/catx-x-ui-service.pid 2>/dev/null || true)
+        rollback_alive=no
+        if [[ -n "$rollback_pid" ]] && kill -0 "$rollback_pid" 2>/dev/null; then rollback_alive=yes; fi
+        echo "staging: rollback service-pid=$rollback_pid alive=$rollback_alive log-bytes=$(wc -c < /tmp/catx-x-ui-service.log 2>/dev/null || echo 0)"
+        if [[ -s /tmp/catx-x-ui-service.log ]]; then
+            tail -n 20 /tmp/catx-x-ui-service.log | while IFS= read -r line; do echo "staging: rollback service-log $line"; done
+        fi
+        cat "$rollback_evidence" >&2
+        grep -Fq "candidate-activated=$candidate_sha" "$rollback_evidence"
+        grep -Fq "failure=service-start" "$rollback_evidence"
+        test "$rollback_rc" -eq 2
+        jq -e --arg run "$rollback_run_id" ".runId == \$run and .state == \"failed\" and .exitCode == 2 and .rolledBack == true and .rollbackHealthy == true" /etc/x-ui/update-status.json >/dev/null
+        grep -Fq "outcome=failure" "$rollback_audit"
+        grep -Fq "outcome=rollback rollback_healthy=1" "$rollback_audit"
+
+        restored_sha=$(sha256sum /usr/local/x-ui/x-ui | cut -d " " -f1)
+        restored_cli=$(sha256sum /usr/bin/x-ui | cut -d " " -f1)
+        restored_service=$(sha256sum /etc/systemd/system/x-ui.service | cut -d " " -f1)
+        restored_environment=$(sha256sum /etc/default/x-ui | cut -d " " -f1)
+        db_marker_after=$(sqlite3 /etc/x-ui/x-ui.db "SELECT value FROM catx_rc2_fixture WHERE key = \"synthetic-client\";")
+        test "$restored_sha" = "$known_good_sha"
+        test "$restored_sha" != "$candidate_sha"
+        test "$restored_cli" = "$cli_before"
+        test "$restored_service" = "$service_before"
+        test "$restored_environment" = "$environment_before"
+        test "$db_marker_after" = "$db_marker_before"
+        if [[ -n "$known_good_release_info" ]]; then
+            test "$known_good_release_info" = "$(/usr/local/x-ui/x-ui release-info 2>/dev/null)"
+        fi
+        echo "staging: rollback restored binary sha=$restored_sha"
+        echo "staging: rollback database marker after=$db_marker_after"
+        test -s /tmp/catx-x-ui-service.pid
+        service_pid=$(cat /tmp/catx-x-ui-service.pid)
+        kill -0 "$service_pid"
+        wait_http http://127.0.0.1:28080/staging/
+        curl -fsS http://127.0.0.1:28080/staging/ >/dev/null
+        xray_pid=""
+        for proc in /proc/[0-9]*; do
+            proc_pid=${proc#/proc/}
+            if [[ "$proc_pid" != 1 && "$(readlink "$proc/exe" 2>/dev/null || true)" == "/usr/local/x-ui/bin/xray-linux-amd64" ]]; then
+                xray_pid=$proc_pid
+                break
+            fi
+        done
+        test -n "$xray_pid"
+        kill -0 "$xray_pid"
+        grep -Eiq "xray.*started" /tmp/catx-x-ui-service.log
+        echo "staging: rollback restored panel healthy pid=$service_pid"
+        echo "staging: rollback restored xray healthy pid=$xray_pid"
+        systemctl stop x-ui
+        export CATX_STAGING_RUNTIME=0 CATX_STAGING_ROLLBACK_INJECT=0
 
         # Corruption is rejected before the known-good installation is
         # replaced.  This is an actual updater invocation, not a unit mock.

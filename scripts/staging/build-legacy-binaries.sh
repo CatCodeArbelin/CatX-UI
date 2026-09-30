@@ -27,6 +27,7 @@ while [[ $# -gt 0 ]]; do
     # Go's embed matcher must see a real file in the archived frontend tree;
     # the current release artifact supplies the actual UI during qualification.
     printf '<!doctype html><title>legacy staging placeholder</title>\n' > "$work/internal/web/dist/index.html"
+    printf '<!doctype html><title>legacy staging login placeholder</title>\n' > "$work/internal/web/dist/login.html"
     printf 'legacy staging placeholder\n' > "$work/internal/web/dist/assets/index.txt"
     (cd "$work" && GOWORK=off CGO_ENABLED=1 go build -mod=mod -buildvcs=false -o "$out_dir/$label/x-ui" .)
     chmod +x "$out_dir/$label/x-ui"
