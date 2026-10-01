@@ -56,6 +56,8 @@ jobs:
       - name: Run focused fork lifecycle coverage
         run: |
           set -euo pipefail
+          mkdir -p internal/web/dist
+          touch internal/web/dist/.gitkeep
           go test -count=1 ./internal/forkext ./internal/database ./internal/web
           go test -race -count=1 ./internal/forkext
 
