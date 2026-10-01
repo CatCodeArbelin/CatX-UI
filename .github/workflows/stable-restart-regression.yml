@@ -40,6 +40,17 @@ jobs:
         with:
           go-version-file: go.mod
           cache: true
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Build frontend bundle
+        run: |
+          npm ci
+          npm run build
+        working-directory: frontend
 
       - name: Install Linux qualification dependencies
         run: |
@@ -56,8 +67,6 @@ jobs:
       - name: Run focused fork lifecycle coverage
         run: |
           set -euo pipefail
-          mkdir -p internal/web/dist
-          touch internal/web/dist/.gitkeep
           go test -count=1 ./internal/forkext ./internal/database ./internal/web
           go test -race -count=1 ./internal/forkext
 
@@ -69,8 +78,6 @@ jobs:
         run: |
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
-          mkdir -p internal/web/dist
-          touch internal/web/dist/.gitkeep
           go build -buildvcs=false -ldflags "-s -w -X github.com/mhsanaei/3x-ui/v3/internal/config.buildCommit=$GITHUB_SHA -X github.com/mhsanaei/3x-ui/v3/internal/config.buildChannel=rc -X github.com/mhsanaei/3x-ui/v3/internal/config.buildDate=$(date -u +%Y-%m-%dT%H:%M:%SZ)" -o "$CANDIDATE_BINARY" .
           curl --fail --location --retry 4 --retry-all-errors --retry-delay 2 \
             -o "$RUNNER_TEMP/xray.zip" \
