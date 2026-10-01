@@ -377,14 +377,14 @@ login
 
 if [[ "$PUBLIC_CHANNEL" == stable ]]; then
     api_get "/server/getPanelUpdateInfo" "$RUN_DIR/stable-update-info.json"
-    jq -e --arg repository "$RELEASE_REPOSITORY" \
-        '.obj.channel == "stable" and .obj.currentVersion == "0.1.0" and
-         .obj.latestVersion == "0.1.0" and .obj.upstreamBaseVersion == "3.8.5" and
+    cp -f "$RUN_DIR/stable-update-info.json" "$EVIDENCE_DIR/stable-update-info.json"
+    jq -e --arg repository "$RELEASE_REPOSITORY" --arg version "$RELEASE_VERSION" --arg tag "$RELEASE_TAG" \
+        '.obj.channel == "stable" and .obj.currentVersion == $version and
+         .obj.latestVersion == $tag and .obj.upstreamBaseVersion == "3.8.5" and
          .obj.bundledXrayVersion == "26.9.9" and .obj.releaseRepository == $repository and
          .obj.updateAvailable == false' "$RUN_DIR/stable-update-info.json" >/dev/null ||
-        fail "stable updater identity did not report current/latest v0.1.0"
-    cp -f "$RUN_DIR/stable-update-info.json" "$EVIDENCE_DIR/stable-update-info.json"
-    log "PASS: updater reported stable v0.1.0 identity from the CatX repository"
+        fail "stable updater identity did not report current ${RELEASE_VERSION} and latest ${RELEASE_TAG}"
+    log "PASS: updater reported stable ${RELEASE_VERSION} identity from the CatX repository"
 fi
 
 api_get "/server/status" "$RUN_DIR/status-off.json"
