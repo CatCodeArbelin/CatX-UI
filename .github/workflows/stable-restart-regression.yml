@@ -6,6 +6,9 @@ on:
       - feature/stable-v0.1.0-qualification
     paths:
       - ".github/workflows/stable-restart-regression.yml"
+      - "internal/database/db.go"
+      - "internal/forkext/**"
+      - "internal/web/web.go"
       - "scripts/staging/observe-rc2-linux.sh"
   workflow_dispatch:
     inputs:
@@ -24,7 +27,102 @@ permissions:
   contents: read
 
 jobs:
+  candidate-restart-regression:
+    if: github.event_name == 'push'
+    name: Exercise real restartPanel on exact-SHA candidate
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Install Linux qualification dependencies
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends curl jq iproute2 nftables unzip
+          sudo modprobe ifb numifbs=8
+          sudo modprobe sch_htb
+          sudo modprobe sch_ingress
+          sudo modprobe cls_flower
+          sudo modprobe cls_fw
+          sudo modprobe act_mirred
+
+      - name: Run focused fork lifecycle coverage
+        run: |
+          set -euo pipefail
+          go test -count=1 ./internal/forkext ./internal/database ./internal/web
+          go test -race -count=1 ./internal/forkext
+
+      - name: Build and identify the exact candidate
+        env:
+          CANDIDATE_BINARY: ${{ runner.temp }}/catx-candidate-x-ui
+          CANDIDATE_XRAY: ${{ runner.temp }}/xray-linux-amd64
+          CANDIDATE_XRAY_ASSETS: ${{ runner.temp }}/xray-assets
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          mkdir -p internal/web/dist
+          touch internal/web/dist/.gitkeep
+          go build -buildvcs=false -ldflags "-s -w -X github.com/mhsanaei/3x-ui/v3/internal/config.buildCommit=$GITHUB_SHA -X github.com/mhsanaei/3x-ui/v3/internal/config.buildChannel=rc -X github.com/mhsanaei/3x-ui/v3/internal/config.buildDate=$(date -u +%Y-%m-%dT%H:%M:%SZ)" -o "$CANDIDATE_BINARY" .
+          curl --fail --location --retry 4 --retry-all-errors --retry-delay 2 \
+            -o "$RUNNER_TEMP/xray.zip" \
+            "https://github.com/XTLS/Xray-core/releases/download/v26.9.9/Xray-linux-64.zip"
+          unzip -q "$RUNNER_TEMP/xray.zip" xray geoip.dat geosite.dat -d "$RUNNER_TEMP/xray-unpacked"
+          install -m 0755 "$RUNNER_TEMP/xray-unpacked/xray" "$CANDIDATE_XRAY"
+          mkdir -p "$CANDIDATE_XRAY_ASSETS"
+          install -m 0644 "$RUNNER_TEMP/xray-unpacked/geoip.dat" "$CANDIDATE_XRAY_ASSETS/geoip.dat"
+          install -m 0644 "$RUNNER_TEMP/xray-unpacked/geosite.dat" "$CANDIDATE_XRAY_ASSETS/geosite.dat"
+          sha256sum "$CANDIDATE_BINARY" | tee "$RUNNER_TEMP/candidate.sha256"
+          "$CANDIDATE_BINARY" release-info | tee "$RUNNER_TEMP/candidate-release-info.txt"
+          grep -F "build_commit=$GITHUB_SHA" "$RUNNER_TEMP/candidate-release-info.txt"
+
+      - name: Run real restart regression on disposable Linux state
+        env:
+          CATX_RC6_CANDIDATE_BINARY: ${{ runner.temp }}/catx-candidate-x-ui
+          CATX_RC6_CANDIDATE_XRAY_BINARY: ${{ runner.temp }}/xray-linux-amd64
+          CATX_RC6_CANDIDATE_XRAY_ASSET_DIR: ${{ runner.temp }}/xray-assets
+          CATX_RC6_CANDIDATE_COMMIT: ${{ github.sha }}
+          CATX_RC6_EVIDENCE_DIR: ${{ runner.temp }}/stable-candidate-restart-evidence
+        run: |
+          set -euo pipefail
+          candidate_sha256=$(cut -d ' ' -f1 "$RUNNER_TEMP/candidate.sha256")
+          test -n "$candidate_sha256"
+          sudo env \
+            CATX_STABLE_RESTART_REGRESSION_ONLY=1 \
+            "CATX_RC6_CANDIDATE_BINARY=$CATX_RC6_CANDIDATE_BINARY" \
+            "CATX_RC6_CANDIDATE_XRAY_BINARY=$CATX_RC6_CANDIDATE_XRAY_BINARY" \
+            "CATX_RC6_CANDIDATE_XRAY_ASSET_DIR=$CATX_RC6_CANDIDATE_XRAY_ASSET_DIR" \
+            "CATX_RC6_CANDIDATE_COMMIT=$CATX_RC6_CANDIDATE_COMMIT" \
+            "CATX_RC6_CANDIDATE_SHA256=$candidate_sha256" \
+            "CATX_RC6_EVIDENCE_DIR=$CATX_RC6_EVIDENCE_DIR" \
+            bash scripts/staging/observe-rc2-linux.sh
+
+      - name: Summarize sanitized candidate evidence
+        if: always()
+        run: |
+          evidence="${RUNNER_TEMP}/stable-candidate-restart-evidence"
+          if [ -d "$evidence" ]; then
+            find "$evidence" -maxdepth 1 -type f -printf '%f\n' | sort
+            if [ -f "$evidence/observation.log" ]; then cat "$evidence/observation.log"; fi
+          fi
+
+      - name: Upload sanitized candidate evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stable-candidate-restart-${{ github.run_id }}
+          path: ${{ runner.temp }}/stable-candidate-restart-evidence
+          if-no-files-found: warn
+          retention-days: 30
+
   restart-regression:
+    if: github.event_name == 'workflow_dispatch'
     name: Exercise real restartPanel on actual public RC assets
     runs-on: ubuntu-latest
     timeout-minutes: 30

@@ -7,7 +7,7 @@ package forkext
 import (
 	"context"
 	"encoding/json"
-	"log"
+	"fmt"
 	"time"
 
 	"github.com/mhsanaei/3x-ui/v3/internal/analytics"
@@ -34,101 +34,171 @@ import (
 // side effects while all fork features are disabled.
 func Install() {}
 
-// RegisterMigrations is the single database integration point for fork-owned
-// migrations. Analytics is opt-in; the default path is an exact no-op.
-func RegisterMigrations(db *gorm.DB) error {
-	setSettingsDB(db)
+type runtimeConfig struct {
+	analytics      bool
+	dns            bool
+	policies       bool
+	trafficControl bool
+	security       bool
+	audit          bool
+	selfService    bool
+	fleetUpdates   bool
+	fleetMutation  bool
+}
+
+func loadRuntimeConfig(db *gorm.DB) (runtimeConfig, error) {
 	if db == nil {
-		portal.Configure(nil, false)
-		fleetupdate.Configure(nil, false)
-		audit.Configure(nil, false)
-		groupquota.Configure(nil, false)
-		trafficpolicy.Configure(nil, false)
-		trafficcontrol.Configure(false)
-		analytics.Configure(analytics.NoopRepository{}, false)
-		policy.Configure(nil, false)
-		risk.Configure(nil, false)
+		return runtimeConfig{}, nil
+	}
+	values := make(map[Flag]bool, len(managedFeatureFlags))
+	settings := NewSettings(db)
+	for _, feature := range managedFeatureFlags {
+		enabled, err := settings.Enabled(feature.flag)
+		if err != nil {
+			return runtimeConfig{}, fmt.Errorf("read fork feature flag %s: %w", feature.flag, err)
+		}
+		values[feature.flag] = enabled
+	}
+	if err := validateFeatureState(values); err != nil {
+		return runtimeConfig{}, fmt.Errorf("validate fork feature flags: %w", err)
+	}
+	return runtimeConfig{
+		analytics:      values[FlagAnalytics],
+		dns:            values[FlagDNSIntelligence],
+		policies:       values[FlagPolicies],
+		trafficControl: values[FlagTrafficControl],
+		security:       values[FlagSecurityAnomaly],
+		audit:          values[FlagAudit],
+		selfService:    values[FlagSelfService],
+		fleetUpdates:   values[FlagFleetUpdates],
+		fleetMutation:  values[FlagFleetMutation],
+	}, nil
+}
+
+func prepareRuntimeSchema(db *gorm.DB, cfg runtimeConfig) error {
+	if db == nil {
 		return nil
 	}
-	portalEnabled, _ := NewSettings(db).Enabled(FlagSelfService)
+	// The portal schema has historically been part of every CatX database.
+	// Preserve that compatibility while keeping all other optional schemas
+	// gated by the feature that owns them.
 	if err := portal.Migrate(db); err != nil {
-		return err
+		return fmt.Errorf("prepare self-service schema: %w", err)
 	}
-	portal.Configure(db, portalEnabled)
-	fleetEnabled, _ := NewSettings(db).Enabled(FlagFleetUpdates)
-	fleetupdate.Configure(db, fleetEnabled)
-	fleetMutationEnabled, _ := NewSettings(db).Enabled(FlagFleetMutation)
-	if s := fleetupdate.Current(); s != nil {
-		s.SetMutationEnabled(fleetMutationEnabled)
-	}
-	auditEnabled, _ := NewSettings(db).Enabled(FlagAudit)
-	webhooksEnabled, _ := NewSettings(db).Enabled(FlagWebhooks)
-	if auditEnabled {
-		if err := audit.Migrate(db); err != nil {
-			return err
+	if cfg.fleetUpdates {
+		if err := fleetupdate.Migrate(db); err != nil {
+			return fmt.Errorf("prepare fleet-update schema: %w", err)
 		}
 	}
-	_ = webhooksEnabled // retained as an explicit flag for future delivery-only disablement
-	audit.Configure(db, auditEnabled)
-	trafficControlEnabled, err := NewSettings(db).Enabled(FlagTrafficControl)
-	if err != nil {
-		trafficControlEnabled = false
+	if cfg.audit {
+		if err := audit.Migrate(db); err != nil {
+			return fmt.Errorf("prepare audit schema: %w", err)
+		}
 	}
-	if trafficControlEnabled {
+	if cfg.trafficControl {
 		if err := groupquota.Migrate(db); err != nil {
-			return err
+			return fmt.Errorf("prepare group-quota schema: %w", err)
 		}
 		if err := trafficpolicy.Migrate(db); err != nil {
-			return err
+			return fmt.Errorf("prepare traffic-policy schema: %w", err)
 		}
 	}
-	groupquota.Configure(db, trafficControlEnabled)
-	trafficpolicy.Configure(db, trafficControlEnabled)
-	trafficcontrol.Configure(trafficControlEnabled)
-	analyticsEnabled, err := NewSettings(db).Enabled(FlagAnalytics)
-	if err != nil {
-		log.Printf("fork analytics disabled: cannot read feature flag: %v", err)
-		analyticsEnabled = false
+	if cfg.analytics {
+		if err := analytics.Migrate(db); err != nil {
+			return fmt.Errorf("prepare analytics schema: %w", err)
+		}
 	}
-	if !analyticsEnabled {
-		analytics.Configure(analytics.NoopRepository{}, false)
-	} else if err := analytics.Migrate(db); err != nil {
-		log.Printf("fork analytics migration skipped after error: %v", err)
-		analytics.Configure(analytics.NoopRepository{}, false)
-		analyticsEnabled = false
-	} else {
+	if cfg.policies {
+		if err := policy.Migrate(db); err != nil {
+			return fmt.Errorf("prepare policy schema: %w", err)
+		}
+	}
+	if cfg.security {
+		if err := risk.Migrate(db); err != nil {
+			return fmt.Errorf("prepare security-anomaly schema: %w", err)
+		}
+	}
+	return nil
+}
+
+func disableRuntime() {
+	portal.Configure(nil, false)
+	fleetupdate.Configure(nil, false)
+	audit.Configure(nil, false)
+	groupquota.Configure(nil, false)
+	trafficpolicy.Configure(nil, false)
+	trafficcontrol.Configure(false)
+	analytics.Configure(analytics.NoopRepository{}, false)
+	analytics.SetEvidenceEnabled(false)
+	policy.Configure(nil, false)
+	risk.Configure(nil, false)
+}
+
+func applyRuntimeConfig(db *gorm.DB, cfg runtimeConfig) {
+	portal.Configure(db, cfg.selfService)
+	fleetupdate.Configure(db, cfg.fleetUpdates)
+	if service := fleetupdate.Current(); service != nil {
+		service.SetMutationEnabled(cfg.fleetMutation)
+	}
+	audit.Configure(db, cfg.audit)
+	groupquota.Configure(db, cfg.trafficControl)
+	trafficpolicy.Configure(db, cfg.trafficControl)
+	trafficcontrol.Configure(cfg.trafficControl)
+	if cfg.analytics {
 		analytics.Configure(analytics.NewRepository(db, true), true)
 		analytics.SetRetentionPolicy(retentionPolicyFromDB(db))
+	} else {
+		analytics.Configure(analytics.NoopRepository{}, false)
 	}
-	policiesEnabled, err := NewSettings(db).Enabled(FlagPolicies)
+	analytics.SetEvidenceEnabled(cfg.analytics && cfg.dns)
+	policy.Configure(db, cfg.policies)
+	risk.Configure(db, cfg.security)
+}
+
+// RegisterMigrations is the single database integration point for initial
+// fork-owned schema preparation. It deliberately does not configure runtime
+// state; database startup performs that as a separate lifecycle step.
+func RegisterMigrations(db *gorm.DB) error {
+	setSettingsDB(db)
+	cfg, err := loadRuntimeConfig(db)
 	if err != nil {
-		log.Printf("fork policies disabled: cannot read feature flag: %v", err)
-		policiesEnabled = false
+		disableRuntime()
+		return err
 	}
-	if policiesEnabled {
-		if err := policy.Migrate(db); err != nil {
-			log.Printf("fork policy migration skipped after error: %v", err)
-			policiesEnabled = false
-		}
+	if err := prepareRuntimeSchema(db, cfg); err != nil {
+		disableRuntime()
+		return err
 	}
-	policy.Configure(db, policiesEnabled)
-	dnsEnabled, err := NewSettings(db).Enabled(FlagDNSIntelligence)
+	return nil
+}
+
+// ConfigureRuntimeFromSettings configures in-process fork services only. The
+// caller must prepare schema first; keeping this separate prevents a panel
+// restart from repeating upstream database initialization or seeders.
+func ConfigureRuntimeFromSettings(db *gorm.DB) error {
+	cfg, err := loadRuntimeConfig(db)
 	if err != nil {
-		log.Printf("fork DNS intelligence disabled: cannot read feature flag: %v", err)
-		dnsEnabled = false
+		disableRuntime()
+		return err
 	}
-	analytics.SetEvidenceEnabled(analyticsEnabled && dnsEnabled)
-	securityEnabled, err := NewSettings(db).Enabled(FlagSecurityAnomaly)
+	applyRuntimeConfig(db, cfg)
+	return nil
+}
+
+// ReloadRuntimeFromSettings is the panel-restart boundary. It prepares any
+// newly enabled fork schema before publishing the new in-process state.
+func ReloadRuntimeFromSettings(db *gorm.DB) error {
+	setSettingsDB(db)
+	cfg, err := loadRuntimeConfig(db)
 	if err != nil {
-		securityEnabled = false
+		disableRuntime()
+		return err
 	}
-	if securityEnabled && analyticsEnabled {
-		if err := risk.Migrate(db); err != nil {
-			log.Printf("fork risk migration skipped after error: %v", err)
-			securityEnabled = false
-		}
+	if err := prepareRuntimeSchema(db, cfg); err != nil {
+		disableRuntime()
+		return err
 	}
-	risk.Configure(db, securityEnabled && analyticsEnabled)
+	applyRuntimeConfig(db, cfg)
 	return nil
 }
 

@@ -320,6 +320,23 @@ func TestConfigureDisabledCleansOwnedState(t *testing.T) {
 	}
 }
 
+func TestConfigureEnabledPreservesRollbackOwnershipAcrossPanelRestart(t *testing.T) {
+	e := &lifecycleExecutor{}
+	b := NewBackend(e, "linux", []string{"eth0"})
+	rule := DesiredRule{NodeKey: "n", ClientKey: "c", Interface: "eth0", Mark: 10, UploadRateBps: 8000, DownloadRateBps: 8000, Selectors: []string{"192.0.2.1/32"}}
+	if _, err := b.Reconcile(context.Background(), []DesiredRule{rule}); err != nil {
+		t.Fatalf("apply owned state: %v", err)
+	}
+	SetBackendForTests(b)
+	t.Cleanup(func() { Configure(false) })
+
+	Configure(true)
+	Configure(false)
+	if e.qdisc || e.ifb || e.nft {
+		t.Fatalf("enabled restart lost rollback ownership: qdisc=%v ifb=%v nft=%v", e.qdisc, e.ifb, e.nft)
+	}
+}
+
 func TestIFBNameStaysWithinLinuxInterfaceLimit(t *testing.T) {
 	name := ifbName("catxrc6dummy0")
 	if len(name) > 15 {

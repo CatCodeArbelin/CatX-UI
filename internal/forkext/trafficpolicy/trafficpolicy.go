@@ -148,6 +148,11 @@ func getDB() (*gorm.DB, bool) {
 	return db, enabled && db != nil
 }
 
+func Enabled() bool {
+	_, enabled := getDB()
+	return enabled
+}
+
 func validatePolicy(p *Policy) error {
 	if strings.TrimSpace(p.ClientEmail) == "" || p.WindowSeconds < 60 || p.WindowSeconds > 366*24*60*60 {
 		return errors.New("client email and fixed window of 60..31622400 seconds are required")
