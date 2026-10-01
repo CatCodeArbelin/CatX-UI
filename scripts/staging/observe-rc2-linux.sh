@@ -260,11 +260,15 @@ restart_panel_via_api() {
 
 assert_restart_surfaces() {
     local phase=$1 expected=$2
+    log "INFO: checking ${phase} restart server health"
     api_get "/server/status" "$RUN_DIR/status-${phase}.json"
+    cp -f "$RUN_DIR/status-${phase}.json" "$EVIDENCE_DIR/"
     jq -e '(.obj.xray.state == "running") or (.obj.xrayState == "running")' \
         "$RUN_DIR/status-${phase}.json" >/dev/null || fail "Xray was not healthy after ${phase} restart"
 
+    log "INFO: checking ${phase} persisted CatX feature flags"
     api_get "/fork/settings/features" "$RUN_DIR/features-${phase}.json"
+    cp -f "$RUN_DIR/features-${phase}.json" "$EVIDENCE_DIR/"
     if [[ "$expected" == enabled ]]; then
         jq -e '([.obj.items[] | select(.key == "analytics.enabled" or .key == "dns_intelligence.enabled") | .enabled] | sort) == [true, true]' \
             "$RUN_DIR/features-${phase}.json" >/dev/null || fail "CatX enabled flags did not survive ${phase} restart"
@@ -273,13 +277,16 @@ assert_restart_surfaces() {
             "$RUN_DIR/features-${phase}.json" >/dev/null || fail "CatX disabled flags did not survive ${phase} restart"
     fi
 
+    log "INFO: checking ${phase} analytics and DNS Intelligence APIs"
     api_get "/analytics/status" "$RUN_DIR/analytics-status-${phase}.json"
+    cp -f "$RUN_DIR/analytics-status-${phase}.json" "$EVIDENCE_DIR/"
     api_get "/analytics/settings" "$RUN_DIR/analytics-settings-${phase}.json"
+    cp -f "$RUN_DIR/analytics-settings-${phase}.json" "$EVIDENCE_DIR/"
     api_get "/analytics/clients/${CLIENT_EMAIL}/activity" "$RUN_DIR/activity-${phase}.json"
+    cp -f "$RUN_DIR/activity-${phase}.json" "$EVIDENCE_DIR/"
     api_get "/analytics/clients/${CLIENT_EMAIL}/dns" "$RUN_DIR/dns-${phase}.json"
-    cp -f "$RUN_DIR/status-${phase}.json" "$RUN_DIR/features-${phase}.json" \
-        "$RUN_DIR/analytics-status-${phase}.json" "$RUN_DIR/analytics-settings-${phase}.json" \
-        "$RUN_DIR/activity-${phase}.json" "$RUN_DIR/dns-${phase}.json" "$EVIDENCE_DIR/"
+    cp -f "$RUN_DIR/dns-${phase}.json" "$EVIDENCE_DIR/"
+    log "INFO: checking ${phase} Activity page"
     activity_page_code=$(curl --connect-timeout 2 --max-time 5 --silent --show-error \
         -b "$COOKIE_FILE" -o "$RUN_DIR/activity-page-${phase}.html" -w '%{http_code}' \
         "$BASE_URL/activity" || true)
