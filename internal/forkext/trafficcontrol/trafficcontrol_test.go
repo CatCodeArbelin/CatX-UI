@@ -404,7 +404,7 @@ func TestRemoteReconcileRefusesUnsupportedAndDegradedCapabilitiesWithoutMutation
 			if err == nil {
 				t.Fatal("ReconcileRemote error = nil, want explicit refusal")
 			}
-			if status.Capabilities.State != tt.wantState || status.Capabilities.Reason != tt.wantReason {
+			if status.State != tt.wantState || status.Reason != tt.wantReason {
 				t.Fatalf("status=%+v, want state=%q reason=%q", status, tt.wantState, tt.wantReason)
 			}
 			if tt.remote.calls != 1 {
