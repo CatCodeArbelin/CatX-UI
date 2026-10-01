@@ -380,7 +380,7 @@ if [[ "$STABLE_RESTART_REGRESSION_ONLY" == 1 ]]; then
         "$RUN_DIR/features-on-before-restart.json" >/dev/null || fail "CatX enabled flags were not persisted before the real restart"
     restart_panel_via_api enabled
     log "INFO: enabled restart helper returned; entering surface assertions"
-    assert_restart_surfaces enabled
+    assert_restart_surfaces enabled enabled
 
     api_mutate PUT "/fork/settings/features" \
         '{"flags":{"analytics.enabled":false,"dns_intelligence.enabled":false,"policies.enabled":false,"traffic_control.enabled":false,"audit.enabled":false,"self_service.enabled":false,"fleet_updates.enabled":false,"fleet_updates.mutation.enabled":false}}' \
@@ -389,7 +389,7 @@ if [[ "$STABLE_RESTART_REGRESSION_ONLY" == 1 ]]; then
     jq -e '([.obj.items[] | select(.key == "analytics.enabled" or .key == "dns_intelligence.enabled") | .enabled] | sort) == [false, false]' \
         "$RUN_DIR/features-off-before-restart.json" >/dev/null || fail "CatX disabled flags were not persisted before the real restart"
     restart_panel_via_api disabled
-    assert_restart_surfaces disabled
+    assert_restart_surfaces disabled disabled
     api_get "/clients/get/${CLIENT_EMAIL}" "$RUN_DIR/client-after-restart.json"
     jq -e --arg email "$CLIENT_EMAIL" '.obj.client.email == $email' "$RUN_DIR/client-after-restart.json" >/dev/null ||
         fail "synthetic database client was not preserved across real panel restarts"
