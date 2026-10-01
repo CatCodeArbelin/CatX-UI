@@ -26,6 +26,27 @@ type Backend struct {
 	desired    map[string]DesiredRule
 }
 
+type interfacePlan struct {
+	rootOwned    bool
+	ingressOwned bool
+	ifbOwned     bool
+	ifbPresent   bool
+}
+
+type interfaceMutation struct {
+	iface          string
+	ifb            string
+	mutated        bool
+	rootCreated    bool
+	ingressCreated bool
+	ifbCreated     bool
+	ifbRootCreated bool
+}
+
+func (m interfaceMutation) changed() bool {
+	return m.mutated || m.rootCreated || m.ingressCreated || m.ifbCreated || m.ifbRootCreated
+}
+
 func NewBackend(e Executor, platform string, interfaces []string) *Backend {
 	if e == nil {
 		e = processExecutor{}
@@ -156,19 +177,27 @@ func (b *Backend) Reconcile(ctx context.Context, rules []DesiredRule) (Status, e
 		byIface[rule.Interface] = append(byIface[rule.Interface], rule)
 	}
 	allRules := make([]DesiredRule, 0, len(rules))
+	mutations := make([]interfaceMutation, 0, len(b.interfaces))
 	for _, iface := range b.interfaces {
-		if err := b.reconcileInterface(ctx, iface, byIface[iface]); err != nil {
+		mutation, err := b.reconcileInterface(ctx, iface, byIface[iface])
+		if mutation.changed() {
+			mutations = append(mutations, mutation)
+		}
+		if err != nil {
 			status.State, status.Reason, status.LastError = State(stateDegraded), "apply failed", err.Error()
-			_ = b.rollback(ctx, iface)
+			if rollbackErr := b.rollbackMutations(ctx, mutations, false); rollbackErr != nil {
+				status.LastError += "; rollback: " + rollbackErr.Error()
+			}
 			b.status = status
 			return status, err
 		}
 		allRules = append(allRules, byIface[iface]...)
 		status.AppliedInterfaces = append(status.AppliedInterfaces, iface)
 	}
-	if err := b.applyNft(ctx, allRules); err != nil {
+	nftCreated, err := b.applyNft(ctx, allRules)
+	if err != nil {
 		status.State, status.Reason, status.LastError = State(stateDegraded), "apply failed", err.Error()
-		if rollbackErr := b.rollback(ctx, ""); rollbackErr != nil {
+		if rollbackErr := b.rollbackMutations(ctx, mutations, nftCreated); rollbackErr != nil {
 			status.LastError += "; rollback: " + rollbackErr.Error()
 		}
 		b.status = status
@@ -218,67 +247,209 @@ func (b *Backend) RemoveClientLimit(ctx context.Context, nodeKey, clientKey stri
 	return err
 }
 
-func (b *Backend) reconcileInterface(ctx context.Context, iface string, rules []DesiredRule) error {
-	qdisc, err := b.exec.Run(ctx, "tc", []string{"qdisc", "show", "dev", iface}, nil)
+func (b *Backend) reconcileInterface(ctx context.Context, iface string, rules []DesiredRule) (interfaceMutation, error) {
+	mutation := interfaceMutation{iface: iface, ifb: ifbName(iface)}
+	plan, err := b.preflightInterface(ctx, iface)
 	if err != nil {
-		return err
+		return mutation, err
 	}
-	q := string(qdisc.Stdout)
-	managed := strings.Contains(q, "noqueue")
-	if !managed {
-		managed, _ = b.ownedTable(ctx)
+	apply := func(name string, args []string) error {
+		// Mark before execution: a command can fail after changing kernel state.
+		mutation.mutated = true
+		return b.execSimple(ctx, name, args)
 	}
-	if !managed {
-		return fmt.Errorf("refusing admin-owned qdisc on %s", iface)
+
+	if !plan.rootOwned {
+		mutation.rootCreated = true
+		if err := apply("tc", []string{"qdisc", "replace", "dev", iface, "root", "handle", "1:", "htb", "default", "1"}); err != nil {
+			return mutation, err
+		}
 	}
-	if err := b.execSimple(ctx, "tc", []string{"qdisc", "replace", "dev", iface, "root", "handle", "1:", "htb", "default", "1"}); err != nil {
-		return err
+	if err := apply("tc", []string{"class", "replace", "dev", iface, "parent", "1:", "classid", "1:1", "htb", "rate", "1gbit"}); err != nil {
+		return mutation, err
 	}
-	if err := b.execSimple(ctx, "tc", []string{"class", "replace", "dev", iface, "parent", "1:", "classid", "1:1", "htb", "rate", "1gbit"}); err != nil {
-		return err
+	if !plan.ifbPresent {
+		mutation.ifbCreated = true
+		if err := apply("ip", []string{"link", "add", mutation.ifb, "type", "ifb"}); err != nil {
+			if strings.Contains(err.Error(), "File exists") {
+				mutation.ifbCreated = false
+			}
+			return mutation, err
+		}
 	}
-	if err := b.execSimple(ctx, "ip", []string{"link", "add", ifbName(iface), "type", "ifb"}); err != nil && !strings.Contains(err.Error(), "File exists") {
-		return err
+	if err := apply("ip", []string{"link", "set", "dev", mutation.ifb, "up"}); err != nil {
+		return mutation, err
 	}
-	if err := b.execSimple(ctx, "ip", []string{"link", "set", "dev", ifbName(iface), "up"}); err != nil {
-		return err
+	if !plan.ifbOwned {
+		mutation.ifbRootCreated = true
+		if err := apply("tc", []string{"qdisc", "replace", "dev", mutation.ifb, "root", "handle", "1:", "htb", "default", "1"}); err != nil {
+			return mutation, err
+		}
 	}
-	if err := b.execSimple(ctx, "tc", []string{"qdisc", "replace", "dev", ifbName(iface), "root", "handle", "1:", "htb", "default", "1"}); err != nil {
-		return err
+	if err := apply("tc", []string{"class", "replace", "dev", mutation.ifb, "parent", "1:", "classid", "1:1", "htb", "rate", "1gbit"}); err != nil {
+		return mutation, err
 	}
-	if err := b.execSimple(ctx, "tc", []string{"class", "replace", "dev", ifbName(iface), "parent", "1:", "classid", "1:1", "htb", "rate", "1gbit"}); err != nil {
-		return err
+	if !plan.ingressOwned {
+		mutation.ingressCreated = true
+		if err := apply("tc", []string{"qdisc", "replace", "dev", iface, "handle", "ffff:", "ingress"}); err != nil {
+			return mutation, err
+		}
 	}
 	for _, rule := range rules {
 		minor := strconv.FormatUint(uint64(rule.Mark), 10)
-		if err := b.execSimple(ctx, "tc", []string{"class", "replace", "dev", iface, "parent", "1:", "classid", "1:" + minor, "htb", "rate", rate(rule.UploadRateBps)}); err != nil {
-			return err
+		if err := apply("tc", []string{"class", "replace", "dev", iface, "parent", "1:", "classid", "1:" + minor, "htb", "rate", rate(rule.UploadRateBps)}); err != nil {
+			return mutation, err
 		}
-		if err := b.execSimple(ctx, "tc", []string{"class", "replace", "dev", ifbName(iface), "parent", "1:", "classid", "1:" + minor, "htb", "rate", rate(rule.DownloadRateBps)}); err != nil {
-			return err
+		if err := apply("tc", []string{"class", "replace", "dev", mutation.ifb, "parent", "1:", "classid", "1:" + minor, "htb", "rate", rate(rule.DownloadRateBps)}); err != nil {
+			return mutation, err
 		}
-		if err := b.execSimple(ctx, "tc", []string{"filter", "replace", "dev", iface, "parent", "1:", "protocol", "all", "pref", "100", "handle", minor, "fw", "flowid", "1:" + minor}); err != nil {
-			return err
+		if err := apply("tc", []string{"filter", "replace", "dev", iface, "parent", "1:", "protocol", "all", "pref", "100", "handle", minor, "fw", "flowid", "1:" + minor}); err != nil {
+			return mutation, err
 		}
-		if err := b.execSimple(ctx, "tc", []string{"filter", "replace", "dev", ifbName(iface), "parent", "1:", "protocol", "all", "pref", "100", "handle", minor, "fw", "flowid", "1:" + minor}); err != nil {
-			return err
+		if err := apply("tc", []string{"filter", "replace", "dev", mutation.ifb, "parent", "1:", "protocol", "all", "pref", "100", "handle", minor, "fw", "flowid", "1:" + minor}); err != nil {
+			return mutation, err
 		}
 	}
-	if err := b.execSimple(ctx, "tc", []string{"filter", "replace", "dev", iface, "ingress", "protocol", "all", "pref", "10", "flower", "action", "mirred", "egress", "redirect", "dev", ifbName(iface)}); err != nil {
-		return err
+	if err := apply("tc", []string{"filter", "replace", "dev", iface, "ingress", "protocol", "all", "pref", "10", "handle", "1", "flower", "action", "mirred", "egress", "redirect", "dev", mutation.ifb}); err != nil {
+		return mutation, err
 	}
-	return nil
+	return mutation, nil
 }
 
-func (b *Backend) applyNft(ctx context.Context, rules []DesiredRule) error {
+func (b *Backend) preflightInterface(ctx context.Context, iface string) (interfacePlan, error) {
+	qdisc, err := b.exec.Run(ctx, "tc", []string{"qdisc", "show", "dev", iface}, nil)
+	if err != nil {
+		return interfacePlan{}, err
+	}
+	q := string(qdisc.Stdout)
+	owned, _ := b.ownedTable(ctx)
+	rootNoqueue := hasRootQdisc(q, "noqueue")
+	rootOwned := owned && isCatXRootQdisc(q)
+	if hasQdiscKind(q, "clsact") {
+		return interfacePlan{}, fmt.Errorf("refusing admin-owned clsact qdisc on %s", iface)
+	}
+	if rootNoqueue {
+		if hasQdiscKind(q, "ingress") {
+			return interfacePlan{}, fmt.Errorf("refusing admin-owned ingress qdisc on %s", iface)
+		}
+	} else if !rootOwned {
+		return interfacePlan{}, fmt.Errorf("refusing admin-owned qdisc on %s", iface)
+	}
+
+	plan := interfacePlan{rootOwned: rootOwned}
+	if hasQdiscKind(q, "ingress") {
+		if !rootOwned || !hasQdisc(q, "ingress", "ffff:") {
+			return interfacePlan{}, fmt.Errorf("refusing admin-owned ingress qdisc on %s", iface)
+		}
+		plan.ingressOwned = true
+	}
+
+	ifb := ifbName(iface)
+	_, err = b.exec.Run(ctx, "ip", []string{"link", "show", "dev", ifb}, nil)
+	if err == nil {
+		plan.ifbPresent = true
+		if !rootOwned || !owned {
+			return interfacePlan{}, fmt.Errorf("refusing pre-existing IFB %s on %s", ifb, iface)
+		}
+		ifbQdisc, err := b.exec.Run(ctx, "tc", []string{"qdisc", "show", "dev", ifb}, nil)
+		if err != nil {
+			return interfacePlan{}, err
+		}
+		if !isCatXRootQdisc(string(ifbQdisc.Stdout)) {
+			return interfacePlan{}, fmt.Errorf("refusing non-CatX IFB %s", ifb)
+		}
+		plan.ifbOwned = true
+	} else {
+		failure := strings.ToLower(err.Error())
+		if !strings.Contains(failure, "does not exist") && !strings.Contains(failure, "cannot find device") && !strings.Contains(failure, "not found") {
+			return interfacePlan{}, fmt.Errorf("checking IFB %s failed: %w", ifb, err)
+		}
+	}
+	return plan, nil
+}
+
+func hasQdisc(qdisc, kind, handle string) bool {
+	for _, line := range strings.Split(qdisc, "\n") {
+		fields := strings.Fields(line)
+		if len(fields) >= 3 && fields[0] == "qdisc" && fields[1] == kind && fields[2] == handle {
+			return true
+		}
+	}
+	return false
+}
+
+func hasQdiscKind(qdisc, kind string) bool {
+	for _, line := range strings.Split(qdisc, "\n") {
+		fields := strings.Fields(line)
+		if len(fields) >= 2 && fields[0] == "qdisc" && fields[1] == kind {
+			return true
+		}
+	}
+	return false
+}
+
+func hasRootQdisc(qdisc, kind string) bool {
+	for _, line := range strings.Split(qdisc, "\n") {
+		fields := strings.Fields(line)
+		if len(fields) >= 4 && fields[0] == "qdisc" && fields[1] == kind && contains(fields[3:], "root") {
+			return true
+		}
+	}
+	return false
+}
+
+func isCatXRootQdisc(qdisc string) bool {
+	return hasQdisc(qdisc, "htb", "1:") && hasRootQdisc(qdisc, "htb")
+}
+
+func (b *Backend) rollbackMutations(ctx context.Context, mutations []interfaceMutation, nftCreated bool) error {
+	var first error
+	for _, mutation := range mutations {
+		commands := make([][]string, 0, 4)
+		if mutation.ingressCreated {
+			commands = append(commands, []string{"tc", "qdisc", "del", "dev", mutation.iface, "ingress"})
+		}
+		if mutation.rootCreated {
+			commands = append(commands, []string{"tc", "qdisc", "del", "dev", mutation.iface, "root"})
+		}
+		if mutation.ifbRootCreated {
+			commands = append(commands, []string{"tc", "qdisc", "del", "dev", mutation.ifb, "root"})
+		}
+		if mutation.ifbCreated {
+			commands = append(commands, []string{"ip", "link", "del", mutation.ifb})
+		}
+		for _, command := range commands {
+			if err := b.execSimple(ctx, command[0], command[1:]); err != nil && first == nil {
+				first = err
+			}
+		}
+	}
+	if nftCreated {
+		if err := b.deleteOwnedNftTable(ctx); err != nil && first == nil {
+			first = err
+		}
+	}
+	return first
+}
+
+func (b *Backend) deleteOwnedNftTable(ctx context.Context) error {
+	owned, err := b.ownedTable(ctx)
+	if err != nil || !owned {
+		return nil
+	}
+	return b.execSimpleInput(ctx, "nft", []string{"delete", "table", nftFamily, nftTable}, nil)
+}
+
+func (b *Backend) applyNft(ctx context.Context, rules []DesiredRule) (bool, error) {
 	var script strings.Builder
 	table, err := b.exec.Run(ctx, "nft", []string{"list", "table", nftFamily, nftTable}, nil)
+	nftCreated := err != nil
 	if err != nil {
 		script.WriteString("add table inet " + nftTable + " { comment \"catx-managed-v1\"; }\n")
 		script.WriteString("add chain inet " + nftTable + " catx_mark { type filter hook forward priority -150; policy accept; }\n")
 		script.WriteString("add chain inet " + nftTable + " catx_output { type route hook output priority -150; policy accept; }\n")
 	} else if !strings.Contains(string(table.Stdout), "catx-managed-v1") {
-		return fmt.Errorf("refusing nft table %s without CatX ownership marker", nftTable)
+		return false, fmt.Errorf("refusing nft table %s without CatX ownership marker", nftTable)
 	} else if !strings.Contains(string(table.Stdout), "catx_mark") || !strings.Contains(string(table.Stdout), "catx_output") {
 		script.WriteString("add chain inet " + nftTable + " catx_mark { type filter hook forward priority -150; policy accept; }\n")
 		script.WriteString("add chain inet " + nftTable + " catx_output { type route hook output priority -150; policy accept; }\n")
@@ -290,7 +461,7 @@ func (b *Backend) applyNft(ctx context.Context, rules []DesiredRule) error {
 		for _, selector := range rule.Selectors {
 			ip, _, err := net.ParseCIDR(selector)
 			if err != nil {
-				return fmt.Errorf("invalid selector %q: %w", selector, err)
+				return nftCreated, fmt.Errorf("invalid selector %q: %w", selector, err)
 			}
 			family := "ip"
 			if ip.To4() == nil {
@@ -299,41 +470,49 @@ func (b *Backend) applyNft(ctx context.Context, rules []DesiredRule) error {
 			script.WriteString("add rule inet " + nftTable + " catx_mark iifname \"" + rule.Interface + "\" " + family + " saddr " + selector + " ct mark set " + strconv.FormatUint(uint64(rule.Mark), 10) + " meta mark set ct mark\n")
 		}
 	}
-	return b.execSimpleInput(ctx, "nft", []string{"-f", "-"}, []byte(script.String()))
-}
-
-func (b *Backend) rollback(ctx context.Context, iface string) error {
-	var first error
-	interfaces := b.interfaces
-	if iface != "" {
-		interfaces = []string{iface}
-	}
-	for _, managedIface := range interfaces {
-		qdisc, err := b.exec.Run(ctx, "tc", []string{"qdisc", "show", "dev", managedIface}, nil)
-		if err != nil {
-			if first == nil {
-				first = err
-			}
-			continue
-		}
-		if !strings.Contains(string(qdisc.Stdout), "noqueue") {
-			for _, cmd := range [][]string{{"tc", "qdisc", "del", "dev", managedIface, "root"}, {"tc", "qdisc", "del", "dev", ifbName(managedIface), "root"}, {"ip", "link", "del", ifbName(managedIface)}} {
-				if err := b.execSimple(ctx, cmd[0], cmd[1:]); err != nil && first == nil {
-					first = err
-				}
-			}
-		}
-	}
-	_ = b.execSimpleInput(ctx, "nft", []string{"delete", "table", nftFamily, nftTable}, nil)
-	return first
+	return nftCreated, b.execSimpleInput(ctx, "nft", []string{"-f", "-"}, []byte(script.String()))
 }
 
 func (b *Backend) removeOwnedState(ctx context.Context) error {
-	owned, _ := b.ownedTable(ctx)
-	if !owned {
+	owned, err := b.ownedTable(ctx)
+	if err != nil || !owned {
 		return nil
 	}
-	return b.rollback(ctx, "")
+	var first error
+	for _, iface := range b.interfaces {
+		plan, err := b.preflightInterface(ctx, iface)
+		if err != nil {
+			// Refusal is deliberately non-destructive. The nft marker may be
+			// stale, but an administrator-owned qdisc must remain untouched.
+			continue
+		}
+		for _, command := range []struct {
+			args  []string
+			owned bool
+		}{
+			{[]string{"tc", "qdisc", "del", "dev", iface, "ingress"}, plan.ingressOwned},
+			{[]string{"tc", "qdisc", "del", "dev", iface, "root"}, plan.rootOwned},
+		} {
+			if !command.owned {
+				continue
+			}
+			if err := b.execSimple(ctx, command.args[0], command.args[1:]); err != nil && first == nil {
+				first = err
+			}
+		}
+		if plan.ifbOwned {
+			if err := b.execSimple(ctx, "tc", []string{"qdisc", "del", "dev", ifbName(iface), "root"}); err != nil && first == nil {
+				first = err
+			}
+			if err := b.execSimple(ctx, "ip", []string{"link", "del", ifbName(iface)}); err != nil && first == nil {
+				first = err
+			}
+		}
+	}
+	if err := b.deleteOwnedNftTable(ctx); err != nil && first == nil {
+		first = err
+	}
+	return first
 }
 
 func (b *Backend) ownedTable(ctx context.Context) (bool, error) {
@@ -358,7 +537,9 @@ func ifbName(iface string) string {
 	n := "catx-" + iface
 	if len(n) > 15 {
 		sum := sha256.Sum256([]byte(iface))
-		n = "catx-ifb" + fmt.Sprintf("%x", sum[:])[:8]
+		// Linux IFNAMSIZ allows at most 15 visible characters. Keep the
+		// deterministic collision-resistant suffix within that limit.
+		n = "catx-ifb" + fmt.Sprintf("%x", sum[:])[:7]
 	}
 	return n
 }

@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"os/exec"
+	"strings"
 )
 
 type CommandResult struct {
@@ -25,7 +26,8 @@ func (processExecutor) Run(ctx context.Context, name string, args []string, stdi
 	cmd.Stdout, cmd.Stderr = &stdout, &stderr
 	err := cmd.Run()
 	if err != nil {
-		return CommandResult{Stdout: stdout.Bytes(), Stderr: stderr.Bytes()}, fmt.Errorf("%s failed: %w: %s", name, err, stderr.String())
+		command := strings.Join(append([]string{name}, args...), " ")
+		return CommandResult{Stdout: stdout.Bytes(), Stderr: stderr.Bytes()}, fmt.Errorf("%s failed: %w: %s", command, err, stderr.String())
 	}
 	return CommandResult{Stdout: stdout.Bytes(), Stderr: stderr.Bytes()}, nil
 }

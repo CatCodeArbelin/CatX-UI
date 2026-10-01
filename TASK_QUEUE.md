@@ -537,17 +537,46 @@ WP-9D was merged into `develop` with merge SHA
 `17588b4ed90798979ee2a3953ed5d1d8430afd6e`; its feature branch was deleted
 locally and remotely.
 
-## RC-5 — Final Second Public RC Qualification & Cut — CURRENT
+## RC-5 — Final Second Public RC Qualification & Cut — DONE
 
 Branch: `feature/rc5-final-second-public-rc`
 
-Start from exact post-WP-9D `develop` SHA
-`17588b4ed90798979ee2a3953ed5d1d8430afd6e`. Re-run release qualification and,
-only after every pre-tag gate passes, target `v0.1.0-rc.2`, preserving the RC-4
-release-engineering improvements. After the tag, perform real published-asset
-smoke checks on disposable installations. Do not touch stable `v0.1.0` and do
-not perform repository productization in RC-5. The RC-5 required-reading set is
-defined in `CURRENT_TASK.md`; no `v0.1.0-rc.2` tag or release exists yet.
+RC-5 merged into `develop` with merge SHA
+`a0cd0499d1423025ae2b8085fa3fd15db71380c3` after the exact-SHA Fork
+Verification and Release CatX-UI gates passed. The public prerelease tag is
+`v0.1.0-rc.2`, and its immutable release SHA is
+`4d8feae2e62db914d3146504340d9b9f802088b2`. The canonical tagged Release
+workflow `36674096974` passed. Post-publication clean install, actual
+published-asset RC1-to-RC2 transition, rollback, checksum, panel/Xray, and
+Russian/RTL smoke qualification passed. Stable `v0.1.0` was not published and
+`main` was not changed.
+
+## RC-6 — Real RC Observation & Stable Readiness — CURRENT
+
+Branch: `feature/rc6-rc2-observation-stable-readiness`
+
+Observe the already-published `v0.1.0-rc.2` on isolated/test infrastructure.
+Establish a feature-off upstream baseline before incrementally exercising
+representative CatX Analytics, DNS Intelligence, Policy, Traffic Control, and
+Operations flows. If the source blocker is confirmed, carry only its focused
+fix, qualify and publish `v0.1.0-rc.3`, then repeat observation with the actual
+RC-3 assets. This remains one RC-6 package; do not create an RC-7 branch or
+work package. Audit and isolate the Docker release path from upstream image
+namespaces, do not add product features, do not publish stable `v0.1.0`, and
+keep `main` untouched.
+
+If a source-level blocker is found, finish the focused fix, exact-SHA RC-3
+qualification/publication, and actual RC-3 observation within RC-6. If that
+observation is green, record `RC-6 COMPLETE — READY TO START STABLE
+QUALIFICATION` and stop before Stable Qualification.
+
+## RC-6 completion record
+
+RC-6 completed on exact SHA `437d5e2f5bb835118ba6628ea62059b27721cfa3`.
+Hosted candidate qualification, Fork verification, public `v0.1.0-rc.3`
+release qualification, and post-publication Linux observation passed. Stable
+Qualification is the next roadmap step but has not started. No RC-7 branch or
+work package was created; stable `v0.1.0` and `main` remain untouched.
 
 # Operating Rules
 
