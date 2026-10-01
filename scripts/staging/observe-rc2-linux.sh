@@ -234,10 +234,14 @@ restart_panel_via_api() {
     log "PASS: POST /setting/restartPanel accepted for ${label}"
 
     # The endpoint schedules the real SIGHUP path three seconds later. Do not
-    # accept the old listener as proof that the restart completed.
+    # accept the old listener as proof that the restart completed. The release
+    # logger records the two completed server restarts, but does not always
+    # retain the preceding signal-receipt line.
     sleep 4
-    grep -Fq "Received SIGHUP signal. Restarting servers..." "$RUN_DIR/panel.log" ||
-        fail "panel log did not record the SIGHUP restart requested by ${label}"
+    grep -Fq "Web server restarted successfully." "$RUN_DIR/panel.log" ||
+        fail "panel log did not record web-server completion for ${label} restart"
+    grep -Fq "Sub server restarted successfully." "$RUN_DIR/panel.log" ||
+        fail "panel log did not record sub-server completion for ${label} restart"
 
     for _ in $(seq 1 60); do
         kill -0 "$previous_pid" 2>/dev/null || fail "panel process exited during ${label} restart"
