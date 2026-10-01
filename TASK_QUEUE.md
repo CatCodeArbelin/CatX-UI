@@ -662,6 +662,36 @@ All RC tags remain immutable, public stable assets remain unchanged, no
 post-qualification product/runtime source entered `main`, and Repository
 Productization has not started. Stop before Productization.
 
+## Repository Productization — CURRENT
+
+Branch: `feature/repository-productization`
+
+Starting stable product/runtime SHA: `fd28ea7144147d9164b70810d4a24872a3d48b4f`.
+
+The final Stable Qualification evidence commit
+`2ec8d6c3661dd37c81cc057066781217a5f26faf` was documentation-only and was
+carried onto this branch as `05479906`. Productization is limited to public
+repository identity, documentation, release notes, public issue/contribution/
+security routing, docs-site identity, and install/update/Docker examples. Do
+not change v0.1.0 runtime semantics, compatibility-sensitive internal names,
+the stable tag, or any RC tag.
+
+Required completion checks:
+
+- product claims match the shipped stable product and capability model;
+- CatX-owned install, update, release, issue, and Docker links are used;
+- required upstream attribution and GPL notices remain intact;
+- translated READMEs and local docs are not presented as official upstream
+  CatX documentation;
+- stale public upstream-link audit, Markdown/link sanity, and relevant docs
+  checks are recorded;
+- final diff contains no Go or frontend runtime-source change;
+- stable/RC tag targets remain unchanged and no v0.1.1 or upstream maintenance
+  work starts.
+
+Stop after this work package and wait for separate authorization for Upstream
+Maintenance Strategy.
+
 # Operating Rules
 
 ## Branching

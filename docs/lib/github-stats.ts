@@ -9,9 +9,9 @@ export interface GitHubStats {
 // Real, recent numbers used as a fallback when the GitHub API is unavailable
 // at build time (offline CI, rate limit). Update periodically.
 const FALLBACK: GitHubStats = {
-  stars: 41500,
-  forks: 7700,
-  latestVersion: 'v3.x',
+  stars: 0,
+  forks: 0,
+  latestVersion: 'v0.1.0',
 };
 
 const API_BASE = `https://api.github.com/repos/${productRepo.user}/${productRepo.repo}`;
@@ -55,7 +55,7 @@ export async function fetchGitHubStats(init?: RequestInit): Promise<GitHubStats 
  */
 export async function getGitHubStats(): Promise<GitHubStats> {
   const headers: Record<string, string> = {
-    'User-Agent': '3x-ui-docs',
+    'User-Agent': 'catx-ui-docs',
     Accept: 'application/vnd.github+json',
   };
   if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;

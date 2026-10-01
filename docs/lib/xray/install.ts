@@ -1,18 +1,18 @@
-// Pure builders for 3x-ui install commands (script + Docker). No React/DOM.
+// Pure builders for CatX-UI install commands (script + Docker). No React/DOM.
 
 export type InstallMethod = 'script' | 'docker';
 
 export interface InstallOptions {
   method: InstallMethod;
-  /** A release tag like `v3.4.1`, or empty/`latest` for the latest release. */
+  /** A release tag like `v0.1.0`, or empty/`latest` for the latest release. */
   version: string;
   enableFail2ban: boolean;
   panelPort: string;
   webBasePath: string;
 }
 
-const REPO_RAW = 'https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh';
-const IMAGE = 'ghcr.io/mhsanaei/3x-ui:latest';
+const REPO_RAW = 'https://raw.githubusercontent.com/CatCodeArbelin/CatX-UI/main/install.sh';
+const IMAGE = 'ghcr.io/catcodearbelin/catx-ui:latest';
 
 function isLatest(version: string): boolean {
   const v = version.trim().toLowerCase();
@@ -20,7 +20,7 @@ function isLatest(version: string): boolean {
 }
 
 /**
- * The one-line script install command. The master install script reads the
+ * The one-line script install command. The CatX-UI install script reads the
  * version as its first argument: empty = latest stable release, a tag like
  * `v3.4.0` = that release, and `dev-latest` = the rolling per-commit dev build.
  */
@@ -43,7 +43,7 @@ export function buildDockerRun(options: InstallOptions): string {
   lines.push(`  -v $PWD/cert/:/root/cert/`);
   lines.push(`  --network=host`);
   lines.push(`  --restart=unless-stopped`);
-  lines.push(`  --name 3x-ui`);
+  lines.push(`  --name catx-ui`);
   lines.push(`  ${IMAGE}`);
   return lines.join(' \\\n');
 }
@@ -60,9 +60,9 @@ export function buildDockerCompose(options: InstallOptions): string {
 
   return [
     `services:`,
-    `  3x-ui:`,
+    `  catx-ui:`,
     `    image: ${IMAGE}`,
-    `    container_name: 3x-ui`,
+    `    container_name: catx-ui`,
     `    volumes:`,
     `      - ./db/:/etc/x-ui/`,
     `      - ./cert/:/root/cert/`,
