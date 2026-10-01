@@ -1,22 +1,19 @@
-# Security Policy
+# CatX-UI Security Policy
 
-## Reporting a vulnerability
+CatX-UI is a maintained downstream fork of 3x-ui. Security reports for the
+CatX product belong in the [CatCodeArbelin/CatX-UI Security
+tab](https://github.com/CatCodeArbelin/CatX-UI/security), using GitHub's
+private vulnerability reporting. Do not open a public issue for an
+authentication bypass, remote code execution, injection, secret or credential
+exposure, privilege escalation, or another exploitable defect.
 
-Do not open a public issue for anything you believe is exploitable — an
-authentication bypass, remote code execution, injection, secret or
-credential exposure, privilege escalation. A public report gives attackers
-a head start against every 3x-ui deployment.
+Include the affected CatX-UI version, installation method, OS/architecture,
+database backend, reproduction steps, impact, and redacted logs. Never include
+passwords, tokens, cookies, Authorization headers, client UUIDs, or private
+server data in a report.
 
-Instead, use GitHub's private vulnerability reporting: open this
-repository's **Security** tab and click **Report a vulnerability**. Include
-the affected 3x-ui version, reproduction steps, and the impact you see.
-You will receive replies in the advisory thread.
-
-There is no bug-bounty program. Fixes ship in the next release, and the
-advisory is published after a fixed version is available.
-
-## Supported versions
-
-Only the latest release receives security fixes. Update with the install
-script or your package channel and confirm the problem still exists before
-reporting.
+Only the latest CatX release receives security fixes. Update from the CatX
+release channel and confirm the issue on the latest stable version before
+reporting. CatX is not endorsed by MHSanaei or the upstream 3x-ui maintainers;
+upstream-only vulnerabilities should be reported to the upstream project as
+well, with the CatX version and affected boundary identified.

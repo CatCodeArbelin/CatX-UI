@@ -1,54 +1,52 @@
 ---
-title: 3x-ui Documentation
-description: Official documentation for 3x-ui — an advanced web panel for managing Xray-core servers, proxies, clients, and subscriptions.
+title: CatX-UI repository documentation
+description: Inherited 3x-ui documentation and CatX-UI public product guidance for the maintained downstream fork.
 icon: House
 ---
 
-**3x-ui** is an open-source web panel for deploying and managing
-[Xray-core](https://github.com/XTLS/Xray-core) servers. It gives you a modern
-dashboard for inbounds, protocols, clients, traffic accounting, subscriptions,
-and more — without hand-editing Xray JSON on the command line.
+**CatX-UI** is a maintained downstream fork of
+[MHSanaei/3x-ui](https://github.com/MHSanaei/3x-ui). The repository preserves
+the upstream panel and Xray boundaries while adding independently gated Policy,
+Traffic Control, Insight, and Operations capabilities.
 
-This site is the official documentation and a set of **interactive, in-browser
-tools** (config generators) that run entirely on your device — no data ever
-leaves the page.
-
-## Start here
+This directory contains inherited upstream documentation material and CatX
+repository guidance. It is not an independently published official CatX
+documentation site. For the stable public contract, use the [root
+README](https://github.com/CatCodeArbelin/CatX-UI/blob/main/README.md) and [stable
+release notes](https://github.com/CatCodeArbelin/CatX-UI/blob/main/docs/29_STABLE_RELEASE_NOTES.md).
 
 <Cards>
   <Card
-    title="What is 3x-ui?"
-    href="/docs/guide"
-    description="The big picture: Xray-core, the panel, and who it's for."
-  />
-  <Card
     title="Installation"
     href="/docs/guide/installation"
-    description="Install via script, Docker, or manually."
+    description="Install CatX-UI from the CatX release channel or use Docker."
   />
   <Card
     title="First login"
     href="/docs/guide/first-login"
-    description="Reach the panel and harden it before anything else."
+    description="Reach the panel and secure the generated credentials."
   />
   <Card
-    title="REALITY"
-    href="/docs/config/reality"
-    description="Set up VLESS + REALITY with XTLS-Vision."
+    title="Inherited upstream guide"
+    href="/docs/guide"
+    description="Learn the upstream 3x-ui and Xray concepts retained by CatX."
   />
 </Cards>
 
-## Highlights
+## Product layers
 
-- **Every major protocol** — VLESS, VMess, Trojan, Shadowsocks, WireGuard,
-  AmneziaWG, TUIC v5, Hysteria2, SOCKS, HTTP, and Dokodemo-door.
-- **REALITY & XTLS-Vision** — modern, censorship-resistant transports.
-- **Per-client controls** — traffic quotas, expiry dates, IP limits, share
-  links, and QR codes.
-- **Subscriptions** — VLESS, Clash/Mihomo, and JSON formats.
-- **Operations** — multi-node management, Telegram and Discord bots, backups, and a REST API.
+- **Policy** — policies, groups, schedules, domain/category decisions, and
+  explainable simulation.
+- **Insight** — Activity, traffic history, DNS Intelligence, and metadata-only
+  destination evidence.
+- **Traffic Control** — capability-dependent quotas, windows, speeds, and
+  soft-throttle workflows.
+- **Operations** — audit, webhooks, metrics, self-service, fleet, backup,
+  rollback, and updater safety.
 
-<Callout type="info">
-  New to Xray? Read [What is 3x-ui?](/docs/guide) first — it explains how the panel, Xray-core, and
-  your client apps fit together.
+<Callout type="warn">
+  Generic Xray-user kernel attribution is unsupported. Traffic Control must
+  report capability-dependent supported, degraded, or unsupported state. CatX
+  does not use TLS MITM or collect decrypted HTTP content, cookies,
+  Authorization headers, credentials, passwords, or messages.
 </Callout>

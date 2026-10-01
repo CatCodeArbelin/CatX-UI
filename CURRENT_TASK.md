@@ -2,123 +2,118 @@
 
 ## Work Package
 
-`Stable Qualification — v0.1.0`
+`Repository Productization — COMPLETE`
 
 ## Base and branch
 
-RC-6 was merged into `develop` with merge SHA
-`ecd8ee1afbee4996f9a099d67014c4ab2236ae44`. This package starts from that
-exact `develop` HEAD on branch `feature/stable-v0.1.0-qualification`.
+This package starts from the published stable product/runtime SHA
+`fd28ea7144147d9164b70810d4a24872a3d48b4f` (`main` and tag `v0.1.0`) on
+branch `feature/repository-productization`.
 
-The immutable public tags remain:
+The final Stable Qualification evidence commit
+`2ec8d6c3661dd37c81cc057066781217a5f26faf` was inspected and confirmed to be
+documentation-only (`CURRENT_TASK.md`, `TASK_QUEUE.md`). Its changes were
+carried onto this branch as commit `05479906` without importing unrelated
+post-release qualification harness work.
 
-- `v0.1.0-rc.1` — unchanged;
+Immutable public tags remain unchanged:
+
+- `v0.1.0-rc.1` — `09f5432aacfb2c45f3df79cdca2e15e77bc9a8a6`;
 - `v0.1.0-rc.2` — `4d8feae2e62db914d3146504340d9b9f802088b2`;
 - `v0.1.0-rc.3` — `437d5e2f5bb835118ba6628ea62059b27721cfa3`;
-- `v0.1.0-rc.4` — `283abaa401d60b4374a4b618a5a5f8a72ec26cb4`.
-
-`main` remains untouched. Stable `v0.1.0` has not been published.
-Repository Productization has not started.
+- `v0.1.0-rc.4` — `283abaa401d60b4374a4b618a5a5f8a72ec26cb4`;
+- `v0.1.0` — `fd28ea7144147d9164b70810d4a24872a3d48b4f`.
 
 ## Required reading
 
-Read `AGENTS.md`, this file, and these canonical documents before changing
-implementation or release state:
+Before changing implementation or public repository state, read:
 
-- `docs/03_ROADMAP.md`
-- `docs/05_TESTING_ROLLBACK_RELEASE.md`
-- `docs/15_DEFINITION_OF_DONE.md`
-- `docs/22_RC2_STAGING_RELEASE_QUALIFICATION.md`
-- `docs/27_SECOND_RC_PLAN.md`
-- `docs/28_RC6_REAL_RC_OBSERVATION.md`
+- `AGENTS.md`;
+- `CURRENT_TASK.md` and `TASK_QUEUE.md`;
+- `docs/00_MASTER_SPEC.md`;
+- `docs/01_ARCHITECTURE.md`;
+- `docs/02_FEATURE_CATALOG.md`;
+- `docs/03_ROADMAP.md`;
+- `docs/04_UPSTREAM_SYNC.md`;
+- `docs/05_TESTING_ROLLBACK_RELEASE.md`;
+- `docs/08_FRONTEND_UX.md`;
+- `docs/12_UPDATER_IDENTITY.md`;
+- `docs/14_NON_GOALS.md`;
+- `docs/15_DEFINITION_OF_DONE.md`;
+- `docs/16_LEGAL_GPL_NOTES.md`;
+- `docs/17_AI_WORKFLOW.md`;
+- `docs/19_REPOSITORY_MAP.md`;
+- `docs/23_RC2_RELEASE_NOTES.md`;
+- `docs/28_RC6_REAL_RC_OBSERVATION.md`.
 
 ## Scope
 
-Qualify the already-observed RC3 code for stable release. This package may
-carry only confirmed release-blocking fixes and qualification infrastructure.
-It must not add features, redesign QoS, implement generic Xray-user
-attribution, start repository productization, or change `main` before every
-stable gate is green.
+Productize the CatX-UI repository and its public-facing documentation while
+preserving the released v0.1.0 runtime. This is not a new application-feature
+phase. Do not begin Upstream Maintenance Strategy, sync a newer upstream
+release, create v0.1.1, or change runtime behavior.
 
-The first mandatory gate is the real user-visible panel restart lifecycle on
-actual public `v0.1.0-rc.3` Linux assets:
+Allowed changes are limited to repository identity, documentation, release
+notes, public issue/contribution/security routing, documentation-site identity,
+public assets/metadata, and corrections to public install/update/Docker
+examples. Compatibility-sensitive internal identifiers remain unchanged,
+including the Go module/import path, package paths, database schema names,
+CLI/API routes, and Xray boundaries.
 
-1. install/start the public RC3 payload on disposable Linux;
-2. authenticate and read CatX feature settings;
-3. enable `analytics.enabled` and `dns_intelligence.enabled` through the
-   normal CatX feature-settings API/UI contract and verify persistence;
-4. invoke `POST /panel/api/setting/restartPanel`;
-5. wait for panel recovery, authenticate again, and verify both flags;
-6. verify Activity, DNS Intelligence, panel health, Xray health, database
-   preservation, and absence of panic/fatal/startup-loop evidence;
-7. disable both flags through the normal path and repeat the real restart;
-8. verify explicit healthy feature-off behavior and persistence.
+Public claims must match stable v0.1.0. In particular, generic Xray-user
+kernel attribution and universal per-user kernel shaping are unsupported;
+Traffic Control must use capability-dependent supported/degraded/unsupported
+language; CatX does not use TLS MITM or collect decrypted bodies, cookies,
+Authorization headers, credentials, passwords, or messages; and CatX is not a
+billing platform or generic plugin ecosystem.
 
-The regression harness must use the actual restart endpoint. A direct process
-stop/start is not an accepted substitute.
+## Required productization outcomes
 
-If this gate finds a source-level defect, stop Stable Qualification, do not
-publish stable, and require focused `v0.1.0-rc.4` qualification and real
-observation before returning here. Infrastructure-only failures must be
-recorded precisely and retried according to the existing policy.
+1. Replace the upstream-oriented root README with a coherent CatX README that
+   identifies the downstream relationship, release/update sources, supported
+   platforms/databases, Docker image, architecture, caveats, privacy boundary,
+   rollback expectations, contribution routes, and GPL attribution.
+2. Audit and update linked README translations without claiming that CatX is
+   the official upstream project.
+3. Retarget CatX install/update/Docker examples to `CatCodeArbelin/CatX-UI`
+   and `ghcr.io/catcodearbelin/catx-ui`, while keeping legitimate upstream
+   attribution and technical references.
+4. Productize `CONTRIBUTING.md`, `SECURITY.md`, issue/PR routing, cloud-init
+   notes, and local docs-site identity.
+5. Add stable v0.1.0 release notes covering the shipped capabilities,
+   limitations, upgrade, and rollback expectations.
+6. Perform a stale public-link and product-reality audit, classify remaining
+   upstream references, and document any repository metadata that cannot be
+   changed with available permissions.
 
-## Stable identity
+## Verification gate
 
-The eventual stable release must use:
+Run checks appropriate to the final diff and report exact results. At minimum:
 
-- fork version `0.1.0`;
-- release version `0.1.0`;
-- channel `stable`;
-- upstream base `MHSanaei/3x-ui v3.8.5`;
-- bundled Xray `26.9.9`;
-- annotated tag `v0.1.0` with `prerelease=false` and the normal stable/latest
-  release semantics.
+- Markdown/link and image/asset-reference sanity;
+- stale CatX install/update/Docker-link audit;
+- docs build/format checks when docs-site files change;
+- `make verify` and `make verify-fork` if required by the final diff or
+  repository governance.
 
-RC tags and assets must remain unchanged.
+Do not claim checks that were not run. Inspect the final diff for runtime/source
+drift and confirm the stable and RC tag targets remain unchanged.
 
-## Stable Qualification decision
+## Stop condition
 
-The confirmed RC3 restart blocker is resolved by public corrective release
-`v0.1.0-rc.4`. Stable Qualification is **READY TO RESUME**, but must not resume
-automatically before review of this evidence.
+After Repository Productization is complete, stop. Do not start Upstream
+Maintenance Strategy or any new product feature work in this package.
 
-Root cause and fix:
+## Completion record
 
-- RC3 coupled fork schema preparation and persisted runtime configuration in
-  `forkext.RegisterMigrations()`; the panel-only SIGHUP path did not repeat the
-  runtime configuration step;
-- RC4 separates initial fork migration preparation from runtime configuration
-  and reloads persisted managed-feature state after old panel-owned workers
-  stop and before the new panel runtime starts;
-- newly enabled fork schema is prepared before activation, failures disable the
-  runtime and propagate, and upstream DB initialization/seeders are not rerun;
-- enabled-to-enabled Traffic Control reload preserves CatX rollback ownership.
+The prerequisite frontend dependency remediation was isolated in security PR
+#2 and merged first:
 
-Qualification evidence:
+- dependency fix commit: `960138303cc5b8e2bfd84471dfb0b43eec9d53e7`;
+- dependency-fix merge commit: `e046c282fc8ea770dfe35c0d2b00d31341d28f4c`;
+- Productization branch prerequisite merge commit: `606d31e5de1dcc93f025a7d86487d21119dacf62`.
 
-- focused exact-SHA candidate restart regression: run `36806720158`, PASS;
-- final exact SHA: `283abaa401d60b4374a4b618a5a5f8a72ec26cb4`;
-- final Fork Verification: run `36807215175`, PASS;
-- final restart plus Linux Traffic Control/quota/no-clobber qualification: run
-  `36807215104`, PASS;
-- non-publishing RC artifact, checksum, Linux, Windows, SQLite, PostgreSQL,
-  clean-install, RC3-to-RC4 upgrade, DB-preservation, health, and rollback
-  matrix: run `36807225858`, PASS;
-- annotated public tag `v0.1.0-rc.4` targets the final exact SHA;
-- canonical tagged Release CatX-UI workflow: run `36807931375`, PASS;
-- public release is `draft=false`, `prerelease=true`, has 28 qualified assets,
-  and did not create or move a stable latest release;
-- actual-public-assets restart observation: run `36808874388`, PASS.
-
-Public RC4 observation proved both directions through the real
-`POST /panel/api/setting/restartPanel` endpoint: persisted enabled state became
-enabled runtime with working Activity and DNS Intelligence, and persisted
-disabled state became disabled runtime with explicit healthy feature-off
-behavior. Panel, subscription server, SQLite state, and Xray remained healthy.
-Representative policy, Traffic Control, audit, self-service, and fleet runtime
-surfaces also matched persisted state after restart.
-
-`v0.1.0-rc.1`, `v0.1.0-rc.2`, and `v0.1.0-rc.3` remain unchanged. `main`
-remains `7ef22f94c950ff09f0870e2295fa65ad5968742c`; stable `v0.1.0` has not
-been published, and Repository Productization has not started. Stop here until
-Stable Qualification is explicitly resumed.
+The remediation is lockfile-only and changes no runtime source. Final hosted
+run identifiers, Productization merge SHA, and final `main` SHA are recorded
+in the final handoff after PR #1 settles. No v0.1.1 was created, no upstream
+release was synchronized, and the stable/RC tags remain immutable.
