@@ -581,7 +581,7 @@ created; stable `v0.1.0` and `main` remain untouched.
 RC-6 was merged into `develop` with merge SHA
 `ecd8ee1afbee4996f9a099d67014c4ab2236ae44`.
 
-## Stable Qualification — v0.1.0 — BLOCKED
+## Stable Qualification — v0.1.0 — READY TO RESUME
 
 Branch: `feature/stable-v0.1.0-qualification`
 
@@ -605,10 +605,22 @@ reported disabled even though the persisted `analytics.enabled` and
 does not re-run the fork runtime configuration performed during process
 startup.
 
-Stable Qualification is stopped. Do not merge to `main`, publish `v0.1.0`, or
-continue remaining stable gates. The focused lifecycle fix requires a new
-public `v0.1.0-rc.4`, followed by exact-SHA qualification and real observation;
-do not patch the defect only into stable.
+The focused generic fork-runtime lifecycle fix was published as immutable
+`v0.1.0-rc.4` at exact SHA
+`283abaa401d60b4374a4b618a5a5f8a72ec26cb4`. Final Fork Verification
+`36807215175`, final hosted restart/Traffic Control observation `36807215104`,
+the non-publishing complete RC matrix `36807225858`, and canonical tagged
+Release CatX-UI workflow `36807931375` passed.
+
+Post-publication run `36808874388` downloaded and verified the actual public
+RC4 Linux archive and metadata, then passed enabled and disabled transitions
+through the real `POST /panel/api/setting/restartPanel` endpoint. Analytics,
+DNS Intelligence, Activity, panel, Xray, and representative generic managed
+feature runtimes matched persisted state after both restarts.
+
+The RC3 blocker is resolved and Stable Qualification is ready to resume after
+review. Stop here: do not automatically continue remaining stable gates, merge
+to `main`, publish `v0.1.0`, or start Repository Productization.
 
 After every exact-SHA stable gate passes, merge the qualified branch into
 `main`, create annotated `v0.1.0` without moving any RC tag, verify the actual

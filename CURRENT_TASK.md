@@ -14,7 +14,8 @@ The immutable public tags remain:
 
 - `v0.1.0-rc.1` — unchanged;
 - `v0.1.0-rc.2` — `4d8feae2e62db914d3146504340d9b9f802088b2`;
-- `v0.1.0-rc.3` — `437d5e2f5bb835118ba6628ea62059b27721cfa3`.
+- `v0.1.0-rc.3` — `437d5e2f5bb835118ba6628ea62059b27721cfa3`;
+- `v0.1.0-rc.4` — `283abaa401d60b4374a4b618a5a5f8a72ec26cb4`.
 
 `main` remains untouched. Stable `v0.1.0` has not been published.
 Repository Productization has not started.
@@ -77,36 +78,47 @@ RC tags and assets must remain unchanged.
 
 ## Stable Qualification decision
 
-Stable Qualification is **BLOCKED** by a confirmed source-level RC3 restart
-defect. Hosted run `36804879634` used the actual public
-`v0.1.0-rc.3` Linux archive and metadata at exact commit
-`437d5e2f5bb835118ba6628ea62059b27721cfa3`.
+The confirmed RC3 restart blocker is resolved by public corrective release
+`v0.1.0-rc.4`. Stable Qualification is **READY TO RESUME**, but must not resume
+automatically before review of this evidence.
 
-Evidence:
+Root cause and fix:
 
-- public archive/checksums/metadata identity: PASS;
-- clean disposable Linux panel start, login, SQLite, and Xray 26.9.9: PASS;
-- CatX feature settings persisted both `analytics.enabled=true` and
-  `dns_intelligence.enabled=true`: PASS;
-- real `POST /panel/api/setting/restartPanel`: accepted, same panel process
-  recovered, web and sub servers restarted: PASS;
-- after that real restart, `/panel/api/analytics/status` and
-  `/panel/api/analytics/settings` reported `enabled=false` and
-  `dnsIntelligence=false`, while the persisted feature flags remained true:
-  FAIL;
-- Activity/DNS APIs therefore remained feature-off after the enabled restart:
-  FAIL;
-- reverse disable/restart lifecycle was not run after this source-level
-  blocker, as required by the stop rule.
+- RC3 coupled fork schema preparation and persisted runtime configuration in
+  `forkext.RegisterMigrations()`; the panel-only SIGHUP path did not repeat the
+  runtime configuration step;
+- RC4 separates initial fork migration preparation from runtime configuration
+  and reloads persisted managed-feature state after old panel-owned workers
+  stop and before the new panel runtime starts;
+- newly enabled fork schema is prepared before activation, failures disable the
+  runtime and propagate, and upstream DB initialization/seeders are not rerun;
+- enabled-to-enabled Traffic Control reload preserves CatX rollback ownership.
 
-Source cause: `database.InitDB()` invokes `forkext.RegisterMigrations()` during
-process startup and that is where the analytics runtime is configured from the
-persisted flags. The real panel-only SIGHUP path calls `StopPanelOnly()` and
-`StartPanelOnly()` without re-running database/fork runtime configuration, so
-flags changed before the restart are persisted but are not activated in the
-new panel runtime.
+Qualification evidence:
 
-Do not patch this only into Stable Qualification or publish `v0.1.0`. The
-focused lifecycle fix must be carried by a new public `v0.1.0-rc.4`, followed
-by exact-SHA qualification and real observation before returning to Stable
-Qualification. `main`, all RC tags, and stable release state remain untouched.
+- focused exact-SHA candidate restart regression: run `36806720158`, PASS;
+- final exact SHA: `283abaa401d60b4374a4b618a5a5f8a72ec26cb4`;
+- final Fork Verification: run `36807215175`, PASS;
+- final restart plus Linux Traffic Control/quota/no-clobber qualification: run
+  `36807215104`, PASS;
+- non-publishing RC artifact, checksum, Linux, Windows, SQLite, PostgreSQL,
+  clean-install, RC3-to-RC4 upgrade, DB-preservation, health, and rollback
+  matrix: run `36807225858`, PASS;
+- annotated public tag `v0.1.0-rc.4` targets the final exact SHA;
+- canonical tagged Release CatX-UI workflow: run `36807931375`, PASS;
+- public release is `draft=false`, `prerelease=true`, has 28 qualified assets,
+  and did not create or move a stable latest release;
+- actual-public-assets restart observation: run `36808874388`, PASS.
+
+Public RC4 observation proved both directions through the real
+`POST /panel/api/setting/restartPanel` endpoint: persisted enabled state became
+enabled runtime with working Activity and DNS Intelligence, and persisted
+disabled state became disabled runtime with explicit healthy feature-off
+behavior. Panel, subscription server, SQLite state, and Xray remained healthy.
+Representative policy, Traffic Control, audit, self-service, and fleet runtime
+surfaces also matched persisted state after restart.
+
+`v0.1.0-rc.1`, `v0.1.0-rc.2`, and `v0.1.0-rc.3` remain unchanged. `main`
+remains `7ef22f94c950ff09f0870e2295fa65ad5968742c`; stable `v0.1.0` has not
+been published, and Repository Productization has not started. Stop here until
+Stable Qualification is explicitly resumed.
