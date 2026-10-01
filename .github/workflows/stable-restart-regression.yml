@@ -9,6 +9,7 @@ on:
       - "internal/database/db.go"
       - "internal/forkext/**"
       - "internal/forkrelease/**"
+      - "internal/web/runtime/**"
       - "internal/web/web.go"
       - "scripts/staging/observe-rc2-linux.sh"
       - "frontend/scripts/observe-public-locales.mjs"
