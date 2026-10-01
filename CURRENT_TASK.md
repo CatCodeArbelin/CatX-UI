@@ -2,7 +2,7 @@
 
 ## Work Package
 
-`Repository Productization — CURRENT`
+`Repository Productization — COMPLETE`
 
 ## Base and branch
 
@@ -103,3 +103,17 @@ drift and confirm the stable and RC tag targets remain unchanged.
 
 After Repository Productization is complete, stop. Do not start Upstream
 Maintenance Strategy or any new product feature work in this package.
+
+## Completion record
+
+The prerequisite frontend dependency remediation was isolated in security PR
+#2 and merged first:
+
+- dependency fix commit: `960138303cc5b8e2bfd84471dfb0b43eec9d53e7`;
+- dependency-fix merge commit: `e046c282fc8ea770dfe35c0d2b00d31341d28f4c`;
+- Productization branch prerequisite merge commit: `606d31e5de1dcc93f025a7d86487d21119dacf62`.
+
+The remediation is lockfile-only and changes no runtime source. Final hosted
+run identifiers, Productization merge SHA, and final `main` SHA are recorded
+in the final handoff after PR #1 settles. No v0.1.1 was created, no upstream
+release was synchronized, and the stable/RC tags remain immutable.

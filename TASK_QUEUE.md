@@ -662,7 +662,7 @@ All RC tags remain immutable, public stable assets remain unchanged, no
 post-qualification product/runtime source entered `main`, and Repository
 Productization has not started. Stop before Productization.
 
-## Repository Productization — CURRENT
+## Repository Productization — COMPLETE
 
 Branch: `feature/repository-productization`
 
@@ -691,6 +691,20 @@ Required completion checks:
 
 Stop after this work package and wait for separate authorization for Upstream
 Maintenance Strategy.
+
+### Completion record
+
+Security PR #2 (`fix/frontend-audit-dependencies`) was merged first at
+`e046c282fc8ea770dfe35c0d2b00d31341d28f4c` from focused fix commit
+`960138303cc5b8e2bfd84471dfb0b43eec9d53e7`. Its lockfile-only change cleared
+the hosted frontend audit while preserving runtime source. The Productization
+branch includes that prerequisite through merge commit
+`606d31e5de1dcc93f025a7d86487d21119dacf62`.
+
+The package remains complete only after PR #1's final hosted Docs, CI, Fork
+Verification, Release, and Deploy Smoke gates pass and the merge metadata is
+recorded in `CURRENT_TASK.md` and this queue. No v0.1.1, upstream maintenance,
+tag movement, or runtime-source change is part of this package.
 
 # Operating Rules
 
