@@ -66,6 +66,7 @@ sanitize_file() {
 finish() {
     local exit_code=$?
     set +e
+    printf '%s INFO: observer exit status=%s\n' "$(date -u +%FT%TZ)" "$exit_code" | tee -a "$RUN_LOG"
     sanitize_file "$RUN_LOG" "$EVIDENCE_DIR/observation.log"
     sanitize_file "$RUN_DIR/panel.log" "$EVIDENCE_DIR/panel.log"
     sanitize_file "$RUN_DIR/xray-client.log" "$EVIDENCE_DIR/xray-client.log"
@@ -378,6 +379,7 @@ if [[ "$STABLE_RESTART_REGRESSION_ONLY" == 1 ]]; then
     jq -e '([.obj.items[] | select(.key == "analytics.enabled" or .key == "dns_intelligence.enabled") | .enabled] | sort) == [true, true]' \
         "$RUN_DIR/features-on-before-restart.json" >/dev/null || fail "CatX enabled flags were not persisted before the real restart"
     restart_panel_via_api enabled
+    log "INFO: enabled restart helper returned; entering surface assertions"
     assert_restart_surfaces enabled
 
     api_mutate PUT "/fork/settings/features" \
