@@ -208,6 +208,13 @@ api_get() {
     jq -e '.success == true' "$target" >/dev/null || fail "GET $path returned an unsuccessful API envelope"
 }
 
+api_get_expect_status() {
+    local path=$1 expected=$2 target=$3 status
+    status=$(curl --silent --show-error -b "$COOKIE_FILE" -o "$target" -w '%{http_code}' \
+        "$BASE_URL/panel/api$path" || true)
+    [[ "$status" == "$expected" ]] || fail "GET $path returned HTTP $status instead of $expected"
+}
+
 api_mutate() {
     local method=$1 path=$2 body=$3 target=$4 status summary
     status=$(curl --silent --show-error -b "$COOKIE_FILE" -c "$COOKIE_FILE" -X "$method" \
@@ -271,10 +278,10 @@ assert_restart_surfaces() {
     api_get "/fork/settings/features" "$RUN_DIR/features-${phase}.json"
     cp -f "$RUN_DIR/features-${phase}.json" "$EVIDENCE_DIR/"
     if [[ "$expected" == enabled ]]; then
-        jq -e '([.obj.items[] | select(.key == "analytics.enabled" or .key == "dns_intelligence.enabled") | .enabled] | sort) == [true, true]' \
+        jq -e 'all(.obj.items[]; if (.key == "analytics.enabled" or .key == "dns_intelligence.enabled" or .key == "policies.enabled" or .key == "traffic_control.enabled" or .key == "audit.enabled" or .key == "self_service.enabled" or .key == "fleet_updates.enabled" or .key == "fleet_updates.mutation.enabled") then .enabled == true else true end)' \
             "$RUN_DIR/features-${phase}.json" >/dev/null || fail "CatX enabled flags did not survive ${phase} restart"
     else
-        jq -e '([.obj.items[] | select(.key == "analytics.enabled" or .key == "dns_intelligence.enabled") | .enabled] | sort) == [false, false]' \
+        jq -e 'all(.obj.items[]; if (.key == "analytics.enabled" or .key == "dns_intelligence.enabled" or .key == "policies.enabled" or .key == "traffic_control.enabled" or .key == "audit.enabled" or .key == "self_service.enabled" or .key == "fleet_updates.enabled" or .key == "fleet_updates.mutation.enabled") then .enabled == false else true end)' \
             "$RUN_DIR/features-${phase}.json" >/dev/null || fail "CatX disabled flags did not survive ${phase} restart"
     fi
 
@@ -303,6 +310,15 @@ assert_restart_surfaces() {
         jq -e '.obj.enabled == true' "$RUN_DIR/dns-${phase}.json" >/dev/null ||
             fail "DNS Intelligence API was not operational after ${phase} restart"
         log "PASS: Activity and DNS Intelligence surfaces were operational after ${phase} restart"
+
+        api_get "/policies/status" "$RUN_DIR/policies-${phase}.json"
+        api_get "/portal/settings" "$RUN_DIR/portal-${phase}.json"
+        api_get "/fleet-updates/campaigns" "$RUN_DIR/fleet-${phase}.json"
+        api_get "/fork/audit/events" "$RUN_DIR/audit-${phase}.json"
+        api_get "/traffic-control/capabilities" "$RUN_DIR/traffic-control-${phase}.json"
+        jq -e '.obj.enabled == true' "$RUN_DIR/policies-${phase}.json" >/dev/null || fail "policy runtime was not enabled after ${phase} restart"
+        jq -e '.obj.enabled == true' "$RUN_DIR/portal-${phase}.json" >/dev/null || fail "self-service runtime was not enabled after ${phase} restart"
+        jq -e '.obj.state == "ready"' "$RUN_DIR/traffic-control-${phase}.json" >/dev/null || fail "Traffic Control runtime was not enabled after ${phase} restart"
     else
         jq -e '.obj.enabled == false and .obj.dnsIntelligence == false' "$RUN_DIR/analytics-status-${phase}.json" >/dev/null ||
             fail "feature-off analytics status was not explicit after ${phase} restart"
@@ -313,7 +329,20 @@ assert_restart_surfaces() {
         jq -e '.obj.enabled == false' "$RUN_DIR/dns-${phase}.json" >/dev/null ||
             fail "feature-off DNS API was not explicit after ${phase} restart"
         log "PASS: feature-off Activity and DNS Intelligence behavior was explicit and healthy after ${phase} restart"
+
+        api_get "/policies/status" "$RUN_DIR/policies-${phase}.json"
+        api_get "/portal/settings" "$RUN_DIR/portal-${phase}.json"
+        api_get "/traffic-control/capabilities" "$RUN_DIR/traffic-control-${phase}.json"
+        api_get_expect_status "/fleet-updates/campaigns" 404 "$RUN_DIR/fleet-${phase}.json"
+        api_get_expect_status "/fork/audit/events" 404 "$RUN_DIR/audit-${phase}.json"
+        jq -e '.obj.enabled == false' "$RUN_DIR/policies-${phase}.json" >/dev/null || fail "policy runtime was not disabled after ${phase} restart"
+        jq -e '.obj.enabled == false' "$RUN_DIR/portal-${phase}.json" >/dev/null || fail "self-service runtime was not disabled after ${phase} restart"
+        jq -e '.obj.state == "disabled"' "$RUN_DIR/traffic-control-${phase}.json" >/dev/null || fail "Traffic Control runtime was not disabled after ${phase} restart"
+        jq -e '.featureDisabled == true' "$RUN_DIR/fleet-${phase}.json" >/dev/null || fail "fleet runtime did not report disabled after ${phase} restart"
     fi
+    cp -f "$RUN_DIR/policies-${phase}.json" "$RUN_DIR/portal-${phase}.json" "$RUN_DIR/fleet-${phase}.json" \
+        "$RUN_DIR/audit-${phase}.json" "$RUN_DIR/traffic-control-${phase}.json" "$EVIDENCE_DIR/"
+    log "PASS: generic managed-feature runtime matched persisted ${expected} state after ${phase} restart"
 }
 
 start_panel
@@ -435,7 +464,7 @@ fi
 grep -q 'noqueue' "$EVIDENCE_DIR/tc-after-remove.txt" || fail "managed qdisc was not removed"
 log "PASS: Linux Traffic Control reconcile/apply/remove was idempotent and cleaned its owned state"
 
-if [[ -n "$CANDIDATE_BINARY" || "$RELEASE_TAG" == "v0.1.0-rc.3" ]]; then
+if [[ -n "$CANDIDATE_BINARY" || "$RELEASE_TAG" == "v0.1.0-rc.3" || "$RELEASE_TAG" == "v0.1.0-rc.4" ]]; then
     ip link show dev "$ADMIN_INTERFACE" >/dev/null 2>&1 && ip link delete "$ADMIN_INTERFACE" 2>/dev/null || true
     ip link add "$ADMIN_INTERFACE" type dummy
     ip link set dev "$ADMIN_INTERFACE" up

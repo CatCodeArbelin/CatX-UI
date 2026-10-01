@@ -260,7 +260,7 @@ EOF
         cp -a /etc/x-ui /tmp/populated-db
         sqlite3 /tmp/populated-db/x-ui.db "CREATE TABLE IF NOT EXISTS catx_rc2_fixture (key TEXT PRIMARY KEY, value TEXT NOT NULL); INSERT OR REPLACE INTO catx_rc2_fixture VALUES (\"synthetic-client\",\"fixture-value\");"
 
-        for label in production-baseline pre-rc-develop rc1-public; do
+        for label in production-baseline pre-rc-develop rc1-public rc3-public; do
             rm -rf /usr/local/x-ui /etc/x-ui
             mkdir -p /usr/local/x-ui /etc/x-ui /etc/systemd/system
             cp -a /tmp/populated-db/. /etc/x-ui/
@@ -279,6 +279,7 @@ EOF
                 production-baseline) run_id=900719925474099312345 ;;
                 pre-rc-develop) run_id=900719925474099312346 ;;
                 rc1-public) run_id=900719925474099312347 ;;
+                rc3-public) run_id=900719925474099312349 ;;
                 *) echo "unexpected legacy label: $label" >&2; exit 1 ;;
             esac
             printf "%s\n" "$update_script" >/tmp/staging-update.sh

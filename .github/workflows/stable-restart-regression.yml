@@ -8,6 +8,7 @@ on:
       - ".github/workflows/stable-restart-regression.yml"
       - "internal/database/db.go"
       - "internal/forkext/**"
+      - "internal/forkrelease/**"
       - "internal/web/web.go"
       - "scripts/staging/observe-rc2-linux.sh"
   workflow_dispatch:
@@ -112,6 +113,26 @@ jobs:
             "CATX_RC6_EVIDENCE_DIR=$CATX_RC6_EVIDENCE_DIR" \
             bash scripts/staging/observe-rc2-linux.sh
 
+      - name: Run Linux Traffic Control and quota regression on the same candidate
+        env:
+          CATX_RC6_CANDIDATE_BINARY: ${{ runner.temp }}/catx-candidate-x-ui
+          CATX_RC6_CANDIDATE_XRAY_BINARY: ${{ runner.temp }}/xray-linux-amd64
+          CATX_RC6_CANDIDATE_XRAY_ASSET_DIR: ${{ runner.temp }}/xray-assets
+          CATX_RC6_CANDIDATE_COMMIT: ${{ github.sha }}
+          CATX_RC6_EVIDENCE_DIR: ${{ runner.temp }}/stable-candidate-linux-evidence
+        run: |
+          set -euo pipefail
+          candidate_sha256=$(cut -d ' ' -f1 "$RUNNER_TEMP/candidate.sha256")
+          test -n "$candidate_sha256"
+          sudo env \
+            "CATX_RC6_CANDIDATE_BINARY=$CATX_RC6_CANDIDATE_BINARY" \
+            "CATX_RC6_CANDIDATE_XRAY_BINARY=$CATX_RC6_CANDIDATE_XRAY_BINARY" \
+            "CATX_RC6_CANDIDATE_XRAY_ASSET_DIR=$CATX_RC6_CANDIDATE_XRAY_ASSET_DIR" \
+            "CATX_RC6_CANDIDATE_COMMIT=$CATX_RC6_CANDIDATE_COMMIT" \
+            "CATX_RC6_CANDIDATE_SHA256=$candidate_sha256" \
+            "CATX_RC6_EVIDENCE_DIR=$CATX_RC6_EVIDENCE_DIR" \
+            bash scripts/staging/observe-rc2-linux.sh
+
       - name: Summarize sanitized candidate evidence
         if: always()
         run: |
@@ -120,6 +141,11 @@ jobs:
             find "$evidence" -maxdepth 1 -type f -printf '%f\n' | sort
             if [ -f "$evidence/observation.log" ]; then cat "$evidence/observation.log"; fi
           fi
+          linux_evidence="${RUNNER_TEMP}/stable-candidate-linux-evidence"
+          if [ -d "$linux_evidence" ]; then
+            find "$linux_evidence" -maxdepth 1 -type f -printf '%f\n' | sort
+            if [ -f "$linux_evidence/observation.log" ]; then cat "$linux_evidence/observation.log"; fi
+          fi
 
       - name: Upload sanitized candidate evidence
         if: always()
@@ -127,6 +153,15 @@ jobs:
         with:
           name: stable-candidate-restart-${{ github.run_id }}
           path: ${{ runner.temp }}/stable-candidate-restart-evidence
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Upload sanitized Linux candidate evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stable-candidate-linux-${{ github.run_id }}
+          path: ${{ runner.temp }}/stable-candidate-linux-evidence
           if-no-files-found: warn
           retention-days: 30
 
