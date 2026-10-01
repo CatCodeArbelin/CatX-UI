@@ -581,7 +581,7 @@ created; stable `v0.1.0` and `main` remain untouched.
 RC-6 was merged into `develop` with merge SHA
 `ecd8ee1afbee4996f9a099d67014c4ab2236ae44`.
 
-## Stable Qualification — v0.1.0 — READY TO RESUME
+## Stable Qualification — v0.1.0 — DONE
 
 Branch: `feature/stable-v0.1.0-qualification`
 
@@ -618,14 +618,49 @@ through the real `POST /panel/api/setting/restartPanel` endpoint. Analytics,
 DNS Intelligence, Activity, panel, Xray, and representative generic managed
 feature runtimes matched persisted state after both restarts.
 
-The RC3 blocker is resolved and Stable Qualification is ready to resume after
-review. Stop here: do not automatically continue remaining stable gates, merge
-to `main`, publish `v0.1.0`, or start Repository Productization.
+Stable Qualification completed on exact product/runtime SHA
+`fd28ea7144147d9164b70810d4a24872a3d48b4f`. Exact-SHA Fork Verification
+`36811795614`, stable candidate lifecycle `36811795653`, and the complete
+non-publishing stable release matrix `36811937162` passed. The matrix covered
+Linux/Windows artifacts and identity, SQLite, PostgreSQL, clean install,
+actual RC4-to-stable upgrade, database preservation, restart health, and
+rollback to RC4. Reconnect, node-restart, multi-node fanout, remote capability,
+Traffic Control, quota/window, feature-off, and no-clobber coverage remained
+green.
 
-After every exact-SHA stable gate passes, merge the qualified branch into
-`main`, create annotated `v0.1.0` without moving any RC tag, verify the actual
-published stable assets and release identity, run the narrow post-publication
-stable smoke, then stop before Repository Productization.
+`main` and annotated `v0.1.0` resolve to the qualified SHA. Canonical tagged
+Release run `36813723610` passed; the public final/latest release has 28
+expected assets. Corrected actual-public-assets observer `36815136071` passed
+updater identity, Russian LTR, Persian RTL, enabled and disabled real
+`restartPanel` lifecycles, generic managed-feature reload, panel/SQLite/Xray
+health, live traffic, Traffic Control apply/remove/no-clobber, authoritative
+quota/window behavior, and feature-disable cleanup.
+
+Observer attempts `36814708161` and `36814901784` remain recorded. The first
+was initially classified as latest-release visibility lag; the retry proved
+the qualification assertion incorrectly expected an unprefixed latest version
+instead of tag `v0.1.0`. Harness-only commit
+`35a03bb9d4407ebe343d9d8c0f8c62024dbdc4bb` corrected the assertion on the
+qualification branch and was not merged into the already-published stable
+product.
+
+Docker run `36813723615` passed. CatX-only aliases `v0.1.0`, `0.1.0`, and
+`latest` resolve to
+`sha256:3e94b98560e8261c315b9f9ae4d97a0e8ea5977e00072f9b310088eb9fac1322`
+with amd64, arm64, arm/v7, arm/v6, and 386 images plus provenance/SBOM
+attestations; the OCI revision is the qualified SHA.
+
+Non-canonical follow-ups remain explicit: the post-freeze npm audit found a
+high `brace-expansion` advisory and low DOMPurify advisory after all source
+build/test/lint/typecheck gates passed; Docs format drift and disabled GitHub
+Pages are tooling/configuration issues; and the secondary release-install
+smoke's no-systemd container cannot perform transactional updater service
+control, while the dedicated clean-install/upgrade/rollback matrix passed.
+None established a stable binary runtime defect during qualification.
+
+All RC tags remain immutable, public stable assets remain unchanged, no
+post-qualification product/runtime source entered `main`, and Repository
+Productization has not started. Stop before Productization.
 
 # Operating Rules
 
