@@ -12,19 +12,19 @@ The checked-out repository is authoritative. This baseline does not change runti
 
 The compatibility suite reuses the current upstream tests rather than creating a second test harness:
 
-| Area | Existing coverage |
-| --- | --- |
-| Xray config generation and Xray-core acceptance | `internal/web/service/golden_fixtures_xray_test.go`, `xray_config_clients_test.go`, `xray_config_inject_test.go`, `xray_strip_rules_test.go`, `internal/xray/*_test.go` |
-| Standard and raw subscriptions | `internal/sub/controller_test.go`, `service_test.go`, `links_test.go`, `export_all_links_test.go` |
-| JSON subscriptions | `internal/sub/json_service_test.go`, `json_routing_test.go`, `json_routing_baked_test.go`, `json_dns_test.go`, `json_flow_gate_test.go` |
-| Clash / Mihomo output | `internal/sub/clash_service_test.go`, `clash_yaml_test.go`, `clash_info_node_test.go`, `controller_test.go` |
-| Happ output | `internal/sub/happ_test.go`, `remote_routing_test.go`, `internal/web/controller/client_happ_test.go` |
-| Client CRUD and normalized source of truth | `internal/web/service/client_*.go` tests, `bulk_clients_test.go`, `bulk_traffic_test.go`, `client_identity_normalized_test.go` |
-| Client groups | `client_group_bulk_test.go`, `client_group_reset_test.go`, `client_group_node_sync_test.go`, `api_scale_postgres_test.go` |
-| Client-to-inbound attachment | `client_link_delta_test.go`, `client_inbound_apply_test.go`, `bulk_clients_test.go`, `client_create_fanout_test.go`, `client_flow_isolation_test.go` |
-| Routing | `xray_strip_rules_test.go`, `xray_config_inject_test.go`, `internal/sub/json_routing*_test.go`, `internal/sub/remote_routing_test.go`, frontend routing tests |
-| SQLite | `internal/database/*_test.go` SQLite cases, including `dump_sqlite_test.go`, `backup_test.go`, `prepare_sqlite_test.go`, and migration tests |
-| PostgreSQL | Opt-in cases in `internal/database/*_test.go` and `internal/web/service/*postgres*_test.go`, including `api_scale_postgres_test.go` and `inbound_durable_postgres_test.go` |
+| Area                                            | Existing coverage                                                                                                                                                          |
+| ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Xray config generation and Xray-core acceptance | `internal/web/service/golden_fixtures_xray_test.go`, `xray_config_clients_test.go`, `xray_config_inject_test.go`, `xray_strip_rules_test.go`, `internal/xray/*_test.go`    |
+| Standard and raw subscriptions                  | `internal/sub/controller_test.go`, `service_test.go`, `links_test.go`, `export_all_links_test.go`                                                                          |
+| JSON subscriptions                              | `internal/sub/json_service_test.go`, `json_routing_test.go`, `json_routing_baked_test.go`, `json_dns_test.go`, `json_flow_gate_test.go`                                    |
+| Clash / Mihomo output                           | `internal/sub/clash_service_test.go`, `clash_yaml_test.go`, `clash_info_node_test.go`, `controller_test.go`                                                                |
+| Happ output                                     | `internal/sub/happ_test.go`, `remote_routing_test.go`, `internal/web/controller/client_happ_test.go`                                                                       |
+| Client CRUD and normalized source of truth      | `internal/web/service/client_*.go` tests, `bulk_clients_test.go`, `bulk_traffic_test.go`, `client_identity_normalized_test.go`                                             |
+| Client groups                                   | `client_group_bulk_test.go`, `client_group_reset_test.go`, `client_group_node_sync_test.go`, `api_scale_postgres_test.go`                                                  |
+| Client-to-inbound attachment                    | `client_link_delta_test.go`, `client_inbound_apply_test.go`, `bulk_clients_test.go`, `client_create_fanout_test.go`, `client_flow_isolation_test.go`                       |
+| Routing                                         | `xray_strip_rules_test.go`, `xray_config_inject_test.go`, `internal/sub/json_routing*_test.go`, `internal/sub/remote_routing_test.go`, frontend routing tests              |
+| SQLite                                          | `internal/database/*_test.go` SQLite cases, including `dump_sqlite_test.go`, `backup_test.go`, `prepare_sqlite_test.go`, and migration tests                               |
+| PostgreSQL                                      | Opt-in cases in `internal/database/*_test.go` and `internal/web/service/*postgres*_test.go`, including `api_scale_postgres_test.go` and `inbound_durable_postgres_test.go` |
 
 ## New compatibility coverage added
 

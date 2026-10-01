@@ -80,17 +80,17 @@ evidence.
 
 Record actual observations only:
 
-| Field | Value |
-| --- | --- |
-| Start (UTC) | 2026-09-30 13:24:38Z |
-| End (UTC) | 2026-09-30 13:39:43Z |
-| Duration | 15m 05s |
-| Runtime restarts | 0 during soak; panel and Xray restarted before soak |
-| Panel/Xray restarts | 1 panel process restart; 1 Xray restart before soak |
-| Synthetic requests/flows | 30 proxy probes plus panel/API, subscription, backup/restore, policy, portal, audit, and fleet flows |
-| CPU/RAM trend | Panel status remained responsive; no monotonic failure trend observed |
-| Log growth or recurring errors | No recurring runtime error observed during the soak |
-| Database marker after restart | Inbound/client/subscription and traffic data persisted |
+| Field                          | Value                                                                                                |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| Start (UTC)                    | 2026-09-30 13:24:38Z                                                                                 |
+| End (UTC)                      | 2026-09-30 13:39:43Z                                                                                 |
+| Duration                       | 15m 05s                                                                                              |
+| Runtime restarts               | 0 during soak; panel and Xray restarted before soak                                                  |
+| Panel/Xray restarts            | 1 panel process restart; 1 Xray restart before soak                                                  |
+| Synthetic requests/flows       | 30 proxy probes plus panel/API, subscription, backup/restore, policy, portal, audit, and fleet flows |
+| CPU/RAM trend                  | Panel status remained responsive; no monotonic failure trend observed                                |
+| Log growth or recurring errors | No recurring runtime error observed during the soak                                                  |
+| Database marker after restart  | Inbound/client/subscription and traffic data persisted                                               |
 
 ## Decision
 
