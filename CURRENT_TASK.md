@@ -2,59 +2,82 @@
 
 ## Work Package
 
-`RC-6 — Real RC Observation & Stable Readiness`
+`Stable Qualification — v0.1.0`
 
 ## Base and branch
 
-RC-5 was merged into `develop` with merge SHA
-`a0cd0499d1423025ae2b8085fa3fd15db71380c3`. Work on branch
-`feature/rc6-rc2-observation-stable-readiness`, created from that merge commit.
-`main` remains untouched.
+RC-6 was merged into `develop` with merge SHA
+`ecd8ee1afbee4996f9a099d67014c4ab2236ae44`. This package starts from that
+exact `develop` HEAD on branch `feature/stable-v0.1.0-qualification`.
 
-The immutable public RC tag `v0.1.0-rc.2` remains exactly at
-`4d8feae2e62db914d3146504340d9b9f802088b2`.
+The immutable public tags remain:
 
-RC-6 is now complete: focused Traffic Control fix, hosted exact-SHA
-qualification, public `v0.1.0-rc.3`, and post-publication Linux observation all
-passed. RC-3 is at exact SHA `437d5e2f5bb835118ba6628ea62059b27721cfa3`.
-Status: `RC-6 COMPLETE — READY TO START STABLE QUALIFICATION`. Stop here;
-Stable Qualification has not started, stable `v0.1.0` is not published, and
-`main` remains untouched.
+- `v0.1.0-rc.1` — unchanged;
+- `v0.1.0-rc.2` — `4d8feae2e62db914d3146504340d9b9f802088b2`;
+- `v0.1.0-rc.3` — `437d5e2f5bb835118ba6628ea62059b27721cfa3`.
+
+`main` remains untouched. Stable `v0.1.0` has not been published.
+Repository Productization has not started.
 
 ## Required reading
 
-For RC-6, read only these canonical documents in addition to `AGENTS.md` and
-this file:
+Read `AGENTS.md`, this file, and these canonical documents before changing
+implementation or release state:
 
 - `docs/03_ROADMAP.md`
 - `docs/05_TESTING_ROLLBACK_RELEASE.md`
 - `docs/15_DEFINITION_OF_DONE.md`
+- `docs/22_RC2_STAGING_RELEASE_QUALIFICATION.md`
 - `docs/27_SECOND_RC_PLAN.md`
+- `docs/28_RC6_REAL_RC_OBSERVATION.md`
 
 ## Scope
 
-Observe the already-published `v0.1.0-rc.2` on an isolated disposable or test
-Linux host, establish the feature-off upstream baseline first, then exercise
-representative CatX capabilities incrementally. If observation confirms a
-source blocker, this same RC-6 package carries only the focused fix, hosted
-candidate proof, exact-SHA qualification, `v0.1.0-rc.3` publication, and
-post-publication observation. There is no separate RC-7 work package.
+Qualify the already-observed RC3 code for stable release. This package may
+carry only confirmed release-blocking fixes and qualification infrastructure.
+It must not add features, redesign QoS, implement generic Xray-user
+attribution, start repository productization, or change `main` before every
+stable gate is green.
 
-This package must not:
+The first mandatory gate is the real user-visible panel restart lifecycle on
+actual public `v0.1.0-rc.3` Linux assets:
 
-- add new product features;
-- publish stable `v0.1.0`;
-- touch `main`;
-- start repository productization;
-- silently place unobserved source changes into a stable release.
+1. install/start the public RC3 payload on disposable Linux;
+2. authenticate and read CatX feature settings;
+3. enable `analytics.enabled` and `dns_intelligence.enabled` through the
+   normal CatX feature-settings API/UI contract and verify persistence;
+4. invoke `POST /panel/api/setting/restartPanel`;
+5. wait for panel recovery, authenticate again, and verify both flags;
+6. verify Activity, DNS Intelligence, panel health, Xray health, database
+   preservation, and absence of panic/fatal/startup-loop evidence;
+7. disable both flags through the normal path and repeat the real restart;
+8. verify explicit healthy feature-off behavior and persistence.
 
-The Docker release path is part of RC-6 stable-readiness isolation. It must
-not publish to upstream-owned namespaces and must preserve multi-architecture
-behavior where practical.
+The regression harness must use the actual restart endpoint. A direct process
+stop/start is not an accepted substitute.
 
-## Observation decision
+If this gate finds a source-level defect, stop Stable Qualification, do not
+publish stable, and require focused `v0.1.0-rc.4` qualification and real
+observation before returning here. Infrastructure-only failures must be
+recorded precisely and retried according to the existing policy.
 
-If a source-level stable blocker is found, complete the focused fix and
-fully qualify/publish `v0.1.0-rc.3`, then repeat real observation with the
-actual RC-3 assets. When that observation is green, close RC-6 as ready to
-start Stable Qualification and stop. Stable `v0.1.0` is outside this package.
+## Stable identity
+
+The eventual stable release must use:
+
+- fork version `0.1.0`;
+- release version `0.1.0`;
+- channel `stable`;
+- upstream base `MHSanaei/3x-ui v3.8.5`;
+- bundled Xray `26.9.9`;
+- annotated tag `v0.1.0` with `prerelease=false` and the normal stable/latest
+  release semantics.
+
+RC tags and assets must remain unchanged.
+
+## Completion state
+
+Stable Qualification is in progress. Do not merge to `main`, create `v0.1.0`,
+or start Repository Productization until the exact-SHA stable qualification,
+stable cut, actual published-asset verification, and post-publication smoke
+all pass. After successful publication, stop before Productization.

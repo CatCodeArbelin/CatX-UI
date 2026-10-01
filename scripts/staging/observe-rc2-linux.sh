@@ -8,6 +8,7 @@ readonly RELEASE_REPOSITORY="CatCodeArbelin/CatX-UI"
 readonly RELEASE_TAG="${CATX_RC6_PUBLIC_TAG:-v0.1.0-rc.2}"
 readonly RELEASE_VERSION="${CATX_RC6_PUBLIC_VERSION:-0.1.0-rc.2}"
 readonly RELEASE_COMMIT="${CATX_RC6_PUBLIC_COMMIT:-4d8feae2e62db914d3146504340d9b9f802088b2}"
+readonly STABLE_RESTART_REGRESSION_ONLY="${CATX_STABLE_RESTART_REGRESSION_ONLY:-0}"
 readonly CANDIDATE_BINARY="${CATX_RC6_CANDIDATE_BINARY:-}"
 readonly CANDIDATE_XRAY_BINARY="${CATX_RC6_CANDIDATE_XRAY_BINARY:-}"
 readonly CANDIDATE_XRAY_ASSET_DIR="${CATX_RC6_CANDIDATE_XRAY_ASSET_DIR:-}"
@@ -223,6 +224,86 @@ api_mutate() {
     }
 }
 
+restart_panel_via_api() {
+    local label=$1
+    local previous_pid="$PANEL_PID"
+    local csrf_code=000
+
+    api_mutate POST "/setting/restartPanel" '{}' "$RUN_DIR/restart-${label}.json"
+    cp -f "$RUN_DIR/restart-${label}.json" "$EVIDENCE_DIR/restart-${label}.json"
+    log "PASS: POST /setting/restartPanel accepted for ${label}"
+
+    # The endpoint schedules the real SIGHUP path three seconds later. Do not
+    # accept the old listener as proof that the restart completed.
+    sleep 4
+    grep -Fq "Received SIGHUP signal. Restarting servers..." "$RUN_DIR/panel.log" ||
+        fail "panel log did not record the SIGHUP restart requested by ${label}"
+
+    for _ in $(seq 1 60); do
+        kill -0 "$previous_pid" 2>/dev/null || fail "panel process exited during ${label} restart"
+        csrf_code=$(curl --connect-timeout 2 --max-time 5 --silent --output /dev/null \
+            --write-out '%{http_code}' "$BASE_URL/csrf-token" || true)
+        if [[ "$csrf_code" == 200 ]]; then
+            login
+            [[ "$PANEL_PID" == "$previous_pid" ]] || fail "${label} restart changed the panel process unexpectedly"
+            log "PASS: panel recovered through the same process after real ${label} restart"
+            return 0
+        fi
+        sleep 1
+    done
+    fail "panel did not recover after real ${label} restart (last HTTP status $csrf_code)"
+}
+
+assert_restart_surfaces() {
+    local phase=$1 expected=$2
+    api_get "/server/status" "$RUN_DIR/status-${phase}.json"
+    jq -e '(.obj.xray.state == "running") or (.obj.xrayState == "running")' \
+        "$RUN_DIR/status-${phase}.json" >/dev/null || fail "Xray was not healthy after ${phase} restart"
+
+    api_get "/fork/settings/features" "$RUN_DIR/features-${phase}.json"
+    if [[ "$expected" == enabled ]]; then
+        jq -e '([.obj.items[] | select(.key == "analytics.enabled" or .key == "dns_intelligence.enabled") | .enabled] | sort) == [true, true]' \
+            "$RUN_DIR/features-${phase}.json" >/dev/null || fail "CatX enabled flags did not survive ${phase} restart"
+    else
+        jq -e '([.obj.items[] | select(.key == "analytics.enabled" or .key == "dns_intelligence.enabled") | .enabled] | sort) == [false, false]' \
+            "$RUN_DIR/features-${phase}.json" >/dev/null || fail "CatX disabled flags did not survive ${phase} restart"
+    fi
+
+    api_get "/analytics/status" "$RUN_DIR/analytics-status-${phase}.json"
+    api_get "/analytics/settings" "$RUN_DIR/analytics-settings-${phase}.json"
+    api_get "/analytics/clients/${CLIENT_EMAIL}/activity" "$RUN_DIR/activity-${phase}.json"
+    api_get "/analytics/clients/${CLIENT_EMAIL}/dns" "$RUN_DIR/dns-${phase}.json"
+    cp -f "$RUN_DIR/status-${phase}.json" "$RUN_DIR/features-${phase}.json" \
+        "$RUN_DIR/analytics-status-${phase}.json" "$RUN_DIR/analytics-settings-${phase}.json" \
+        "$RUN_DIR/activity-${phase}.json" "$RUN_DIR/dns-${phase}.json" "$EVIDENCE_DIR/"
+    activity_page_code=$(curl --connect-timeout 2 --max-time 5 --silent --show-error \
+        -b "$COOKIE_FILE" -o "$RUN_DIR/activity-page-${phase}.html" -w '%{http_code}' \
+        "$BASE_URL/activity" || true)
+    [[ "$activity_page_code" == 200 ]] || fail "Activity page returned HTTP ${activity_page_code} after ${phase} restart"
+
+    if [[ "$expected" == enabled ]]; then
+        jq -e '.obj.enabled == true and .obj.dnsIntelligence == true' "$RUN_DIR/analytics-status-${phase}.json" >/dev/null ||
+            fail "Analytics/DNS Intelligence status was not enabled after ${phase} restart"
+        jq -e '.obj.enabled == true and .obj.dnsIntelligence == true' "$RUN_DIR/analytics-settings-${phase}.json" >/dev/null ||
+            fail "Analytics/DNS Intelligence settings were not enabled after ${phase} restart"
+        jq -e '.obj.enabled == true' "$RUN_DIR/activity-${phase}.json" >/dev/null ||
+            fail "Activity API was not operational after ${phase} restart"
+        jq -e '.obj.enabled == true' "$RUN_DIR/dns-${phase}.json" >/dev/null ||
+            fail "DNS Intelligence API was not operational after ${phase} restart"
+        log "PASS: Activity and DNS Intelligence surfaces were operational after ${phase} restart"
+    else
+        jq -e '.obj.enabled == false and .obj.dnsIntelligence == false' "$RUN_DIR/analytics-status-${phase}.json" >/dev/null ||
+            fail "feature-off analytics status was not explicit after ${phase} restart"
+        jq -e '.obj.enabled == false and .obj.dnsIntelligence == false' "$RUN_DIR/analytics-settings-${phase}.json" >/dev/null ||
+            fail "feature-off analytics settings were not explicit after ${phase} restart"
+        jq -e '.obj.enabled == false' "$RUN_DIR/activity-${phase}.json" >/dev/null ||
+            fail "feature-off Activity API was not explicit after ${phase} restart"
+        jq -e '.obj.enabled == false' "$RUN_DIR/dns-${phase}.json" >/dev/null ||
+            fail "feature-off DNS API was not explicit after ${phase} restart"
+        log "PASS: feature-off Activity and DNS Intelligence behavior was explicit and healthy after ${phase} restart"
+    fi
+}
+
 start_panel
 wait_panel
 login
@@ -280,6 +361,32 @@ log "PASS: synthetic VLESS client reached example.com through Xray (HTTP 200)"
 
 feature_body='{"flags":{"analytics.enabled":true,"dns_intelligence.enabled":true,"policies.enabled":true,"traffic_control.enabled":true,"audit.enabled":true,"self_service.enabled":true,"fleet_updates.enabled":true,"fleet_updates.mutation.enabled":true}}'
 api_mutate PUT "/fork/settings/features" "$feature_body" "$RUN_DIR/features-on-save.json"
+
+if [[ "$STABLE_RESTART_REGRESSION_ONLY" == 1 ]]; then
+    api_get "/fork/settings/features" "$RUN_DIR/features-on-before-restart.json"
+    jq -e '([.obj.items[] | select(.key == "analytics.enabled" or .key == "dns_intelligence.enabled") | .enabled] | sort) == [true, true]' \
+        "$RUN_DIR/features-on-before-restart.json" >/dev/null || fail "CatX enabled flags were not persisted before the real restart"
+    restart_panel_via_api enabled
+    assert_restart_surfaces enabled
+
+    api_mutate PUT "/fork/settings/features" \
+        '{"flags":{"analytics.enabled":false,"dns_intelligence.enabled":false,"policies.enabled":false,"traffic_control.enabled":false,"audit.enabled":false,"self_service.enabled":false,"fleet_updates.enabled":false,"fleet_updates.mutation.enabled":false}}' \
+        "$RUN_DIR/features-off-save.json"
+    api_get "/fork/settings/features" "$RUN_DIR/features-off-before-restart.json"
+    jq -e '([.obj.items[] | select(.key == "analytics.enabled" or .key == "dns_intelligence.enabled") | .enabled] | sort) == [false, false]' \
+        "$RUN_DIR/features-off-before-restart.json" >/dev/null || fail "CatX disabled flags were not persisted before the real restart"
+    restart_panel_via_api disabled
+    assert_restart_surfaces disabled
+    api_get "/clients/get/${CLIENT_EMAIL}" "$RUN_DIR/client-after-restart.json"
+    jq -e --arg email "$CLIENT_EMAIL" '.obj.client.email == $email' "$RUN_DIR/client-after-restart.json" >/dev/null ||
+        fail "synthetic database client was not preserved across real panel restarts"
+    if grep -Eiq 'panic|fatal|startup loop' "$RUN_DIR/panel.log"; then
+        fail "panel log contained panic/fatal/startup-loop evidence during real restart regression"
+    fi
+    log "PASS: Stable Qualification real restart regression completed on public ${RELEASE_VERSION} assets"
+    exit 0
+fi
+
 stop_panel
 start_panel
 wait_panel

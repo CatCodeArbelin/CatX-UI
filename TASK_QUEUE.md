@@ -551,7 +551,7 @@ published-asset RC1-to-RC2 transition, rollback, checksum, panel/Xray, and
 Russian/RTL smoke qualification passed. Stable `v0.1.0` was not published and
 `main` was not changed.
 
-## RC-6 — Real RC Observation & Stable Readiness — CURRENT
+## RC-6 — Real RC Observation & Stable Readiness — DONE
 
 Branch: `feature/rc6-rc2-observation-stable-readiness`
 
@@ -575,8 +575,34 @@ QUALIFICATION` and stop before Stable Qualification.
 RC-6 completed on exact SHA `437d5e2f5bb835118ba6628ea62059b27721cfa3`.
 Hosted candidate qualification, Fork verification, public `v0.1.0-rc.3`
 release qualification, and post-publication Linux observation passed. Stable
-Qualification is the next roadmap step but has not started. No RC-7 branch or
-work package was created; stable `v0.1.0` and `main` remain untouched.
+Qualification is the next roadmap step. No RC-7 branch or work package was
+created; stable `v0.1.0` and `main` remain untouched.
+
+RC-6 was merged into `develop` with merge SHA
+`ecd8ee1afbee4996f9a099d67014c4ab2236ae44`.
+
+## Stable Qualification — v0.1.0 — CURRENT
+
+Branch: `feature/stable-v0.1.0-qualification`
+
+Starting SHA: `ecd8ee1afbee4996f9a099d67014c4ab2236ae44`.
+
+Qualify the already-observed RC3 code for stable without adding features,
+starting Repository Productization, or touching `main` before all stable gates
+pass. The first mandatory gate is a persistent disposable Linux regression
+using actual public `v0.1.0-rc.3` assets. It must save
+`analytics.enabled` and `dns_intelligence.enabled`, invoke the real
+`POST /panel/api/setting/restartPanel` endpoint, verify recovery and Activity /
+DNS Intelligence health, then disable both flags and repeat the real restart.
+
+The workflow must retain sanitized evidence. A source-level defect blocks
+stable and requires focused `v0.1.0-rc.4` qualification and observation; an
+infrastructure-only failure must follow the documented retry policy.
+
+After every exact-SHA stable gate passes, merge the qualified branch into
+`main`, create annotated `v0.1.0` without moving any RC tag, verify the actual
+published stable assets and release identity, run the narrow post-publication
+stable smoke, then stop before Repository Productization.
 
 # Operating Rules
 

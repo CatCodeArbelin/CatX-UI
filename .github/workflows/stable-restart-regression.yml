@@ -1,0 +1,106 @@
+name: Stable Qualification real restart regression
+
+on:
+  push:
+    branches:
+      - feature/stable-v0.1.0-qualification
+    paths:
+      - ".github/workflows/stable-restart-regression.yml"
+      - "scripts/staging/observe-rc2-linux.sh"
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Published CatX release tag whose actual assets will be tested
+        required: true
+        default: v0.1.0-rc.3
+        type: string
+      release_commit:
+        description: Exact commit recorded in the published release metadata
+        required: true
+        default: 437d5e2f5bb835118ba6628ea62059b27721cfa3
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  restart-regression:
+    name: Exercise real restartPanel on actual public RC assets
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Install Linux qualification dependencies
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends curl jq iproute2 nftables unzip
+          sudo modprobe ifb numifbs=8
+          sudo modprobe sch_htb
+          sudo modprobe sch_ingress
+          sudo modprobe cls_flower
+          sudo modprobe cls_fw
+          sudo modprobe act_mirred
+
+      - name: Wait for the actual published assets
+        env:
+          RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || 'v0.1.0-rc.3' }}
+          RELEASE_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]] || {
+            echo "invalid release tag: $RELEASE_TAG" >&2
+            exit 1
+          }
+          for attempt in $(seq 1 120); do
+            if curl --fail --silent --show-error \
+              -H "Authorization: Bearer $RELEASE_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/CatCodeArbelin/CatX-UI/releases/tags/${RELEASE_TAG}" > "$RUNNER_TEMP/release.json"; then
+              if jq -e --arg a catx-ui-linux-amd64.tar.gz --arg b catx-ui-release-metadata.json \
+                '(.draft == false and ([.assets[].name] | index($a)) != null and ([.assets[].name] | index($b)) != null)' \
+                "$RUNNER_TEMP/release.json" >/dev/null; then
+                exit 0
+              fi
+            fi
+            sleep 10
+          done
+          echo "published assets for ${RELEASE_TAG} were not ready" >&2
+          exit 1
+
+      - name: Run the real restartPanel regression against public assets
+        env:
+          RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || 'v0.1.0-rc.3' }}
+          RELEASE_COMMIT: ${{ github.event_name == 'workflow_dispatch' && inputs.release_commit || '437d5e2f5bb835118ba6628ea62059b27721cfa3' }}
+          EVIDENCE_DIR: ${{ runner.temp }}/stable-restart-regression-evidence
+        run: |
+          set -euo pipefail
+          public_version="${RELEASE_TAG#v}"
+          sudo env \
+            CATX_STABLE_RESTART_REGRESSION_ONLY=1 \
+            CATX_RC6_PUBLIC_TAG="$RELEASE_TAG" \
+            CATX_RC6_PUBLIC_VERSION="$public_version" \
+            CATX_RC6_PUBLIC_COMMIT="$RELEASE_COMMIT" \
+            CATX_RC6_EVIDENCE_DIR="$EVIDENCE_DIR" \
+            bash scripts/staging/observe-rc2-linux.sh
+
+      - name: Summarize sanitized restart evidence
+        if: always()
+        run: |
+          evidence="${RUNNER_TEMP}/stable-restart-regression-evidence"
+          if [ -d "$evidence" ]; then
+            find "$evidence" -maxdepth 1 -type f -printf '%f\n' | sort
+            if [ -f "$evidence/observation.log" ]; then cat "$evidence/observation.log"; fi
+          fi
+
+      - name: Upload sanitized restart evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stable-restart-regression-${{ github.run_id }}
+          path: ${{ runner.temp }}/stable-restart-regression-evidence
+          if-no-files-found: warn
+          retention-days: 30
