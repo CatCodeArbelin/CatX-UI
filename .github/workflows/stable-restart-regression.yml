@@ -11,6 +11,7 @@ on:
       - "internal/forkrelease/**"
       - "internal/web/web.go"
       - "scripts/staging/observe-rc2-linux.sh"
+      - "frontend/scripts/observe-public-locales.mjs"
   workflow_dispatch:
     inputs:
       release_tag:
@@ -30,7 +31,7 @@ permissions:
 jobs:
   candidate-restart-regression:
     if: github.event_name == 'push'
-    name: Exercise real restartPanel on exact-SHA candidate
+    name: Exercise real restartPanel on exact-SHA stable candidate
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
@@ -79,7 +80,7 @@ jobs:
         run: |
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
-          go build -buildvcs=false -ldflags "-s -w -X github.com/mhsanaei/3x-ui/v3/internal/config.buildCommit=$GITHUB_SHA -X github.com/mhsanaei/3x-ui/v3/internal/config.buildChannel=rc -X github.com/mhsanaei/3x-ui/v3/internal/config.buildDate=$(date -u +%Y-%m-%dT%H:%M:%SZ)" -o "$CANDIDATE_BINARY" .
+          go build -buildvcs=false -ldflags "-s -w" -o "$CANDIDATE_BINARY" .
           curl --fail --location --retry 4 --retry-all-errors --retry-delay 2 \
             -o "$RUNNER_TEMP/xray.zip" \
             "https://github.com/XTLS/Xray-core/releases/download/v26.9.9/Xray-linux-64.zip"
@@ -90,7 +91,9 @@ jobs:
           install -m 0644 "$RUNNER_TEMP/xray-unpacked/geosite.dat" "$CANDIDATE_XRAY_ASSETS/geosite.dat"
           sha256sum "$CANDIDATE_BINARY" | tee "$RUNNER_TEMP/candidate.sha256"
           "$CANDIDATE_BINARY" release-info | tee "$RUNNER_TEMP/candidate-release-info.txt"
-          grep -F "build_commit=$GITHUB_SHA" "$RUNNER_TEMP/candidate-release-info.txt"
+          grep -Fx "channel=stable" "$RUNNER_TEMP/candidate-release-info.txt"
+          grep -Fx "release_version=0.1.0" "$RUNNER_TEMP/candidate-release-info.txt"
+          grep -Fx "build_commit=" "$RUNNER_TEMP/candidate-release-info.txt"
 
       - name: Run real restart regression on disposable Linux state
         env:
@@ -110,6 +113,7 @@ jobs:
             "CATX_RC6_CANDIDATE_XRAY_ASSET_DIR=$CATX_RC6_CANDIDATE_XRAY_ASSET_DIR" \
             "CATX_RC6_CANDIDATE_COMMIT=$CATX_RC6_CANDIDATE_COMMIT" \
             "CATX_RC6_CANDIDATE_SHA256=$candidate_sha256" \
+            CATX_RC6_CANDIDATE_CHANNEL=stable \
             "CATX_RC6_EVIDENCE_DIR=$CATX_RC6_EVIDENCE_DIR" \
             bash scripts/staging/observe-rc2-linux.sh
 
@@ -130,6 +134,7 @@ jobs:
             "CATX_RC6_CANDIDATE_XRAY_ASSET_DIR=$CATX_RC6_CANDIDATE_XRAY_ASSET_DIR" \
             "CATX_RC6_CANDIDATE_COMMIT=$CATX_RC6_CANDIDATE_COMMIT" \
             "CATX_RC6_CANDIDATE_SHA256=$candidate_sha256" \
+            CATX_RC6_CANDIDATE_CHANNEL=stable \
             "CATX_RC6_EVIDENCE_DIR=$CATX_RC6_EVIDENCE_DIR" \
             bash scripts/staging/observe-rc2-linux.sh
 
@@ -167,13 +172,27 @@ jobs:
 
   restart-regression:
     if: github.event_name == 'workflow_dispatch'
-    name: Exercise real restartPanel on actual public RC assets
+    name: Exercise actual public release assets
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 50
+    env:
+      PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/ms-playwright
     steps:
       - uses: actions/checkout@v7
         with:
           ref: ${{ github.ref }}
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install public locale probe dependencies
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+        working-directory: frontend
 
       - name: Install Linux qualification dependencies
         run: |
@@ -222,7 +241,26 @@ jobs:
           set -euo pipefail
           public_version="${RELEASE_TAG#v}"
           sudo env \
+            "PATH=$PATH" \
+            "PLAYWRIGHT_BROWSERS_PATH=$PLAYWRIGHT_BROWSERS_PATH" \
             CATX_STABLE_RESTART_REGRESSION_ONLY=1 \
+            CATX_PUBLIC_LOCALE_BROWSER=1 \
+            CATX_PUBLIC_LOCALE_PROBE_SCRIPT="$GITHUB_WORKSPACE/frontend/scripts/observe-public-locales.mjs" \
+            CATX_RC6_PUBLIC_TAG="$RELEASE_TAG" \
+            CATX_RC6_PUBLIC_VERSION="$public_version" \
+            CATX_RC6_PUBLIC_COMMIT="$RELEASE_COMMIT" \
+            CATX_RC6_EVIDENCE_DIR="$EVIDENCE_DIR" \
+            bash scripts/staging/observe-rc2-linux.sh
+
+      - name: Run the Traffic Control and quota smoke against public assets
+        env:
+          RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || 'v0.1.0-rc.3' }}
+          RELEASE_COMMIT: ${{ github.event_name == 'workflow_dispatch' && inputs.release_commit || '437d5e2f5bb835118ba6628ea62059b27721cfa3' }}
+          EVIDENCE_DIR: ${{ runner.temp }}/stable-public-linux-evidence
+        run: |
+          set -euo pipefail
+          public_version="${RELEASE_TAG#v}"
+          sudo env \
             CATX_RC6_PUBLIC_TAG="$RELEASE_TAG" \
             CATX_RC6_PUBLIC_VERSION="$public_version" \
             CATX_RC6_PUBLIC_COMMIT="$RELEASE_COMMIT" \
@@ -237,12 +275,19 @@ jobs:
             find "$evidence" -maxdepth 1 -type f -printf '%f\n' | sort
             if [ -f "$evidence/observation.log" ]; then cat "$evidence/observation.log"; fi
           fi
+          linux_evidence="${RUNNER_TEMP}/stable-public-linux-evidence"
+          if [ -d "$linux_evidence" ]; then
+            find "$linux_evidence" -maxdepth 1 -type f -printf '%f\n' | sort
+            if [ -f "$linux_evidence/observation.log" ]; then cat "$linux_evidence/observation.log"; fi
+          fi
 
       - name: Upload sanitized restart evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: stable-restart-regression-${{ github.run_id }}
-          path: ${{ runner.temp }}/stable-restart-regression-evidence
+          path: |
+            ${{ runner.temp }}/stable-restart-regression-evidence
+            ${{ runner.temp }}/stable-public-linux-evidence
           if-no-files-found: warn
           retention-days: 30

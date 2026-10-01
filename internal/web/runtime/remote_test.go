@@ -54,6 +54,51 @@ func TestRemoteDo_AcceptsNormalResponse(t *testing.T) {
 	}
 }
 
+func TestRemoteTrafficControlUsesAuthenticatedCapabilityAndMutationRoutes(t *testing.T) {
+	var methods []string
+	var paths []string
+	var reconcileBody map[string]any
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		methods = append(methods, req.Method)
+		paths = append(paths, req.URL.Path)
+		if got := req.Header.Get("Authorization"); got != "Bearer tok" {
+			t.Fatalf("Authorization = %q, want Bearer token", got)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		switch req.URL.Path {
+		case "/verify/panel/api/traffic-control/capabilities":
+			_, _ = w.Write([]byte(`{"success":true,"obj":{"state":"ready","platform":"linux"}}`))
+		case "/verify/panel/api/traffic-control/reconcile":
+			if err := json.NewDecoder(req.Body).Decode(&reconcileBody); err != nil {
+				t.Fatalf("decode reconcile body: %v", err)
+			}
+			_, _ = w.Write([]byte(`{"success":true,"obj":{"status":{"state":"ready","generation":2}}}`))
+		default:
+			http.NotFound(w, req)
+		}
+	}))
+	defer srv.Close()
+
+	r := NewRemote(nodeForPlainServer(t, srv, "verify", "tok"), nil)
+	capability, err := r.TrafficControlCapabilities(context.Background())
+	if err != nil || !strings.Contains(string(capability), `"state":"ready"`) {
+		t.Fatalf("capability=%s err=%v", capability, err)
+	}
+	response, err := r.TrafficControlReconcile(context.Background(), json.RawMessage(`{"rules":[{"nodeKey":"n","clientKey":"c"}]}`))
+	if err != nil || !strings.Contains(string(response), `"generation":2`) {
+		t.Fatalf("reconcile response=%s err=%v", response, err)
+	}
+	if got, want := strings.Join(methods, ","), "GET,POST"; got != want {
+		t.Fatalf("methods=%q, want %q", got, want)
+	}
+	if got, want := strings.Join(paths, ","), "/verify/panel/api/traffic-control/capabilities,/verify/panel/api/traffic-control/reconcile"; got != want {
+		t.Fatalf("paths=%q, want %q", got, want)
+	}
+	if _, ok := reconcileBody["rules"]; !ok {
+		t.Fatalf("reconcile body=%v, want rules", reconcileBody)
+	}
+}
+
 func TestRemoteSetInboundSubSortIndexSendsOnlyNarrowField(t *testing.T) {
 	var posted url.Values
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {

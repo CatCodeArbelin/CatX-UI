@@ -14,6 +14,9 @@ readonly CANDIDATE_XRAY_BINARY="${CATX_RC6_CANDIDATE_XRAY_BINARY:-}"
 readonly CANDIDATE_XRAY_ASSET_DIR="${CATX_RC6_CANDIDATE_XRAY_ASSET_DIR:-}"
 readonly CANDIDATE_COMMIT="${CATX_RC6_CANDIDATE_COMMIT:-}"
 readonly CANDIDATE_BINARY_SHA256="${CATX_RC6_CANDIDATE_SHA256:-}"
+readonly CANDIDATE_CHANNEL="${CATX_RC6_CANDIDATE_CHANNEL:-rc}"
+readonly PUBLIC_LOCALE_BROWSER="${CATX_PUBLIC_LOCALE_BROWSER:-0}"
+readonly PUBLIC_LOCALE_PROBE_SCRIPT="${CATX_PUBLIC_LOCALE_PROBE_SCRIPT:-frontend/scripts/observe-public-locales.mjs}"
 readonly ASSET_PREFIX="catx-ui"
 readonly PANEL_PORT="${CATX_RC6_PANEL_PORT:-19185}"
 readonly SUB_PORT="${CATX_RC6_SUB_PORT:-2096}"
@@ -37,6 +40,16 @@ readonly COOKIE_FILE="$RUN_DIR/session.cookies"
 readonly RUN_LOG="$RUN_DIR/observation.log"
 readonly BASE_URL="http://127.0.0.1:${PANEL_PORT}${BASE_PATH%/}"
 readonly SUB_URL="http://127.0.0.1:${SUB_PORT}"
+
+PUBLIC_CHANNEL=rc
+PUBLIC_PRERELEASE=true
+PUBLIC_LATEST=false
+if [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    PUBLIC_CHANNEL=stable
+    PUBLIC_PRERELEASE=false
+    PUBLIC_LATEST=true
+fi
+readonly PUBLIC_CHANNEL PUBLIC_PRERELEASE PUBLIC_LATEST
 
 PANEL_PID=""
 CLIENT_XRAY_PID=""
@@ -109,7 +122,13 @@ if [[ -n "$CANDIDATE_BINARY" ]]; then
     cp -f "$CANDIDATE_XRAY_ASSET_DIR/geoip.dat" "$CANDIDATE_XRAY_ASSET_DIR/geosite.dat" "$PAYLOAD_DIR/x-ui/bin/"
     chmod +x "$PAYLOAD_DIR/x-ui/x-ui" "$PAYLOAD_DIR/x-ui/bin/xray-linux-amd64"
     "$PAYLOAD_DIR/x-ui/x-ui" release-info > "$EVIDENCE_DIR/candidate-release-info.txt"
-    grep -Fq "build_commit=$CANDIDATE_COMMIT" "$EVIDENCE_DIR/candidate-release-info.txt" || fail "candidate release identity did not contain the expected exact commit"
+    if [[ "$CANDIDATE_CHANNEL" == stable ]]; then
+        grep -Fxq "channel=stable" "$EVIDENCE_DIR/candidate-release-info.txt" || fail "candidate release identity was not stable"
+        grep -Fxq "release_version=0.1.0" "$EVIDENCE_DIR/candidate-release-info.txt" || fail "candidate release version was not 0.1.0"
+        grep -Fxq "build_commit=" "$EVIDENCE_DIR/candidate-release-info.txt" || fail "stable candidate unexpectedly carried a dev/RC build stamp"
+    else
+        grep -Fq "build_commit=$CANDIDATE_COMMIT" "$EVIDENCE_DIR/candidate-release-info.txt" || fail "candidate release identity did not contain the expected exact commit"
+    fi
     log "PASS: exact hosted candidate identity matched commit=$CANDIDATE_COMMIT binary_sha256=$actual_candidate_sha256"
 else
     download_verified_asset "${ASSET_PREFIX}-linux-amd64.tar.gz"
@@ -117,12 +136,13 @@ else
     jq -e \
         --arg product "CatX-UI" --arg repository "$RELEASE_REPOSITORY" \
         --arg fork "0.1.0" --arg upstream "3.8.5" --arg xray "26.9.9" \
-        --arg channel "rc" --arg version "$RELEASE_VERSION" --arg tag "$RELEASE_TAG" \
+        --arg channel "$PUBLIC_CHANNEL" --arg version "$RELEASE_VERSION" --arg tag "$RELEASE_TAG" \
         --arg commit "$RELEASE_COMMIT" \
+        --argjson prerelease "$PUBLIC_PRERELEASE" --argjson latest "$PUBLIC_LATEST" \
         '.product == $product and .repository == $repository and .forkVersion == $fork and
          .upstreamBaseVersion == $upstream and .bundledXrayVersion == $xray and
          .channel == $channel and .releaseVersion == $version and .releaseTag == $tag and
-         .prerelease == true and .latest == false and .buildCommit == $commit' \
+         .prerelease == $prerelease and .latest == $latest and .buildCommit == $commit' \
         "$ASSET_DIR/${ASSET_PREFIX}-release-metadata.json" >/dev/null ||
         fail "public ${RELEASE_VERSION} metadata identity did not match the qualified release"
     cp -f "$ASSET_DIR/${ASSET_PREFIX}-release-metadata.json" "$EVIDENCE_DIR/release-metadata.json"
@@ -347,7 +367,25 @@ assert_restart_surfaces() {
 
 start_panel
 wait_panel
+if [[ "$PUBLIC_LOCALE_BROWSER" == 1 ]]; then
+    require_command node
+    [[ -f "$PUBLIC_LOCALE_PROBE_SCRIPT" ]] || fail "public locale browser probe is unavailable"
+    node "$PUBLIC_LOCALE_PROBE_SCRIPT" "$BASE_URL" | tee -a "$RUN_LOG"
+    log "PASS: actual public asset rendered Russian LTR and Persian RTL login behavior"
+fi
 login
+
+if [[ "$PUBLIC_CHANNEL" == stable ]]; then
+    api_get "/server/getPanelUpdateInfo" "$RUN_DIR/stable-update-info.json"
+    jq -e --arg repository "$RELEASE_REPOSITORY" \
+        '.obj.channel == "stable" and .obj.currentVersion == "0.1.0" and
+         .obj.latestVersion == "0.1.0" and .obj.upstreamBaseVersion == "3.8.5" and
+         .obj.bundledXrayVersion == "26.9.9" and .obj.releaseRepository == $repository and
+         .obj.updateAvailable == false' "$RUN_DIR/stable-update-info.json" >/dev/null ||
+        fail "stable updater identity did not report current/latest v0.1.0"
+    cp -f "$RUN_DIR/stable-update-info.json" "$EVIDENCE_DIR/stable-update-info.json"
+    log "PASS: updater reported stable v0.1.0 identity from the CatX repository"
+fi
 
 api_get "/server/status" "$RUN_DIR/status-off.json"
 api_get "/fork/settings/features" "$RUN_DIR/features-off.json"
@@ -357,7 +395,7 @@ jq -e '(.obj.xray.state == "running") or (.obj.xrayState == "running")' "$RUN_DI
 jq -e '.obj.state == "disabled"' "$RUN_DIR/capabilities-off.json" >/dev/null || fail "feature-off Traffic Control was not disabled"
 cp -f "$RUN_DIR/features-off.json" "$EVIDENCE_DIR/features-off.json"
 cp -f "$RUN_DIR/capabilities-off.json" "$EVIDENCE_DIR/capabilities-off.json"
-log "PASS: public RC-2 feature-off Linux baseline reached panel, SQLite, login, and Xray"
+log "PASS: public ${RELEASE_VERSION} feature-off Linux baseline reached panel, SQLite, login, and Xray"
 
 inbound_body=$(jq -nc --argjson port "$INBOUND_PORT" '{remark:"rc6-linux-vless",enable:true,listen:"127.0.0.1",port:$port,protocol:"vless",settings:{clients:[],decryption:"none",fallbacks:[]},streamSettings:{network:"tcp",security:"none"},sniffing:{enabled:true,destOverride:["http","tls"]},total:0,expiryTime:0}')
 api_mutate POST "/inbounds/add" "$inbound_body" "$RUN_DIR/inbound-add.json"
@@ -385,8 +423,8 @@ for _ in $(seq 1 30); do
     fi
     sleep 1
 done
-[[ -s "$RUN_DIR/subscription.txt" ]] || fail "public RC-2 subscription endpoint did not return data (HTTP $subscription_code)"
-log "PASS: fetched synthetic client subscription from the public RC-2 panel"
+[[ -s "$RUN_DIR/subscription.txt" ]] || fail "public ${RELEASE_VERSION} subscription endpoint did not return data (HTTP $subscription_code)"
+log "PASS: fetched synthetic client subscription from the public ${RELEASE_VERSION} panel"
 
 cat > "$RUN_DIR/client-xray.json" <<EOF
 {
@@ -441,7 +479,7 @@ jq -e '.obj.state == "ready" and .obj.platform == "linux" and .obj.tc == true an
     fail "Linux Traffic Control capability contract was not ready/unsupported-honest"
 }
 cp -f "$RUN_DIR/capabilities-on.json" "$EVIDENCE_DIR/capabilities-on.json"
-log "PASS: public RC-2 Linux capabilities ready; generic user attribution remained false"
+log "PASS: public ${RELEASE_VERSION} Linux capabilities ready; generic user attribution remained false"
 
 log "INFO: preparing owned Linux Traffic Control substrate rule"
 substrate_rule=$(jq -nc --arg iface "$MANAGED_INTERFACE" '{rules:[{nodeKey:"rc6-linux-node",clientKey:"rc6-substrate",interface:$iface,mark:6001,uploadRateBps:1000000,downloadRateBps:1000000,selectors:["127.0.0.1/32"]}]}') || fail "could not encode substrate rule"
@@ -464,7 +502,7 @@ fi
 grep -q 'noqueue' "$EVIDENCE_DIR/tc-after-remove.txt" || fail "managed qdisc was not removed"
 log "PASS: Linux Traffic Control reconcile/apply/remove was idempotent and cleaned its owned state"
 
-if [[ -n "$CANDIDATE_BINARY" || "$RELEASE_TAG" == "v0.1.0-rc.3" || "$RELEASE_TAG" == "v0.1.0-rc.4" ]]; then
+if [[ -n "$CANDIDATE_BINARY" || "$RELEASE_TAG" == "v0.1.0-rc.3" || "$RELEASE_TAG" == "v0.1.0-rc.4" || "$RELEASE_TAG" == "v0.1.0" ]]; then
     ip link show dev "$ADMIN_INTERFACE" >/dev/null 2>&1 && ip link delete "$ADMIN_INTERFACE" 2>/dev/null || true
     ip link add "$ADMIN_INTERFACE" type dummy
     ip link set dev "$ADMIN_INTERFACE" up
@@ -524,7 +562,7 @@ for _ in $(seq 1 18); do
     fi
     sleep 4
 done
-(( traffic_after > traffic_before )) || fail "public RC-2 traffic counters did not advance after VLESS traffic"
+(( traffic_after > traffic_before )) || fail "public ${RELEASE_VERSION} traffic counters did not advance after VLESS traffic"
 api_get "/traffic-control/clients/${CLIENT_EMAIL}/policy" "$RUN_DIR/policy-after-traffic.json"
 jq -e '.obj.enforcement == "unsupported" and (.obj.lifecycle == "active" or .obj.lifecycle == "throttled")' "$RUN_DIR/policy-after-traffic.json" >/dev/null || fail "traffic policy lifecycle/enforcement state was inconsistent"
 
@@ -556,4 +594,4 @@ grep -q 'noqueue' "$EVIDENCE_DIR/tc-after-disable.txt" || fail "Traffic Control 
 cp -f "$RUN_DIR/features-final.json" "$EVIDENCE_DIR/features-final.json"
 cp -f "$RUN_DIR/capabilities-final.json" "$EVIDENCE_DIR/capabilities-final.json"
 log "PASS: feature disablement and restart removed CatX-owned Linux Traffic Control state"
-log "PASS: RC-6 public RC-2 Linux observation completed using synthetic disposable data"
+log "PASS: public ${RELEASE_VERSION} Linux observation completed using synthetic disposable data"

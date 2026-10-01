@@ -348,19 +348,70 @@ func TestIFBNameStaysWithinLinuxInterfaceLimit(t *testing.T) {
 }
 
 type fakeRemote struct {
-	capability []byte
-	response   []byte
-	calls      int
+	capability   []byte
+	response     []byte
+	capErr       error
+	reconcileErr error
+	calls        int
 }
 
 func (r *fakeRemote) TrafficControlCapabilities(context.Context) (json.RawMessage, error) {
 	r.calls++
-	return r.capability, nil
+	return r.capability, r.capErr
 }
 
 func (r *fakeRemote) TrafficControlReconcile(context.Context, json.RawMessage) (json.RawMessage, error) {
 	r.calls++
-	return r.response, nil
+	return r.response, r.reconcileErr
+}
+
+func TestRemoteReconcileRefusesUnsupportedAndDegradedCapabilitiesWithoutMutation(t *testing.T) {
+	tests := []struct {
+		name       string
+		remote     *fakeRemote
+		wantState  State
+		wantReason string
+	}{
+		{
+			name:       "old node without endpoint",
+			remote:     &fakeRemote{capErr: errors.New("remote request failed: HTTP 404")},
+			wantState:  State(stateUnsupported),
+			wantReason: "remote node does not support shaping",
+		},
+		{
+			name:       "capability probe failure",
+			remote:     &fakeRemote{capErr: errors.New("connection reset")},
+			wantState:  State(stateDegraded),
+			wantReason: "remote capability probe failed",
+		},
+		{
+			name:       "node reports degraded",
+			remote:     &fakeRemote{capability: []byte(`{"state":"degraded","reason":"missing CAP_NET_ADMIN"}`)},
+			wantState:  State(stateDegraded),
+			wantReason: "missing CAP_NET_ADMIN",
+		},
+		{
+			name:       "node reports unsupported",
+			remote:     &fakeRemote{capability: []byte(`{"state":"unsupported","reason":"platform is not linux"}`)},
+			wantState:  State(stateUnsupported),
+			wantReason: "platform is not linux",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			status, err := ReconcileRemote(context.Background(), tt.remote, []DesiredRule{{NodeKey: "n", ClientKey: "c"}})
+			if err == nil {
+				t.Fatal("ReconcileRemote error = nil, want explicit refusal")
+			}
+			if status.Capabilities.State != tt.wantState || status.Capabilities.Reason != tt.wantReason {
+				t.Fatalf("status=%+v, want state=%q reason=%q", status, tt.wantState, tt.wantReason)
+			}
+			if tt.remote.calls != 1 {
+				t.Fatalf("remote calls=%d, want capability probe only and no reconcile mutation", tt.remote.calls)
+			}
+		})
+	}
 }
 
 func TestRemoteReconcileUsesCapabilityBoundary(t *testing.T) {
