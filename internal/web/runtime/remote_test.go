@@ -66,9 +66,9 @@ func TestRemoteTrafficControlUsesAuthenticatedCapabilityAndMutationRoutes(t *tes
 		}
 		w.Header().Set("Content-Type", "application/json")
 		switch req.URL.Path {
-		case "/verify/panel/api/traffic-control/capabilities":
+		case "/panel/api/traffic-control/capabilities":
 			_, _ = w.Write([]byte(`{"success":true,"obj":{"state":"ready","platform":"linux"}}`))
-		case "/verify/panel/api/traffic-control/reconcile":
+		case "/panel/api/traffic-control/reconcile":
 			if err := json.NewDecoder(req.Body).Decode(&reconcileBody); err != nil {
 				t.Fatalf("decode reconcile body: %v", err)
 			}
@@ -91,7 +91,7 @@ func TestRemoteTrafficControlUsesAuthenticatedCapabilityAndMutationRoutes(t *tes
 	if got, want := strings.Join(methods, ","), "GET,POST"; got != want {
 		t.Fatalf("methods=%q, want %q", got, want)
 	}
-	if got, want := strings.Join(paths, ","), "/verify/panel/api/traffic-control/capabilities,/verify/panel/api/traffic-control/reconcile"; got != want {
+	if got, want := strings.Join(paths, ","), "/panel/api/traffic-control/capabilities,/panel/api/traffic-control/reconcile"; got != want {
 		t.Fatalf("paths=%q, want %q", got, want)
 	}
 	if _, ok := reconcileBody["rules"]; !ok {
