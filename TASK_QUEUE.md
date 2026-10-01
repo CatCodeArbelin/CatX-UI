@@ -701,10 +701,12 @@ the hosted frontend audit while preserving runtime source. The Productization
 branch includes that prerequisite through merge commit
 `606d31e5de1dcc93f025a7d86487d21119dacf62`.
 
-The package remains complete only after PR #1's final hosted Docs, CI, Fork
-Verification, Release, and Deploy Smoke gates pass and the merge metadata is
-recorded in `CURRENT_TASK.md` and this queue. No v0.1.1, upstream maintenance,
-tag movement, or runtime-source change is part of this package.
+Productization PR #1 final head was `e39b3dbf6c780518cb77a209e6d968875fec2680`
+and merged at `db610e986862bbe902d0fc8f1e4aa52cd707095f`. Docs CI
+`36911212458`, CI `36911212478`, Fork Verification `36911212331`, Release
+CatX-UI `36911212551`, and Deploy Smoke `36911212337` passed. No v0.1.1,
+upstream maintenance, tag movement, or runtime-source change is part of this
+package.
 
 # Operating Rules
 

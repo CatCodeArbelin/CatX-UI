@@ -111,9 +111,12 @@ The prerequisite frontend dependency remediation was isolated in security PR
 
 - dependency fix commit: `960138303cc5b8e2bfd84471dfb0b43eec9d53e7`;
 - dependency-fix merge commit: `e046c282fc8ea770dfe35c0d2b00d31341d28f4c`;
-- Productization branch prerequisite merge commit: `606d31e5de1dcc93f025a7d86487d21119dacf62`.
+- Productization branch prerequisite merge commit: `606d31e5de1dcc93f025a7d86487d21119dacf62`;
+- final Productization head before merge: `e39b3dbf6c780518cb77a209e6d968875fec2680`;
+- Productization PR #1 merge commit and final `main`: `db610e986862bbe902d0fc8f1e4aa52cd707095f`.
 
 The remediation is lockfile-only and changes no runtime source. Final hosted
-run identifiers, Productization merge SHA, and final `main` SHA are recorded
-in the final handoff after PR #1 settles. No v0.1.1 was created, no upstream
-release was synchronized, and the stable/RC tags remain immutable.
+evidence: Docs CI `36911212458`, CI `36911212478`, Fork Verification
+`36911212331`, Release CatX-UI `36911212551`, and Deploy Smoke
+`36911212337` all passed. No v0.1.1 was created, no upstream release was
+synchronized, and the stable/RC tags remain immutable.
