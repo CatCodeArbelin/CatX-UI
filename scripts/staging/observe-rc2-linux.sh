@@ -290,7 +290,7 @@ assert_restart_surfaces() {
     log "INFO: checking ${phase} Activity page"
     activity_page_code=$(curl --connect-timeout 2 --max-time 5 --silent --show-error \
         -b "$COOKIE_FILE" -o "$RUN_DIR/activity-page-${phase}.html" -w '%{http_code}' \
-        "$BASE_URL/activity" || true)
+        "$BASE_URL/panel/activity" || true)
     [[ "$activity_page_code" == 200 ]] || fail "Activity page returned HTTP ${activity_page_code} after ${phase} restart"
 
     if [[ "$expected" == enabled ]]; then
