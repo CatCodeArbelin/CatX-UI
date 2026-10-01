@@ -175,8 +175,6 @@ jobs:
     name: Exercise actual public release assets
     runs-on: ubuntu-latest
     timeout-minutes: 50
-    env:
-      PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/ms-playwright
     steps:
       - uses: actions/checkout@v7
         with:
@@ -189,6 +187,8 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install public locale probe dependencies
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/ms-playwright
         run: |
           npm ci
           npx playwright install --with-deps chromium
@@ -237,6 +237,7 @@ jobs:
           RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || 'v0.1.0-rc.3' }}
           RELEASE_COMMIT: ${{ github.event_name == 'workflow_dispatch' && inputs.release_commit || '437d5e2f5bb835118ba6628ea62059b27721cfa3' }}
           EVIDENCE_DIR: ${{ runner.temp }}/stable-restart-regression-evidence
+          PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/ms-playwright
         run: |
           set -euo pipefail
           public_version="${RELEASE_TAG#v}"
