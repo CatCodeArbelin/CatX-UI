@@ -581,7 +581,7 @@ created; stable `v0.1.0` and `main` remain untouched.
 RC-6 was merged into `develop` with merge SHA
 `ecd8ee1afbee4996f9a099d67014c4ab2236ae44`.
 
-## Stable Qualification — v0.1.0 — CURRENT
+## Stable Qualification — v0.1.0 — BLOCKED
 
 Branch: `feature/stable-v0.1.0-qualification`
 
@@ -595,9 +595,20 @@ using actual public `v0.1.0-rc.3` assets. It must save
 `POST /panel/api/setting/restartPanel` endpoint, verify recovery and Activity /
 DNS Intelligence health, then disable both flags and repeat the real restart.
 
-The workflow must retain sanitized evidence. A source-level defect blocks
-stable and requires focused `v0.1.0-rc.4` qualification and observation; an
-infrastructure-only failure must follow the documented retry policy.
+Hosted restart regression run `36804879634` used actual public RC3 assets. The
+archive, checksums, release identity, clean Linux install, login, SQLite,
+Xray, persisted feature flags, real `POST /panel/api/setting/restartPanel`,
+same-process recovery, and web/sub server restart all passed. The source-level
+gate failed because after the real panel restart the analytics and DNS runtime
+reported disabled even though the persisted `analytics.enabled` and
+`dns_intelligence.enabled` flags remained enabled. The panel-only restart path
+does not re-run the fork runtime configuration performed during process
+startup.
+
+Stable Qualification is stopped. Do not merge to `main`, publish `v0.1.0`, or
+continue remaining stable gates. The focused lifecycle fix requires a new
+public `v0.1.0-rc.4`, followed by exact-SHA qualification and real observation;
+do not patch the defect only into stable.
 
 After every exact-SHA stable gate passes, merge the qualified branch into
 `main`, create annotated `v0.1.0` without moving any RC tag, verify the actual

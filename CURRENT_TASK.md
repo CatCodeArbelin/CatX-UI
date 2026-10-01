@@ -75,9 +75,38 @@ The eventual stable release must use:
 
 RC tags and assets must remain unchanged.
 
-## Completion state
+## Stable Qualification decision
 
-Stable Qualification is in progress. Do not merge to `main`, create `v0.1.0`,
-or start Repository Productization until the exact-SHA stable qualification,
-stable cut, actual published-asset verification, and post-publication smoke
-all pass. After successful publication, stop before Productization.
+Stable Qualification is **BLOCKED** by a confirmed source-level RC3 restart
+defect. Hosted run `36804879634` used the actual public
+`v0.1.0-rc.3` Linux archive and metadata at exact commit
+`437d5e2f5bb835118ba6628ea62059b27721cfa3`.
+
+Evidence:
+
+- public archive/checksums/metadata identity: PASS;
+- clean disposable Linux panel start, login, SQLite, and Xray 26.9.9: PASS;
+- CatX feature settings persisted both `analytics.enabled=true` and
+  `dns_intelligence.enabled=true`: PASS;
+- real `POST /panel/api/setting/restartPanel`: accepted, same panel process
+  recovered, web and sub servers restarted: PASS;
+- after that real restart, `/panel/api/analytics/status` and
+  `/panel/api/analytics/settings` reported `enabled=false` and
+  `dnsIntelligence=false`, while the persisted feature flags remained true:
+  FAIL;
+- Activity/DNS APIs therefore remained feature-off after the enabled restart:
+  FAIL;
+- reverse disable/restart lifecycle was not run after this source-level
+  blocker, as required by the stop rule.
+
+Source cause: `database.InitDB()` invokes `forkext.RegisterMigrations()` during
+process startup and that is where the analytics runtime is configured from the
+persisted flags. The real panel-only SIGHUP path calls `StopPanelOnly()` and
+`StartPanelOnly()` without re-running database/fork runtime configuration, so
+flags changed before the restart are persisted but are not activated in the
+new panel runtime.
+
+Do not patch this only into Stable Qualification or publish `v0.1.0`. The
+focused lifecycle fix must be carried by a new public `v0.1.0-rc.4`, followed
+by exact-SHA qualification and real observation before returning to Stable
+Qualification. `main`, all RC tags, and stable release state remain untouched.
