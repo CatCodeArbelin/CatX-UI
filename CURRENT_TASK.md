@@ -35,5 +35,23 @@ and make the actual upstream upgrade a separate work package.
 
 ## Completion record
 
-Record the dry-run result, changed sensitive paths, CatX touchpoint overlaps,
-verification results, final strategy SHA, and merge SHA here before stopping.
+Strategy implementation commit: `b68daf5fc7187d86a63aa2ec0288d343e19ebfd7`.
+
+The non-production `sync/upstream-v3.9.0` branch was created from `main` at
+`8f63afc6f1fdbac0f50d3bfd4f6f0bb8da4255fb`. Merging exact upstream tag
+`v3.9.0` produced 12 conflicts and was aborted without a merge commit. The
+conflicts covered release/updater workflow and scripts, frontend dependency
+manifests, Go dependencies, panel/update code, client/inbound traffic code,
+and web lifecycle code. The upstream delta contained 563 changed paths, 224
+classified sensitive paths, and 64 known CatX touchpoint overlaps.
+
+Verification completed: upstream metadata/tag fetch, advisory report via Git
+Bash, Bash syntax check for the new report, and `git diff --check` passed.
+`make`, `make verify`, and `make verify-fork` were not run because `make` is
+unavailable on this Windows host; no full verification result is claimed.
+
+No merge SHA exists: the dry-run merge was intentionally aborted. `main`
+remains `8f63afc6f1fdbac0f50d3bfd4f6f0bb8da4255fb`; `develop` remains
+`ecd8ee1afbee4996f9a099d67014c4ab2236ae44`. The stable and RC tag targets
+remain unchanged. No CatX release was created, no upstream upgrade entered
+`main`, and no product feature was added.
