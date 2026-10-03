@@ -355,13 +355,30 @@ func testServerUDPDatagramE2E(t *testing.T, controller string) {
 		t.Fatalf("expected %q, got %q", udpMsg, replyPayload)
 	}
 
-	// 4. Verify traffic
-	deltas := server.CollectClientTraffic()
-	if len(deltas) == 0 {
-		t.Fatalf("expected traffic deltas, got none")
-	}
-	if deltas[0].Email != "bob@example.com" || deltas[0].Up < int64(len(udpMsg)) || deltas[0].Down < int64(len(udpMsg)) {
-		t.Fatalf("unexpected traffic deltas: %+v", deltas[0])
+	// 4. Verify traffic. UDP accounting is completed by the relay response
+	// goroutine, so the upload and download counters can become observable in
+	// separate collection cycles after the response datagram is received.
+	var delta ClientTrafficDelta
+	trafficDeadline := time.Now().Add(time.Second)
+	trafficTarget := int64(len(udpMsg))
+	for {
+		for _, candidate := range server.CollectClientTraffic() {
+			if candidate.Email != "bob@example.com" {
+				continue
+			}
+			delta.Email = candidate.Email
+			delta.UUID = candidate.UUID
+			delta.InboundID = candidate.InboundID
+			delta.Up += candidate.Up
+			delta.Down += candidate.Down
+		}
+		if delta.Up >= trafficTarget && delta.Down >= trafficTarget {
+			break
+		}
+		if time.Now().After(trafficDeadline) {
+			t.Fatalf("unexpected traffic deltas: %+v", delta)
+		}
+		time.Sleep(5 * time.Millisecond)
 	}
 }
 

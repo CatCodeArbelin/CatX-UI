@@ -22,6 +22,7 @@ vi.mock('@/api/http-init', () => ({
 
 vi.mock('@/i18n/react', () => ({
   readyI18n: () => Promise.resolve(),
+  i18n: { language: 'en-US' },
 }));
 
 vi.mock('@/hooks/useTheme', () => ({
