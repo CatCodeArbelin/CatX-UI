@@ -157,8 +157,11 @@ jobs:
             catx-ui-linux-amd64.tar.gz \
             catx-ui-linux-amd64.tar.gz.sha256 \
             catx-ui-install.sh \
+            catx-ui-install.sh.sha256 \
             catx-ui-update.sh \
+            catx-ui-update.sh.sha256 \
             catx-ui-update-lib.sh \
+            catx-ui-update-lib.sh.sha256 \
             catx-ui.sh \
             catx-ui-release-metadata.json; do
             curl --fail --location --retry 5 --retry-all-errors --retry-delay 3 \
