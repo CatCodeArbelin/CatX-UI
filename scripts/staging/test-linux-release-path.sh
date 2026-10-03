@@ -260,7 +260,7 @@ EOF
         cp -a /etc/x-ui /tmp/populated-db
         sqlite3 /tmp/populated-db/x-ui.db "CREATE TABLE IF NOT EXISTS catx_rc2_fixture (key TEXT PRIMARY KEY, value TEXT NOT NULL); INSERT OR REPLACE INTO catx_rc2_fixture VALUES (\"synthetic-client\",\"fixture-value\");"
 
-        for label in production-baseline pre-rc-develop rc1-public; do
+        for label in production-baseline pre-rc-develop rc1-public rc3-public rc4-public; do
             rm -rf /usr/local/x-ui /etc/x-ui
             mkdir -p /usr/local/x-ui /etc/x-ui /etc/systemd/system
             cp -a /tmp/populated-db/. /etc/x-ui/
@@ -279,6 +279,8 @@ EOF
                 production-baseline) run_id=900719925474099312345 ;;
                 pre-rc-develop) run_id=900719925474099312346 ;;
                 rc1-public) run_id=900719925474099312347 ;;
+                rc3-public) run_id=900719925474099312349 ;;
+                rc4-public) run_id=900719925474099312350 ;;
                 *) echo "unexpected legacy label: $label" >&2; exit 1 ;;
             esac
             printf "%s\n" "$update_script" >/tmp/staging-update.sh
@@ -326,7 +328,12 @@ EOF
         rm -rf /usr/local/x-ui /etc/x-ui
         mkdir -p /usr/local/x-ui /etc/x-ui /etc/systemd/system
         cp -a /tmp/populated-db/. /etc/x-ui/
-        cp /legacy/rc1-public/x-ui /usr/local/x-ui/x-ui
+        rollback_baseline=rc1-public
+        if [[ "$release_tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            rollback_baseline=rc4-public
+        fi
+        cp "/legacy/$rollback_baseline/x-ui" /usr/local/x-ui/x-ui
+        echo "staging: rollback known-good release=$rollback_baseline"
         cp /assets/catx-ui.sh /usr/local/x-ui/x-ui.sh
         cp /assets/catx-ui-update-lib.sh /usr/local/x-ui/catx-update-lib.sh
         cp /assets/catx-ui-update.sh /usr/local/x-ui/update.sh

@@ -1,0 +1,295 @@
+name: Stable Qualification real restart regression
+
+on:
+  push:
+    branches:
+      - feature/stable-v0.1.0-qualification
+    paths:
+      - ".github/workflows/stable-restart-regression.yml"
+      - "internal/database/db.go"
+      - "internal/forkext/**"
+      - "internal/forkrelease/**"
+      - "internal/web/runtime/**"
+      - "internal/web/web.go"
+      - "scripts/staging/observe-rc2-linux.sh"
+      - "frontend/scripts/observe-public-locales.mjs"
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Published CatX release tag whose actual assets will be tested
+        required: true
+        default: v0.1.0-rc.3
+        type: string
+      release_commit:
+        description: Exact commit recorded in the published release metadata
+        required: true
+        default: 437d5e2f5bb835118ba6628ea62059b27721cfa3
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  candidate-restart-regression:
+    if: github.event_name == 'push'
+    name: Exercise real restartPanel on exact-SHA stable candidate
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Build frontend bundle
+        run: |
+          npm ci
+          npm run build
+        working-directory: frontend
+
+      - name: Install Linux qualification dependencies
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends curl jq iproute2 nftables unzip
+          sudo modprobe ifb numifbs=8
+          sudo modprobe sch_htb
+          sudo modprobe sch_ingress
+          sudo modprobe cls_flower
+          sudo modprobe cls_fw
+          sudo modprobe act_mirred
+
+      - name: Run focused fork lifecycle coverage
+        run: |
+          set -euo pipefail
+          go test -count=1 ./internal/forkext ./internal/database ./internal/web
+          go test -race -count=1 ./internal/forkext
+
+      - name: Build and identify the exact candidate
+        env:
+          CANDIDATE_BINARY: ${{ runner.temp }}/catx-candidate-x-ui
+          CANDIDATE_XRAY: ${{ runner.temp }}/xray-linux-amd64
+          CANDIDATE_XRAY_ASSETS: ${{ runner.temp }}/xray-assets
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          go build -buildvcs=false -ldflags "-s -w" -o "$CANDIDATE_BINARY" .
+          curl --fail --location --retry 4 --retry-all-errors --retry-delay 2 \
+            -o "$RUNNER_TEMP/xray.zip" \
+            "https://github.com/XTLS/Xray-core/releases/download/v26.9.9/Xray-linux-64.zip"
+          unzip -q "$RUNNER_TEMP/xray.zip" xray geoip.dat geosite.dat -d "$RUNNER_TEMP/xray-unpacked"
+          install -m 0755 "$RUNNER_TEMP/xray-unpacked/xray" "$CANDIDATE_XRAY"
+          mkdir -p "$CANDIDATE_XRAY_ASSETS"
+          install -m 0644 "$RUNNER_TEMP/xray-unpacked/geoip.dat" "$CANDIDATE_XRAY_ASSETS/geoip.dat"
+          install -m 0644 "$RUNNER_TEMP/xray-unpacked/geosite.dat" "$CANDIDATE_XRAY_ASSETS/geosite.dat"
+          sha256sum "$CANDIDATE_BINARY" | tee "$RUNNER_TEMP/candidate.sha256"
+          "$CANDIDATE_BINARY" release-info | tee "$RUNNER_TEMP/candidate-release-info.txt"
+          grep -Fx "channel=stable" "$RUNNER_TEMP/candidate-release-info.txt"
+          grep -Fx "release_version=0.1.0" "$RUNNER_TEMP/candidate-release-info.txt"
+          grep -Fx "build_commit=" "$RUNNER_TEMP/candidate-release-info.txt"
+
+      - name: Run real restart regression on disposable Linux state
+        env:
+          CATX_RC6_CANDIDATE_BINARY: ${{ runner.temp }}/catx-candidate-x-ui
+          CATX_RC6_CANDIDATE_XRAY_BINARY: ${{ runner.temp }}/xray-linux-amd64
+          CATX_RC6_CANDIDATE_XRAY_ASSET_DIR: ${{ runner.temp }}/xray-assets
+          CATX_RC6_CANDIDATE_COMMIT: ${{ github.sha }}
+          CATX_RC6_EVIDENCE_DIR: ${{ runner.temp }}/stable-candidate-restart-evidence
+        run: |
+          set -euo pipefail
+          candidate_sha256=$(cut -d ' ' -f1 "$RUNNER_TEMP/candidate.sha256")
+          test -n "$candidate_sha256"
+          sudo env \
+            CATX_STABLE_RESTART_REGRESSION_ONLY=1 \
+            "CATX_RC6_CANDIDATE_BINARY=$CATX_RC6_CANDIDATE_BINARY" \
+            "CATX_RC6_CANDIDATE_XRAY_BINARY=$CATX_RC6_CANDIDATE_XRAY_BINARY" \
+            "CATX_RC6_CANDIDATE_XRAY_ASSET_DIR=$CATX_RC6_CANDIDATE_XRAY_ASSET_DIR" \
+            "CATX_RC6_CANDIDATE_COMMIT=$CATX_RC6_CANDIDATE_COMMIT" \
+            "CATX_RC6_CANDIDATE_SHA256=$candidate_sha256" \
+            CATX_RC6_CANDIDATE_CHANNEL=stable \
+            "CATX_RC6_EVIDENCE_DIR=$CATX_RC6_EVIDENCE_DIR" \
+            bash scripts/staging/observe-rc2-linux.sh
+
+      - name: Run Linux Traffic Control and quota regression on the same candidate
+        env:
+          CATX_RC6_CANDIDATE_BINARY: ${{ runner.temp }}/catx-candidate-x-ui
+          CATX_RC6_CANDIDATE_XRAY_BINARY: ${{ runner.temp }}/xray-linux-amd64
+          CATX_RC6_CANDIDATE_XRAY_ASSET_DIR: ${{ runner.temp }}/xray-assets
+          CATX_RC6_CANDIDATE_COMMIT: ${{ github.sha }}
+          CATX_RC6_EVIDENCE_DIR: ${{ runner.temp }}/stable-candidate-linux-evidence
+        run: |
+          set -euo pipefail
+          candidate_sha256=$(cut -d ' ' -f1 "$RUNNER_TEMP/candidate.sha256")
+          test -n "$candidate_sha256"
+          sudo env \
+            "CATX_RC6_CANDIDATE_BINARY=$CATX_RC6_CANDIDATE_BINARY" \
+            "CATX_RC6_CANDIDATE_XRAY_BINARY=$CATX_RC6_CANDIDATE_XRAY_BINARY" \
+            "CATX_RC6_CANDIDATE_XRAY_ASSET_DIR=$CATX_RC6_CANDIDATE_XRAY_ASSET_DIR" \
+            "CATX_RC6_CANDIDATE_COMMIT=$CATX_RC6_CANDIDATE_COMMIT" \
+            "CATX_RC6_CANDIDATE_SHA256=$candidate_sha256" \
+            CATX_RC6_CANDIDATE_CHANNEL=stable \
+            "CATX_RC6_EVIDENCE_DIR=$CATX_RC6_EVIDENCE_DIR" \
+            bash scripts/staging/observe-rc2-linux.sh
+
+      - name: Summarize sanitized candidate evidence
+        if: always()
+        run: |
+          evidence="${RUNNER_TEMP}/stable-candidate-restart-evidence"
+          if [ -d "$evidence" ]; then
+            find "$evidence" -maxdepth 1 -type f -printf '%f\n' | sort
+            if [ -f "$evidence/observation.log" ]; then cat "$evidence/observation.log"; fi
+          fi
+          linux_evidence="${RUNNER_TEMP}/stable-candidate-linux-evidence"
+          if [ -d "$linux_evidence" ]; then
+            find "$linux_evidence" -maxdepth 1 -type f -printf '%f\n' | sort
+            if [ -f "$linux_evidence/observation.log" ]; then cat "$linux_evidence/observation.log"; fi
+          fi
+
+      - name: Upload sanitized candidate evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stable-candidate-restart-${{ github.run_id }}
+          path: ${{ runner.temp }}/stable-candidate-restart-evidence
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Upload sanitized Linux candidate evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stable-candidate-linux-${{ github.run_id }}
+          path: ${{ runner.temp }}/stable-candidate-linux-evidence
+          if-no-files-found: warn
+          retention-days: 30
+
+  restart-regression:
+    if: github.event_name == 'workflow_dispatch'
+    name: Exercise actual public release assets
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.ref }}
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install public locale probe dependencies
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/ms-playwright
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+        working-directory: frontend
+
+      - name: Install Linux qualification dependencies
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends curl jq iproute2 nftables unzip
+          sudo modprobe ifb numifbs=8
+          sudo modprobe sch_htb
+          sudo modprobe sch_ingress
+          sudo modprobe cls_flower
+          sudo modprobe cls_fw
+          sudo modprobe act_mirred
+
+      - name: Wait for the actual published assets
+        env:
+          RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || 'v0.1.0-rc.3' }}
+          RELEASE_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]] || {
+            echo "invalid release tag: $RELEASE_TAG" >&2
+            exit 1
+          }
+          for attempt in $(seq 1 120); do
+            if curl --fail --silent --show-error \
+              -H "Authorization: Bearer $RELEASE_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/CatCodeArbelin/CatX-UI/releases/tags/${RELEASE_TAG}" > "$RUNNER_TEMP/release.json"; then
+              if jq -e --arg a catx-ui-linux-amd64.tar.gz --arg b catx-ui-release-metadata.json \
+                '(.draft == false and ([.assets[].name] | index($a)) != null and ([.assets[].name] | index($b)) != null)' \
+                "$RUNNER_TEMP/release.json" >/dev/null; then
+                exit 0
+              fi
+            fi
+            sleep 10
+          done
+          echo "published assets for ${RELEASE_TAG} were not ready" >&2
+          exit 1
+
+      - name: Run the real restartPanel regression against public assets
+        env:
+          RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || 'v0.1.0-rc.3' }}
+          RELEASE_COMMIT: ${{ github.event_name == 'workflow_dispatch' && inputs.release_commit || '437d5e2f5bb835118ba6628ea62059b27721cfa3' }}
+          EVIDENCE_DIR: ${{ runner.temp }}/stable-restart-regression-evidence
+          PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/ms-playwright
+        run: |
+          set -euo pipefail
+          public_version="${RELEASE_TAG#v}"
+          sudo env \
+            "PATH=$PATH" \
+            "PLAYWRIGHT_BROWSERS_PATH=$PLAYWRIGHT_BROWSERS_PATH" \
+            CATX_STABLE_RESTART_REGRESSION_ONLY=1 \
+            CATX_PUBLIC_LOCALE_BROWSER=1 \
+            CATX_PUBLIC_LOCALE_PROBE_SCRIPT="$GITHUB_WORKSPACE/frontend/scripts/observe-public-locales.mjs" \
+            CATX_RC6_PUBLIC_TAG="$RELEASE_TAG" \
+            CATX_RC6_PUBLIC_VERSION="$public_version" \
+            CATX_RC6_PUBLIC_COMMIT="$RELEASE_COMMIT" \
+            CATX_RC6_EVIDENCE_DIR="$EVIDENCE_DIR" \
+            bash scripts/staging/observe-rc2-linux.sh
+
+      - name: Run the Traffic Control and quota smoke against public assets
+        env:
+          RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || 'v0.1.0-rc.3' }}
+          RELEASE_COMMIT: ${{ github.event_name == 'workflow_dispatch' && inputs.release_commit || '437d5e2f5bb835118ba6628ea62059b27721cfa3' }}
+          EVIDENCE_DIR: ${{ runner.temp }}/stable-public-linux-evidence
+        run: |
+          set -euo pipefail
+          public_version="${RELEASE_TAG#v}"
+          sudo env \
+            CATX_RC6_PUBLIC_TAG="$RELEASE_TAG" \
+            CATX_RC6_PUBLIC_VERSION="$public_version" \
+            CATX_RC6_PUBLIC_COMMIT="$RELEASE_COMMIT" \
+            CATX_RC6_EVIDENCE_DIR="$EVIDENCE_DIR" \
+            bash scripts/staging/observe-rc2-linux.sh
+
+      - name: Summarize sanitized restart evidence
+        if: always()
+        run: |
+          evidence="${RUNNER_TEMP}/stable-restart-regression-evidence"
+          if [ -d "$evidence" ]; then
+            find "$evidence" -maxdepth 1 -type f -printf '%f\n' | sort
+            if [ -f "$evidence/observation.log" ]; then cat "$evidence/observation.log"; fi
+          fi
+          linux_evidence="${RUNNER_TEMP}/stable-public-linux-evidence"
+          if [ -d "$linux_evidence" ]; then
+            find "$linux_evidence" -maxdepth 1 -type f -printf '%f\n' | sort
+            if [ -f "$linux_evidence/observation.log" ]; then cat "$linux_evidence/observation.log"; fi
+          fi
+
+      - name: Upload sanitized restart evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stable-restart-regression-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/stable-restart-regression-evidence
+            ${{ runner.temp }}/stable-public-linux-evidence
+          if-no-files-found: warn
+          retention-days: 30

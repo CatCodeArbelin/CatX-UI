@@ -687,21 +687,21 @@ cycles. Empty/default hooks are exact no-ops.
 The following files/functions are expected to retain one small downstream hook
 or fork identity edit across upstream synchronizations:
 
-| Hotspot | Permanent reason | Discipline |
-| --- | --- | --- |
-| `main.go` / `runWebServer()` | Install fixed fork modules before DB/server startup | One call; no feature logic |
-| `internal/database/db.go` | Model/migration discovery has no external registry | One database hook; fork migrations elsewhere |
-| `internal/web/controller/api.go` / `initRouter()` | Protected API group is local to this function | One route-registration call |
-| `internal/web/web.go` / startup, jobs, shutdown | Scheduler, event bus, and lifecycle are composed here | Fixed job/subscriber/start/stop calls only |
-| `internal/web/service/xray.go` / `GetXrayConfig()` | Only safe point after complete upstream config assembly | One no-op-capable decorator |
-| `internal/web/service/xray.go` / `RestartXray()` | Existing hot/full apply boundary needs transactional safety | Narrow wrapper; retain upstream implementation |
-| `tools/openapigen/main.go` | Explicit source allowlist | One fork source registration |
-| `frontend/src/routes.tsx` | Root frontend route list | One spread |
-| `frontend/src/layouts/AppSidebar.tsx` | Root navigation list | One spread/adapter |
-| `frontend/src/components/CommandPalette.tsx` | Separate discoverability list | Shared descriptor adapter |
-| `frontend/src/pages/api-docs/endpoints.ts` | Manual endpoint catalog | One fork catalog spread |
-| Panel and shell updater files | Distribution identity cannot remain upstream | Centralized constants only |
-| `Makefile` and CI | Mandatory fork verification entry point | Additive target/job |
+| Hotspot                                            | Permanent reason                                            | Discipline                                     |
+| -------------------------------------------------- | ----------------------------------------------------------- | ---------------------------------------------- |
+| `main.go` / `runWebServer()`                       | Install fixed fork modules before DB/server startup         | One call; no feature logic                     |
+| `internal/database/db.go`                          | Model/migration discovery has no external registry          | One database hook; fork migrations elsewhere   |
+| `internal/web/controller/api.go` / `initRouter()`  | Protected API group is local to this function               | One route-registration call                    |
+| `internal/web/web.go` / startup, jobs, shutdown    | Scheduler, event bus, and lifecycle are composed here       | Fixed job/subscriber/start/stop calls only     |
+| `internal/web/service/xray.go` / `GetXrayConfig()` | Only safe point after complete upstream config assembly     | One no-op-capable decorator                    |
+| `internal/web/service/xray.go` / `RestartXray()`   | Existing hot/full apply boundary needs transactional safety | Narrow wrapper; retain upstream implementation |
+| `tools/openapigen/main.go`                         | Explicit source allowlist                                   | One fork source registration                   |
+| `frontend/src/routes.tsx`                          | Root frontend route list                                    | One spread                                     |
+| `frontend/src/layouts/AppSidebar.tsx`              | Root navigation list                                        | One spread/adapter                             |
+| `frontend/src/components/CommandPalette.tsx`       | Separate discoverability list                               | Shared descriptor adapter                      |
+| `frontend/src/pages/api-docs/endpoints.ts`         | Manual endpoint catalog                                     | One fork catalog spread                        |
+| Panel and shell updater files                      | Distribution identity cannot remain upstream                | Centralized constants only                     |
+| `Makefile` and CI                                  | Mandatory fork verification entry point                     | Additive target/job                            |
 
 If feature logic begins accumulating in these files, the hook boundary has
 failed and should be redesigned before continuing.

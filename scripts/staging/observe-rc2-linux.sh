@@ -8,11 +8,15 @@ readonly RELEASE_REPOSITORY="CatCodeArbelin/CatX-UI"
 readonly RELEASE_TAG="${CATX_RC6_PUBLIC_TAG:-v0.1.0-rc.2}"
 readonly RELEASE_VERSION="${CATX_RC6_PUBLIC_VERSION:-0.1.0-rc.2}"
 readonly RELEASE_COMMIT="${CATX_RC6_PUBLIC_COMMIT:-4d8feae2e62db914d3146504340d9b9f802088b2}"
+readonly STABLE_RESTART_REGRESSION_ONLY="${CATX_STABLE_RESTART_REGRESSION_ONLY:-0}"
 readonly CANDIDATE_BINARY="${CATX_RC6_CANDIDATE_BINARY:-}"
 readonly CANDIDATE_XRAY_BINARY="${CATX_RC6_CANDIDATE_XRAY_BINARY:-}"
 readonly CANDIDATE_XRAY_ASSET_DIR="${CATX_RC6_CANDIDATE_XRAY_ASSET_DIR:-}"
 readonly CANDIDATE_COMMIT="${CATX_RC6_CANDIDATE_COMMIT:-}"
 readonly CANDIDATE_BINARY_SHA256="${CATX_RC6_CANDIDATE_SHA256:-}"
+readonly CANDIDATE_CHANNEL="${CATX_RC6_CANDIDATE_CHANNEL:-rc}"
+readonly PUBLIC_LOCALE_BROWSER="${CATX_PUBLIC_LOCALE_BROWSER:-0}"
+readonly PUBLIC_LOCALE_PROBE_SCRIPT="${CATX_PUBLIC_LOCALE_PROBE_SCRIPT:-frontend/scripts/observe-public-locales.mjs}"
 readonly ASSET_PREFIX="catx-ui"
 readonly PANEL_PORT="${CATX_RC6_PANEL_PORT:-19185}"
 readonly SUB_PORT="${CATX_RC6_SUB_PORT:-2096}"
@@ -36,6 +40,16 @@ readonly COOKIE_FILE="$RUN_DIR/session.cookies"
 readonly RUN_LOG="$RUN_DIR/observation.log"
 readonly BASE_URL="http://127.0.0.1:${PANEL_PORT}${BASE_PATH%/}"
 readonly SUB_URL="http://127.0.0.1:${SUB_PORT}"
+
+PUBLIC_CHANNEL=rc
+PUBLIC_PRERELEASE=true
+PUBLIC_LATEST=false
+if [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    PUBLIC_CHANNEL=stable
+    PUBLIC_PRERELEASE=false
+    PUBLIC_LATEST=true
+fi
+readonly PUBLIC_CHANNEL PUBLIC_PRERELEASE PUBLIC_LATEST
 
 PANEL_PID=""
 CLIENT_XRAY_PID=""
@@ -65,6 +79,7 @@ sanitize_file() {
 finish() {
     local exit_code=$?
     set +e
+    printf '%s INFO: observer exit status=%s\n' "$(date -u +%FT%TZ)" "$exit_code" | tee -a "$RUN_LOG"
     sanitize_file "$RUN_LOG" "$EVIDENCE_DIR/observation.log"
     sanitize_file "$RUN_DIR/panel.log" "$EVIDENCE_DIR/panel.log"
     sanitize_file "$RUN_DIR/xray-client.log" "$EVIDENCE_DIR/xray-client.log"
@@ -107,7 +122,13 @@ if [[ -n "$CANDIDATE_BINARY" ]]; then
     cp -f "$CANDIDATE_XRAY_ASSET_DIR/geoip.dat" "$CANDIDATE_XRAY_ASSET_DIR/geosite.dat" "$PAYLOAD_DIR/x-ui/bin/"
     chmod +x "$PAYLOAD_DIR/x-ui/x-ui" "$PAYLOAD_DIR/x-ui/bin/xray-linux-amd64"
     "$PAYLOAD_DIR/x-ui/x-ui" release-info > "$EVIDENCE_DIR/candidate-release-info.txt"
-    grep -Fq "build_commit=$CANDIDATE_COMMIT" "$EVIDENCE_DIR/candidate-release-info.txt" || fail "candidate release identity did not contain the expected exact commit"
+    if [[ "$CANDIDATE_CHANNEL" == stable ]]; then
+        grep -Fxq "channel=stable" "$EVIDENCE_DIR/candidate-release-info.txt" || fail "candidate release identity was not stable"
+        grep -Fxq "release_version=0.1.0" "$EVIDENCE_DIR/candidate-release-info.txt" || fail "candidate release version was not 0.1.0"
+        grep -Fxq "build_commit=" "$EVIDENCE_DIR/candidate-release-info.txt" || fail "stable candidate unexpectedly carried a dev/RC build stamp"
+    else
+        grep -Fq "build_commit=$CANDIDATE_COMMIT" "$EVIDENCE_DIR/candidate-release-info.txt" || fail "candidate release identity did not contain the expected exact commit"
+    fi
     log "PASS: exact hosted candidate identity matched commit=$CANDIDATE_COMMIT binary_sha256=$actual_candidate_sha256"
 else
     download_verified_asset "${ASSET_PREFIX}-linux-amd64.tar.gz"
@@ -115,12 +136,13 @@ else
     jq -e \
         --arg product "CatX-UI" --arg repository "$RELEASE_REPOSITORY" \
         --arg fork "0.1.0" --arg upstream "3.8.5" --arg xray "26.9.9" \
-        --arg channel "rc" --arg version "$RELEASE_VERSION" --arg tag "$RELEASE_TAG" \
+        --arg channel "$PUBLIC_CHANNEL" --arg version "$RELEASE_VERSION" --arg tag "$RELEASE_TAG" \
         --arg commit "$RELEASE_COMMIT" \
+        --argjson prerelease "$PUBLIC_PRERELEASE" --argjson latest "$PUBLIC_LATEST" \
         '.product == $product and .repository == $repository and .forkVersion == $fork and
          .upstreamBaseVersion == $upstream and .bundledXrayVersion == $xray and
          .channel == $channel and .releaseVersion == $version and .releaseTag == $tag and
-         .prerelease == true and .latest == false and .buildCommit == $commit' \
+         .prerelease == $prerelease and .latest == $latest and .buildCommit == $commit' \
         "$ASSET_DIR/${ASSET_PREFIX}-release-metadata.json" >/dev/null ||
         fail "public ${RELEASE_VERSION} metadata identity did not match the qualified release"
     cp -f "$ASSET_DIR/${ASSET_PREFIX}-release-metadata.json" "$EVIDENCE_DIR/release-metadata.json"
@@ -206,6 +228,13 @@ api_get() {
     jq -e '.success == true' "$target" >/dev/null || fail "GET $path returned an unsuccessful API envelope"
 }
 
+api_get_expect_status() {
+    local path=$1 expected=$2 target=$3 status
+    status=$(curl --silent --show-error -b "$COOKIE_FILE" -o "$target" -w '%{http_code}' \
+        "$BASE_URL/panel/api$path" || true)
+    [[ "$status" == "$expected" ]] || fail "GET $path returned HTTP $status instead of $expected"
+}
+
 api_mutate() {
     local method=$1 path=$2 body=$3 target=$4 status summary
     status=$(curl --silent --show-error -b "$COOKIE_FILE" -c "$COOKIE_FILE" -X "$method" \
@@ -223,9 +252,140 @@ api_mutate() {
     }
 }
 
+restart_panel_via_api() {
+    local label=$1
+    local previous_pid="$PANEL_PID"
+    local csrf_code=000
+
+    api_mutate POST "/setting/restartPanel" '{}' "$RUN_DIR/restart-${label}.json"
+    cp -f "$RUN_DIR/restart-${label}.json" "$EVIDENCE_DIR/restart-${label}.json"
+    log "PASS: POST /setting/restartPanel accepted for ${label}"
+
+    # The endpoint schedules the real SIGHUP path three seconds later. Do not
+    # accept the old listener as proof that the restart completed. The release
+    # logger records the two completed server restarts, but does not always
+    # retain the preceding signal-receipt line.
+    sleep 4
+    grep -Fq "Web server restarted successfully." "$RUN_DIR/panel.log" ||
+        fail "panel log did not record web-server completion for ${label} restart"
+    grep -Fq "Sub server restarted successfully." "$RUN_DIR/panel.log" ||
+        fail "panel log did not record sub-server completion for ${label} restart"
+
+    for _ in $(seq 1 60); do
+        kill -0 "$previous_pid" 2>/dev/null || fail "panel process exited during ${label} restart"
+        csrf_code=$(curl --connect-timeout 2 --max-time 5 --silent --output /dev/null \
+            --write-out '%{http_code}' "$BASE_URL/csrf-token" || true)
+        if [[ "$csrf_code" == 200 ]]; then
+            login
+            [[ "$PANEL_PID" == "$previous_pid" ]] || fail "${label} restart changed the panel process unexpectedly"
+            log "PASS: panel recovered through the same process after real ${label} restart"
+            return 0
+        fi
+        sleep 1
+    done
+    fail "panel did not recover after real ${label} restart (last HTTP status $csrf_code)"
+}
+
+assert_restart_surfaces() {
+    local phase=$1 expected=$2
+    log "INFO: checking ${phase} restart server health"
+    api_get "/server/status" "$RUN_DIR/status-${phase}.json"
+    cp -f "$RUN_DIR/status-${phase}.json" "$EVIDENCE_DIR/"
+    jq -e '(.obj.xray.state == "running") or (.obj.xrayState == "running")' \
+        "$RUN_DIR/status-${phase}.json" >/dev/null || fail "Xray was not healthy after ${phase} restart"
+
+    log "INFO: checking ${phase} persisted CatX feature flags"
+    api_get "/fork/settings/features" "$RUN_DIR/features-${phase}.json"
+    cp -f "$RUN_DIR/features-${phase}.json" "$EVIDENCE_DIR/"
+    if [[ "$expected" == enabled ]]; then
+        jq -e 'all(.obj.items[]; if (.key == "analytics.enabled" or .key == "dns_intelligence.enabled" or .key == "policies.enabled" or .key == "traffic_control.enabled" or .key == "audit.enabled" or .key == "self_service.enabled" or .key == "fleet_updates.enabled" or .key == "fleet_updates.mutation.enabled") then .enabled == true else true end)' \
+            "$RUN_DIR/features-${phase}.json" >/dev/null || fail "CatX enabled flags did not survive ${phase} restart"
+    else
+        jq -e 'all(.obj.items[]; if (.key == "analytics.enabled" or .key == "dns_intelligence.enabled" or .key == "policies.enabled" or .key == "traffic_control.enabled" or .key == "audit.enabled" or .key == "self_service.enabled" or .key == "fleet_updates.enabled" or .key == "fleet_updates.mutation.enabled") then .enabled == false else true end)' \
+            "$RUN_DIR/features-${phase}.json" >/dev/null || fail "CatX disabled flags did not survive ${phase} restart"
+    fi
+
+    log "INFO: checking ${phase} analytics and DNS Intelligence APIs"
+    api_get "/analytics/status" "$RUN_DIR/analytics-status-${phase}.json"
+    cp -f "$RUN_DIR/analytics-status-${phase}.json" "$EVIDENCE_DIR/"
+    api_get "/analytics/settings" "$RUN_DIR/analytics-settings-${phase}.json"
+    cp -f "$RUN_DIR/analytics-settings-${phase}.json" "$EVIDENCE_DIR/"
+    api_get "/analytics/clients/${CLIENT_EMAIL}/activity" "$RUN_DIR/activity-${phase}.json"
+    cp -f "$RUN_DIR/activity-${phase}.json" "$EVIDENCE_DIR/"
+    api_get "/analytics/clients/${CLIENT_EMAIL}/dns" "$RUN_DIR/dns-${phase}.json"
+    cp -f "$RUN_DIR/dns-${phase}.json" "$EVIDENCE_DIR/"
+    log "INFO: checking ${phase} Activity page"
+    activity_page_code=$(curl --connect-timeout 2 --max-time 5 --silent --show-error \
+        -b "$COOKIE_FILE" -o "$RUN_DIR/activity-page-${phase}.html" -w '%{http_code}' \
+        "$BASE_URL/panel/activity" || true)
+    [[ "$activity_page_code" == 200 ]] || fail "Activity page returned HTTP ${activity_page_code} after ${phase} restart"
+
+    if [[ "$expected" == enabled ]]; then
+        jq -e '.obj.enabled == true and .obj.dnsIntelligence == true' "$RUN_DIR/analytics-status-${phase}.json" >/dev/null ||
+            fail "Analytics/DNS Intelligence status was not enabled after ${phase} restart"
+        jq -e '.obj.enabled == true and .obj.dnsIntelligence == true' "$RUN_DIR/analytics-settings-${phase}.json" >/dev/null ||
+            fail "Analytics/DNS Intelligence settings were not enabled after ${phase} restart"
+        jq -e '.obj.enabled == true' "$RUN_DIR/activity-${phase}.json" >/dev/null ||
+            fail "Activity API was not operational after ${phase} restart"
+        jq -e '.obj.enabled == true' "$RUN_DIR/dns-${phase}.json" >/dev/null ||
+            fail "DNS Intelligence API was not operational after ${phase} restart"
+        log "PASS: Activity and DNS Intelligence surfaces were operational after ${phase} restart"
+
+        api_get "/policies/status" "$RUN_DIR/policies-${phase}.json"
+        api_get "/portal/settings" "$RUN_DIR/portal-${phase}.json"
+        api_get "/fleet-updates/campaigns" "$RUN_DIR/fleet-${phase}.json"
+        api_get "/fork/audit/events" "$RUN_DIR/audit-${phase}.json"
+        api_get "/traffic-control/capabilities" "$RUN_DIR/traffic-control-${phase}.json"
+        jq -e '.obj.enabled == true' "$RUN_DIR/policies-${phase}.json" >/dev/null || fail "policy runtime was not enabled after ${phase} restart"
+        jq -e '.obj.enabled == true' "$RUN_DIR/portal-${phase}.json" >/dev/null || fail "self-service runtime was not enabled after ${phase} restart"
+        jq -e '.obj.state == "ready"' "$RUN_DIR/traffic-control-${phase}.json" >/dev/null || fail "Traffic Control runtime was not enabled after ${phase} restart"
+    else
+        jq -e '.obj.enabled == false and .obj.dnsIntelligence == false' "$RUN_DIR/analytics-status-${phase}.json" >/dev/null ||
+            fail "feature-off analytics status was not explicit after ${phase} restart"
+        jq -e '.obj.enabled == false and .obj.dnsIntelligence == false' "$RUN_DIR/analytics-settings-${phase}.json" >/dev/null ||
+            fail "feature-off analytics settings were not explicit after ${phase} restart"
+        jq -e '.obj.enabled == false' "$RUN_DIR/activity-${phase}.json" >/dev/null ||
+            fail "feature-off Activity API was not explicit after ${phase} restart"
+        jq -e '.obj.enabled == false' "$RUN_DIR/dns-${phase}.json" >/dev/null ||
+            fail "feature-off DNS API was not explicit after ${phase} restart"
+        log "PASS: feature-off Activity and DNS Intelligence behavior was explicit and healthy after ${phase} restart"
+
+        api_get "/policies/status" "$RUN_DIR/policies-${phase}.json"
+        api_get "/portal/settings" "$RUN_DIR/portal-${phase}.json"
+        api_get "/traffic-control/capabilities" "$RUN_DIR/traffic-control-${phase}.json"
+        api_get_expect_status "/fleet-updates/campaigns" 404 "$RUN_DIR/fleet-${phase}.json"
+        api_get_expect_status "/fork/audit/events" 404 "$RUN_DIR/audit-${phase}.json"
+        jq -e '.obj.enabled == false' "$RUN_DIR/policies-${phase}.json" >/dev/null || fail "policy runtime was not disabled after ${phase} restart"
+        jq -e '.obj.enabled == false' "$RUN_DIR/portal-${phase}.json" >/dev/null || fail "self-service runtime was not disabled after ${phase} restart"
+        jq -e '.obj.state == "disabled"' "$RUN_DIR/traffic-control-${phase}.json" >/dev/null || fail "Traffic Control runtime was not disabled after ${phase} restart"
+        jq -e '.featureDisabled == true' "$RUN_DIR/fleet-${phase}.json" >/dev/null || fail "fleet runtime did not report disabled after ${phase} restart"
+    fi
+    cp -f "$RUN_DIR/policies-${phase}.json" "$RUN_DIR/portal-${phase}.json" "$RUN_DIR/fleet-${phase}.json" \
+        "$RUN_DIR/audit-${phase}.json" "$RUN_DIR/traffic-control-${phase}.json" "$EVIDENCE_DIR/"
+    log "PASS: generic managed-feature runtime matched persisted ${expected} state after ${phase} restart"
+}
+
 start_panel
 wait_panel
+if [[ "$PUBLIC_LOCALE_BROWSER" == 1 ]]; then
+    require_command node
+    [[ -f "$PUBLIC_LOCALE_PROBE_SCRIPT" ]] || fail "public locale browser probe is unavailable"
+    node "$PUBLIC_LOCALE_PROBE_SCRIPT" "$BASE_URL" | tee -a "$RUN_LOG"
+    log "PASS: actual public asset rendered Russian LTR and Persian RTL login behavior"
+fi
 login
+
+if [[ "$PUBLIC_CHANNEL" == stable ]]; then
+    api_get "/server/getPanelUpdateInfo" "$RUN_DIR/stable-update-info.json"
+    jq -e --arg repository "$RELEASE_REPOSITORY" \
+        '.obj.channel == "stable" and .obj.currentVersion == "0.1.0" and
+         .obj.latestVersion == "0.1.0" and .obj.upstreamBaseVersion == "3.8.5" and
+         .obj.bundledXrayVersion == "26.9.9" and .obj.releaseRepository == $repository and
+         .obj.updateAvailable == false' "$RUN_DIR/stable-update-info.json" >/dev/null ||
+        fail "stable updater identity did not report current/latest v0.1.0"
+    cp -f "$RUN_DIR/stable-update-info.json" "$EVIDENCE_DIR/stable-update-info.json"
+    log "PASS: updater reported stable v0.1.0 identity from the CatX repository"
+fi
 
 api_get "/server/status" "$RUN_DIR/status-off.json"
 api_get "/fork/settings/features" "$RUN_DIR/features-off.json"
@@ -235,7 +395,7 @@ jq -e '(.obj.xray.state == "running") or (.obj.xrayState == "running")' "$RUN_DI
 jq -e '.obj.state == "disabled"' "$RUN_DIR/capabilities-off.json" >/dev/null || fail "feature-off Traffic Control was not disabled"
 cp -f "$RUN_DIR/features-off.json" "$EVIDENCE_DIR/features-off.json"
 cp -f "$RUN_DIR/capabilities-off.json" "$EVIDENCE_DIR/capabilities-off.json"
-log "PASS: public RC-2 feature-off Linux baseline reached panel, SQLite, login, and Xray"
+log "PASS: public ${RELEASE_VERSION} feature-off Linux baseline reached panel, SQLite, login, and Xray"
 
 inbound_body=$(jq -nc --argjson port "$INBOUND_PORT" '{remark:"rc6-linux-vless",enable:true,listen:"127.0.0.1",port:$port,protocol:"vless",settings:{clients:[],decryption:"none",fallbacks:[]},streamSettings:{network:"tcp",security:"none"},sniffing:{enabled:true,destOverride:["http","tls"]},total:0,expiryTime:0}')
 api_mutate POST "/inbounds/add" "$inbound_body" "$RUN_DIR/inbound-add.json"
@@ -263,8 +423,8 @@ for _ in $(seq 1 30); do
     fi
     sleep 1
 done
-[[ -s "$RUN_DIR/subscription.txt" ]] || fail "public RC-2 subscription endpoint did not return data (HTTP $subscription_code)"
-log "PASS: fetched synthetic client subscription from the public RC-2 panel"
+[[ -s "$RUN_DIR/subscription.txt" ]] || fail "public ${RELEASE_VERSION} subscription endpoint did not return data (HTTP $subscription_code)"
+log "PASS: fetched synthetic client subscription from the public ${RELEASE_VERSION} panel"
 
 cat > "$RUN_DIR/client-xray.json" <<EOF
 {
@@ -280,6 +440,33 @@ log "PASS: synthetic VLESS client reached example.com through Xray (HTTP 200)"
 
 feature_body='{"flags":{"analytics.enabled":true,"dns_intelligence.enabled":true,"policies.enabled":true,"traffic_control.enabled":true,"audit.enabled":true,"self_service.enabled":true,"fleet_updates.enabled":true,"fleet_updates.mutation.enabled":true}}'
 api_mutate PUT "/fork/settings/features" "$feature_body" "$RUN_DIR/features-on-save.json"
+
+if [[ "$STABLE_RESTART_REGRESSION_ONLY" == 1 ]]; then
+    api_get "/fork/settings/features" "$RUN_DIR/features-on-before-restart.json"
+    jq -e '([.obj.items[] | select(.key == "analytics.enabled" or .key == "dns_intelligence.enabled") | .enabled] | sort) == [true, true]' \
+        "$RUN_DIR/features-on-before-restart.json" >/dev/null || fail "CatX enabled flags were not persisted before the real restart"
+    restart_panel_via_api enabled
+    log "INFO: enabled restart helper returned; entering surface assertions"
+    assert_restart_surfaces enabled enabled
+
+    api_mutate PUT "/fork/settings/features" \
+        '{"flags":{"analytics.enabled":false,"dns_intelligence.enabled":false,"policies.enabled":false,"traffic_control.enabled":false,"audit.enabled":false,"self_service.enabled":false,"fleet_updates.enabled":false,"fleet_updates.mutation.enabled":false}}' \
+        "$RUN_DIR/features-off-save.json"
+    api_get "/fork/settings/features" "$RUN_DIR/features-off-before-restart.json"
+    jq -e '([.obj.items[] | select(.key == "analytics.enabled" or .key == "dns_intelligence.enabled") | .enabled] | sort) == [false, false]' \
+        "$RUN_DIR/features-off-before-restart.json" >/dev/null || fail "CatX disabled flags were not persisted before the real restart"
+    restart_panel_via_api disabled
+    assert_restart_surfaces disabled disabled
+    api_get "/clients/get/${CLIENT_EMAIL}" "$RUN_DIR/client-after-restart.json"
+    jq -e --arg email "$CLIENT_EMAIL" '.obj.client.email == $email' "$RUN_DIR/client-after-restart.json" >/dev/null ||
+        fail "synthetic database client was not preserved across real panel restarts"
+    if grep -Eiq 'panic|fatal|startup loop' "$RUN_DIR/panel.log"; then
+        fail "panel log contained panic/fatal/startup-loop evidence during real restart regression"
+    fi
+    log "PASS: Stable Qualification real restart regression completed on public ${RELEASE_VERSION} assets"
+    exit 0
+fi
+
 stop_panel
 start_panel
 wait_panel
@@ -292,7 +479,7 @@ jq -e '.obj.state == "ready" and .obj.platform == "linux" and .obj.tc == true an
     fail "Linux Traffic Control capability contract was not ready/unsupported-honest"
 }
 cp -f "$RUN_DIR/capabilities-on.json" "$EVIDENCE_DIR/capabilities-on.json"
-log "PASS: public RC-2 Linux capabilities ready; generic user attribution remained false"
+log "PASS: public ${RELEASE_VERSION} Linux capabilities ready; generic user attribution remained false"
 
 log "INFO: preparing owned Linux Traffic Control substrate rule"
 substrate_rule=$(jq -nc --arg iface "$MANAGED_INTERFACE" '{rules:[{nodeKey:"rc6-linux-node",clientKey:"rc6-substrate",interface:$iface,mark:6001,uploadRateBps:1000000,downloadRateBps:1000000,selectors:["127.0.0.1/32"]}]}') || fail "could not encode substrate rule"
@@ -315,7 +502,7 @@ fi
 grep -q 'noqueue' "$EVIDENCE_DIR/tc-after-remove.txt" || fail "managed qdisc was not removed"
 log "PASS: Linux Traffic Control reconcile/apply/remove was idempotent and cleaned its owned state"
 
-if [[ -n "$CANDIDATE_BINARY" || "$RELEASE_TAG" == "v0.1.0-rc.3" ]]; then
+if [[ -n "$CANDIDATE_BINARY" || "$RELEASE_TAG" == "v0.1.0-rc.3" || "$RELEASE_TAG" == "v0.1.0-rc.4" || "$RELEASE_TAG" == "v0.1.0" ]]; then
     ip link show dev "$ADMIN_INTERFACE" >/dev/null 2>&1 && ip link delete "$ADMIN_INTERFACE" 2>/dev/null || true
     ip link add "$ADMIN_INTERFACE" type dummy
     ip link set dev "$ADMIN_INTERFACE" up
@@ -375,7 +562,7 @@ for _ in $(seq 1 18); do
     fi
     sleep 4
 done
-(( traffic_after > traffic_before )) || fail "public RC-2 traffic counters did not advance after VLESS traffic"
+(( traffic_after > traffic_before )) || fail "public ${RELEASE_VERSION} traffic counters did not advance after VLESS traffic"
 api_get "/traffic-control/clients/${CLIENT_EMAIL}/policy" "$RUN_DIR/policy-after-traffic.json"
 jq -e '.obj.enforcement == "unsupported" and (.obj.lifecycle == "active" or .obj.lifecycle == "throttled")' "$RUN_DIR/policy-after-traffic.json" >/dev/null || fail "traffic policy lifecycle/enforcement state was inconsistent"
 
@@ -407,4 +594,4 @@ grep -q 'noqueue' "$EVIDENCE_DIR/tc-after-disable.txt" || fail "Traffic Control 
 cp -f "$RUN_DIR/features-final.json" "$EVIDENCE_DIR/features-final.json"
 cp -f "$RUN_DIR/capabilities-final.json" "$EVIDENCE_DIR/capabilities-final.json"
 log "PASS: feature disablement and restart removed CatX-owned Linux Traffic Control state"
-log "PASS: RC-6 public RC-2 Linux observation completed using synthetic disposable data"
+log "PASS: public ${RELEASE_VERSION} Linux observation completed using synthetic disposable data"

@@ -1,6 +1,6 @@
-# 3x-ui via cloud-init
+# CatX-UI via cloud-init
 
-A single [`cloud-init.yaml`](cloud-init.yaml) user-data file that installs 3x-ui
+A single [`cloud-init.yaml`](cloud-init.yaml) user-data file that installs CatX-UI
 non-interactively on a fresh Ubuntu/Debian VM and generates **unique random
 credentials per instance**. It works on any cloud-init platform.
 
@@ -8,7 +8,7 @@ credentials per instance**. It works on any cloud-init platform.
 
 1. The VM boots a stock Ubuntu/Debian cloud image.
 2. cloud-init writes and runs `/opt/xui-bootstrap.sh`, which exports
-   `XUI_NONINTERACTIVE=1` and pipes the project's `install.sh` into `bash`.
+   `XUI_NONINTERACTIVE=1` and pipes CatX-UI's `install.sh` into `bash`.
 3. `install.sh` runs end-to-end with **zero prompts**, picking secure random
    values for any credential you didn't pin.
 4. The generated credentials are written to `/etc/x-ui/install-result.env`

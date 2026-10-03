@@ -2753,6 +2753,9 @@ func InitDB(dbPath string) error {
 	if err := forkext.RegisterMigrations(db); err != nil {
 		return err
 	}
+	if err := forkext.ConfigureRuntimeFromSettings(db); err != nil {
+		return err
+	}
 
 	isUsersEmpty, err := isTableEmpty("users")
 	if err != nil {

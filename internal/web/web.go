@@ -19,6 +19,7 @@ import (
 
 	"github.com/mhsanaei/3x-ui/v3/internal/amneziawgnet"
 	"github.com/mhsanaei/3x-ui/v3/internal/config"
+	"github.com/mhsanaei/3x-ui/v3/internal/database"
 	"github.com/mhsanaei/3x-ui/v3/internal/eventbus"
 	"github.com/mhsanaei/3x-ui/v3/internal/forkext"
 	"github.com/mhsanaei/3x-ui/v3/internal/forkext/fleetupdate"
@@ -542,6 +543,9 @@ func (s *Server) Start() (err error) {
 }
 
 func (s *Server) StartPanelOnly() (err error) {
+	if err := forkext.ReloadRuntimeFromSettings(database.GetDB()); err != nil {
+		return fmt.Errorf("reload fork runtime: %w", err)
+	}
 	return s.start(false, true)
 }
 

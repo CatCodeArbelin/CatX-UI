@@ -91,6 +91,11 @@ func enabledDB() (*gorm.DB, bool) {
 	return state.db, state.enabled
 }
 
+func Enabled() bool {
+	_, enabled := enabledDB()
+	return enabled
+}
+
 func Migrate(db *gorm.DB) error {
 	if db == nil {
 		return nil

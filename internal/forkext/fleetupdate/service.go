@@ -93,6 +93,7 @@ func (s *Service) SetExecutor(e UpdateExecutor) {
 }
 
 func (s *Service) SetMutationEnabled(enabled bool) { s.mutationEnabled = enabled }
+func (s *Service) MutationEnabled() bool           { return s != nil && s.mutationEnabled }
 
 func SetExecutor(e UpdateExecutor) {
 	if s := Current(); s != nil && e != nil {

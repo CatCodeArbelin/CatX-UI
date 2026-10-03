@@ -551,7 +551,7 @@ published-asset RC1-to-RC2 transition, rollback, checksum, panel/Xray, and
 Russian/RTL smoke qualification passed. Stable `v0.1.0` was not published and
 `main` was not changed.
 
-## RC-6 — Real RC Observation & Stable Readiness — CURRENT
+## RC-6 — Real RC Observation & Stable Readiness — DONE
 
 Branch: `feature/rc6-rc2-observation-stable-readiness`
 
@@ -575,8 +575,157 @@ QUALIFICATION` and stop before Stable Qualification.
 RC-6 completed on exact SHA `437d5e2f5bb835118ba6628ea62059b27721cfa3`.
 Hosted candidate qualification, Fork verification, public `v0.1.0-rc.3`
 release qualification, and post-publication Linux observation passed. Stable
-Qualification is the next roadmap step but has not started. No RC-7 branch or
-work package was created; stable `v0.1.0` and `main` remain untouched.
+Qualification is the next roadmap step. No RC-7 branch or work package was
+created; stable `v0.1.0` and `main` remain untouched.
+
+RC-6 was merged into `develop` with merge SHA
+`ecd8ee1afbee4996f9a099d67014c4ab2236ae44`.
+
+## Stable Qualification — v0.1.0 — DONE
+
+Branch: `feature/stable-v0.1.0-qualification`
+
+Starting SHA: `ecd8ee1afbee4996f9a099d67014c4ab2236ae44`.
+
+Qualify the already-observed RC3 code for stable without adding features,
+starting Repository Productization, or touching `main` before all stable gates
+pass. The first mandatory gate is a persistent disposable Linux regression
+using actual public `v0.1.0-rc.3` assets. It must save
+`analytics.enabled` and `dns_intelligence.enabled`, invoke the real
+`POST /panel/api/setting/restartPanel` endpoint, verify recovery and Activity /
+DNS Intelligence health, then disable both flags and repeat the real restart.
+
+Hosted restart regression run `36804879634` used actual public RC3 assets. The
+archive, checksums, release identity, clean Linux install, login, SQLite,
+Xray, persisted feature flags, real `POST /panel/api/setting/restartPanel`,
+same-process recovery, and web/sub server restart all passed. The source-level
+gate failed because after the real panel restart the analytics and DNS runtime
+reported disabled even though the persisted `analytics.enabled` and
+`dns_intelligence.enabled` flags remained enabled. The panel-only restart path
+does not re-run the fork runtime configuration performed during process
+startup.
+
+The focused generic fork-runtime lifecycle fix was published as immutable
+`v0.1.0-rc.4` at exact SHA
+`283abaa401d60b4374a4b618a5a5f8a72ec26cb4`. Final Fork Verification
+`36807215175`, final hosted restart/Traffic Control observation `36807215104`,
+the non-publishing complete RC matrix `36807225858`, and canonical tagged
+Release CatX-UI workflow `36807931375` passed.
+
+Post-publication run `36808874388` downloaded and verified the actual public
+RC4 Linux archive and metadata, then passed enabled and disabled transitions
+through the real `POST /panel/api/setting/restartPanel` endpoint. Analytics,
+DNS Intelligence, Activity, panel, Xray, and representative generic managed
+feature runtimes matched persisted state after both restarts.
+
+Stable Qualification completed on exact product/runtime SHA
+`fd28ea7144147d9164b70810d4a24872a3d48b4f`. Exact-SHA Fork Verification
+`36811795614`, stable candidate lifecycle `36811795653`, and the complete
+non-publishing stable release matrix `36811937162` passed. The matrix covered
+Linux/Windows artifacts and identity, SQLite, PostgreSQL, clean install,
+actual RC4-to-stable upgrade, database preservation, restart health, and
+rollback to RC4. Reconnect, node-restart, multi-node fanout, remote capability,
+Traffic Control, quota/window, feature-off, and no-clobber coverage remained
+green.
+
+`main` and annotated `v0.1.0` resolve to the qualified SHA. Canonical tagged
+Release run `36813723610` passed; the public final/latest release has 28
+expected assets. Corrected actual-public-assets observer `36815136071` passed
+updater identity, Russian LTR, Persian RTL, enabled and disabled real
+`restartPanel` lifecycles, generic managed-feature reload, panel/SQLite/Xray
+health, live traffic, Traffic Control apply/remove/no-clobber, authoritative
+quota/window behavior, and feature-disable cleanup.
+
+Observer attempts `36814708161` and `36814901784` remain recorded. The first
+was initially classified as latest-release visibility lag; the retry proved
+the qualification assertion incorrectly expected an unprefixed latest version
+instead of tag `v0.1.0`. Harness-only commit
+`35a03bb9d4407ebe343d9d8c0f8c62024dbdc4bb` corrected the assertion on the
+qualification branch and was not merged into the already-published stable
+product.
+
+Docker run `36813723615` passed. CatX-only aliases `v0.1.0`, `0.1.0`, and
+`latest` resolve to
+`sha256:3e94b98560e8261c315b9f9ae4d97a0e8ea5977e00072f9b310088eb9fac1322`
+with amd64, arm64, arm/v7, arm/v6, and 386 images plus provenance/SBOM
+attestations; the OCI revision is the qualified SHA.
+
+Non-canonical follow-ups remain explicit: the post-freeze npm audit found a
+high `brace-expansion` advisory and low DOMPurify advisory after all source
+build/test/lint/typecheck gates passed; Docs format drift and disabled GitHub
+Pages are tooling/configuration issues; and the secondary release-install
+smoke's no-systemd container cannot perform transactional updater service
+control, while the dedicated clean-install/upgrade/rollback matrix passed.
+None established a stable binary runtime defect during qualification.
+
+All RC tags remain immutable, public stable assets remain unchanged, no
+post-qualification product/runtime source entered `main`, and Repository
+Productization has not started. Stop before Productization.
+
+## Repository Productization — COMPLETE
+
+Branch: `feature/repository-productization`
+
+Starting stable product/runtime SHA: `fd28ea7144147d9164b70810d4a24872a3d48b4f`.
+
+The final Stable Qualification evidence commit
+`2ec8d6c3661dd37c81cc057066781217a5f26faf` was documentation-only and was
+carried onto this branch as `05479906`. Productization is limited to public
+repository identity, documentation, release notes, public issue/contribution/
+security routing, docs-site identity, and install/update/Docker examples. Do
+not change v0.1.0 runtime semantics, compatibility-sensitive internal names,
+the stable tag, or any RC tag.
+
+Required completion checks:
+
+- product claims match the shipped stable product and capability model;
+- CatX-owned install, update, release, issue, and Docker links are used;
+- required upstream attribution and GPL notices remain intact;
+- translated READMEs and local docs are not presented as official upstream
+  CatX documentation;
+- stale public upstream-link audit, Markdown/link sanity, and relevant docs
+  checks are recorded;
+- final diff contains no Go or frontend runtime-source change;
+- stable/RC tag targets remain unchanged and no v0.1.1 or upstream maintenance
+  work starts.
+
+Stop after this work package and wait for separate authorization for Upstream
+Maintenance Strategy.
+
+### Completion record
+
+Security PR #2 (`fix/frontend-audit-dependencies`) was merged first at
+`e046c282fc8ea770dfe35c0d2b00d31341d28f4c` from focused fix commit
+`960138303cc5b8e2bfd84471dfb0b43eec9d53e7`. Its lockfile-only change cleared
+the hosted frontend audit while preserving runtime source. The Productization
+branch includes that prerequisite through merge commit
+`606d31e5de1dcc93f025a7d86487d21119dacf62`.
+
+Productization PR #1 final head was `e39b3dbf6c780518cb77a209e6d968875fec2680`
+and merged at `db610e986862bbe902d0fc8f1e4aa52cd707095f`. Docs CI
+`36911212458`, CI `36911212478`, Fork Verification `36911212331`, Release
+CatX-UI `36911212551`, and Deploy Smoke `36911212337` passed. No v0.1.1,
+upstream maintenance, tag movement, or runtime-source change is part of this
+package.
+
+# Upstream Maintenance Strategy — COMPLETE
+
+Branch: `feature/upstream-maintenance-strategy`
+
+Starting `main`: `8f63afc6f1fdbac0f50d3bfd4f6f0bb8da4255fb`.
+
+Recorded upstream base: `MHSanaei/3x-ui v3.8.5`. The current fetched stable
+tag is `v3.9.0` at `3cd4bf504c3cd8ea9b1c1fdb032a9796c5c43ddb`.
+
+This package establishes the canonical maintenance process in
+`docs/04_UPSTREAM_SYNC.md`, inventories CatX/upstream touchpoints and sensitive
+paths, defines conflict/migration/rollback/feature-off/RC policy, and adds the
+advisory `scripts/upstream-maintenance-report.sh`. It must not add product
+features, publish a release, move any tag, or merge upstream into `main` or
+`develop`.
+
+The `v3.9.0` assessment is a non-production dry run on
+`sync/upstream-v3.9.0`. Any actual upgrade is a separate work package.
 
 # Operating Rules
 

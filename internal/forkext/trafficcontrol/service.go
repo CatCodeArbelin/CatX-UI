@@ -31,6 +31,13 @@ func configuredInterfaces() []string {
 
 func Configure(enabled bool) {
 	service.mu.Lock()
+	if enabled && service.enabled {
+		// A same-process panel restart must retain the backend that owns the
+		// CatX qdisc/nftables state. Replacing it here would lose rollback
+		// ownership and make a later disable unable to clean up safely.
+		service.mu.Unlock()
+		return
+	}
 	previous := service.backend
 	service.enabled = enabled
 	service.backend = NewBackend(nil, "", configuredInterfaces())
@@ -43,6 +50,12 @@ func Configure(enabled bool) {
 	if !enabled && previous != nil {
 		_, _ = previous.Reconcile(context.Background(), []DesiredRule{})
 	}
+}
+
+func Enabled() bool {
+	service.mu.RLock()
+	defer service.mu.RUnlock()
+	return service.enabled
 }
 
 func SetBackendForTests(b *Backend) {

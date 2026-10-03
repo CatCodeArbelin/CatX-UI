@@ -3,6 +3,16 @@ name: Release CatX-UI
 
 on:
   workflow_dispatch:
+    inputs:
+      qualification_channel:
+        description: Build identity used for a non-publishing exact-SHA qualification run
+        required: true
+        default: dev
+        type: choice
+        options:
+          - dev
+          - rc
+          - stable
   # Only main (dev channel) and version tags ship binaries; build any other
   # branch on demand via workflow_dispatch.
   push:
@@ -39,6 +49,9 @@ on:
       - "x-ui.service.rhel"
       - ".github/workflows/release.yml"
       - ".github/workflows/fork-verify.yml"
+
+env:
+  CATX_QUALIFICATION_CHANNEL: ${{ github.event_name == 'workflow_dispatch' && inputs.qualification_channel || 'dev' }}
 
 jobs:
   validate-release-identity:
@@ -151,10 +164,13 @@ jobs:
           export CC=$(realpath "$(find "$TOOLCHAIN_DIR/bin" -name '*-gcc.br_real' -type f -executable | head -n1)")
           [ -z "$CC" ] && { echo "No gcc.br_real found in $TOOLCHAIN_DIR/bin" >&2; exit 1; }
           cd -
-          # Stamp the commit into per-commit (dev channel) builds only; tagged
-          # stable releases stay unstamped so config.IsDevBuild() returns false.
+          # Exact-SHA RC qualification builds carry both commit and RC channel;
+          # stable qualification and tagged stable releases stay unstamped so
+          # the binary identity exactly matches the eventual stable payload.
           LDFLAGS="-w -s -linkmode external -extldflags '-static'"
-          if [[ "$GITHUB_REF" != refs/tags/* ]]; then
+          if [[ "$GITHUB_REF" != refs/tags/* && "$CATX_QUALIFICATION_CHANNEL" == rc ]]; then
+            LDFLAGS="$LDFLAGS -X github.com/mhsanaei/3x-ui/v3/internal/config.buildCommit=$GITHUB_SHA -X github.com/mhsanaei/3x-ui/v3/internal/config.buildDate=$(date -u +%Y-%m-%dT%H:%M:%SZ) -X github.com/mhsanaei/3x-ui/v3/internal/config.buildChannel=rc"
+          elif [[ "$GITHUB_REF" != refs/tags/* && "$CATX_QUALIFICATION_CHANNEL" != stable ]]; then
             LDFLAGS="$LDFLAGS -X github.com/mhsanaei/3x-ui/v3/internal/config.buildCommit=${GITHUB_SHA::8} -X github.com/mhsanaei/3x-ui/v3/internal/config.buildDate=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           elif [[ "$GITHUB_REF_NAME" == "v$(tr -d '[:space:]' < internal/forkrelease/rc_version)" ]]; then
             LDFLAGS="$LDFLAGS -X github.com/mhsanaei/3x-ui/v3/internal/config.buildChannel=rc"
@@ -346,9 +362,12 @@ jobs:
           go version
           gcc --version
 
-          # Stamp the commit into per-commit (dev channel) builds only.
+          # Exact-SHA RC qualification builds carry both commit and RC channel;
+          # stable qualification stays unstamped like the eventual stable tag.
           LDFLAGS="-w -s"
-          if [[ "$GITHUB_REF" != refs/tags/* ]]; then
+          if [[ "$GITHUB_REF" != refs/tags/* && "$CATX_QUALIFICATION_CHANNEL" == rc ]]; then
+            LDFLAGS="$LDFLAGS -X github.com/mhsanaei/3x-ui/v3/internal/config.buildCommit=$GITHUB_SHA -X github.com/mhsanaei/3x-ui/v3/internal/config.buildDate=$(date -u +%Y-%m-%dT%H:%M:%SZ) -X github.com/mhsanaei/3x-ui/v3/internal/config.buildChannel=rc"
+          elif [[ "$GITHUB_REF" != refs/tags/* && "$CATX_QUALIFICATION_CHANNEL" != stable ]]; then
             LDFLAGS="$LDFLAGS -X github.com/mhsanaei/3x-ui/v3/internal/config.buildCommit=${GITHUB_SHA:0:8} -X github.com/mhsanaei/3x-ui/v3/internal/config.buildDate=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           elif [[ "$GITHUB_REF_NAME" == "v$(tr -d '[:space:]' < internal/forkrelease/rc_version)" ]]; then
             LDFLAGS="$LDFLAGS -X github.com/mhsanaei/3x-ui/v3/internal/config.buildChannel=rc"
@@ -473,7 +492,17 @@ jobs:
           release_tag="${CATX_DEV_RELEASE_TAG}"
           release_prerelease=true
           release_latest=false
-          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+          if [[ "$GITHUB_REF" != refs/tags/* && "$CATX_QUALIFICATION_CHANNEL" == rc ]]; then
+            release_channel=rc
+            release_version="$rc_version"
+            release_tag="v${rc_version}"
+          elif [[ "$GITHUB_REF" != refs/tags/* && "$CATX_QUALIFICATION_CHANNEL" == stable ]]; then
+            release_channel=stable
+            release_version="$fork_version"
+            release_tag="v${fork_version}"
+            release_prerelease=false
+            release_latest=true
+          elif [[ "$GITHUB_REF" == refs/tags/* ]]; then
             if [[ "$GITHUB_REF_NAME" == "v${rc_version}" ]]; then
               release_channel=rc
               release_version="$rc_version"
@@ -564,7 +593,7 @@ jobs:
 
   linux-staging-qualification:
     name: Disposable Linux install and upgrade rehearsal
-    if: startsWith(github.ref, 'refs/heads/feature/rc') || startsWith(github.ref, 'refs/tags/')
+    if: startsWith(github.ref, 'refs/heads/feature/rc') || startsWith(github.ref, 'refs/tags/') || (github.event_name == 'workflow_dispatch' && (inputs.qualification_channel == 'rc' || inputs.qualification_channel == 'stable'))
     needs: qualify-artifacts
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -581,7 +610,24 @@ jobs:
           bash scripts/staging/build-legacy-binaries.sh legacy \
             7ef22f94c950ff09f0870e2295fa65ad5968742c production-baseline \
             1c88ed18 pre-rc-develop \
-            09f5432aacfb2c45f3df79cdca2e15e77bc9a8a6 rc1-public
+            09f5432aacfb2c45f3df79cdca2e15e77bc9a8a6 rc1-public \
+            437d5e2f5bb835118ba6628ea62059b27721cfa3 rc3-public
+      - name: Fetch the actual public RC4 upgrade baseline
+        run: |
+          set -euo pipefail
+          work=$(mktemp -d)
+          trap 'rm -rf "$work"' EXIT
+          base="https://github.com/CatCodeArbelin/CatX-UI/releases/download/v0.1.0-rc.4"
+          curl --fail --location --retry 5 --retry-all-errors --retry-delay 3 \
+            -o "$work/catx-ui-linux-amd64.tar.gz" "$base/catx-ui-linux-amd64.tar.gz"
+          curl --fail --location --retry 5 --retry-all-errors --retry-delay 3 \
+            -o "$work/catx-ui-linux-amd64.tar.gz.sha256" "$base/catx-ui-linux-amd64.tar.gz.sha256"
+          (cd "$work" && sha256sum -c catx-ui-linux-amd64.tar.gz.sha256)
+          mkdir -p legacy/rc4-public
+          tar -xOzf "$work/catx-ui-linux-amd64.tar.gz" x-ui/x-ui > legacy/rc4-public/x-ui
+          chmod +x legacy/rc4-public/x-ui
+          grep -Fxq 'channel=rc' <(legacy/rc4-public/x-ui release-info)
+          grep -Fxq 'release_version=0.1.0-rc.4' <(legacy/rc4-public/x-ui release-info)
       - name: Download qualified artifacts
         uses: actions/download-artifact@v8
         with:
@@ -591,7 +637,13 @@ jobs:
         run: |
           set +e
           release_tag="dev-latest"
-          if [[ "$GITHUB_REF" == refs/tags/* ]]; then release_tag="$GITHUB_REF_NAME"; fi
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            release_tag="$GITHUB_REF_NAME"
+          elif [[ "$CATX_QUALIFICATION_CHANNEL" == rc ]]; then
+            release_tag="v$(tr -d '[:space:]' < internal/forkrelease/rc_version)"
+          elif [[ "$CATX_QUALIFICATION_CHANNEL" == stable ]]; then
+            release_tag="v$(tr -d '[:space:]' < internal/forkrelease/fork_version)"
+          fi
           bash scripts/staging/test-linux-release-path.sh release-assets legacy "$release_tag" 2>&1 | tee "$RUNNER_TEMP/linux-staging.log"
           status=${PIPESTATUS[0]}
           if [ "$status" -ne 0 ]; then
@@ -607,7 +659,7 @@ jobs:
 
   postgres-staging-qualification:
     name: Disposable PostgreSQL migration qualification
-    if: startsWith(github.ref, 'refs/heads/feature/rc') || startsWith(github.ref, 'refs/tags/')
+    if: startsWith(github.ref, 'refs/heads/feature/rc') || startsWith(github.ref, 'refs/tags/') || (github.event_name == 'workflow_dispatch' && (inputs.qualification_channel == 'rc' || inputs.qualification_channel == 'stable'))
     needs: qualify-artifacts
     runs-on: ubuntu-latest
     services:
