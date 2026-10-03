@@ -94,7 +94,7 @@ test-fork-go: dist-stub ## Fork-owned foundation tests
 
 .PHONY: test-fork-release
 test-fork-release: ## Fork release identity, integrity, and rollback tests
-	bash -n update.sh install.sh x-ui.sh scripts/catx-update-transaction.sh scripts/inspect-release-artifacts.sh scripts/test-release-identity.sh scripts/test-update-transaction.sh scripts/test-artifact-qualification.sh
+	bash -n update.sh install.sh x-ui.sh scripts/catx-update-transaction.sh scripts/inspect-release-artifacts.sh scripts/test-release-identity.sh scripts/test-update-transaction.sh scripts/test-artifact-qualification.sh scripts/upstream-maintenance-report.sh
 	bash scripts/test-release-identity.sh
 	bash scripts/test-update-transaction.sh
 	bash scripts/test-artifact-qualification.sh
@@ -102,3 +102,7 @@ test-fork-release: ## Fork release identity, integrity, and rollback tests
 .PHONY: verify-fork
 verify-fork: verify test-fork-go test-fork-release ## Upstream gate plus fork-owned verification
 	@echo "verify-fork: OK"
+
+.PHONY: upstream-report
+upstream-report: ## Report stable upstream delta and CatX touchpoint overlap
+	bash scripts/upstream-maintenance-report.sh $(if $(TAG),--compare $(TAG),)

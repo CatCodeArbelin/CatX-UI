@@ -708,6 +708,25 @@ CatX-UI `36911212551`, and Deploy Smoke `36911212337` passed. No v0.1.1,
 upstream maintenance, tag movement, or runtime-source change is part of this
 package.
 
+# Upstream Maintenance Strategy — COMPLETE
+
+Branch: `feature/upstream-maintenance-strategy`
+
+Starting `main`: `8f63afc6f1fdbac0f50d3bfd4f6f0bb8da4255fb`.
+
+Recorded upstream base: `MHSanaei/3x-ui v3.8.5`. The current fetched stable
+tag is `v3.9.0` at `3cd4bf504c3cd8ea9b1c1fdb032a9796c5c43ddb`.
+
+This package establishes the canonical maintenance process in
+`docs/04_UPSTREAM_SYNC.md`, inventories CatX/upstream touchpoints and sensitive
+paths, defines conflict/migration/rollback/feature-off/RC policy, and adds the
+advisory `scripts/upstream-maintenance-report.sh`. It must not add product
+features, publish a release, move any tag, or merge upstream into `main` or
+`develop`.
+
+The `v3.9.0` assessment is a non-production dry run on
+`sync/upstream-v3.9.0`. Any actual upgrade is a separate work package.
+
 # Operating Rules
 
 ## Branching
