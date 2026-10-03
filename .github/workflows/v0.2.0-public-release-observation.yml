@@ -1,10 +1,6 @@
 name: CatX v0.2.0 actual-public release observation
 
 on:
-  push:
-    tags:
-      - "v0.2.0-rc.1"
-      - "v0.2.0"
   workflow_dispatch:
     inputs:
       release_tag:
@@ -31,7 +27,7 @@ permissions:
 
 jobs:
   observe-public-linux:
-    name: Observe actual public ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref_name }} assets on Linux
+    name: Observe actual public ${{ inputs.release_tag }} assets on Linux
     runs-on: ubuntu-latest
     timeout-minutes: 70
     env:
@@ -39,7 +35,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.release_commit || github.ref }}
+          ref: ${{ inputs.release_commit }}
           fetch-depth: 0
 
       - uses: actions/setup-node@v7
@@ -69,8 +65,8 @@ jobs:
 
       - name: Wait for the actual published assets
         env:
-          RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref_name }}
-          RELEASE_CHANNEL_INPUT: ${{ github.event_name == 'workflow_dispatch' && inputs.release_channel || '' }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          RELEASE_CHANNEL_INPUT: ${{ inputs.release_channel }}
           RELEASE_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
@@ -108,8 +104,8 @@ jobs:
 
       - name: Observe the actual public release payload
         env:
-          RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref_name }}
-          RELEASE_COMMIT_INPUT: ${{ github.event_name == 'workflow_dispatch' && inputs.release_commit || '' }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          RELEASE_COMMIT_INPUT: ${{ inputs.release_commit }}
           EVIDENCE_DIR: ${{ runner.temp }}/catx-v0-2-public-linux-evidence
         run: |
           set -euo pipefail
@@ -136,10 +132,10 @@ jobs:
             bash scripts/staging/observe-rc2-linux.sh
 
       - name: Observe the real restartPanel lifecycle on stable assets
-        if: ${{ (github.event_name == 'workflow_dispatch' && inputs.release_channel == 'stable') || (github.event_name == 'push' && github.ref_name == 'v0.2.0') }}
+        if: ${{ inputs.release_channel == 'stable' }}
         env:
-          RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref_name }}
-          RELEASE_COMMIT_INPUT: ${{ github.event_name == 'workflow_dispatch' && inputs.release_commit || '' }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          RELEASE_COMMIT_INPUT: ${{ inputs.release_commit }}
           EVIDENCE_DIR: ${{ runner.temp }}/catx-v0-2-stable-restart-evidence
         run: |
           set -euo pipefail
