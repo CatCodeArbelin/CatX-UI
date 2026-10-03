@@ -23,7 +23,7 @@ not a duplicate of the general maintenance procedure in
 | CatX-overlap count            | `64`                                                   |
 | Sync branch                   | `sync/upstream-v3.9.0`                                 |
 | Upstream merge SHA            | `9335eb4af5ab4c73976fdcbeda875926400e53f8`             |
-| Final qualified candidate SHA | `3b25757f` (qualification rerun pending)               |
+| Final qualified candidate SHA | `196ca986414bcc8e6ec7af4a9d807669546faaee`             |
 | Sync PR                       | [#4](https://github.com/CatCodeArbelin/CatX-UI/pull/4) |
 | Develop merge SHA             | pending                                                |
 | Final develop SHA             | pending                                                |
@@ -89,8 +89,8 @@ compatibility.
 ## Final record
 
 - final sync merge SHA: `9335eb4af5ab4c73976fdcbeda875926400e53f8`;
-- post-merge correction commits: `c38b640a`, `f3168d86`, `a46aa3fd`, `7b64e878`, `b2627c61`, `3b25757f`;
-- final exact qualified candidate SHA: pending final hosted rerun;
+- post-merge correction commits: `c38b640a`, `f3168d86`, `a46aa3fd`, `7b64e878`, `b2627c61`, `3b25757f`, `196ca986`;
+- final exact qualified candidate SHA: `196ca986414bcc8e6ec7af4a9d807669546faaee`;
 - final develop integration SHA: pending;
 - Xray version after sync: `26.9.30`;
 - migration/recovery result: hosted migration, updater transaction, and rollback checks passed;
