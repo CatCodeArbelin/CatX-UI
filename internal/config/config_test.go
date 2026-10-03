@@ -30,19 +30,19 @@ func TestGetPanelVersion(t *testing.T) {
 
 	buildCommit = ""
 	buildChannel = "rc"
-	if got := GetPanelVersion(); got != "0.1.0-rc.4" {
-		t.Fatalf("RC build: GetPanelVersion = %q, want %q", got, "0.1.0-rc.4")
+	if got := GetPanelVersion(); got != "0.2.0-rc.1" {
+		t.Fatalf("RC build: GetPanelVersion = %q, want %q", got, "0.2.0-rc.1")
 	}
 
 	buildCommit = "1d1128cf945c4615efa05cf41ba7fa766e2ee428"
-	if got := GetPanelVersion(); got != "0.1.0-rc.4" || IsDevBuild() || GetReleaseChannel() != forkrelease.ChannelRC {
+	if got := GetPanelVersion(); got != "0.2.0-rc.1" || IsDevBuild() || GetReleaseChannel() != forkrelease.ChannelRC {
 		t.Fatalf("stamped RC build = %q, dev=%t, channel=%q; want RC identity", got, IsDevBuild(), GetReleaseChannel())
 	}
 }
 
 func TestReleaseVersionsRemainSeparate(t *testing.T) {
-	if GetForkVersion() != "0.1.0" {
-		t.Fatalf("fork version = %q, want 0.1.0", GetForkVersion())
+	if GetForkVersion() != "0.2.0" {
+		t.Fatalf("fork version = %q, want 0.2.0", GetForkVersion())
 	}
 	if GetUpstreamBaseVersion() != "3.9.0" {
 		t.Fatalf("upstream base = %q, want 3.9.0", GetUpstreamBaseVersion())

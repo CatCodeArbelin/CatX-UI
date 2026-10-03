@@ -246,6 +246,10 @@ jobs:
             "PATH=$PATH" \
             "PLAYWRIGHT_BROWSERS_PATH=$PLAYWRIGHT_BROWSERS_PATH" \
             CATX_STABLE_RESTART_REGRESSION_ONLY=1 \
+            CATX_PUBLIC_FORK_VERSION=0.2.0 \
+            CATX_PUBLIC_UPSTREAM_VERSION=3.9.0 \
+            CATX_PUBLIC_XRAY_VERSION=26.9.30 \
+            CATX_PUBLIC_STABLE_VERSION=0.2.0 \
             CATX_PUBLIC_LOCALE_BROWSER=1 \
             CATX_PUBLIC_LOCALE_PROBE_SCRIPT="$GITHUB_WORKSPACE/frontend/scripts/observe-public-locales.mjs" \
             CATX_RC6_PUBLIC_TAG="$RELEASE_TAG" \
@@ -263,6 +267,10 @@ jobs:
           set -euo pipefail
           public_version="${RELEASE_TAG#v}"
           sudo env \
+            CATX_PUBLIC_FORK_VERSION=0.2.0 \
+            CATX_PUBLIC_UPSTREAM_VERSION=3.9.0 \
+            CATX_PUBLIC_XRAY_VERSION=26.9.30 \
+            CATX_PUBLIC_STABLE_VERSION=0.2.0 \
             CATX_RC6_PUBLIC_TAG="$RELEASE_TAG" \
             CATX_RC6_PUBLIC_VERSION="$public_version" \
             CATX_RC6_PUBLIC_COMMIT="$RELEASE_COMMIT" \

@@ -8,6 +8,11 @@ readonly RELEASE_REPOSITORY="CatCodeArbelin/CatX-UI"
 readonly RELEASE_TAG="${CATX_RC6_PUBLIC_TAG:-v0.1.0-rc.2}"
 readonly RELEASE_VERSION="${CATX_RC6_PUBLIC_VERSION:-0.1.0-rc.2}"
 readonly RELEASE_COMMIT="${CATX_RC6_PUBLIC_COMMIT:-4d8feae2e62db914d3146504340d9b9f802088b2}"
+readonly EXPECTED_FORK_VERSION="${CATX_PUBLIC_FORK_VERSION:-0.1.0}"
+readonly EXPECTED_UPSTREAM_VERSION="${CATX_PUBLIC_UPSTREAM_VERSION:-3.8.5}"
+readonly EXPECTED_XRAY_VERSION="${CATX_PUBLIC_XRAY_VERSION:-26.9.9}"
+readonly EXPECTED_STABLE_VERSION="${CATX_PUBLIC_STABLE_VERSION:-0.1.0}"
+readonly RUN_ADMIN_QDISC_CHECK="${CATX_RUN_ADMIN_QDISC_CHECK:-0}"
 readonly STABLE_RESTART_REGRESSION_ONLY="${CATX_STABLE_RESTART_REGRESSION_ONLY:-0}"
 readonly CANDIDATE_BINARY="${CATX_RC6_CANDIDATE_BINARY:-}"
 readonly CANDIDATE_XRAY_BINARY="${CATX_RC6_CANDIDATE_XRAY_BINARY:-}"
@@ -124,7 +129,7 @@ if [[ -n "$CANDIDATE_BINARY" ]]; then
     "$PAYLOAD_DIR/x-ui/x-ui" release-info > "$EVIDENCE_DIR/candidate-release-info.txt"
     if [[ "$CANDIDATE_CHANNEL" == stable ]]; then
         grep -Fxq "channel=stable" "$EVIDENCE_DIR/candidate-release-info.txt" || fail "candidate release identity was not stable"
-        grep -Fxq "release_version=0.1.0" "$EVIDENCE_DIR/candidate-release-info.txt" || fail "candidate release version was not 0.1.0"
+        grep -Fxq "release_version=$EXPECTED_FORK_VERSION" "$EVIDENCE_DIR/candidate-release-info.txt" || fail "candidate release version was not $EXPECTED_FORK_VERSION"
         grep -Fxq "build_commit=" "$EVIDENCE_DIR/candidate-release-info.txt" || fail "stable candidate unexpectedly carried a dev/RC build stamp"
     else
         grep -Fq "build_commit=$CANDIDATE_COMMIT" "$EVIDENCE_DIR/candidate-release-info.txt" || fail "candidate release identity did not contain the expected exact commit"
@@ -135,7 +140,7 @@ else
     download_verified_asset "${ASSET_PREFIX}-release-metadata.json"
     jq -e \
         --arg product "CatX-UI" --arg repository "$RELEASE_REPOSITORY" \
-        --arg fork "0.1.0" --arg upstream "3.8.5" --arg xray "26.9.9" \
+        --arg fork "$EXPECTED_FORK_VERSION" --arg upstream "$EXPECTED_UPSTREAM_VERSION" --arg xray "$EXPECTED_XRAY_VERSION" \
         --arg channel "$PUBLIC_CHANNEL" --arg version "$RELEASE_VERSION" --arg tag "$RELEASE_TAG" \
         --arg commit "$RELEASE_COMMIT" \
         --argjson prerelease "$PUBLIC_PRERELEASE" --argjson latest "$PUBLIC_LATEST" \
@@ -151,7 +156,22 @@ else
 fi
 readonly APP_DIR="$PAYLOAD_DIR/x-ui"
 [[ -x "$APP_DIR/x-ui" ]] || fail "Linux archive did not contain executable x-ui"
-[[ -x "$APP_DIR/bin/xray-linux-amd64" ]] || fail "Linux archive did not contain Xray 26.9.9"
+[[ -x "$APP_DIR/bin/xray-linux-amd64" ]] || fail "Linux archive did not contain Xray $EXPECTED_XRAY_VERSION"
+"$APP_DIR/x-ui" release-info > "$EVIDENCE_DIR/public-release-info.txt"
+grep -Fxq "product=CatX-UI" "$EVIDENCE_DIR/public-release-info.txt" || fail "public release-info product was not CatX-UI"
+grep -Fxq "repository=$RELEASE_REPOSITORY" "$EVIDENCE_DIR/public-release-info.txt" || fail "public release-info repository was not CatX-owned"
+grep -Fxq "fork_version=$EXPECTED_FORK_VERSION" "$EVIDENCE_DIR/public-release-info.txt" || fail "public release-info fork version was not $EXPECTED_FORK_VERSION"
+grep -Fxq "upstream_base_version=$EXPECTED_UPSTREAM_VERSION" "$EVIDENCE_DIR/public-release-info.txt" || fail "public release-info upstream version was not $EXPECTED_UPSTREAM_VERSION"
+grep -Fxq "bundled_xray_version=$EXPECTED_XRAY_VERSION" "$EVIDENCE_DIR/public-release-info.txt" || fail "public release-info Xray version was not $EXPECTED_XRAY_VERSION"
+if [[ "$PUBLIC_CHANNEL" == stable ]]; then
+    grep -Fxq "channel=stable" "$EVIDENCE_DIR/public-release-info.txt" || fail "public release-info channel was not stable"
+    grep -Fxq "release_version=$EXPECTED_FORK_VERSION" "$EVIDENCE_DIR/public-release-info.txt" || fail "public release-info version was not $EXPECTED_FORK_VERSION"
+else
+    grep -Fxq "channel=rc" "$EVIDENCE_DIR/public-release-info.txt" || fail "public release-info channel was not rc"
+    grep -Fxq "release_version=$RELEASE_VERSION" "$EVIDENCE_DIR/public-release-info.txt" || fail "public release-info version was not $RELEASE_VERSION"
+fi
+"$APP_DIR/bin/xray-linux-amd64" version > "$EVIDENCE_DIR/xray-version.txt" 2>&1 || fail "bundled Xray version probe failed"
+grep -Fq "$EXPECTED_XRAY_VERSION" "$EVIDENCE_DIR/xray-version.txt" || fail "bundled Xray binary did not report $EXPECTED_XRAY_VERSION"
 
 export XUI_DB_FOLDER="$DB_DIR"
 export XUI_LOG_FOLDER="$LOG_DIR"
@@ -378,13 +398,15 @@ login
 if [[ "$PUBLIC_CHANNEL" == stable ]]; then
     api_get "/server/getPanelUpdateInfo" "$RUN_DIR/stable-update-info.json"
     jq -e --arg repository "$RELEASE_REPOSITORY" \
-        '.obj.channel == "stable" and .obj.currentVersion == "0.1.0" and
-         .obj.latestVersion == "0.1.0" and .obj.upstreamBaseVersion == "3.8.5" and
-         .obj.bundledXrayVersion == "26.9.9" and .obj.releaseRepository == $repository and
+        --arg stable "$EXPECTED_STABLE_VERSION" --arg upstream "$EXPECTED_UPSTREAM_VERSION" \
+        --arg xray "$EXPECTED_XRAY_VERSION" \
+        '.obj.channel == "stable" and .obj.currentVersion == $stable and
+         .obj.latestVersion == $stable and .obj.upstreamBaseVersion == $upstream and
+         .obj.bundledXrayVersion == $xray and .obj.releaseRepository == $repository and
          .obj.updateAvailable == false' "$RUN_DIR/stable-update-info.json" >/dev/null ||
-        fail "stable updater identity did not report current/latest v0.1.0"
+        fail "stable updater identity did not report current/latest $EXPECTED_STABLE_VERSION"
     cp -f "$RUN_DIR/stable-update-info.json" "$EVIDENCE_DIR/stable-update-info.json"
-    log "PASS: updater reported stable v0.1.0 identity from the CatX repository"
+    log "PASS: updater reported stable $EXPECTED_STABLE_VERSION identity from the CatX repository"
 fi
 
 api_get "/server/status" "$RUN_DIR/status-off.json"
@@ -502,7 +524,7 @@ fi
 grep -q 'noqueue' "$EVIDENCE_DIR/tc-after-remove.txt" || fail "managed qdisc was not removed"
 log "PASS: Linux Traffic Control reconcile/apply/remove was idempotent and cleaned its owned state"
 
-if [[ -n "$CANDIDATE_BINARY" || "$RELEASE_TAG" == "v0.1.0-rc.3" || "$RELEASE_TAG" == "v0.1.0-rc.4" || "$RELEASE_TAG" == "v0.1.0" ]]; then
+if [[ -n "$CANDIDATE_BINARY" || "$RUN_ADMIN_QDISC_CHECK" == 1 || "$RELEASE_TAG" == "v0.1.0-rc.3" || "$RELEASE_TAG" == "v0.1.0-rc.4" || "$RELEASE_TAG" == "v0.1.0" ]]; then
     ip link show dev "$ADMIN_INTERFACE" >/dev/null 2>&1 && ip link delete "$ADMIN_INTERFACE" 2>/dev/null || true
     ip link add "$ADMIN_INTERFACE" type dummy
     ip link set dev "$ADMIN_INTERFACE" up

@@ -1,0 +1,248 @@
+name: CatX v0.2.0 actual-public release observation
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Published CatX release tag to observe
+        required: true
+        default: v0.2.0-rc.1
+        type: string
+      release_commit:
+        description: Exact qualified commit recorded in the release metadata
+        required: true
+        default: f9178025d79e8bc403cf7f3f77f83aab3028965a
+        type: string
+      release_channel:
+        description: Published release channel
+        required: true
+        default: rc
+        type: choice
+        options:
+          - rc
+          - stable
+
+permissions:
+  contents: read
+
+jobs:
+  observe-public-linux:
+    name: Observe actual public ${{ inputs.release_tag }} assets on Linux
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.release_commit }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install public locale probe dependencies
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/catx-v0-2-playwright
+        run: |
+          set -euo pipefail
+          npm ci
+          npx playwright install --with-deps chromium
+        working-directory: frontend
+
+      - name: Install Linux qualification dependencies
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends curl jq iproute2 nftables unzip
+          sudo modprobe ifb numifbs=8
+          sudo modprobe sch_htb
+          sudo modprobe sch_ingress
+          sudo modprobe cls_flower
+          sudo modprobe cls_fw
+          sudo modprobe act_mirred
+
+      - name: Wait for the actual published assets
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          RELEASE_CHANNEL_INPUT: ${{ inputs.release_channel }}
+          RELEASE_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_TAG" =~ ^v0\.2\.0(-rc\.[0-9]+)?$ ]] || {
+            echo "invalid v0.2.0 release tag: $RELEASE_TAG" >&2
+            exit 1
+          }
+          release_channel="$RELEASE_CHANNEL_INPUT"
+          if [[ -z "$release_channel" ]]; then
+            if [[ "$RELEASE_TAG" == *-rc.* ]]; then release_channel=rc; else release_channel=stable; fi
+          fi
+          case "$release_channel" in
+            rc) prerelease=true; latest=false ;;
+            stable) prerelease=false; latest=true ;;
+            *) echo "invalid release channel: $release_channel" >&2; exit 1 ;;
+          esac
+          for attempt in $(seq 1 120); do
+            if curl --fail --silent --show-error \
+              -H "Authorization: Bearer $RELEASE_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/CatCodeArbelin/CatX-UI/releases/tags/${RELEASE_TAG}" > "$RUNNER_TEMP/release.json"; then
+              if jq -e --arg tag "$RELEASE_TAG" --argjson prerelease "$prerelease" \
+                --arg a catx-ui-linux-amd64.tar.gz --arg b catx-ui-release-metadata.json \
+                '(.tag_name == $tag and .draft == false and .prerelease == $prerelease and ([.assets[].name] | index($a)) != null and ([.assets[].name] | index($b)) != null)' \
+                "$RUNNER_TEMP/release.json" >/dev/null; then
+                printf '%s\n' "$RELEASE_TAG" > "$RUNNER_TEMP/release-tag"
+                printf '%s\n' "$release_channel" > "$RUNNER_TEMP/release-channel"
+                exit 0
+              fi
+            fi
+            sleep 10
+          done
+          echo "published assets for ${RELEASE_TAG} were not ready" >&2
+          exit 1
+
+      - name: Observe the actual public release payload
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          RELEASE_COMMIT_INPUT: ${{ inputs.release_commit }}
+          EVIDENCE_DIR: ${{ runner.temp }}/catx-v0-2-public-linux-evidence
+        run: |
+          set -euo pipefail
+          public_version="${RELEASE_TAG#v}"
+          public_commit="$RELEASE_COMMIT_INPUT"
+          if [[ -z "$public_commit" ]]; then
+            git fetch --force --tags origin "refs/tags/${RELEASE_TAG}:refs/tags/${RELEASE_TAG}"
+            public_commit=$(git rev-parse "${RELEASE_TAG}^{commit}")
+          fi
+          sudo env \
+            "PATH=$PATH" \
+            "PLAYWRIGHT_BROWSERS_PATH=$RUNNER_TEMP/catx-v0-2-playwright" \
+            CATX_PUBLIC_FORK_VERSION=0.2.0 \
+            CATX_PUBLIC_UPSTREAM_VERSION=3.9.0 \
+            CATX_PUBLIC_XRAY_VERSION=26.9.30 \
+            CATX_PUBLIC_STABLE_VERSION=0.2.0 \
+            CATX_RUN_ADMIN_QDISC_CHECK=1 \
+            CATX_PUBLIC_LOCALE_BROWSER=1 \
+            CATX_PUBLIC_LOCALE_PROBE_SCRIPT="$GITHUB_WORKSPACE/frontend/scripts/observe-public-locales.mjs" \
+            CATX_RC6_PUBLIC_TAG="$RELEASE_TAG" \
+            CATX_RC6_PUBLIC_VERSION="$public_version" \
+            CATX_RC6_PUBLIC_COMMIT="$public_commit" \
+            CATX_RC6_EVIDENCE_DIR="$EVIDENCE_DIR" \
+            bash scripts/staging/observe-rc2-linux.sh
+
+      - name: Qualify actual public v0.1.0 to release upgrade
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_TAG" =~ ^v0\.2\.0(-rc\.[0-9]+)?$ ]] || {
+            echo "invalid target release tag: $RELEASE_TAG" >&2
+            exit 1
+          }
+          case "$RELEASE_TAG" in
+            v0.2.0-rc.*) expected_channel=rc; expected_version="${RELEASE_TAG#v}" ;;
+            v0.2.0) expected_channel=stable; expected_version=0.2.0 ;;
+            *) echo "unsupported target release tag: $RELEASE_TAG" >&2; exit 1 ;;
+          esac
+
+          asset_dir="$RUNNER_TEMP/catx-v0-2-public-upgrade-assets"
+          legacy_dir="$RUNNER_TEMP/catx-v0-2-public-upgrade-legacy"
+          previous_dir="$RUNNER_TEMP/catx-v0-1-public-upgrade-baseline"
+          mkdir -p "$asset_dir" "$legacy_dir/public-v0.1.0"
+          mkdir -p "$previous_dir"
+          target_base="https://github.com/CatCodeArbelin/CatX-UI/releases/download/$RELEASE_TAG"
+          previous_base="https://github.com/CatCodeArbelin/CatX-UI/releases/download/v0.1.0"
+          for name in \
+            catx-ui-linux-amd64.tar.gz \
+            catx-ui-linux-amd64.tar.gz.sha256 \
+            catx-ui-install.sh \
+            catx-ui-install.sh.sha256 \
+            catx-ui-update.sh \
+            catx-ui-update.sh.sha256 \
+            catx-ui-update-lib.sh \
+            catx-ui-update-lib.sh.sha256 \
+            catx-ui.sh \
+            catx-ui-release-metadata.json; do
+            curl --fail --location --retry 5 --retry-all-errors --retry-delay 3 \
+              -o "$asset_dir/$name" "$target_base/$name"
+          done
+          curl --fail --location --retry 5 --retry-all-errors --retry-delay 3 \
+            -o "$previous_dir/catx-ui-linux-amd64.tar.gz" "$previous_base/catx-ui-linux-amd64.tar.gz"
+          curl --fail --location --retry 5 --retry-all-errors --retry-delay 3 \
+            -o "$previous_dir/catx-ui-linux-amd64.tar.gz.sha256" "$previous_base/catx-ui-linux-amd64.tar.gz.sha256"
+          (cd "$asset_dir" && sha256sum -c catx-ui-linux-amd64.tar.gz.sha256)
+          (cd "$previous_dir" && sha256sum -c catx-ui-linux-amd64.tar.gz.sha256)
+          jq -e --arg tag "$RELEASE_TAG" --arg channel "$expected_channel" \
+            --arg version "$expected_version" \
+            '.product == "CatX-UI" and .repository == "CatCodeArbelin/CatX-UI" and
+             .forkVersion == "0.2.0" and .upstreamBaseVersion == "3.9.0" and
+             .bundledXrayVersion == "26.9.30" and .channel == $channel and
+             .releaseVersion == $version and .releaseTag == $tag' \
+            "$asset_dir/catx-ui-release-metadata.json" >/dev/null
+          tar -xOzf "$previous_dir/catx-ui-linux-amd64.tar.gz" x-ui/x-ui > "$legacy_dir/public-v0.1.0/x-ui"
+          chmod +x "$legacy_dir/public-v0.1.0/x-ui"
+          grep -Fxq 'product=CatX-UI' <("$legacy_dir/public-v0.1.0/x-ui" release-info)
+          grep -Fxq 'channel=stable' <("$legacy_dir/public-v0.1.0/x-ui" release-info)
+          grep -Fxq 'release_version=0.1.0' <("$legacy_dir/public-v0.1.0/x-ui" release-info)
+          for label in production-baseline pre-rc-develop rc1-public rc3-public rc4-public; do
+            mkdir -p "$legacy_dir/$label"
+            cp "$legacy_dir/public-v0.1.0/x-ui" "$legacy_dir/$label/x-ui"
+          done
+          set -o pipefail
+          bash scripts/staging/test-linux-release-path.sh "$asset_dir" "$legacy_dir" "$RELEASE_TAG" \
+            2>&1 | tee "$RUNNER_TEMP/catx-v0-2-public-upgrade.log"
+
+      - name: Observe the real restartPanel lifecycle on stable assets
+        if: ${{ inputs.release_channel == 'stable' }}
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          RELEASE_COMMIT_INPUT: ${{ inputs.release_commit }}
+          EVIDENCE_DIR: ${{ runner.temp }}/catx-v0-2-stable-restart-evidence
+        run: |
+          set -euo pipefail
+          public_version="${RELEASE_TAG#v}"
+          public_commit="$RELEASE_COMMIT_INPUT"
+          if [[ -z "$public_commit" ]]; then
+            git fetch --force --tags origin "refs/tags/${RELEASE_TAG}:refs/tags/${RELEASE_TAG}"
+            public_commit=$(git rev-parse "${RELEASE_TAG}^{commit}")
+          fi
+          sudo env \
+            "PATH=$PATH" \
+            "PLAYWRIGHT_BROWSERS_PATH=$RUNNER_TEMP/catx-v0-2-playwright" \
+            CATX_STABLE_RESTART_REGRESSION_ONLY=1 \
+            CATX_PUBLIC_FORK_VERSION=0.2.0 \
+            CATX_PUBLIC_UPSTREAM_VERSION=3.9.0 \
+            CATX_PUBLIC_XRAY_VERSION=26.9.30 \
+            CATX_PUBLIC_STABLE_VERSION=0.2.0 \
+            CATX_PUBLIC_LOCALE_BROWSER=1 \
+            CATX_PUBLIC_LOCALE_PROBE_SCRIPT="$GITHUB_WORKSPACE/frontend/scripts/observe-public-locales.mjs" \
+            CATX_RC6_PUBLIC_TAG="$RELEASE_TAG" \
+            CATX_RC6_PUBLIC_VERSION="$public_version" \
+            CATX_RC6_PUBLIC_COMMIT="$public_commit" \
+            CATX_RC6_EVIDENCE_DIR="$EVIDENCE_DIR" \
+            bash scripts/staging/observe-rc2-linux.sh
+
+      - name: Summarize sanitized public evidence
+        if: always()
+        run: |
+          set -euo pipefail
+          for evidence in \
+            "$RUNNER_TEMP/catx-v0-2-public-linux-evidence" \
+            "$RUNNER_TEMP/catx-v0-2-stable-restart-evidence"; do
+            if [ -d "$evidence" ]; then
+              find "$evidence" -maxdepth 1 -type f -printf '%f\n' | sort
+              if [ -f "$evidence/observation.log" ]; then cat "$evidence/observation.log"; fi
+            fi
+          done
+
+      - name: Upload sanitized public evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: catx-v0-2-public-observation-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/catx-v0-2-public-linux-evidence
+            ${{ runner.temp }}/catx-v0-2-stable-restart-evidence
+          if-no-files-found: warn
+          retention-days: 30

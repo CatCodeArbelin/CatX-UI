@@ -2,60 +2,105 @@
 
 ## Work Package
 
-`Upstream Sync — 3x-ui v3.9.0`
+`CatX v0.2.0 Release Qualification`
 
 ## Status
 
-`COMPLETE`
+`CURRENT`
 
-This work package performs the actual merge-based integration of the exact
-upstream `v3.9.0` release into the CatX integration line. The qualified sync
-was merged into `develop`; no release or tag was published.
+This package qualifies the already-integrated upstream `v3.9.0` CatX
+develop state for one public `v0.2.0-rc.1` release, actual-public-artifact
+observation, and stable `v0.2.0` publication only if the exact RC passes.
+This is not an upstream sync and does not add product features.
 
-## Integration baseline
+## Release baseline
 
-- CatX integration base SHA: `65957a8988b5b51c4ac01dbd1121f04b55af6c8a`
-- Strategy PR: `https://github.com/CatCodeArbelin/CatX-UI/pull/3`
-- Strategy merge SHA: `7cb97e13def59280e92e5667d3f43ac23db8d470`
-- Develop reconciliation: `main → develop` merge SHA
-  `65957a8988b5b51c4ac01dbd1121f04b55af6c8a`
-- Previous upstream base: `MHSanaei/3x-ui v3.8.5`
-- Previous upstream base SHA: `7ef22f94c950ff09f0870e2295fa65ad5968742c`
-- Target upstream: `MHSanaei/3x-ui v3.9.0`
-- Target upstream SHA: `3cd4bf504c3cd8ea9b1c1fdb032a9796c5c43ddb`
-- Sync branch: `sync/upstream-v3.9.0`
-- Preserved dry-run branch: `sync/upstream-v3.9.0-dry-run`
+- release branch: `feature/v0.2.0-release-qualification`
+- release baseline SHA: `31a442cef876669aeae97ba9cb1e3e8888f42613`
+- starting `origin/develop`: `31a442cef876669aeae97ba9cb1e3e8888f42613`
+- starting `origin/main`: `7cb97e13def59280e92e5667d3f43ac23db8d470`
+- previous CatX stable: `v0.1.0`
+- previous stable runtime SHA: `fd28ea7144147d9164b70810d4a24872a3d48b4f`
+- new fork version: `0.2.0`
+- first and only planned RC: `0.2.0-rc.1`
+- frozen RC candidate source SHA: `f9178025d79e8bc403cf7f3f77f83aab3028965a`
+- upstream base: `MHSanaei/3x-ui v3.9.0`
+- upstream SHA: `3cd4bf504c3cd8ea9b1c1fdb032a9796c5c43ddb`
+- upstream integration merge SHA: `c5f2e4e0165d96577af3f0e9d3b40810a98e7764`
+- Xray: `26.9.30`
+- existing stable tag: `v0.1.0`
+- `v0.2.0-rc.1` tag: `v0.2.0-rc.1 → f9178025d79e8bc403cf7f3f77f83aab3028965a` (annotated, immutable)
+- `v0.2.0` tag: not created
 
-## Known dry-run evidence
-
-- upstream commits: `99`
-- changed upstream paths: `563`
-- sensitive paths: `224`
-- CatX touchpoint overlaps: `64`
-- dry-run merge conflicts: `12`
-- actual merge conflict count: `12`
+`origin/main` is an ancestor of the release baseline. No legitimate main-only
+commits require reconciliation before qualification.
 
 ## Scope
 
-- integrate upstream `v3.9.0` while preserving upstream ancestry;
-- preserve CatX architecture, product identity, and release identity;
-- adopt upstream implementations where they replace equivalent inherited
-  behavior;
-- adapt CatX hooks to the new upstream lifecycle boundaries;
-- audit and qualify database/migration, Xray, TUIC, AmneziaWG, client,
-  subscription, frontend/generated, updater, and feature-off behavior;
-- integrate the exact qualified candidate into `develop`.
+- release identity transition to CatX `0.2.0` / `0.2.0-rc.1`;
+- release candidate source and artifact qualification;
+- public `v0.2.0-rc.1` creation and immutable asset observation;
+- SQLite and PostgreSQL migration/upgrade coverage;
+- backup/restore, updater transaction, and rollback qualification;
+- real `restartPanel`, Xray/live VLESS, native TUIC, subscriptions,
+  AmneziaWG, multi-node, Traffic Control, quota, policy, Activity/DNS,
+  localization, and product-reality checks;
+- stable qualification and `v0.2.0` publication only if the exact public RC
+  passes without a product/runtime source change;
+- final evidence in `docs/31_V0_2_0_RELEASE_QUALIFICATION.md`.
 
 ## Non-goals
 
-- no new CatX feature work;
-- no unrelated refactor or generic cleanup;
-- no `v0.2.0` release or tag;
-- no direct merge to `main`;
-- no rewrite of CatX architecture;
-- no fork of `xray-core`;
-- no new sensitive-data collection;
-- no automatic punitive action based on one heuristic signal.
+- no new product features;
+- no new upstream sync;
+- no unrelated refactor or repository-wide formatting;
+- no Traffic Control attribution expansion;
+- no generic plugin system;
+- no architectural redesign;
+- no rewrite of historical `v0.1.0` notes;
+- no preemptive `rc.2`;
+- no stable-only product/runtime patch;
+- no modification of `AGENTS.md`;
+- no force/movement of existing tags.
+
+## Release and RC policy
+
+The only planned public candidate is `v0.2.0-rc.1`. Do not create `rc.2`
+unless public RC observation reveals a genuine source, release identity,
+artifact, migration/update/rollback, or runtime defect. Infrastructure-only
+failures are retried and classified. Observation-harness-only defects are
+fixed without mutating immutable RC assets.
+
+The RC tag must point exactly to the frozen qualified candidate. Stable must
+reuse the same proven product/runtime source; any RC-to-stable commit may only
+change the required release identity and evidence metadata. Stable publication
+requires a qualified `main` merge, annotated `v0.2.0`, canonical stable release
+workflow, Docker verification, and actual-public stable smoke.
+
+## Qualification policy
+
+Hosted Linux CI is authoritative. Required gates include `make verify`,
+`make verify-fork`, Go/race/SQLite/PostgreSQL/migration tests, generated and
+frontend checks, docs checks, release identity, updater/rollback, Xray,
+Docker, localization, non-publishing release matrix, and actual public RC
+observation. A skipped check is recorded as skipped with its reason, never as
+pass.
+
+Before tagging, the branch must be clean and pushed, all exact-SHA required
+checks must be green, and the candidate SHA must be recorded in this file,
+`TASK_QUEUE.md`, and `docs/31_V0_2_0_RELEASE_QUALIFICATION.md`.
+
+Every risky apply or release operation follows:
+
+```text
+snapshot → validate → apply → healthcheck → commit known-good state
+FAIL → restore previous state → restart/reload → healthcheck → audit failure
+```
+
+The optional Claude review workflow is not a source qualification gate unless
+repository governance explicitly makes it required. If it appears again with
+missing credentials, record the infrastructure condition without fabricating a
+review or blocking an otherwise qualified release.
 
 ## Required reading
 
@@ -77,31 +122,12 @@ was merged into `develop`; no release or tag was published.
 - `docs/15_DEFINITION_OF_DONE.md`
 - `docs/19_REPOSITORY_MAP.md`
 
-## Qualification policy
+## Completion condition
 
-The exact sync merge and every focused correction must be recorded in
-`docs/30_UPSTREAM_3_9_0_SYNC.md`. No source changes may be made after the
-exact qualified candidate is frozen without rerunning the affected gates.
+Do not mark this package complete until the final public stable qualification
+record contains the RC and stable candidate/tag/release/observer/Docker/main
+SHAs and URLs, migration/upgrade/backup/restore/updater/rollback evidence,
+runtime and product-reality evidence, and immutable-tag verification.
 
-`make verify`, `make verify-fork`, hosted Linux qualification, SQLite and
-PostgreSQL migration coverage, generated-artifact checks, frontend checks,
-runtime smoke, and the non-publishing release matrix are required where the
-environment supports them. A check that was not run is not recorded as pass.
-
-The real `restartPanel` lifecycle must preserve persisted CatX flags, schema
-preparation/runtime-configuration separation, reload error propagation, and
-Traffic Control rollback ownership. With all CatX features disabled, behavior
-must follow integrated upstream `v3.9.0` semantics as closely as possible.
-
-Do not modify `AGENTS.md` unless a new permanent repository-wide invariant is
-discovered; stop and report the proposed wording before doing so.
-
-## Completion record
-
-- upstream merge commit: `9335eb4af5ab4c73976fdcbeda875926400e53f8`;
-- final qualified code candidate: `196ca986414bcc8e6ec7af4a9d807669546faaee`;
-- sync PR: [#4](https://github.com/CatCodeArbelin/CatX-UI/pull/4);
-- `develop` merge commit: `c5f2e4e0165d96577af3f0e9d3b40810a98e7764`;
-- `main` remains `7cb97e13def59280e92e5667d3f43ac23db8d470`;
-- Xray version after sync: `26.9.30`;
-- release publication and tag movement: not performed.
+At completion set this file and `TASK_QUEUE.md` to `COMPLETE`. Finish with
+exactly one required release status phrase from the package request.

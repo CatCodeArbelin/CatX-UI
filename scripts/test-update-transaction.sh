@@ -27,13 +27,13 @@ assert_file() {
 
 arch() { echo amd64; }
 
-for valid_tag in "${CATX_DEV_RELEASE_TAG}" "v0.1.0" "v${CATX_RC_VERSION}"; do
+for valid_tag in "${CATX_DEV_RELEASE_TAG}" "v0.1.0" "v0.2.0" "v${CATX_RC_VERSION}"; do
     _catx_validate_tag "$valid_tag" || {
         echo "FAIL: valid CatX tag rejected: $valid_tag" >&2
         failures=$((failures + 1))
     }
 done
-for invalid_tag in "v0.1.0-rc" "v0.1.0-rc.01" "v0.1.0-beta.1" "v0.1.0-rc.1+build"; do
+for invalid_tag in "v0.2.0-rc" "v0.2.0-rc.01" "v0.2.0-beta.1" "v0.2.0-rc.1+build"; do
     if _catx_validate_tag "$invalid_tag"; then
         echo "FAIL: malformed or unapproved CatX tag accepted: $invalid_tag" >&2
         failures=$((failures + 1))
@@ -67,7 +67,7 @@ rm -rf "$archive_root"
 
 make_binary() {
     local path="$1" version="$2"
-    local release_channel=stable release_version=0.1.0
+    local release_channel=stable release_version=0.2.0
     if [[ "$version" == rc ]]; then
         release_channel=rc
         release_version="$CATX_RC_VERSION"
@@ -81,7 +81,7 @@ case "\${1:-}" in
         exit 0
         ;;
     release-info)
-        printf 'product=CatX-UI\nrepository=CatCodeArbelin/CatX-UI\nfork_version=0.1.0\nrelease_version=${release_version}\nupstream_base_version=3.9.0\nbundled_xray_version=26.9.30\nchannel=${release_channel}\nbuild_commit=\n'
+        printf 'product=CatX-UI\nrepository=CatCodeArbelin/CatX-UI\nfork_version=0.2.0\nrelease_version=${release_version}\nupstream_base_version=3.9.0\nbundled_xray_version=26.9.30\nchannel=${release_channel}\nbuild_commit=\n'
         ;;
 esac
 EOF
