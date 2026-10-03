@@ -776,7 +776,7 @@ Release identity:
 - previous stable: `v0.1.0` at runtime SHA `fd28ea7144147d9164b70810d4a24872a3d48b4f`;
 - fork version: `0.2.0`;
 - first RC: `0.2.0-rc.1`;
-- frozen RC candidate source: `6a7e7aa6d9dcec4214ad0a7ba5aefc1cc9e0e998`;
+- frozen RC candidate source: `f9178025d79e8bc403cf7f3f77f83aab3028965a`;
 - upstream: `MHSanaei/3x-ui v3.9.0` at `3cd4bf504c3cd8ea9b1c1fdb032a9796c5c43ddb`;
 - upstream integration merge: `c5f2e4e0165d96577af3f0e9d3b40810a98e7764`;
 - Xray: `26.9.30`.
