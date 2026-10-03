@@ -8,25 +8,25 @@ not a duplicate of the general maintenance procedure in
 
 ## Candidate and ancestry
 
-| Item                          | Value                                      |
-| ----------------------------- | ------------------------------------------ |
-| CatX integration base         | `65957a8988b5b51c4ac01dbd1121f04b55af6c8a` |
-| Strategy merge SHA            | `7cb97e13def59280e92e5667d3f43ac23db8d470` |
-| Develop reconciliation SHA    | `65957a8988b5b51c4ac01dbd1121f04b55af6c8a` |
-| Upstream old tag              | `v3.8.5`                                   |
-| Upstream old SHA              | `7ef22f94c950ff09f0870e2295fa65ad5968742c` |
-| Upstream new tag              | `v3.9.0`                                   |
-| Upstream new SHA              | `3cd4bf504c3cd8ea9b1c1fdb032a9796c5c43ddb` |
-| Upstream commit count         | `99`                                       |
-| Changed-path count            | `563`                                      |
-| Sensitive-path count          | `224`                                      |
-| CatX-overlap count            | `64`                                       |
-| Sync branch                   | `sync/upstream-v3.9.0`                     |
-| Upstream merge SHA            | pending conflict resolution                |
-| Final qualified candidate SHA | pending                                    |
-| Sync PR                       | pending                                    |
-| Develop merge SHA             | pending                                    |
-| Final develop SHA             | pending                                    |
+| Item                          | Value                                                  |
+| ----------------------------- | ------------------------------------------------------ |
+| CatX integration base         | `65957a8988b5b51c4ac01dbd1121f04b55af6c8a`             |
+| Strategy merge SHA            | `7cb97e13def59280e92e5667d3f43ac23db8d470`             |
+| Develop reconciliation SHA    | `65957a8988b5b51c4ac01dbd1121f04b55af6c8a`             |
+| Upstream old tag              | `v3.8.5`                                               |
+| Upstream old SHA              | `7ef22f94c950ff09f0870e2295fa65ad5968742c`             |
+| Upstream new tag              | `v3.9.0`                                               |
+| Upstream new SHA              | `3cd4bf504c3cd8ea9b1c1fdb032a9796c5c43ddb`             |
+| Upstream commit count         | `99`                                                   |
+| Changed-path count            | `563`                                                  |
+| Sensitive-path count          | `224`                                                  |
+| CatX-overlap count            | `64`                                                   |
+| Sync branch                   | `sync/upstream-v3.9.0`                                 |
+| Upstream merge SHA            | `9335eb4af5ab4c73976fdcbeda875926400e53f8`             |
+| Final qualified candidate SHA | `b2627c616c8d7c6fb18f127b72c0a01c4c68898d`             |
+| Sync PR                       | [#4](https://github.com/CatCodeArbelin/CatX-UI/pull/4) |
+| Develop merge SHA             | pending                                                |
+| Final develop SHA             | pending                                                |
 
 ## Conflict inventory
 
@@ -64,34 +64,34 @@ compatibility.
 
 ## Verification
 
-| Check                               | Result  | Evidence                                 |
-| ----------------------------------- | ------- | ---------------------------------------- |
-| `make verify`                       | pending | hosted/local result to be recorded       |
-| `make verify-fork`                  | pending | hosted/local result to be recorded       |
-| Go tests                            | pending | hosted/local result to be recorded       |
-| Go race tests                       | pending | hosted/local result to be recorded       |
-| SQLite migration qualification      | pending | fresh and supported upgrade              |
-| PostgreSQL migration qualification  | pending | fresh and supported upgrade              |
-| Generated drift                     | pending | authoritative generators                 |
-| Frontend lint/typecheck/tests/build | pending | hosted result                            |
-| Frontend visual gate                | pending | required only if declared by affected UX |
-| Xray config/start/reload            | pending | candidate and runtime smoke              |
-| Restart Panel regression            | pending | real endpoint lifecycle                  |
-| Multi-node/runtime                  | pending | hosted/disposable evidence               |
-| Traffic Control                     | pending | capability/apply/reconcile/rollback      |
-| Feature-off compatibility           | pending | integrated upstream baseline             |
-| Non-publishing release matrix       | pending | exact candidate                          |
-| Disposable Linux smoke              | pending | synthetic data only                      |
-| Native TUIC smoke                   | pending | if active in candidate                   |
-| Dependency audit                    | pending | production dependency graph              |
-| `git diff --check`                  | pending | final candidate                          |
+| Check                               | Result       | Evidence                               |
+| ----------------------------------- | ------------ | -------------------------------------- |
+| `make verify`                       | success      | hosted `verify-fork`                   |
+| `make verify-fork`                  | success      | hosted `verify-fork`                   |
+| Go tests                            | success      | hosted `go-test`                       |
+| Go race tests                       | success      | hosted `race`                          |
+| SQLite migration qualification      | success      | hosted fork verification               |
+| PostgreSQL migration qualification  | success      | hosted `postgres-durable-first`        |
+| Generated drift                     | success      | hosted `codegen` and fork verification |
+| Frontend lint/typecheck/tests/build | success      | hosted `frontend`                      |
+| Frontend visual gate                | not required | no visual-approval gate declared       |
+| Xray config/start/reload            | success      | hosted fork verification               |
+| Restart Panel regression            | success      | hosted fork verification               |
+| Multi-node/runtime                  | success      | hosted fork verification               |
+| Traffic Control                     | success      | hosted fork verification               |
+| Feature-off compatibility           | success      | hosted fork verification               |
+| Non-publishing release matrix       | success      | hosted build/artifact qualification    |
+| Disposable Linux smoke              | skipped      | workflow gate not enabled for this PR  |
+| Native TUIC smoke                   | success      | hosted Go, race, and fork verification |
+| Dependency audit                    | success      | hosted `govulncheck`                   |
+| `git diff --check`                  | success      | local and hosted verification          |
 
 ## Final record
 
-- final sync merge SHA: pending;
-- post-merge correction commits: pending;
-- final exact qualified candidate SHA: pending;
+- final sync merge SHA: `9335eb4af5ab4c73976fdcbeda875926400e53f8`;
+- post-merge correction commits: `c38b640a`, `f3168d86`, `a46aa3fd`, `7b64e878`, `b2627c61`;
+- final exact qualified candidate SHA: `b2627c616c8d7c6fb18f127b72c0a01c4c68898d`;
 - final develop integration SHA: pending;
 - Xray version after sync: `26.9.30`;
-- migration/recovery result: pending;
+- migration/recovery result: hosted migration, updater transaction, and rollback checks passed;
 - release publication: explicitly not performed.
