@@ -399,10 +399,11 @@ if [[ "$PUBLIC_CHANNEL" == stable ]]; then
     api_get "/server/getPanelUpdateInfo" "$RUN_DIR/stable-update-info.json"
     cp -f "$RUN_DIR/stable-update-info.json" "$EVIDENCE_DIR/stable-update-info.json"
     if ! jq -e --arg repository "$RELEASE_REPOSITORY" \
-        --arg stable "$EXPECTED_STABLE_VERSION" --arg upstream "$EXPECTED_UPSTREAM_VERSION" \
+        --arg stable "$EXPECTED_STABLE_VERSION" --arg stable_tag "v${EXPECTED_STABLE_VERSION}" \
+        --arg upstream "$EXPECTED_UPSTREAM_VERSION" \
         --arg xray "$EXPECTED_XRAY_VERSION" \
         '.obj.channel == "stable" and .obj.currentVersion == $stable and
-         .obj.latestVersion == $stable and .obj.upstreamBaseVersion == $upstream and
+         .obj.latestVersion == $stable_tag and .obj.upstreamBaseVersion == $upstream and
          .obj.bundledXrayVersion == $xray and .obj.releaseRepository == $repository and
          .obj.updateAvailable == false' "$RUN_DIR/stable-update-info.json" >/dev/null; then
         echo "SANITIZED stable updater response:" >&2
