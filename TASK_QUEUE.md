@@ -727,6 +727,29 @@ features, publish a release, move any tag, or merge upstream into `main` or
 The `v3.9.0` assessment is a non-production dry run on
 `sync/upstream-v3.9.0`. Any actual upgrade is a separate work package.
 
+# Upstream Sync — 3x-ui v3.9.0 — CURRENT
+
+Branch: `sync/upstream-v3.9.0`
+
+Integration base: `65957a8988b5b51c4ac01dbd1121f04b55af6c8a`.
+
+Integrate exact upstream `v3.9.0` at
+`3cd4bf504c3cd8ea9b1c1fdb032a9796c5c43ddb` from the recorded
+`v3.8.5` base `7ef22f94c950ff09f0870e2295fa65ad5968742c`. Preserve upstream
+ancestry, CatX ownership, fixed fork hooks, migration/recovery invariants,
+feature-off compatibility, and the no-release boundary. This package has no
+new product feature scope and must not merge the sync directly into `main`.
+
+Known dry-run evidence is 99 upstream commits, 563 changed paths, 224
+sensitive paths, 64 CatX touchpoint overlaps, and 12 conflicts. The actual
+merge conflict list, semantic resolutions, verification, exact candidate SHA,
+sync PR, and `develop` merge SHA belong in
+`docs/30_UPSTREAM_3_9_0_SYNC.md` and must be updated as evidence is produced.
+
+The package is complete only after the exact qualified candidate is merged
+into `develop`; `v0.1.0`, RC tags, `main`, and release publication remain
+unchanged.
+
 # Operating Rules
 
 ## Branching

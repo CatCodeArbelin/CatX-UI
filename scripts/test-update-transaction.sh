@@ -81,7 +81,7 @@ case "\${1:-}" in
         exit 0
         ;;
     release-info)
-        printf 'product=CatX-UI\nrepository=CatCodeArbelin/CatX-UI\nfork_version=0.1.0\nrelease_version=${release_version}\nupstream_base_version=3.8.5\nbundled_xray_version=26.9.9\nchannel=${release_channel}\nbuild_commit=\n'
+        printf 'product=CatX-UI\nrepository=CatCodeArbelin/CatX-UI\nfork_version=0.1.0\nrelease_version=${release_version}\nupstream_base_version=3.9.0\nbundled_xray_version=26.9.30\nchannel=${release_channel}\nbuild_commit=\n'
         ;;
 esac
 EOF

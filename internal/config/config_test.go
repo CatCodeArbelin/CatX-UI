@@ -44,11 +44,11 @@ func TestReleaseVersionsRemainSeparate(t *testing.T) {
 	if GetForkVersion() != "0.1.0" {
 		t.Fatalf("fork version = %q, want 0.1.0", GetForkVersion())
 	}
-	if GetUpstreamBaseVersion() != "3.8.5" {
-		t.Fatalf("upstream base = %q, want 3.8.5", GetUpstreamBaseVersion())
+	if GetUpstreamBaseVersion() != "3.9.0" {
+		t.Fatalf("upstream base = %q, want 3.9.0", GetUpstreamBaseVersion())
 	}
-	if GetBundledXrayVersion() != "26.9.9" {
-		t.Fatalf("bundled Xray version = %q, want 26.9.9", GetBundledXrayVersion())
+	if GetBundledXrayVersion() != "26.9.30" {
+		t.Fatalf("bundled Xray version = %q, want 26.9.30", GetBundledXrayVersion())
 	}
 	if GetForkVersion() == GetUpstreamBaseVersion() || GetForkVersion() == GetBundledXrayVersion() {
 		t.Fatal("fork, upstream-base, and Xray versions must not be conflated")

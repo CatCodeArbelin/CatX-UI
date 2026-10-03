@@ -33,6 +33,8 @@ type trafficMutationBatch struct {
 	remotePlans      []trafficInboundUpdatePlan
 	nodeIDs          map[int]struct{}
 	groupQuotaEmails []string
+	// renewedEmails get their MTProto sidecar quota zeroed once the tick commits.
+	renewedEmails []string
 }
 
 type trafficInboundUpdatePlan struct{ oldInbound, newInbound model.Inbound }
