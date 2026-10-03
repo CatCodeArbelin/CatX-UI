@@ -1,0 +1,190 @@
+name: CatX v0.2.0 actual-public release observation
+
+on:
+  push:
+    tags:
+      - "v0.2.0-rc.1"
+      - "v0.2.0"
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Published CatX release tag to observe
+        required: true
+        default: v0.2.0-rc.1
+        type: string
+      release_commit:
+        description: Exact qualified commit recorded in the release metadata
+        required: true
+        default: ec3eb8cd535b32ca78f9c2edb73e7f50880e281f
+        type: string
+      release_channel:
+        description: Published release channel
+        required: true
+        default: rc
+        type: choice
+        options:
+          - rc
+          - stable
+
+permissions:
+  contents: read
+
+jobs:
+  observe-public-linux:
+    name: Observe actual public ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref_name }} assets on Linux
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    env:
+      PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/catx-v0-2-playwright
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.release_commit || github.ref }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install public locale probe dependencies
+        run: |
+          set -euo pipefail
+          npm ci
+          npx playwright install --with-deps chromium
+        working-directory: frontend
+
+      - name: Install Linux qualification dependencies
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends curl jq iproute2 nftables unzip
+          sudo modprobe ifb numifbs=8
+          sudo modprobe sch_htb
+          sudo modprobe sch_ingress
+          sudo modprobe cls_flower
+          sudo modprobe cls_fw
+          sudo modprobe act_mirred
+
+      - name: Wait for the actual published assets
+        env:
+          RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref_name }}
+          RELEASE_CHANNEL_INPUT: ${{ github.event_name == 'workflow_dispatch' && inputs.release_channel || '' }}
+          RELEASE_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_TAG" =~ ^v0\.2\.0(-rc\.[0-9]+)?$ ]] || {
+            echo "invalid v0.2.0 release tag: $RELEASE_TAG" >&2
+            exit 1
+          }
+          release_channel="$RELEASE_CHANNEL_INPUT"
+          if [[ -z "$release_channel" ]]; then
+            if [[ "$RELEASE_TAG" == *-rc.* ]]; then release_channel=rc; else release_channel=stable; fi
+          fi
+          case "$release_channel" in
+            rc) prerelease=true; latest=false ;;
+            stable) prerelease=false; latest=true ;;
+            *) echo "invalid release channel: $release_channel" >&2; exit 1 ;;
+          esac
+          for attempt in $(seq 1 120); do
+            if curl --fail --silent --show-error \
+              -H "Authorization: Bearer $RELEASE_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/CatCodeArbelin/CatX-UI/releases/tags/${RELEASE_TAG}" > "$RUNNER_TEMP/release.json"; then
+              if jq -e --arg tag "$RELEASE_TAG" --argjson prerelease "$prerelease" \
+                --arg a catx-ui-linux-amd64.tar.gz --arg b catx-ui-release-metadata.json \
+                '(.tag_name == $tag and .draft == false and .prerelease == $prerelease and ([.assets[].name] | index($a)) != null and ([.assets[].name] | index($b)) != null)' \
+                "$RUNNER_TEMP/release.json" >/dev/null; then
+                printf '%s\n' "$RELEASE_TAG" > "$RUNNER_TEMP/release-tag"
+                printf '%s\n' "$release_channel" > "$RUNNER_TEMP/release-channel"
+                exit 0
+              fi
+            fi
+            sleep 10
+          done
+          echo "published assets for ${RELEASE_TAG} were not ready" >&2
+          exit 1
+
+      - name: Observe the actual public release payload
+        env:
+          RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref_name }}
+          RELEASE_COMMIT_INPUT: ${{ github.event_name == 'workflow_dispatch' && inputs.release_commit || '' }}
+          EVIDENCE_DIR: ${{ runner.temp }}/catx-v0-2-public-linux-evidence
+        run: |
+          set -euo pipefail
+          public_version="${RELEASE_TAG#v}"
+          public_commit="$RELEASE_COMMIT_INPUT"
+          if [[ -z "$public_commit" ]]; then
+            git fetch --force --tags origin "refs/tags/${RELEASE_TAG}:refs/tags/${RELEASE_TAG}"
+            public_commit=$(git rev-parse "${RELEASE_TAG}^{commit}")
+          fi
+          sudo env \
+            "PATH=$PATH" \
+            "PLAYWRIGHT_BROWSERS_PATH=$PLAYWRIGHT_BROWSERS_PATH" \
+            CATX_PUBLIC_FORK_VERSION=0.2.0 \
+            CATX_PUBLIC_UPSTREAM_VERSION=3.9.0 \
+            CATX_PUBLIC_XRAY_VERSION=26.9.30 \
+            CATX_PUBLIC_STABLE_VERSION=0.2.0 \
+            CATX_RUN_ADMIN_QDISC_CHECK=1 \
+            CATX_PUBLIC_LOCALE_BROWSER=1 \
+            CATX_PUBLIC_LOCALE_PROBE_SCRIPT="$GITHUB_WORKSPACE/frontend/scripts/observe-public-locales.mjs" \
+            CATX_RC6_PUBLIC_TAG="$RELEASE_TAG" \
+            CATX_RC6_PUBLIC_VERSION="$public_version" \
+            CATX_RC6_PUBLIC_COMMIT="$public_commit" \
+            CATX_RC6_EVIDENCE_DIR="$EVIDENCE_DIR" \
+            bash scripts/staging/observe-rc2-linux.sh
+
+      - name: Observe the real restartPanel lifecycle on stable assets
+        if: ${{ (github.event_name == 'workflow_dispatch' && inputs.release_channel == 'stable') || (github.event_name == 'push' && github.ref_name == 'v0.2.0') }}
+        env:
+          RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref_name }}
+          RELEASE_COMMIT_INPUT: ${{ github.event_name == 'workflow_dispatch' && inputs.release_commit || '' }}
+          EVIDENCE_DIR: ${{ runner.temp }}/catx-v0-2-stable-restart-evidence
+        run: |
+          set -euo pipefail
+          public_version="${RELEASE_TAG#v}"
+          public_commit="$RELEASE_COMMIT_INPUT"
+          if [[ -z "$public_commit" ]]; then
+            git fetch --force --tags origin "refs/tags/${RELEASE_TAG}:refs/tags/${RELEASE_TAG}"
+            public_commit=$(git rev-parse "${RELEASE_TAG}^{commit}")
+          fi
+          sudo env \
+            "PATH=$PATH" \
+            "PLAYWRIGHT_BROWSERS_PATH=$PLAYWRIGHT_BROWSERS_PATH" \
+            CATX_STABLE_RESTART_REGRESSION_ONLY=1 \
+            CATX_PUBLIC_FORK_VERSION=0.2.0 \
+            CATX_PUBLIC_UPSTREAM_VERSION=3.9.0 \
+            CATX_PUBLIC_XRAY_VERSION=26.9.30 \
+            CATX_PUBLIC_STABLE_VERSION=0.2.0 \
+            CATX_PUBLIC_LOCALE_BROWSER=1 \
+            CATX_PUBLIC_LOCALE_PROBE_SCRIPT="$GITHUB_WORKSPACE/frontend/scripts/observe-public-locales.mjs" \
+            CATX_RC6_PUBLIC_TAG="$RELEASE_TAG" \
+            CATX_RC6_PUBLIC_VERSION="$public_version" \
+            CATX_RC6_PUBLIC_COMMIT="$public_commit" \
+            CATX_RC6_EVIDENCE_DIR="$EVIDENCE_DIR" \
+            bash scripts/staging/observe-rc2-linux.sh
+
+      - name: Summarize sanitized public evidence
+        if: always()
+        run: |
+          set -euo pipefail
+          for evidence in \
+            "$RUNNER_TEMP/catx-v0-2-public-linux-evidence" \
+            "$RUNNER_TEMP/catx-v0-2-stable-restart-evidence"; do
+            if [ -d "$evidence" ]; then
+              find "$evidence" -maxdepth 1 -type f -printf '%f\n' | sort
+              if [ -f "$evidence/observation.log" ]; then cat "$evidence/observation.log"; fi
+            fi
+          done
+
+      - name: Upload sanitized public evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: catx-v0-2-public-observation-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/catx-v0-2-public-linux-evidence
+            ${{ runner.temp }}/catx-v0-2-stable-restart-evidence
+          if-no-files-found: warn
+          retention-days: 30
