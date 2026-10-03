@@ -22,6 +22,7 @@ asset, observer, and publication results only.
 | Upstream SHA | `3cd4bf504c3cd8ea9b1c1fdb032a9796c5c43ddb` |
 | Upstream integration merge | `c5f2e4e0165d96577af3f0e9d3b40810a98e7764` |
 | Xray | `26.9.30` |
+| Frozen RC candidate source | `ec3eb8cd535b32ca78f9c2edb73e7f50880e281f` |
 
 The local `dev-latest` tag differs from the remote tag and was not force-updated
 or deleted. No `v0.2.0*` tag existed at package start.
@@ -46,7 +47,7 @@ assets, and container ownership are not acceptable in CatX runtime paths.
 
 | Milestone | Source/tag/workflow | Result |
 | --- | --- | --- |
-| RC source SHA | pending | not frozen |
+| RC source SHA | `ec3eb8cd535b32ca78f9c2edb73e7f50880e281f` | frozen; qualification pending |
 | RC pre-tag matrix | pending | not run |
 | Annotated tag `v0.2.0-rc.1` | pending | not created |
 | RC GitHub Release | pending | not published |
@@ -189,7 +190,7 @@ must not be advertised as universal.
 
 ## Final record
 
-- RC candidate SHA: pending;
+- RC candidate SHA: `ec3eb8cd535b32ca78f9c2edb73e7f50880e281f`;
 - RC tag target: pending;
 - RC Release URL/workflow: pending;
 - RC Docker result: pending;
