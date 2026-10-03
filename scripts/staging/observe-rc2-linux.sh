@@ -397,15 +397,24 @@ login
 
 if [[ "$PUBLIC_CHANNEL" == stable ]]; then
     api_get "/server/getPanelUpdateInfo" "$RUN_DIR/stable-update-info.json"
-    jq -e --arg repository "$RELEASE_REPOSITORY" \
+    cp -f "$RUN_DIR/stable-update-info.json" "$EVIDENCE_DIR/stable-update-info.json"
+    if ! jq -e --arg repository "$RELEASE_REPOSITORY" \
         --arg stable "$EXPECTED_STABLE_VERSION" --arg upstream "$EXPECTED_UPSTREAM_VERSION" \
         --arg xray "$EXPECTED_XRAY_VERSION" \
         '.obj.channel == "stable" and .obj.currentVersion == $stable and
          .obj.latestVersion == $stable and .obj.upstreamBaseVersion == $upstream and
          .obj.bundledXrayVersion == $xray and .obj.releaseRepository == $repository and
-         .obj.updateAvailable == false' "$RUN_DIR/stable-update-info.json" >/dev/null ||
+         .obj.updateAvailable == false' "$RUN_DIR/stable-update-info.json" >/dev/null; then
+        echo "SANITIZED stable updater response:" >&2
+        jq -c '{channel: .obj.channel, currentVersion: .obj.currentVersion,
+                latestVersion: .obj.latestVersion,
+                upstreamBaseVersion: .obj.upstreamBaseVersion,
+                bundledXrayVersion: .obj.bundledXrayVersion,
+                releaseRepository: .obj.releaseRepository,
+                updateAvailable: .obj.updateAvailable}' \
+            "$RUN_DIR/stable-update-info.json" >&2 || true
         fail "stable updater identity did not report current/latest $EXPECTED_STABLE_VERSION"
-    cp -f "$RUN_DIR/stable-update-info.json" "$EVIDENCE_DIR/stable-update-info.json"
+    fi
     log "PASS: updater reported stable $EXPECTED_STABLE_VERSION identity from the CatX repository"
 fi
 
