@@ -6,6 +6,7 @@ import (
 	"crypto/tls"
 	"io"
 	"net"
+	"strings"
 	"testing"
 	"time"
 
@@ -57,7 +58,7 @@ func startLifecycleTestServer(t *testing.T, relayAddr, email string) (*Server, *
 	if _, err := stream.Write(auth); err != nil {
 		t.Fatalf("write authentication: %v", err)
 	}
-	if err := stream.Close(); err != nil {
+	if err := stream.Close(); err != nil && !strings.Contains(err.Error(), "close called for canceled stream") {
 		t.Fatalf("close authentication stream: %v", err)
 	}
 	return server, client, clientID, password

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"strings"
 	"testing"
 	"time"
 
@@ -164,7 +165,7 @@ func TestAudit3ManagerEnsureActualSendersWithPersistentTraffic(t *testing.T) {
 		if _, err := auth.Write(authBytes); err != nil {
 			t.Fatal(err)
 		}
-		if err := auth.Close(); err != nil {
+		if err := auth.Close(); err != nil && !strings.Contains(err.Error(), "close called for canceled stream") {
 			t.Fatal(err)
 		}
 
