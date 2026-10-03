@@ -1,0 +1,114 @@
+name: CatX v0.2.0 actual-public upgrade qualification
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Published CatX target release tag
+        required: true
+        default: v0.2.0-rc.1
+        type: string
+      previous_tag:
+        description: Published CatX previous stable release tag
+        required: true
+        default: v0.1.0
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  public-upgrade:
+    name: Upgrade actual public previous assets to ${{ inputs.release_tag }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.ref }}
+          fetch-depth: 0
+
+      - name: Install qualification dependencies
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends jq sqlite3
+
+      - name: Download and verify actual public previous and target assets
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          PREVIOUS_TAG: ${{ inputs.previous_tag }}
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_TAG" =~ ^v0\.2\.0(-rc\.[0-9]+)?$ ]] || {
+            echo "invalid target release tag: $RELEASE_TAG" >&2
+            exit 1
+          }
+          [[ "$PREVIOUS_TAG" == v0.1.0 ]] || {
+            echo "only the CatX v0.1.0 previous stable is in scope: $PREVIOUS_TAG" >&2
+            exit 1
+          }
+          case "$RELEASE_TAG" in
+            v0.2.0-rc.*) expected_channel=rc; expected_version="${RELEASE_TAG#v}" ;;
+            v0.2.0) expected_channel=stable; expected_version=0.2.0 ;;
+            *) echo "unsupported target release tag: $RELEASE_TAG" >&2; exit 1 ;;
+          esac
+
+          mkdir -p release-assets legacy/public-v0.1.0
+          target_base="https://github.com/CatCodeArbelin/CatX-UI/releases/download/$RELEASE_TAG"
+          previous_base="https://github.com/CatCodeArbelin/CatX-UI/releases/download/$PREVIOUS_TAG"
+          for name in \
+            catx-ui-linux-amd64.tar.gz \
+            catx-ui-linux-amd64.tar.gz.sha256 \
+            catx-ui-install.sh \
+            catx-ui-update.sh \
+            catx-ui-update-lib.sh \
+            catx-ui.sh \
+            catx-ui-release-metadata.json; do
+            curl --fail --location --retry 5 --retry-all-errors --retry-delay 3 \
+              -o "release-assets/$name" "$target_base/$name"
+          done
+          curl --fail --location --retry 5 --retry-all-errors --retry-delay 3 \
+            -o previous.tar.gz "$previous_base/catx-ui-linux-amd64.tar.gz"
+          curl --fail --location --retry 5 --retry-all-errors --retry-delay 3 \
+            -o previous.tar.gz.sha256 "$previous_base/catx-ui-linux-amd64.tar.gz.sha256"
+          (cd release-assets && sha256sum -c catx-ui-linux-amd64.tar.gz.sha256)
+          sha256sum -c previous.tar.gz.sha256
+
+          jq -e --arg tag "$RELEASE_TAG" --arg channel "$expected_channel" \
+            --arg version "$expected_version" \
+            '.product == "CatX-UI" and .repository == "CatCodeArbelin/CatX-UI" and
+             .forkVersion == "0.2.0" and .upstreamBaseVersion == "3.9.0" and
+             .bundledXrayVersion == "26.9.30" and .channel == $channel and
+             .releaseVersion == $version and .releaseTag == $tag' \
+            release-assets/catx-ui-release-metadata.json >/dev/null
+
+          tar -xOzf previous.tar.gz x-ui/x-ui > legacy/public-v0.1.0/x-ui
+          chmod +x legacy/public-v0.1.0/x-ui
+          grep -Fxq 'product=CatX-UI' <(legacy/public-v0.1.0/x-ui release-info)
+          grep -Fxq 'channel=stable' <(legacy/public-v0.1.0/x-ui release-info)
+          grep -Fxq 'release_version=0.1.0' <(legacy/public-v0.1.0/x-ui release-info)
+          for label in production-baseline pre-rc-develop rc1-public rc3-public rc4-public; do
+            mkdir -p "legacy/$label"
+            cp legacy/public-v0.1.0/x-ui "legacy/$label/x-ui"
+          done
+
+      - name: Run disposable upgrade and rollback path with public assets
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          set -o pipefail
+          bash scripts/staging/test-linux-release-path.sh release-assets legacy "$RELEASE_TAG" \
+            2>&1 | tee "$RUNNER_TEMP/catx-v0-2-public-upgrade.log"
+
+      - name: Publish sanitized qualification summary
+        if: always()
+        run: |
+          set -euo pipefail
+          if [ -f "$RUNNER_TEMP/catx-v0-2-public-upgrade.log" ]; then
+            {
+              echo '### Actual-public upgrade qualification'
+              sed -E 's/(password|passwd|token|cookie|authorization)[=:][^[:space:]]+/\1=<redacted>/Ig' \
+                "$RUNNER_TEMP/catx-v0-2-public-upgrade.log" | tail -n 240
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi

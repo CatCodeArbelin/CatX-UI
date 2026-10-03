@@ -37,7 +37,7 @@ or deleted. No `v0.2.0*` tag existed at package start.
 | Upstream version   | `3.9.0`                          | `3.9.0`                          | PASS — artifact metadata     |
 | Xray version       | `26.9.30`                        | `26.9.30`                        | PASS — artifact metadata     |
 | Release repository | `CatCodeArbelin/CatX-UI`         | `CatCodeArbelin/CatX-UI`         | PASS — CatX-owned            |
-| Docker namespace   | `ghcr.io/catcodearbelin/catx-ui` | `ghcr.io/catcodearbelin/catx-ui` | public check pending         |
+| Docker namespace   | `ghcr.io/catcodearbelin/catx-ui` | `ghcr.io/catcodearbelin/catx-ui` | RC workflow pending; stable pending |
 
 Authoritative version sources and every release/updater/install path must be
 audited before the RC candidate is frozen. Official upstream release URLs,
@@ -47,13 +47,13 @@ assets, and container ownership are not acceptable in CatX runtime paths.
 
 | Milestone                     | Source/tag/workflow                                                                   | Result                                 |
 | ----------------------------- | ------------------------------------------------------------------------------------- | -------------------------------------- |
-| RC source SHA                 | `f9178025d79e8bc403cf7f3f77f83aab3028965a`                                            | frozen; qualification pending          |
+| RC source SHA                 | `f9178025d79e8bc403cf7f3f77f83aab3028965a`                                            | PASS — frozen and publicly observed    |
 | RC pre-tag matrix             | [run 37147211709](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37147211709) | PASS — non-publishing RC qualification |
-| Annotated tag `v0.2.0-rc.1`   | pending                                                                               | not created                            |
-| RC GitHub Release             | pending                                                                               | not published                          |
-| RC release workflow           | [run 37147211709](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37147211709) | PASS — artifacts/staging               |
-| RC Docker result              | pending                                                                               | not published                          |
-| Actual-public RC observer     | pending                                                                               | not run                                |
+| Annotated tag `v0.2.0-rc.1`   | `v0.2.0-rc.1 → f9178025d79e8bc403cf7f3f77f83aab3028965a`                              | PASS — annotated, immutable, exact target |
+| RC GitHub Release             | [v0.2.0-rc.1](https://github.com/CatCodeArbelin/CatX-UI/releases/tag/v0.2.0-rc.1)      | PASS — published prerelease            |
+| RC release workflow           | [run 37149015516](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37149015516) | PASS — full assets/staging             |
+| RC Docker result              | pending                                                                               | public Docker workflow still running   |
+| Actual-public RC observer     | [run 37149148734](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37149148734), [artifact 11283755337](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37149148734/artifacts/11283755337) | PASS — published assets, clean Linux, live VLESS, locale, TC/quota |
 | Stable source SHA             | pending                                                                               | not frozen                             |
 | Main merge SHA                | pending                                                                               | not merged                             |
 | Final main SHA                | pending                                                                               | not established                        |
@@ -91,8 +91,8 @@ never converted to pass.
 | Release identity                                             | PASS    | [RC release run 37147211709](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37147211709)                                                                                 |
 | Updater transaction                                          | PASS    | [smoke run 37146928692](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37146928692) and [RC staging](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37147211709) |
 | Rollback                                                     | PASS    | [RC staging run 37147211709](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37147211709)                                                                                 |
-| Xray config/start/reload                                     | pending | Xray `26.9.30`                                                                                                                                                                   |
-| Docker build                                                 | pending | non-publishing and public artifact checks                                                                                                                                        |
+| Xray config/start/reload                                     | PASS    | [public RC observer 37149148734](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37149148734)                                                                            |
+| Docker build                                                 | pending | [public RC Docker run 37149015510](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37149015510) still running                                                             |
 | `git diff --check`                                           | PASS    | local verification                                                                                                                                                               |
 
 ## Database, backup, and restore
@@ -135,25 +135,25 @@ never fetch official upstream `3x-ui` binaries.
 | Evidence                               | Result  | Run / artifact                                                                                   |
 | -------------------------------------- | ------- | ------------------------------------------------------------------------------------------------ |
 | Installer compatibility                | PASS    | [RC staging run 37147211709](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37147211709) |
-| v0.1.0 → public RC updater             | pending | actual published assets                                                                          |
+| v0.1.0 → public RC updater             | pending | actual published assets; explicit public upgrade run still required                             |
 | RC candidate → v0.1.0 rollback         | PASS    | [RC staging run 37147211709](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37147211709) |
-| Real enabled `restartPanel` lifecycle  | pending | persisted flags and active runtimes                                                              |
-| Real disabled `restartPanel` lifecycle | pending | persisted flags and inactive runtimes                                                            |
+| Real enabled `restartPanel` lifecycle  | PASS    | [public RC restart regression 37150043169](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37150043169)                                            |
+| Real disabled `restartPanel` lifecycle | PASS    | [public RC restart regression 37150043169](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37150043169)                                            |
 
 ## Runtime and protocol qualification
 
 | Area                                | Result  | Required evidence                                          |
 | ----------------------------------- | ------- | ---------------------------------------------------------- |
-| Xray config validation/start/reload | pending | generated config plus live Xray                            |
-| Live synthetic VLESS                | pending | actual proxy traffic and counters                          |
-| Subscription generation             | pending | standard/JSON/Clash/Happ/TUIC as applicable                |
-| Native TUIC                         | pending | config, auth, live data, traffic, restart, shutdown        |
-| AmneziaWG/WireGuard                 | pending | focused changed-area smoke                                 |
-| Multi-node                          | pending | fanout, reconnect, reset, capability state                 |
-| Traffic Control                     | pending | capability, apply, reconcile, remove, no-clobber, rollback |
-| Quota lifecycle                     | pending | group quota and fixed/rolling windows where implemented    |
-| Policy                              | pending | decoration and representative decision flow                |
-| Activity/DNS                        | pending | evidence and feature-off behavior                          |
+| Xray config validation/start/reload | PASS | [public RC observer 37149148734](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37149148734) |
+| Live synthetic VLESS                | PASS | [public RC observer 37149148734](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37149148734) |
+| Subscription generation             | PASS | [public RC observer 37149148734](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37149148734) |
+| Native TUIC                         | PASS | [hosted CI / RC matrix 37149138545](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37149138545) |
+| AmneziaWG/WireGuard                 | PASS | [hosted CI / RC matrix 37149138545](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37149138545) |
+| Multi-node                          | PASS | [hosted CI / RC matrix 37149138545](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37149138545) |
+| Traffic Control                     | PASS | [public RC observer 37149148734](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37149148734) |
+| Quota lifecycle                     | PASS | [public RC observer 37149148734](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37149148734) |
+| Policy                              | PASS | [public RC observer 37149148734](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37149148734) |
+| Activity/DNS                        | PASS | [public RC observer 37149148734](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37149148734) |
 
 ## Product, localization, and public observation
 
@@ -166,12 +166,12 @@ must not be advertised as universal.
 
 | Area                                | Result  | Evidence                                |
 | ----------------------------------- | ------- | --------------------------------------- |
-| Russian LTR                         | pending | navigation, CatX pages, settings, forms |
-| Persian RTL                         | pending | navigation, CatX pages, settings, forms |
-| Actual-public RC clean install      | pending | public `v0.2.0-rc.1` assets             |
-| Actual-public RC v0.1.0 upgrade     | pending | public `v0.2.0-rc.1` assets             |
-| Actual-public RC updater identity   | pending | CatX owner/version checks               |
-| Actual-public RC Docker             | pending | namespace, manifest, OCI revision       |
+| Russian LTR                         | PASS | [public RC observer 37149148734](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37149148734) |
+| Persian RTL                         | PASS | [public RC observer 37149148734](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37149148734) |
+| Actual-public RC clean install      | PASS | [public RC observer 37149148734](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37149148734) |
+| Actual-public RC v0.1.0 upgrade     | pending | dedicated public upgrade run required  |
+| Actual-public RC updater identity   | PASS | [public RC observer 37149148734](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37149148734) |
+| Actual-public RC Docker             | pending | [Docker run 37149015510](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37149015510) |
 | Actual-public stable smoke          | pending | public `v0.2.0` assets                  |
 | Actual-public stable v0.1.0 upgrade | pending | public `v0.2.0` assets                  |
 
@@ -191,6 +191,14 @@ must not be advertised as universal.
 - Non-publishing RC qualification [37147211709](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37147211709)
   passed artifact inspection, Linux install/upgrade/rollback rehearsal, and
   PostgreSQL migration staging.
+- The first public RC restart-regression dispatch [37149838636](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37149838636)
+  stopped at an obsolete historical-version expectation before lifecycle
+  execution. The observer-only expectation fix was committed as `a0b17880`;
+  the same immutable RC assets then passed [37150043169](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37150043169).
+- Hosted race attempt 1 had a transient TUIC test failure and attempt 2
+  repeated the same flaky `close called for canceled stream` assertion without
+  a data-race report; the failed race job was rerun again and must remain part
+  of the qualification audit trail.
 - The optional Claude review workflow is not a release gate unless governance
   explicitly requires it; missing credentials must be recorded as tooling
   infrastructure rather than fabricated review evidence.
@@ -198,10 +206,10 @@ must not be advertised as universal.
 ## Final record
 
 - RC candidate SHA: `f9178025d79e8bc403cf7f3f77f83aab3028965a`;
-- RC tag target: pending;
-- RC Release URL/workflow: pending;
-- RC Docker result: pending;
-- public RC observer: pending;
+- RC tag target: `v0.2.0-rc.1 → f9178025d79e8bc403cf7f3f77f83aab3028965a`;
+- RC Release URL/workflow: [release](https://github.com/CatCodeArbelin/CatX-UI/releases/tag/v0.2.0-rc.1), [workflow 37149015516](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37149015516);
+- RC Docker result: pending run [37149015510](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37149015510);
+- public RC observer: [37149148734](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37149148734), restart regression [37150043169](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37150043169);
 - stable candidate SHA: pending;
 - main merge SHA/final main SHA: pending;
 - stable tag target: pending;
