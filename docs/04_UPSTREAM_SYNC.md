@@ -6,17 +6,17 @@ it does not authorize a sync, release, or production deployment.
 
 ## Source and branch model
 
-| Role | Ref | Policy |
-| --- | --- | --- |
-| Upstream | `MHSanaei/3x-ui` | Read-only source of upstream stable tags and history. |
-| Downstream | `CatCodeArbelin/CatX-UI` | Product, fork modules, qualification, and releases. |
-| `upstream` remote | `https://github.com/MHSanaei/3x-ui.git` | Fetch only; its push URL is deliberately disabled. |
-| `origin` remote | `https://github.com/CatCodeArbelin/CatX-UI.git` | Downstream branches and review. |
-| `main` | production | Only qualified CatX releases. |
-| `develop` | integration | Receives reviewed syncs and CatX work after qualification. |
-| `sync/upstream-vX.Y.Z` | disposable sync branch | Starts at the selected CatX integration baseline and merges one exact upstream stable tag. Never deploy directly. |
-| `feature/*` | focused work | CatX changes, including this strategy package. |
-| `release/*` | optional short-lived qualification | Only when a release candidate needs an isolated release gate. |
+| Role                   | Ref                                             | Policy                                                                                                            |
+| ---------------------- | ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Upstream               | `MHSanaei/3x-ui`                                | Read-only source of upstream stable tags and history.                                                             |
+| Downstream             | `CatCodeArbelin/CatX-UI`                        | Product, fork modules, qualification, and releases.                                                               |
+| `upstream` remote      | `https://github.com/MHSanaei/3x-ui.git`         | Fetch only; its push URL is deliberately disabled.                                                                |
+| `origin` remote        | `https://github.com/CatCodeArbelin/CatX-UI.git` | Downstream branches and review.                                                                                   |
+| `main`                 | production                                      | Only qualified CatX releases.                                                                                     |
+| `develop`              | integration                                     | Receives reviewed syncs and CatX work after qualification.                                                        |
+| `sync/upstream-vX.Y.Z` | disposable sync branch                          | Starts at the selected CatX integration baseline and merges one exact upstream stable tag. Never deploy directly. |
+| `feature/*`            | focused work                                    | CatX changes, including this strategy package.                                                                    |
+| `release/*`            | optional short-lived qualification              | Only when a release candidate needs an isolated release gate.                                                     |
 
 CatX-specific work lands in focused feature branches, then `develop`. A sync
 branch is created from the current integration baseline (`develop` when it is
@@ -77,16 +77,16 @@ make verify-fork
 
 ## Conflict classification and resolution
 
-| Class | Resolution | Required evidence |
-| --- | --- | --- |
-| A. UPSTREAM-ONLY | Accept upstream behavior after review. | Relevant upstream tests and regression scope. |
-| B. CATX-HOOK | Preserve the fixed hook at the new upstream boundary; keep fork logic in fork-owned modules. | Hook existence and feature-off tests. |
-| C. SEMANTIC-CONFLICT | Compare intended behavior, choose explicitly, and document the decision. | Targeted tests and reviewer sign-off. |
-| D. GENERATED | Regenerate from authoritative sources; never hand-merge generated output. | Generator/build verification and diff review. |
-| E. MIGRATION/SCHEMA | Review ordering, SQLite/PostgreSQL behavior, indexes, retention, and recovery. | Fresh, upgrade, rollback, and both-engine migration evidence. |
-| F. RELEASE/UPDATER | Preserve CatX identity and reject upstream-owned assets. | Release identity, checksum, updater, and rollback tests. |
-| G. FRONTEND/UX | Keep the upstream shell and adapt CatX routes/navigation at descriptors or adapters. | Type/build, route, locale, and visual checks where declared. |
-| H. SECURITY/PRIVACY | Preserve no-MITM and no-sensitive-body collection boundaries; stop on ambiguity. | Security/privacy review and negative tests. |
+| Class                | Resolution                                                                                   | Required evidence                                             |
+| -------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| A. UPSTREAM-ONLY     | Accept upstream behavior after review.                                                       | Relevant upstream tests and regression scope.                 |
+| B. CATX-HOOK         | Preserve the fixed hook at the new upstream boundary; keep fork logic in fork-owned modules. | Hook existence and feature-off tests.                         |
+| C. SEMANTIC-CONFLICT | Compare intended behavior, choose explicitly, and document the decision.                     | Targeted tests and reviewer sign-off.                         |
+| D. GENERATED         | Regenerate from authoritative sources; never hand-merge generated output.                    | Generator/build verification and diff review.                 |
+| E. MIGRATION/SCHEMA  | Review ordering, SQLite/PostgreSQL behavior, indexes, retention, and recovery.               | Fresh, upgrade, rollback, and both-engine migration evidence. |
+| F. RELEASE/UPDATER   | Preserve CatX identity and reject upstream-owned assets.                                     | Release identity, checksum, updater, and rollback tests.      |
+| G. FRONTEND/UX       | Keep the upstream shell and adapt CatX routes/navigation at descriptors or adapters.         | Type/build, route, locale, and visual checks where declared.  |
+| H. SECURITY/PRIVACY  | Preserve no-MITM and no-sensitive-body collection boundaries; stop on ambiguity.             | Security/privacy review and negative tests.                   |
 
 Upstream removals and renames are handled by understanding the replacement
 design, adapting CatX at the smallest supported boundary, removing obsolete
@@ -128,17 +128,17 @@ Fork-owned code is concentrated in `internal/forkext/**`,
 and the additive `scripts/` and workflow verification assets. The current
 upstream-touch inventory is:
 
-| Boundary | Current touchpoint | Rule |
-| --- | --- | --- |
-| Bootstrap/lifecycle | `main.go`; `internal/web/web.go` | Keep fixed install/start/stop calls; no feature logic in composition roots. |
-| Database/migrations | `internal/database/db.go` | One fork registration boundary; migrations remain fork-owned and ordered. |
-| Runtime/node dispatch | `internal/web/runtime/**`, node services | Reuse upstream local/remote dispatch; preserve capability degradation. |
-| Protected APIs | `internal/web/controller/api.go` and `frontend/src/forkext/registry.ts` | Mount under the existing authenticated boundary and shared descriptors. |
-| Xray compiler/apply | `internal/web/service/xray.go`, `internal/xray/**` | Decorate the completed upstream config; preserve order and rollback. |
-| Subscriptions | `main.go`, `internal/sub/**`, subscription service | Extend existing providers; do not create a parallel subscription engine. |
-| Frontend routes/navigation | `frontend/src/routes.tsx`, `AppSidebar.tsx`, command palette, endpoint catalog | Use fork-owned descriptors/adapters and preserve the upstream shell. |
-| Release/updater identity | `internal/forkrelease/**`, panel updater, `install.sh`, `update.sh`, `x-ui.sh` | CatX-owned sources only; never self-update into upstream. |
-| Verification | `Makefile`, `.github/workflows/fork-verify.yml`, `scripts/*` tests | Keep `make verify` unchanged and additive fork checks. |
+| Boundary                   | Current touchpoint                                                             | Rule                                                                        |
+| -------------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------------- |
+| Bootstrap/lifecycle        | `main.go`; `internal/web/web.go`                                               | Keep fixed install/start/stop calls; no feature logic in composition roots. |
+| Database/migrations        | `internal/database/db.go`                                                      | One fork registration boundary; migrations remain fork-owned and ordered.   |
+| Runtime/node dispatch      | `internal/web/runtime/**`, node services                                       | Reuse upstream local/remote dispatch; preserve capability degradation.      |
+| Protected APIs             | `internal/web/controller/api.go` and `frontend/src/forkext/registry.ts`        | Mount under the existing authenticated boundary and shared descriptors.     |
+| Xray compiler/apply        | `internal/web/service/xray.go`, `internal/xray/**`                             | Decorate the completed upstream config; preserve order and rollback.        |
+| Subscriptions              | `main.go`, `internal/sub/**`, subscription service                             | Extend existing providers; do not create a parallel subscription engine.    |
+| Frontend routes/navigation | `frontend/src/routes.tsx`, `AppSidebar.tsx`, command palette, endpoint catalog | Use fork-owned descriptors/adapters and preserve the upstream shell.        |
+| Release/updater identity   | `internal/forkrelease/**`, panel updater, `install.sh`, `update.sh`, `x-ui.sh` | CatX-owned sources only; never self-update into upstream.                   |
+| Verification               | `Makefile`, `.github/workflows/fork-verify.yml`, `scripts/*` tests             | Keep `make verify` unchanged and additive fork checks.                      |
 
 The implementation remains authoritative. This inventory is intentionally
 review-oriented; the report script derives the changed-file evidence and can
