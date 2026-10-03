@@ -30,8 +30,6 @@ jobs:
     name: Observe actual public ${{ inputs.release_tag }} assets on Linux
     runs-on: ubuntu-latest
     timeout-minutes: 70
-    env:
-      PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/catx-v0-2-playwright
     steps:
       - uses: actions/checkout@v7
         with:
@@ -45,6 +43,8 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install public locale probe dependencies
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/catx-v0-2-playwright
         run: |
           set -euo pipefail
           npm ci
@@ -117,7 +117,7 @@ jobs:
           fi
           sudo env \
             "PATH=$PATH" \
-            "PLAYWRIGHT_BROWSERS_PATH=$PLAYWRIGHT_BROWSERS_PATH" \
+            "PLAYWRIGHT_BROWSERS_PATH=$RUNNER_TEMP/catx-v0-2-playwright" \
             CATX_PUBLIC_FORK_VERSION=0.2.0 \
             CATX_PUBLIC_UPSTREAM_VERSION=3.9.0 \
             CATX_PUBLIC_XRAY_VERSION=26.9.30 \
@@ -147,7 +147,7 @@ jobs:
           fi
           sudo env \
             "PATH=$PATH" \
-            "PLAYWRIGHT_BROWSERS_PATH=$PLAYWRIGHT_BROWSERS_PATH" \
+            "PLAYWRIGHT_BROWSERS_PATH=$RUNNER_TEMP/catx-v0-2-playwright" \
             CATX_STABLE_RESTART_REGRESSION_ONLY=1 \
             CATX_PUBLIC_FORK_VERSION=0.2.0 \
             CATX_PUBLIC_UPSTREAM_VERSION=3.9.0 \
