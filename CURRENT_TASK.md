@@ -2,57 +2,96 @@
 
 ## Work Package
 
-`Upstream Maintenance Strategy — COMPLETE`
+`Upstream Sync — 3x-ui v3.9.0`
 
-This package defines and verifies the long-term, low-divergence maintenance
-process for CatX-UI. It adds no product features, performs no production sync,
-and must stop before any real upstream upgrade or CatX release.
+## Status
 
-## Baseline
+`CURRENT`
 
-- Starting `main`: `8f63afc6f1fdbac0f50d3bfd4f6f0bb8da4255fb`.
-- Stable product/runtime: `v0.1.0` at `fd28ea7144147d9164b70810d4a24872a3d48b4f`.
-- Recorded upstream base: `MHSanaei/3x-ui v3.8.5`.
-- Bundled Xray: `26.9.9`.
-- Actual upstream stable discovered during this package: `v3.9.0` at
-  `3cd4bf504c3cd8ea9b1c1fdb032a9796c5c43ddb`.
-- Strategy branch: `feature/upstream-maintenance-strategy`.
+This work package performs the actual merge-based integration of the exact
+upstream `v3.9.0` release into the CatX integration line. It must stop after
+the qualified sync is merged into `develop`.
 
-## Required outcome
+## Integration baseline
 
-Use `docs/04_UPSTREAM_SYNC.md` as the canonical operator procedure. Maintain
-the explicit upstream/downstream remote and branch model, release discovery,
-merge-based sync flow, conflict classes, sensitive-path review, CatX
-touchpoints, migration/recovery policy, feature-off compatibility, and
-PATCH/MINOR/MAJOR plus RC rules. `scripts/upstream-maintenance-report.sh` is
-advisory only and must never merge, publish, or deploy.
+- CatX integration base SHA: `65957a8988b5b51c4ac01dbd1121f04b55af6c8a`
+- Strategy PR: `https://github.com/CatCodeArbelin/CatX-UI/pull/3`
+- Strategy merge SHA: `7cb97e13def59280e92e5667d3f43ac23db8d470`
+- Develop reconciliation: `main → develop` merge SHA
+  `65957a8988b5b51c4ac01dbd1121f04b55af6c8a`
+- Previous upstream base: `MHSanaei/3x-ui v3.8.5`
+- Previous upstream base SHA: `7ef22f94c950ff09f0870e2295fa65ad5968742c`
+- Target upstream: `MHSanaei/3x-ui v3.9.0`
+- Target upstream SHA: `3cd4bf504c3cd8ea9b1c1fdb032a9796c5c43ddb`
+- Sync branch: `sync/upstream-v3.9.0`
+- Preserved dry-run branch: `sync/upstream-v3.9.0-dry-run`
 
-## Dry-run boundary
+## Known dry-run evidence
 
-Assess `v3.9.0` only on disposable `sync/upstream-v3.9.0`. Do not merge that
-branch into `develop` or `main`, do not resolve a substantial upgrade here,
-and make the actual upstream upgrade a separate work package.
+- upstream commits: `99`
+- changed upstream paths: `563`
+- sensitive paths: `224`
+- CatX touchpoint overlaps: `64`
+- dry-run merge conflicts: `12`
+- actual merge conflict count: pending capture
 
-## Completion record
+## Scope
 
-Final strategy SHA: `ca901e93328233de625c65fd0a92b0b66e270a6c`.
-Strategy implementation commit: `b68daf5fc7187d86a63aa2ec0288d343e19ebfd7`.
+- integrate upstream `v3.9.0` while preserving upstream ancestry;
+- preserve CatX architecture, product identity, and release identity;
+- adopt upstream implementations where they replace equivalent inherited
+  behavior;
+- adapt CatX hooks to the new upstream lifecycle boundaries;
+- audit and qualify database/migration, Xray, TUIC, AmneziaWG, client,
+  subscription, frontend/generated, updater, and feature-off behavior;
+- integrate the exact qualified candidate into `develop`.
 
-The non-production `sync/upstream-v3.9.0` branch was created from `main` at
-`8f63afc6f1fdbac0f50d3bfd4f6f0bb8da4255fb`. Merging exact upstream tag
-`v3.9.0` produced 12 conflicts and was aborted without a merge commit. The
-conflicts covered release/updater workflow and scripts, frontend dependency
-manifests, Go dependencies, panel/update code, client/inbound traffic code,
-and web lifecycle code. The upstream delta contained 563 changed paths, 224
-classified sensitive paths, and 64 known CatX touchpoint overlaps.
+## Non-goals
 
-Verification completed: upstream metadata/tag fetch, advisory report via Git
-Bash, Bash syntax check for the new report, and `git diff --check` passed.
-`make`, `make verify`, and `make verify-fork` were not run because `make` is
-unavailable on this Windows host; no full verification result is claimed.
+- no new CatX feature work;
+- no unrelated refactor or generic cleanup;
+- no `v0.2.0` release or tag;
+- no direct merge to `main`;
+- no rewrite of CatX architecture;
+- no fork of `xray-core`;
+- no new sensitive-data collection;
+- no automatic punitive action based on one heuristic signal.
 
-No merge SHA exists: the dry-run merge was intentionally aborted. `main`
-remains `8f63afc6f1fdbac0f50d3bfd4f6f0bb8da4255fb`; `develop` remains
-`ecd8ee1afbee4996f9a099d67014c4ab2236ae44`. The stable and RC tag targets
-remain unchanged. No CatX release was created, no upstream upgrade entered
-`main`, and no product feature was added.
+## Required reading
+
+- `AGENTS.md`
+- `CURRENT_TASK.md`
+- `TASK_QUEUE.md`
+- `docs/00_MASTER_SPEC.md`
+- `docs/01_ARCHITECTURE.md`
+- `docs/02_FEATURE_CATALOG.md`
+- `docs/04_UPSTREAM_SYNC.md`
+- `docs/05_TESTING_ROLLBACK_RELEASE.md`
+- `docs/06_DATABASE_MIGRATIONS.md`
+- `docs/08_FRONTEND_UX.md`
+- `docs/09_ANALYTICS_DNS.md`
+- `docs/10_POLICY_ENGINE.md`
+- `docs/11_QOS_TRAFFIC_CONTROL.md`
+- `docs/12_UPDATER_IDENTITY.md`
+- `docs/14_NON_GOALS.md`
+- `docs/15_DEFINITION_OF_DONE.md`
+- `docs/19_REPOSITORY_MAP.md`
+
+## Qualification policy
+
+The exact sync merge and every focused correction must be recorded in
+`docs/30_UPSTREAM_3_9_0_SYNC.md`. No source changes may be made after the
+exact qualified candidate is frozen without rerunning the affected gates.
+
+`make verify`, `make verify-fork`, hosted Linux qualification, SQLite and
+PostgreSQL migration coverage, generated-artifact checks, frontend checks,
+runtime smoke, and the non-publishing release matrix are required where the
+environment supports them. A check that was not run is not recorded as pass.
+
+The real `restartPanel` lifecycle must preserve persisted CatX flags, schema
+preparation/runtime-configuration separation, reload error propagation, and
+Traffic Control rollback ownership. With all CatX features disabled, behavior
+must follow integrated upstream `v3.9.0` semantics as closely as possible.
+
+Do not modify `AGENTS.md` unless a new permanent repository-wide invariant is
+discovered; stop and report the proposed wording before doing so.
