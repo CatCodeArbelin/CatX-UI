@@ -780,6 +780,7 @@ Release identity:
 - immutable RC tag: `v0.2.0-rc.1 → f9178025d79e8bc403cf7f3f77f83aab3028965a`;
 - public RC release: [v0.2.0-rc.1](https://github.com/CatCodeArbelin/CatX-UI/releases/tag/v0.2.0-rc.1);
 - actual-public RC observer: [run 37150948602](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37150948602) — PASS, including public `v0.1.0` upgrade/rollback;
+- RC Docker qualification: [run 37149015510](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37149015510), job `111295304468` — PASS on attempt 4; both GHCR aliases resolve to manifest `sha256:cc7021156c971ac1f23d3b9728a5720afcd5a3d04e76ea62495efd4eaf762adf` with OCI revision `f9178025d79e8bc403cf7f3f77f83aab3028965a`;
 - upstream: `MHSanaei/3x-ui v3.9.0` at `3cd4bf504c3cd8ea9b1c1fdb032a9796c5c43ddb`;
 - upstream integration merge: `c5f2e4e0165d96577af3f0e9d3b40810a98e7764`;
 - Xray: `26.9.30`.
