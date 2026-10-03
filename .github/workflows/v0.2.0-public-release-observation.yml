@@ -131,6 +131,63 @@ jobs:
             CATX_RC6_EVIDENCE_DIR="$EVIDENCE_DIR" \
             bash scripts/staging/observe-rc2-linux.sh
 
+      - name: Qualify actual public v0.1.0 to release upgrade
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_TAG" =~ ^v0\.2\.0(-rc\.[0-9]+)?$ ]] || {
+            echo "invalid target release tag: $RELEASE_TAG" >&2
+            exit 1
+          }
+          case "$RELEASE_TAG" in
+            v0.2.0-rc.*) expected_channel=rc; expected_version="${RELEASE_TAG#v}" ;;
+            v0.2.0) expected_channel=stable; expected_version=0.2.0 ;;
+            *) echo "unsupported target release tag: $RELEASE_TAG" >&2; exit 1 ;;
+          esac
+
+          asset_dir="$RUNNER_TEMP/catx-v0-2-public-upgrade-assets"
+          legacy_dir="$RUNNER_TEMP/catx-v0-2-public-upgrade-legacy"
+          mkdir -p "$asset_dir" "$legacy_dir/public-v0.1.0"
+          target_base="https://github.com/CatCodeArbelin/CatX-UI/releases/download/$RELEASE_TAG"
+          previous_base="https://github.com/CatCodeArbelin/CatX-UI/releases/download/v0.1.0"
+          for name in \
+            catx-ui-linux-amd64.tar.gz \
+            catx-ui-linux-amd64.tar.gz.sha256 \
+            catx-ui-install.sh \
+            catx-ui-update.sh \
+            catx-ui-update-lib.sh \
+            catx-ui.sh \
+            catx-ui-release-metadata.json; do
+            curl --fail --location --retry 5 --retry-all-errors --retry-delay 3 \
+              -o "$asset_dir/$name" "$target_base/$name"
+          done
+          curl --fail --location --retry 5 --retry-all-errors --retry-delay 3 \
+            -o "$RUNNER_TEMP/catx-v0-1.0.tar.gz" "$previous_base/catx-ui-linux-amd64.tar.gz"
+          curl --fail --location --retry 5 --retry-all-errors --retry-delay 3 \
+            -o "$RUNNER_TEMP/catx-v0-1.0.tar.gz.sha256" "$previous_base/catx-ui-linux-amd64.tar.gz.sha256"
+          (cd "$asset_dir" && sha256sum -c catx-ui-linux-amd64.tar.gz.sha256)
+          (cd "$RUNNER_TEMP" && sha256sum -c catx-v0-1.0.tar.gz.sha256)
+          jq -e --arg tag "$RELEASE_TAG" --arg channel "$expected_channel" \
+            --arg version "$expected_version" \
+            '.product == "CatX-UI" and .repository == "CatCodeArbelin/CatX-UI" and
+             .forkVersion == "0.2.0" and .upstreamBaseVersion == "3.9.0" and
+             .bundledXrayVersion == "26.9.30" and .channel == $channel and
+             .releaseVersion == $version and .releaseTag == $tag' \
+            "$asset_dir/catx-ui-release-metadata.json" >/dev/null
+          tar -xOzf "$RUNNER_TEMP/catx-v0-1.0.tar.gz" x-ui/x-ui > "$legacy_dir/public-v0.1.0/x-ui"
+          chmod +x "$legacy_dir/public-v0.1.0/x-ui"
+          grep -Fxq 'product=CatX-UI' <("$legacy_dir/public-v0.1.0/x-ui" release-info)
+          grep -Fxq 'channel=stable' <("$legacy_dir/public-v0.1.0/x-ui" release-info)
+          grep -Fxq 'release_version=0.1.0' <("$legacy_dir/public-v0.1.0/x-ui" release-info)
+          for label in production-baseline pre-rc-develop rc1-public rc3-public rc4-public; do
+            mkdir -p "$legacy_dir/$label"
+            cp "$legacy_dir/public-v0.1.0/x-ui" "$legacy_dir/$label/x-ui"
+          done
+          set -o pipefail
+          bash scripts/staging/test-linux-release-path.sh "$asset_dir" "$legacy_dir" "$RELEASE_TAG" \
+            2>&1 | tee "$RUNNER_TEMP/catx-v0-2-public-upgrade.log"
+
       - name: Observe the real restartPanel lifecycle on stable assets
         if: ${{ inputs.release_channel == 'stable' }}
         env:
