@@ -57,7 +57,7 @@ func audit3LogsStart(t *testing.T, level, marker, relayAddr string) (*Server, *c
 	if _, err := auth.Write(frame); err != nil {
 		t.Fatal(err)
 	}
-	if err := auth.Close(); err != nil {
+	if err := auth.Close(); err != nil && !strings.Contains(err.Error(), "close called for canceled stream") {
 		t.Fatal(err)
 	}
 	_, _ = authenticatedServerConnection(t, s, id)

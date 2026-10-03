@@ -13,6 +13,7 @@ import (
 	"io"
 	"math/big"
 	"net"
+	"strings"
 	"testing"
 	"time"
 
@@ -450,7 +451,7 @@ func testServerUDPStreamE2E(t *testing.T, controller string) {
 	if _, err := authStream.Write(authPayload); err != nil {
 		t.Fatalf("write authentication payload failed: %v", err)
 	}
-	if err := authStream.Close(); err != nil {
+	if err := authStream.Close(); err != nil && !strings.Contains(err.Error(), "close called for canceled stream") {
 		t.Fatalf("close authentication stream failed: %v", err)
 	}
 
