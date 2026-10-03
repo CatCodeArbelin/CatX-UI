@@ -759,6 +759,45 @@ Completion record:
 - Xray version after sync: `26.9.30`;
 - release publication and tag movement: not performed.
 
+# CatX v0.2.0 Release Qualification — CURRENT
+
+Branch: `feature/v0.2.0-release-qualification`
+
+Release baseline: `31a442cef876669aeae97ba9cb1e3e8888f42613`.
+
+Starting `origin/main` is `7cb97e13def59280e92e5667d3f43ac23db8d470` and is an
+ancestor of the release baseline. The package qualifies the existing CatX
+v3.9.0 integration for one public `v0.2.0-rc.1`, actual-public-artifact
+observation, and stable `v0.2.0` only if that exact RC passes. It is not an
+upstream sync and must not add product features or unrelated refactors.
+
+Release identity:
+
+- previous stable: `v0.1.0` at runtime SHA `fd28ea7144147d9164b70810d4a24872a3d48b4f`;
+- fork version: `0.2.0`;
+- first RC: `0.2.0-rc.1`;
+- upstream: `MHSanaei/3x-ui v3.9.0` at `3cd4bf504c3cd8ea9b1c1fdb032a9796c5c43ddb`;
+- upstream integration merge: `c5f2e4e0165d96577af3f0e9d3b40810a98e7764`;
+- Xray: `26.9.30`.
+
+Required evidence is maintained in
+`docs/31_V0_2_0_RELEASE_QUALIFICATION.md`: exact candidate SHAs, release
+identity, all verification categories, SQLite/PostgreSQL upgrades, backup and
+restore, updater transaction, rollback, real `restartPanel`, live Xray/TUIC,
+subscriptions, AmneziaWG, multi-node, Traffic Control/quota, policy,
+Activity/DNS, localization, non-publishing matrix, public RC observation,
+stable publication, and immutable-tag verification.
+
+Do not create `rc.2` unless public RC observation finds a genuine source,
+release, migration/update/rollback, artifact, or runtime defect. Do not mutate
+an immutable tag. Stable must reuse the proven product/runtime source and may
+contain only the required RC-to-stable identity/evidence change. The optional
+Claude review workflow is not a release gate unless repository governance
+explicitly requires it.
+
+The package is complete only after stable qualification and publication, or
+with an exact documented blocker and the required final status phrase.
+
 # Operating Rules
 
 ## Branching

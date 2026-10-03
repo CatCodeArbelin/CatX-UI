@@ -9,9 +9,9 @@ func TestCompareVersionStringsUsesSemverPrereleaseOrder(t *testing.T) {
 		right string
 		want  int
 	}{
-		{"rc.1 before rc.2", "0.1.0-rc.1", "0.1.0-rc.2", -1},
-		{"rc.2 before stable", "0.1.0-rc.2", "0.1.0", -1},
-		{"stable after rc.1", "0.1.0", "0.1.0-rc.1", 1},
+		{"rc.1 before rc.2", "0.2.0-rc.1", "0.2.0-rc.2", -1},
+		{"rc.2 before stable", "0.2.0-rc.2", "0.2.0", -1},
+		{"stable after rc.1", "0.2.0", "0.2.0-rc.1", 1},
 		{"numeric prerelease ordering", "1.0.0-rc.10", "1.0.0-rc.2", 1},
 	}
 	for _, tc := range cases {
@@ -24,12 +24,12 @@ func TestCompareVersionStringsUsesSemverPrereleaseOrder(t *testing.T) {
 
 func TestParseVersionRejectsMalformedPrereleaseTags(t *testing.T) {
 	for _, input := range []string{
-		"v0.1.0-rc.",
-		"v0.1.0-rc.01",
-		"v0.1.0-rc+build",
-		"v0.1.0-rc_1",
-		"v0.1.0-rc.1.2_3",
-		"0.1.0-rc.1",
+		"v0.2.0-rc.",
+		"v0.2.0-rc.01",
+		"v0.2.0-rc+build",
+		"v0.2.0-rc_1",
+		"v0.2.0-rc.1.2_3",
+		"0.2.0-rc.1",
 	} {
 		if _, err := ParseReleaseTag(input); err == nil {
 			t.Fatalf("ParseReleaseTag(%q) accepted malformed tag", input)

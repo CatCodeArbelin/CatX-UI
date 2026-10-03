@@ -13,7 +13,7 @@ readonly CATX_RELEASE_REPOSITORY="CatX-UI"
 readonly CATX_RELEASE_SLUG="${CATX_RELEASE_OWNER}/${CATX_RELEASE_REPOSITORY}"
 readonly CATX_ASSET_PREFIX="catx-ui"
 readonly CATX_DEV_RELEASE_TAG="dev-latest"
-readonly CATX_RC_VERSION="0.1.0-rc.4"
+readonly CATX_RC_VERSION="0.2.0-rc.1"
 readonly CATX_RELEASE_WEB="https://github.com/${CATX_RELEASE_SLUG}"
 readonly CATX_RELEASE_API="https://api.github.com/repos/${CATX_RELEASE_SLUG}"
 
@@ -336,7 +336,7 @@ legacy_version() {
     fi
     tag_version="v${tag_version#v}"
     if ! catx_validate_release_tag "$tag_version" || [[ "$tag_version" == "${CATX_DEV_RELEASE_TAG}" ]]; then
-        LOGE "Version must be a CatX-UI stable tag such as v0.1.0"
+        LOGE "Version must be a CatX-UI stable tag such as v0.2.0"
         return 1
     fi
     echo "Downloading and installing CatX-UI version $tag_version..."
