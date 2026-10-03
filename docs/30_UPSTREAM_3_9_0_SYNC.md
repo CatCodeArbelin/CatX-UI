@@ -1,6 +1,6 @@
 # CatX-UI Upstream v3.9.0 Sync Evidence
 
-Status: `CURRENT`
+Status: `COMPLETE`
 
 This document records evidence for the actual upstream integration. It is
 not a duplicate of the general maintenance procedure in
@@ -25,8 +25,8 @@ not a duplicate of the general maintenance procedure in
 | Upstream merge SHA            | `9335eb4af5ab4c73976fdcbeda875926400e53f8`             |
 | Final qualified candidate SHA | `196ca986414bcc8e6ec7af4a9d807669546faaee`             |
 | Sync PR                       | [#4](https://github.com/CatCodeArbelin/CatX-UI/pull/4) |
-| Develop merge SHA             | pending                                                |
-| Final develop SHA             | pending                                                |
+| Develop merge SHA             | `c5f2e4e0165d96577af3f0e9d3b40810a98e7764`             |
+| Final develop SHA             | `c5f2e4e0165d96577af3f0e9d3b40810a98e7764`             |
 
 ## Conflict inventory
 
@@ -86,12 +86,19 @@ compatibility.
 | Dependency audit                    | success      | hosted `govulncheck`                   |
 | `git diff --check`                  | success      | local and hosted verification          |
 
+The optional automated Claude review check did not run because the repository
+workflow has no `ANTHROPIC_API_KEY`; this was an infrastructure configuration
+failure, not a source or qualification test failure. The PR was merged only
+after the required source, fork, race, migration, frontend, generated-artifact,
+runtime, and release-safety checks completed successfully or were explicitly
+skipped by workflow policy.
+
 ## Final record
 
 - final sync merge SHA: `9335eb4af5ab4c73976fdcbeda875926400e53f8`;
 - post-merge correction commits: `c38b640a`, `f3168d86`, `a46aa3fd`, `7b64e878`, `b2627c61`, `3b25757f`, `196ca986`;
 - final exact qualified candidate SHA: `196ca986414bcc8e6ec7af4a9d807669546faaee`;
-- final develop integration SHA: pending;
+- final develop integration SHA: `c5f2e4e0165d96577af3f0e9d3b40810a98e7764`;
 - Xray version after sync: `26.9.30`;
 - migration/recovery result: hosted migration, updater transaction, and rollback checks passed;
 - release publication: explicitly not performed.

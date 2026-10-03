@@ -727,7 +727,7 @@ features, publish a release, move any tag, or merge upstream into `main` or
 The `v3.9.0` assessment is a non-production dry run on
 `sync/upstream-v3.9.0`. Any actual upgrade is a separate work package.
 
-# Upstream Sync — 3x-ui v3.9.0 — CURRENT
+# Upstream Sync — 3x-ui v3.9.0 — COMPLETE
 
 Branch: `sync/upstream-v3.9.0`
 
@@ -746,9 +746,18 @@ merge conflict list, semantic resolutions, verification, exact candidate SHA,
 sync PR, and `develop` merge SHA belong in
 `docs/30_UPSTREAM_3_9_0_SYNC.md` and must be updated as evidence is produced.
 
-The package is complete only after the exact qualified candidate is merged
-into `develop`; `v0.1.0`, RC tags, `main`, and release publication remain
-unchanged.
+The exact qualified candidate was merged into `develop`. `v0.1.0`, RC tags,
+`main`, and release publication remain unchanged.
+
+Completion record:
+
+- upstream merge commit: `9335eb4af5ab4c73976fdcbeda875926400e53f8`;
+- final qualified code candidate: `196ca986414bcc8e6ec7af4a9d807669546faaee`;
+- sync PR: [#4](https://github.com/CatCodeArbelin/CatX-UI/pull/4);
+- `develop` merge commit: `c5f2e4e0165d96577af3f0e9d3b40810a98e7764`;
+- `main` remains `7cb97e13def59280e92e5667d3f43ac23db8d470`;
+- Xray version after sync: `26.9.30`;
+- release publication and tag movement: not performed.
 
 # Operating Rules
 

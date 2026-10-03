@@ -6,11 +6,11 @@
 
 ## Status
 
-`CURRENT`
+`COMPLETE`
 
 This work package performs the actual merge-based integration of the exact
-upstream `v3.9.0` release into the CatX integration line. It must stop after
-the qualified sync is merged into `develop`.
+upstream `v3.9.0` release into the CatX integration line. The qualified sync
+was merged into `develop`; no release or tag was published.
 
 ## Integration baseline
 
@@ -33,7 +33,7 @@ the qualified sync is merged into `develop`.
 - sensitive paths: `224`
 - CatX touchpoint overlaps: `64`
 - dry-run merge conflicts: `12`
-- actual merge conflict count: pending capture
+- actual merge conflict count: `12`
 
 ## Scope
 
@@ -95,3 +95,13 @@ must follow integrated upstream `v3.9.0` semantics as closely as possible.
 
 Do not modify `AGENTS.md` unless a new permanent repository-wide invariant is
 discovered; stop and report the proposed wording before doing so.
+
+## Completion record
+
+- upstream merge commit: `9335eb4af5ab4c73976fdcbeda875926400e53f8`;
+- final qualified code candidate: `196ca986414bcc8e6ec7af4a9d807669546faaee`;
+- sync PR: [#4](https://github.com/CatCodeArbelin/CatX-UI/pull/4);
+- `develop` merge commit: `c5f2e4e0165d96577af3f0e9d3b40810a98e7764`;
+- `main` remains `7cb97e13def59280e92e5667d3f43ac23db8d470`;
+- Xray version after sync: `26.9.30`;
+- release publication and tag movement: not performed.
