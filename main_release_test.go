@@ -10,9 +10,9 @@ func TestReleaseInfoTextSeparatesTrustedIdentities(t *testing.T) {
 	for _, want := range []string{
 		"product=CatX-UI\n",
 		"repository=CatCodeArbelin/CatX-UI\n",
-		"fork_version=0.1.0\n",
-		"upstream_base_version=3.8.5\n",
-		"bundled_xray_version=26.9.9\n",
+		"fork_version=0.2.0\n",
+		"upstream_base_version=3.9.0\n",
+		"bundled_xray_version=26.9.30\n",
 	} {
 		if !strings.Contains(got, want) {
 			t.Fatalf("release info %q does not contain %q", got, want)
