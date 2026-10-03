@@ -13,6 +13,7 @@ vi.mock('react-router/dom', () => ({
 
 vi.mock('antd', () => ({
   message: { config: () => {} },
+  ConfigProvider: ({ children }: { children?: unknown }) => children ?? null,
 }));
 
 vi.mock('@/api/http-init', () => ({
