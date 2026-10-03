@@ -29,15 +29,15 @@ or deleted. No `v0.2.0*` tag existed at package start.
 
 ## Release identity
 
-| Field              | RC target                        | Stable target                    | Result  |
-| ------------------ | -------------------------------- | -------------------------------- | ------- |
-| Fork version       | `0.2.0`                          | `0.2.0`                          | pending |
-| RC version         | `0.2.0-rc.1`                     | n/a                              | pending |
-| Channel            | RC / prerelease                  | stable                           | pending |
-| Upstream version   | `3.9.0`                          | `3.9.0`                          | pending |
-| Xray version       | `26.9.30`                        | `26.9.30`                        | pending |
-| Release repository | `CatCodeArbelin/CatX-UI`         | `CatCodeArbelin/CatX-UI`         | pending |
-| Docker namespace   | `ghcr.io/catcodearbelin/catx-ui` | `ghcr.io/catcodearbelin/catx-ui` | pending |
+| Field              | RC target                        | Stable target                    | Result                       |
+| ------------------ | -------------------------------- | -------------------------------- | ---------------------------- |
+| Fork version       | `0.2.0`                          | `0.2.0`                          | PASS — hosted identity gates |
+| RC version         | `0.2.0-rc.1`                     | n/a                              | PASS — release qualification |
+| Channel            | RC / prerelease                  | stable                           | RC PASS; stable pending      |
+| Upstream version   | `3.9.0`                          | `3.9.0`                          | PASS — artifact metadata     |
+| Xray version       | `26.9.30`                        | `26.9.30`                        | PASS — artifact metadata     |
+| Release repository | `CatCodeArbelin/CatX-UI`         | `CatCodeArbelin/CatX-UI`         | PASS — CatX-owned            |
+| Docker namespace   | `ghcr.io/catcodearbelin/catx-ui` | `ghcr.io/catcodearbelin/catx-ui` | public check pending         |
 
 Authoritative version sources and every release/updater/install path must be
 audited before the RC candidate is frozen. Official upstream release URLs,
@@ -45,24 +45,24 @@ assets, and container ownership are not acceptable in CatX runtime paths.
 
 ## Candidate and publication records
 
-| Milestone                     | Source/tag/workflow                        | Result                        |
-| ----------------------------- | ------------------------------------------ | ----------------------------- |
-| RC source SHA                 | `f9178025d79e8bc403cf7f3f77f83aab3028965a` | frozen; qualification pending |
-| RC pre-tag matrix             | pending                                    | not run                       |
-| Annotated tag `v0.2.0-rc.1`   | pending                                    | not created                   |
-| RC GitHub Release             | pending                                    | not published                 |
-| RC release workflow           | pending                                    | not run                       |
-| RC Docker result              | pending                                    | not published                 |
-| Actual-public RC observer     | pending                                    | not run                       |
-| Stable source SHA             | pending                                    | not frozen                    |
-| Main merge SHA                | pending                                    | not merged                    |
-| Final main SHA                | pending                                    | not established               |
-| Annotated tag `v0.2.0`        | pending                                    | not created                   |
-| Stable GitHub Release         | pending                                    | not published                 |
-| Stable release workflow       | pending                                    | not run                       |
-| Stable Docker result          | pending                                    | not published                 |
-| Actual-public stable observer | pending                                    | not run                       |
-| Final evidence commit         | pending                                    | not committed                 |
+| Milestone                     | Source/tag/workflow                                                                   | Result                                 |
+| ----------------------------- | ------------------------------------------------------------------------------------- | -------------------------------------- |
+| RC source SHA                 | `f9178025d79e8bc403cf7f3f77f83aab3028965a`                                            | frozen; qualification pending          |
+| RC pre-tag matrix             | [run 37147211709](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37147211709) | PASS — non-publishing RC qualification |
+| Annotated tag `v0.2.0-rc.1`   | pending                                                                               | not created                            |
+| RC GitHub Release             | pending                                                                               | not published                          |
+| RC release workflow           | [run 37147211709](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37147211709) | PASS — artifacts/staging               |
+| RC Docker result              | pending                                                                               | not published                          |
+| Actual-public RC observer     | pending                                                                               | not run                                |
+| Stable source SHA             | pending                                                                               | not frozen                             |
+| Main merge SHA                | pending                                                                               | not merged                             |
+| Final main SHA                | pending                                                                               | not established                        |
+| Annotated tag `v0.2.0`        | pending                                                                               | not created                            |
+| Stable GitHub Release         | pending                                                                               | not published                          |
+| Stable release workflow       | pending                                                                               | not run                                |
+| Stable Docker result          | pending                                                                               | not published                          |
+| Actual-public stable observer | pending                                                                               | not run                                |
+| Final evidence commit         | pending                                                                               | not committed                          |
 
 Tags must be annotated, immutable, and point exactly to their qualified source
 SHA. `v0.2.0-rc.1` must be fully observed from actual published assets before
@@ -73,27 +73,27 @@ stable qualification begins.
 Results use `PASS`, `FAIL`, `SKIPPED — reason`, or `PENDING`; a skipped check is
 never converted to pass.
 
-| Area                                                         | Result  | Evidence                                  |
-| ------------------------------------------------------------ | ------- | ----------------------------------------- |
-| `make verify`                                                | pending | hosted exact-SHA run                      |
-| `make verify-fork`                                           | pending | hosted exact-SHA run                      |
-| Go tests                                                     | pending | hosted exact-SHA run                      |
-| Go race tests                                                | pending | hosted exact-SHA run                      |
-| SQLite tests                                                 | pending | hosted exact-SHA run                      |
-| PostgreSQL tests                                             | pending | hosted exact-SHA run                      |
-| Migration tests                                              | pending | fresh and populated upgrade matrix        |
-| `govulncheck`                                                | pending | hosted exact-SHA run                      |
-| `golangci-lint`                                              | pending | hosted exact-SHA run                      |
-| Fuzz smoke                                                   | pending | canonical workflow where applicable       |
-| Frontend install/generated/lint/format/typecheck/tests/build | pending | hosted exact-SHA run                      |
-| Storybook                                                    | pending | hosted exact-SHA run                      |
-| Docs typecheck/lint/format/tests/build                       | pending | hosted exact-SHA run                      |
-| Release identity                                             | pending | release identity tests                    |
-| Updater transaction                                          | pending | v0.1.0 → RC candidate                     |
-| Rollback                                                     | pending | RC candidate → v0.1.0                     |
-| Xray config/start/reload                                     | pending | Xray `26.9.30`                            |
-| Docker build                                                 | pending | non-publishing and public artifact checks |
-| `git diff --check`                                           | pending | local and hosted verification             |
+| Area                                                         | Result  | Evidence                                                                                                                                                                         |
+| ------------------------------------------------------------ | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `make verify`                                                | PASS    | [CI run 37146928789](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37146928789)                                                                                         |
+| `make verify-fork`                                           | PASS    | [Fork verification 37146928674](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37146928674)                                                                              |
+| Go tests                                                     | PASS    | [CI run 37146928789](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37146928789)                                                                                         |
+| Go race tests                                                | PASS    | [CI run 37146928789](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37146928789)                                                                                         |
+| SQLite tests                                                 | PASS    | [CI run 37146928789](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37146928789)                                                                                         |
+| PostgreSQL tests                                             | PASS    | [CI run 37146928789](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37146928789)                                                                                         |
+| Migration tests                                              | PASS    | [RC staging run 37147211709](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37147211709)                                                                                 |
+| `govulncheck`                                                | PASS    | [CI run 37146928789](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37146928789)                                                                                         |
+| `golangci-lint`                                              | PASS    | [CI run 37146928789](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37146928789)                                                                                         |
+| Fuzz smoke                                                   | PASS    | [CI run 37146928789](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37146928789)                                                                                         |
+| Frontend install/generated/lint/format/typecheck/tests/build | PASS    | [CI run 37146928789](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37146928789)                                                                                         |
+| Storybook                                                    | PASS    | [CI run 37146928789](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37146928789)                                                                                         |
+| Docs typecheck/lint/format/tests/build                       | PASS    | [Docs CI run 37146928683](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37146928683)                                                                                    |
+| Release identity                                             | PASS    | [RC release run 37147211709](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37147211709)                                                                                 |
+| Updater transaction                                          | PASS    | [smoke run 37146928692](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37146928692) and [RC staging](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37147211709) |
+| Rollback                                                     | PASS    | [RC staging run 37147211709](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37147211709)                                                                                 |
+| Xray config/start/reload                                     | pending | Xray `26.9.30`                                                                                                                                                                   |
+| Docker build                                                 | pending | non-publishing and public artifact checks                                                                                                                                        |
+| `git diff --check`                                           | PASS    | local verification                                                                                                                                                               |
 
 ## Database, backup, and restore
 
@@ -110,14 +110,14 @@ fields, subscriptions, CatX flags, Analytics, DNS, Policy, Traffic Policy,
 Group Quota, Audit, Fleet, and Portal state. New upstream migration fields
 must be present without destructive reset or silent CatX-state loss.
 
-| Evidence                    | Result  | Run / artifact |
-| --------------------------- | ------- | -------------- |
-| Empty SQLite migration      | pending | pending        |
-| Empty PostgreSQL migration  | pending | pending        |
-| `v0.1.0` SQLite upgrade     | pending | pending        |
-| `v0.1.0` PostgreSQL upgrade | pending | pending        |
-| Backup contents/integrity   | pending | pending        |
-| Disposable restore          | pending | pending        |
+| Evidence                    | Result | Run / artifact                                                                                   |
+| --------------------------- | ------ | ------------------------------------------------------------------------------------------------ |
+| Empty SQLite migration      | PASS   | [RC staging run 37147211709](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37147211709) |
+| Empty PostgreSQL migration  | PASS   | [RC staging run 37147211709](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37147211709) |
+| `v0.1.0` SQLite upgrade     | PASS   | [RC staging run 37147211709](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37147211709) |
+| `v0.1.0` PostgreSQL upgrade | PASS   | [RC staging run 37147211709](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37147211709) |
+| Backup contents/integrity   | PASS   | [RC staging run 37147211709](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37147211709) |
+| Disposable restore          | PASS   | [RC staging run 37147211709](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37147211709) |
 
 ## Installer, updater, rollback, and restart lifecycle
 
@@ -132,13 +132,13 @@ Failure must restore the previous binary, service, config, and database state
 as required, then healthcheck the restored installation. The candidate must
 never fetch official upstream `3x-ui` binaries.
 
-| Evidence                               | Result  | Run / artifact                        |
-| -------------------------------------- | ------- | ------------------------------------- |
-| Installer compatibility                | pending | pending                               |
-| v0.1.0 → public RC updater             | pending | actual published assets               |
-| RC candidate → v0.1.0 rollback         | pending | actual previous release               |
-| Real enabled `restartPanel` lifecycle  | pending | persisted flags and active runtimes   |
-| Real disabled `restartPanel` lifecycle | pending | persisted flags and inactive runtimes |
+| Evidence                               | Result  | Run / artifact                                                                                   |
+| -------------------------------------- | ------- | ------------------------------------------------------------------------------------------------ |
+| Installer compatibility                | PASS    | [RC staging run 37147211709](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37147211709) |
+| v0.1.0 → public RC updater             | pending | actual published assets                                                                          |
+| RC candidate → v0.1.0 rollback         | PASS    | [RC staging run 37147211709](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37147211709) |
+| Real enabled `restartPanel` lifecycle  | pending | persisted flags and active runtimes                                                              |
+| Real disabled `restartPanel` lifecycle | pending | persisted flags and inactive runtimes                                                            |
 
 ## Runtime and protocol qualification
 
@@ -184,6 +184,13 @@ must not be advertised as universal.
   workflow policy.
 - Observation-harness-only defects may be fixed without changing immutable
   public assets; failed attempts remain recorded here.
+- The pre-public branch-push observer attempt [37146925435](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37146925435)
+  created no jobs because it used the superseded push-triggered workflow. The
+  observer was changed to manual dispatch before the candidate was frozen; no
+  release asset was published by that attempt.
+- Non-publishing RC qualification [37147211709](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37147211709)
+  passed artifact inspection, Linux install/upgrade/rollback rehearsal, and
+  PostgreSQL migration staging.
 - The optional Claude review workflow is not a release gate unless governance
   explicitly requires it; missing credentials must be recorded as tooling
   infrastructure rather than fabricated review evidence.
