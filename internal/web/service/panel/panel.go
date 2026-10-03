@@ -508,7 +508,7 @@ func resolveUpdateFolders() (string, string) {
 }
 
 func isNewerVersion(latest string, current string) bool {
-	cmp, ok := compareVersionStrings(latest, current)
+	cmp, ok := forkrelease.CompareVersionStrings(latest, current)
 	if !ok {
 		return false
 	}
