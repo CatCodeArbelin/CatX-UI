@@ -708,7 +708,7 @@ CatX-UI `36911212551`, and Deploy Smoke `36911212337` passed. No v0.1.1,
 upstream maintenance, tag movement, or runtime-source change is part of this
 package.
 
-# Upstream Maintenance Strategy — CURRENT
+# Upstream Maintenance Strategy — COMPLETE
 
 Branch: `feature/upstream-maintenance-strategy`
 

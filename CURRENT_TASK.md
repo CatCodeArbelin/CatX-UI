@@ -2,7 +2,7 @@
 
 ## Work Package
 
-`Upstream Maintenance Strategy — CURRENT`
+`Upstream Maintenance Strategy — COMPLETE`
 
 This package defines and verifies the long-term, low-divergence maintenance
 process for CatX-UI. It adds no product features, performs no production sync,
@@ -35,6 +35,7 @@ and make the actual upstream upgrade a separate work package.
 
 ## Completion record
 
+Final strategy SHA: `11a5892492bbe93e0b7ed38d41a2deff6a3965dc`.
 Strategy implementation commit: `b68daf5fc7187d86a63aa2ec0288d343e19ebfd7`.
 
 The non-production `sync/upstream-v3.9.0` branch was created from `main` at
