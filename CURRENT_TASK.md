@@ -35,7 +35,7 @@ and make the actual upstream upgrade a separate work package.
 
 ## Completion record
 
-Final strategy SHA: `11a5892492bbe93e0b7ed38d41a2deff6a3965dc`.
+Final strategy SHA: `ca901e93328233de625c65fd0a92b0b66e270a6c`.
 Strategy implementation commit: `b68daf5fc7187d86a63aa2ec0288d343e19ebfd7`.
 
 The non-production `sync/upstream-v3.9.0` branch was created from `main` at
