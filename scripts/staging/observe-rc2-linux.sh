@@ -157,6 +157,21 @@ fi
 readonly APP_DIR="$PAYLOAD_DIR/x-ui"
 [[ -x "$APP_DIR/x-ui" ]] || fail "Linux archive did not contain executable x-ui"
 [[ -x "$APP_DIR/bin/xray-linux-amd64" ]] || fail "Linux archive did not contain Xray $EXPECTED_XRAY_VERSION"
+"$APP_DIR/x-ui" release-info > "$EVIDENCE_DIR/public-release-info.txt"
+grep -Fxq "product=CatX-UI" "$EVIDENCE_DIR/public-release-info.txt" || fail "public release-info product was not CatX-UI"
+grep -Fxq "repository=$RELEASE_REPOSITORY" "$EVIDENCE_DIR/public-release-info.txt" || fail "public release-info repository was not CatX-owned"
+grep -Fxq "fork_version=$EXPECTED_FORK_VERSION" "$EVIDENCE_DIR/public-release-info.txt" || fail "public release-info fork version was not $EXPECTED_FORK_VERSION"
+grep -Fxq "upstream_base_version=$EXPECTED_UPSTREAM_VERSION" "$EVIDENCE_DIR/public-release-info.txt" || fail "public release-info upstream version was not $EXPECTED_UPSTREAM_VERSION"
+grep -Fxq "bundled_xray_version=$EXPECTED_XRAY_VERSION" "$EVIDENCE_DIR/public-release-info.txt" || fail "public release-info Xray version was not $EXPECTED_XRAY_VERSION"
+if [[ "$PUBLIC_CHANNEL" == stable ]]; then
+    grep -Fxq "channel=stable" "$EVIDENCE_DIR/public-release-info.txt" || fail "public release-info channel was not stable"
+    grep -Fxq "release_version=$EXPECTED_FORK_VERSION" "$EVIDENCE_DIR/public-release-info.txt" || fail "public release-info version was not $EXPECTED_FORK_VERSION"
+else
+    grep -Fxq "channel=rc" "$EVIDENCE_DIR/public-release-info.txt" || fail "public release-info channel was not rc"
+    grep -Fxq "release_version=$RELEASE_VERSION" "$EVIDENCE_DIR/public-release-info.txt" || fail "public release-info version was not $RELEASE_VERSION"
+fi
+"$APP_DIR/bin/xray-linux-amd64" version > "$EVIDENCE_DIR/xray-version.txt" 2>&1 || fail "bundled Xray version probe failed"
+grep -Fq "$EXPECTED_XRAY_VERSION" "$EVIDENCE_DIR/xray-version.txt" || fail "bundled Xray binary did not report $EXPECTED_XRAY_VERSION"
 
 export XUI_DB_FOLDER="$DB_DIR"
 export XUI_LOG_FOLDER="$LOG_DIR"
