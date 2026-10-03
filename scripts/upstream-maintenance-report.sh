@@ -38,7 +38,7 @@ echo "upstream: $(git remote get-url upstream)"
 
 echo
 echo "stable tags available locally:"
-git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-version:refname | head -n 10
+git tag --list 'v*' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V -r | head -n 10
 
 if [[ -n "$compare_tag" ]]; then
     echo
