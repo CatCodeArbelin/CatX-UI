@@ -148,7 +148,9 @@ jobs:
 
           asset_dir="$RUNNER_TEMP/catx-v0-2-public-upgrade-assets"
           legacy_dir="$RUNNER_TEMP/catx-v0-2-public-upgrade-legacy"
+          previous_dir="$RUNNER_TEMP/catx-v0-1-public-upgrade-baseline"
           mkdir -p "$asset_dir" "$legacy_dir/public-v0.1.0"
+          mkdir -p "$previous_dir"
           target_base="https://github.com/CatCodeArbelin/CatX-UI/releases/download/$RELEASE_TAG"
           previous_base="https://github.com/CatCodeArbelin/CatX-UI/releases/download/v0.1.0"
           for name in \
@@ -163,11 +165,11 @@ jobs:
               -o "$asset_dir/$name" "$target_base/$name"
           done
           curl --fail --location --retry 5 --retry-all-errors --retry-delay 3 \
-            -o "$RUNNER_TEMP/catx-v0-1.0.tar.gz" "$previous_base/catx-ui-linux-amd64.tar.gz"
+            -o "$previous_dir/catx-ui-linux-amd64.tar.gz" "$previous_base/catx-ui-linux-amd64.tar.gz"
           curl --fail --location --retry 5 --retry-all-errors --retry-delay 3 \
-            -o "$RUNNER_TEMP/catx-v0-1.0.tar.gz.sha256" "$previous_base/catx-ui-linux-amd64.tar.gz.sha256"
+            -o "$previous_dir/catx-ui-linux-amd64.tar.gz.sha256" "$previous_base/catx-ui-linux-amd64.tar.gz.sha256"
           (cd "$asset_dir" && sha256sum -c catx-ui-linux-amd64.tar.gz.sha256)
-          (cd "$RUNNER_TEMP" && sha256sum -c catx-v0-1.0.tar.gz.sha256)
+          (cd "$previous_dir" && sha256sum -c catx-ui-linux-amd64.tar.gz.sha256)
           jq -e --arg tag "$RELEASE_TAG" --arg channel "$expected_channel" \
             --arg version "$expected_version" \
             '.product == "CatX-UI" and .repository == "CatCodeArbelin/CatX-UI" and
@@ -175,7 +177,7 @@ jobs:
              .bundledXrayVersion == "26.9.30" and .channel == $channel and
              .releaseVersion == $version and .releaseTag == $tag' \
             "$asset_dir/catx-ui-release-metadata.json" >/dev/null
-          tar -xOzf "$RUNNER_TEMP/catx-v0-1.0.tar.gz" x-ui/x-ui > "$legacy_dir/public-v0.1.0/x-ui"
+          tar -xOzf "$previous_dir/catx-ui-linux-amd64.tar.gz" x-ui/x-ui > "$legacy_dir/public-v0.1.0/x-ui"
           chmod +x "$legacy_dir/public-v0.1.0/x-ui"
           grep -Fxq 'product=CatX-UI' <("$legacy_dir/public-v0.1.0/x-ui" release-info)
           grep -Fxq 'channel=stable' <("$legacy_dir/public-v0.1.0/x-ui" release-info)
