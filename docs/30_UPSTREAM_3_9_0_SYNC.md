@@ -34,20 +34,20 @@ The dry run reported 12 conflicts. The actual conflict list is captured from
 `git diff --name-only --diff-filter=U` immediately after the real merge and
 replaced here if it differs.
 
-| Path                                  | Category                  | Resolution | Evidence                                      |
-| ------------------------------------- | ------------------------- | ---------- | --------------------------------------------- |
-| `.github/workflows/release.yml`       | RELEASE/UPDATER           | kept CatX variable-based Xray URL; identity correction follows separately | CatX release ownership preserved |
-| `frontend/package-lock.json`          | GENERATED / FRONTEND/UX   | resolved package source, then regenerated with npm | no hand-merged lockfile |
-| `frontend/package.json`               | FRONTEND/UX               | adopted upstream toolchain versions; retained CatX overrides and script policy | package source is upstream plus CatX safety constraints |
-| `go.mod`                              | UPSTREAM-ONLY / DEPENDENCY | adopted upstream Go/Xray/quic requirements and retained CatX Prometheus dependency | `go mod tidy` completed |
-| `internal/config/version`             | RELEASE/UPDATER           | kept deleted; CatX `forkrelease` remains authoritative | no upstream release identity reintroduced |
-| `internal/web/service/client_traffic.go` | SEMANTIC-CONFLICT       | combined upstream TUIC/node reset delivery with CatX quota-preserving reset and re-enable | quota ownership remains in CatX layer |
-| `internal/web/service/inbound_node.go` | SEMANTIC-CONFLICT        | adopted upstream `clientFrozen` reset semantics while preserving CatX master lifecycle rules | node lifecycle boundary reviewed |
-| `internal/web/service/inbound_traffic_apply.go` | SEMANTIC-CONFLICT | retained both CatX group-quota reset ownership and upstream renewed-email handling | reset ordering preserved |
-| `internal/web/service/panel/panel.go` | RELEASE/UPDATER           | retained CatX prerelease-aware `forkrelease` comparator | upstream numeric helper remains available elsewhere |
-| `internal/web/service/panel/panel_test.go` | GENERATED / RELEASE/UPDATER | retained CatX strict and prerelease version tests | release identity tests remain CatX-owned |
-| `internal/web/web.go`                 | CATX-HOOK / SEMANTIC-CONFLICT | combined fork stop/reload lifecycle with upstream HTTP and TUIC graceful shutdown | Restart Panel keeps Xray running |
-| `update.sh`                           | RELEASE/UPDATER           | retained transactional CatX updater with snapshot, validation, healthcheck, and rollback | upstream direct updater not adopted |
+| Path                                            | Category                      | Resolution                                                                                   | Evidence                                                |
+| ----------------------------------------------- | ----------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| `.github/workflows/release.yml`                 | RELEASE/UPDATER               | kept CatX variable-based Xray URL; identity correction follows separately                    | CatX release ownership preserved                        |
+| `frontend/package-lock.json`                    | GENERATED / FRONTEND/UX       | resolved package source, then regenerated with npm                                           | no hand-merged lockfile                                 |
+| `frontend/package.json`                         | FRONTEND/UX                   | adopted upstream toolchain versions; retained CatX overrides and script policy               | package source is upstream plus CatX safety constraints |
+| `go.mod`                                        | UPSTREAM-ONLY / DEPENDENCY    | adopted upstream Go/Xray/quic requirements and retained CatX Prometheus dependency           | `go mod tidy` completed                                 |
+| `internal/config/version`                       | RELEASE/UPDATER               | kept deleted; CatX `forkrelease` remains authoritative                                       | no upstream release identity reintroduced               |
+| `internal/web/service/client_traffic.go`        | SEMANTIC-CONFLICT             | combined upstream TUIC/node reset delivery with CatX quota-preserving reset and re-enable    | quota ownership remains in CatX layer                   |
+| `internal/web/service/inbound_node.go`          | SEMANTIC-CONFLICT             | adopted upstream `clientFrozen` reset semantics while preserving CatX master lifecycle rules | node lifecycle boundary reviewed                        |
+| `internal/web/service/inbound_traffic_apply.go` | SEMANTIC-CONFLICT             | retained both CatX group-quota reset ownership and upstream renewed-email handling           | reset ordering preserved                                |
+| `internal/web/service/panel/panel.go`           | RELEASE/UPDATER               | retained CatX prerelease-aware `forkrelease` comparator                                      | upstream numeric helper remains available elsewhere     |
+| `internal/web/service/panel/panel_test.go`      | GENERATED / RELEASE/UPDATER   | retained CatX strict and prerelease version tests                                            | release identity tests remain CatX-owned                |
+| `internal/web/web.go`                           | CATX-HOOK / SEMANTIC-CONFLICT | combined fork stop/reload lifecycle with upstream HTTP and TUIC graceful shutdown            | Restart Panel keeps Xray running                        |
+| `update.sh`                                     | RELEASE/UPDATER               | retained transactional CatX updater with snapshot, validation, healthcheck, and rollback     | upstream direct updater not adopted                     |
 
 ## Resolution summary
 
