@@ -15,7 +15,7 @@ on:
       release_commit:
         description: Exact qualified commit recorded in the release metadata
         required: true
-        default: 6fe19c0e0050683b2d81e6869cce33f9da53a7ac
+        default: 6a7e7aa6d9dcec4214ad0a7ba5aefc1cc9e0e998
         type: string
       release_channel:
         description: Published release channel

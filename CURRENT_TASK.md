@@ -23,7 +23,7 @@ This is not an upstream sync and does not add product features.
 - previous stable runtime SHA: `fd28ea7144147d9164b70810d4a24872a3d48b4f`
 - new fork version: `0.2.0`
 - first and only planned RC: `0.2.0-rc.1`
-- frozen RC candidate source SHA: `6fe19c0e0050683b2d81e6869cce33f9da53a7ac`
+- frozen RC candidate source SHA: `6a7e7aa6d9dcec4214ad0a7ba5aefc1cc9e0e998`
 - upstream base: `MHSanaei/3x-ui v3.9.0`
 - upstream SHA: `3cd4bf504c3cd8ea9b1c1fdb032a9796c5c43ddb`
 - upstream integration merge SHA: `c5f2e4e0165d96577af3f0e9d3b40810a98e7764`
