@@ -29,7 +29,7 @@ This is not an upstream sync and does not add product features.
 - upstream integration merge SHA: `c5f2e4e0165d96577af3f0e9d3b40810a98e7764`
 - Xray: `26.9.30`
 - existing stable tag: `v0.1.0`
-- `v0.2.0-rc.1` tag: not created
+- `v0.2.0-rc.1` tag: `v0.2.0-rc.1 → f9178025d79e8bc403cf7f3f77f83aab3028965a` (annotated, immutable)
 - `v0.2.0` tag: not created
 
 `origin/main` is an ancestor of the release baseline. No legitimate main-only
