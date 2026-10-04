@@ -6127,6 +6127,10 @@
     {
       "name": "CatX-UI Features",
       "description": "Protected CatX feature flags and restart requirement."
+    },
+    {
+      "name": "CatX Sponsors",
+      "description": "Authenticated, operator-configured sponsor metadata and safe logo proxying."
     }
   ],
   "paths": {
@@ -21822,6 +21826,177 @@
         ],
         "summary": "Update CatX feature flags.",
         "operationId": "put_panel_api_fork_settings_features",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/fork/sponsors": {
+      "get": {
+        "tags": [
+          "CatX Sponsors"
+        ],
+        "summary": "Read the active CatX sponsor metadata.",
+        "operationId": "get_panel_api_fork_sponsors",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "$ref": "#/components/schemas/SponsorList"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": {
+                    "contact": "https://t.me/example",
+                    "sponsors": [
+                      {
+                        "enable": true,
+                        "from": "2026-10-01T00:00:00Z",
+                        "id": "acme-2026-10",
+                        "link": "https://acme.example/?utm_source=3x-ui",
+                        "logo": "/sponsors/logo/acme.png",
+                        "name": "Acme VPS",
+                        "slots": [
+                          ""
+                        ],
+                        "text": {},
+                        "title": {},
+                        "until": "2026-11-01T00:00:00Z"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/fork/sponsors/logo/{name}": {
+      "get": {
+        "tags": [
+          "CatX Sponsors"
+        ],
+        "summary": "Read a validated active sponsor logo.",
+        "operationId": "get_panel_api_fork_sponsors_logo_name",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/fork/sponsors/settings": {
+      "get": {
+        "tags": [
+          "CatX Sponsors"
+        ],
+        "summary": "Read sanitized sponsor source settings.",
+        "operationId": "get_panel_api_fork_sponsors_settings",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "CatX Sponsors"
+        ],
+        "summary": "Update the operator-configured sponsor source and contact URLs.",
+        "operationId": "put_panel_api_fork_sponsors_settings",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "sourceUrl": {
+                    "type": "string"
+                  },
+                  "contactUrl": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Successful response",

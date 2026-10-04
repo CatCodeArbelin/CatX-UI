@@ -2726,6 +2726,9 @@
     "operations": {
       "title": "Операції"
     },
+    "sponsors": {
+      "title": "Спонсори"
+    },
     "apiDocs": {
       "labels": {
         "panelApi": "API панелі 3X-UI",
@@ -2740,6 +2743,7 @@
       "portal": "Self-Сервіс Портал",
       "fleetUpdates": "Парк Оновлення",
       "settings": "Функції CatX-UI",
+      "sponsors": "Спонсори CatX",
       "traffic": "Трафік control"
     },
     "portal": {
@@ -3035,6 +3039,10 @@
         "fleetUpdates": {
           "name": "Оновлення вузлів",
           "details": "Планує та узгоджує оновлення керованих вузлів."
+        },
+        "sponsors": {
+          "name": "Спонсори",
+          "details": "Показує налаштовані оператором метадані спонсорів в автентифікованих інтерфейсах CatX."
         },
         "productionFleetUpdates": {
           "name": "Оновлення вузлів у робочому середовищі",

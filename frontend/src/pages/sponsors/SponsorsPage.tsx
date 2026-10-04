@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button, Col, ConfigProvider, Layout, Row, Spin, Tag, Typography } from 'antd';
+import { Alert, Button, Col, ConfigProvider, Layout, Row, Spin, Tag, Typography } from 'antd';
 import {
   CrownOutlined,
   DashboardOutlined,
@@ -53,7 +53,7 @@ function YourBrandCard({ contact, large }: { contact?: string; large?: boolean }
 export default function SponsorsPage() {
   const { t } = useTranslation();
   const { isDark, isUltra, antdThemeConfig } = useTheme();
-  const { data, fetched } = useSponsorsQuery();
+  const { data, fetched, error } = useSponsorsQuery();
   const sponsors = sponsorsForSlot(data.sponsors, 'page');
 
   const { datepicker } = useDatepicker();
@@ -109,7 +109,9 @@ export default function SponsorsPage() {
               </div>
 
               <Spin spinning={!fetched} delay={200}>
-                {sponsors.length === 0 ? (
+                {error ? (
+                  <Alert type="error" showIcon message={error} />
+                ) : sponsors.length === 0 ? (
                   fetched && <YourBrandCard contact={data.contact} large />
                 ) : (
                   <Row gutter={[16, 16]}>

@@ -866,3 +866,33 @@ security/recovery blockers
 ```
 
 Use Luna Medium for the majority of implementation work.
+
+# CatX Sponsors — CURRENT
+
+Branch: `feature/catx-sponsors`.
+
+This is the first post-`v0.2.0` product work package. It starts from the
+synchronized `develop` merge `b4f26cf2827c74592b6b733f0a2e9f24745622d0` and
+must not modify the published `v0.2.0` tag, release artifacts, or create a
+`v0.2.1` release.
+
+The package adds a CatX-owned, authenticated Sponsors API and frontend module.
+The source URL is operator-configured, disabled by default, and subject to
+bounded HTTPS/SSRF-safe metadata fetching, validation, caching, and safe logo
+proxying. The module owns its fork registration and behavior and must not use
+the upstream Sanaei feed or copy its implementation. Existing authenticated
+dashboard/sidebar sponsor slots may use the CatX adapter; the login page must
+not make a public sponsor request.
+
+Required work:
+
+- add the authoritative `sponsors.enabled` feature flag;
+- add backend settings, routes, bounded remote metadata/cache, logo handling,
+  active filtering, and tests under `internal/forkext/sponsors/`;
+- add the CatX `/catx/sponsors` route, registry/API catalog entry, localization
+  coverage, and frontend loading/empty/error behavior;
+- document the contract and recovery path;
+- run relevant tests, `make verify`, and `make verify-fork` where available;
+- push an unmerged PR targeting `develop`.
+
+No merge into `develop` is authorized by this package.

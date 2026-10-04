@@ -2,110 +2,38 @@
 
 ## Work Package
 
-`CatX v0.2.0 Release Qualification`
+`CatX Sponsors`
 
 ## Status
 
-`COMPLETE`
+`CURRENT`
 
-This package qualified the already-integrated upstream `v3.9.0` CatX develop
-state for one public `v0.2.0-rc.1` release, actual-public-artifact observation,
-and stable `v0.2.0` publication. This was not an upstream sync and did not add
-product features.
+This is the first post-`v0.2.0` CatX product feature. It must not create or
+modify a `v0.2.1` release, move an immutable tag, or change the published
+`v0.2.0` source, artifacts, or release evidence.
 
-## Release baseline
+## Baseline
 
-- release branch: `feature/v0.2.0-release-qualification`
-- release baseline SHA: `31a442cef876669aeae97ba9cb1e3e8888f42613`
-- starting `origin/develop`: `31a442cef876669aeae97ba9cb1e3e8888f42613`
-- starting `origin/main`: `7cb97e13def59280e92e5667d3f43ac23db8d470`
-- previous CatX stable: `v0.1.0`
-- previous stable runtime SHA: `fd28ea7144147d9164b70810d4a24872a3d48b4f`
-- new fork version: `0.2.0`
-- first and only planned RC: `0.2.0-rc.1`
-- frozen RC candidate source SHA: `f9178025d79e8bc403cf7f3f77f83aab3028965a`
-- upstream base: `MHSanaei/3x-ui v3.9.0`
-- upstream SHA: `3cd4bf504c3cd8ea9b1c1fdb032a9796c5c43ddb`
-- upstream integration merge SHA: `c5f2e4e0165d96577af3f0e9d3b40810a98e7764`
-- Xray: `26.9.30`
-- existing stable tag: `v0.1.0`
-- `v0.2.0-rc.1` tag: `v0.2.0-rc.1 → f9178025d79e8bc403cf7f3f77f83aab3028965a` (annotated, immutable)
-- `v0.2.0` tag: `v0.2.0 → 2b1760e98e665bde388e94c420bd22aa182fe2b0` (annotated, immutable)
-- final `origin/main`: `2b1760e98e665bde388e94c420bd22aa182fe2b0`
-- stable release: [v0.2.0](https://github.com/CatCodeArbelin/CatX-UI/releases/tag/v0.2.0)
-- stable release workflow: [run 37159138757](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37159138757)
-- stable Docker: [run 37159138735](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37159138735)
-- actual-public stable observer: [run 37163392991](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37163392991), artifact `11288491810`
+- branch: `feature/catx-sponsors`;
+- starting branch: synchronized `origin/develop`;
+- starting `origin/main`: `070212b7c3ddf92cf303c4f352481a86f30d14b4`;
+- starting `origin/develop`: `b4f26cf2827c74592b6b733f0a2e9f24745622d0`;
+- stable tag: `v0.2.0 → 2b1760e98e665bde388e94c420bd22aa182fe2b0`;
+- upstream base: `MHSanaei/3x-ui v3.9.0`;
+- Xray: `26.9.30`.
 
-`origin/main` is an ancestor of the release baseline. No legitimate main-only
-commits require reconciliation before qualification.
+## Goal
 
-## Scope
+Build a first CatX-owned Sponsors module with an authenticated panel API and a
+localized frontend page/sidebar/dashboard presentation. The data source must
+be explicitly configured by an operator, disabled by default, bounded, and
+safe for remote metadata. The CatX module must not depend on or copy the
+upstream Sanaei sponsor feed or source implementation.
 
-- release identity transition to CatX `0.2.0` / `0.2.0-rc.1`;
-- release candidate source and artifact qualification;
-- public `v0.2.0-rc.1` creation and immutable asset observation;
-- SQLite and PostgreSQL migration/upgrade coverage;
-- backup/restore, updater transaction, and rollback qualification;
-- real `restartPanel`, Xray/live VLESS, native TUIC, subscriptions,
-  AmneziaWG, multi-node, Traffic Control, quota, policy, Activity/DNS,
-  localization, and product-reality checks;
-- stable qualification and `v0.2.0` publication only if the exact public RC
-  passes without a product/runtime source change;
-- final evidence in `docs/31_V0_2_0_RELEASE_QUALIFICATION.md`.
-
-## Non-goals
-
-- no new product features;
-- no new upstream sync;
-- no unrelated refactor or repository-wide formatting;
-- no Traffic Control attribution expansion;
-- no generic plugin system;
-- no architectural redesign;
-- no rewrite of historical `v0.1.0` notes;
-- no preemptive `rc.2`;
-- no stable-only product/runtime patch;
-- no modification of `AGENTS.md`;
-- no force/movement of existing tags.
-
-## Release and RC policy
-
-The only planned public candidate is `v0.2.0-rc.1`. Do not create `rc.2`
-unless public RC observation reveals a genuine source, release identity,
-artifact, migration/update/rollback, or runtime defect. Infrastructure-only
-failures are retried and classified. Observation-harness-only defects are
-fixed without mutating immutable RC assets.
-
-The RC tag must point exactly to the frozen qualified candidate. Stable must
-reuse the same proven product/runtime source; any RC-to-stable commit may only
-change the required release identity and evidence metadata. Stable publication
-requires a qualified `main` merge, annotated `v0.2.0`, canonical stable release
-workflow, Docker verification, and actual-public stable smoke.
-
-## Qualification policy
-
-Hosted Linux CI is authoritative. Required gates include `make verify`,
-`make verify-fork`, Go/race/SQLite/PostgreSQL/migration tests, generated and
-frontend checks, docs checks, release identity, updater/rollback, Xray,
-Docker, localization, non-publishing release matrix, and actual public RC
-observation. A skipped check is recorded as skipped with its reason, never as
-pass.
-
-Before tagging, the branch must be clean and pushed, all exact-SHA required
-checks must be green, and the candidate SHA must be recorded in this file,
-`TASK_QUEUE.md`, and `docs/31_V0_2_0_RELEASE_QUALIFICATION.md`.
-
-Every risky apply or release operation follows:
-
-```text
-snapshot → validate → apply → healthcheck → commit known-good state
-FAIL → restore previous state → restart/reload → healthcheck → audit failure
-```
-
-The optional Claude review workflow is not a source qualification gate unless
-repository governance explicitly makes it required. If it appears again with
-missing credentials, record the infrastructure condition without fabricating a
-review or blocking an otherwise qualified release.
+The upstream Sponsors implementation was inspected before coding. Its useful
+shape and visual components may be reused through narrow adapters, but CatX
+owns the route registration, configuration, fetch/cache policy, validation,
+and feature behavior.
 
 ## Required reading
 
@@ -126,13 +54,55 @@ review or blocking an otherwise qualified release.
 - `docs/14_NON_GOALS.md`
 - `docs/15_DEFINITION_OF_DONE.md`
 - `docs/19_REPOSITORY_MAP.md`
+- `docs/33_CATX_SPONSORS.md`
+
+## Scope
+
+- add the authoritative `sponsors.enabled` fork feature flag;
+- add fork-owned backend configuration, bounded HTTPS metadata fetch/cache,
+  active-window filtering, safe logo proxying, authenticated API routes, and
+  tests under `internal/forkext/sponsors/`;
+- persist only source/contact configuration through the existing settings
+  mechanism; no new database table or runtime schema mutation;
+- add a CatX-owned `/catx/sponsors` frontend route and registry entry;
+- route existing authenticated sponsor slots through the CatX API;
+- remove the unauthenticated login-page sponsor request;
+- preserve RTL behavior and provide EN/RU/FA-compatible visible text;
+- document the API/security contract and verification evidence.
+
+## Non-goals
+
+- no merge into `develop` from this branch;
+- no `v0.2.1` release, tag, Docker publication, or stable artifact change;
+- no copy of `internal/web/service/panel/sponsor.go`;
+- no dependency on `sponsors.sanaei.dev`;
+- no decrypted traffic, cookies, credentials, or sensitive HTTP bodies;
+- no database migration unless implementation evidence proves the existing
+  settings mechanism cannot represent the small configuration;
+- no unrelated upstream refactor, generated-file hand edit, or repository-wide
+  formatting.
+
+## Safety and recovery
+
+Feature disabled or unconfigured returns an empty sponsor set without a remote
+request. Only bounded HTTPS metadata is accepted. Redirects, hosts, resolved
+addresses, response sizes, logo names, content types, active dates, and link
+schemes are validated. Cached known-good data remains available during a
+temporary fetch failure; no network call is made while a service lock is held.
+Configuration changes invalidate the cache. Recovery is configuration-level:
+disable `sponsors.enabled` or clear the source URL, then reload fork settings;
+the normal known-good empty/previous-cache behavior remains available without
+altering Xray, routing, or database schema.
+
+## Verification gate
+
+Before requesting review, run relevant Go unit tests including race coverage,
+frontend tests/typecheck, `git diff --check`, `make verify`, and
+`make verify-fork` where the required toolchain is available. Record unavailable
+local checks and rely on hosted required checks. Do not merge this Sponsors PR.
 
 ## Completion condition
 
-The final public stable qualification record contains the RC and stable
-candidate/tag/release/observer/Docker/main SHAs and URLs,
-migration/upgrade/backup/restore/updater/rollback evidence, runtime and
-product-reality evidence, and immutable-tag verification.
-
-At completion set this file and `TASK_QUEUE.md` to `COMPLETE`. Finish with
-exactly one required release status phrase from the package request.
+Implementation, tests, documentation, and feature-disabled compatibility are
+complete; the branch is pushed; hosted required checks are green; and an
+unmerged PR targeting `develop` is open for review.

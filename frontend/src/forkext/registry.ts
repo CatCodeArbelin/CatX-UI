@@ -5,7 +5,15 @@ export interface ForkNavigationItem {
   labelKey: string;
   path: string;
   group: 'clients' | 'nodes' | 'routing' | 'operations';
-  icon: 'activity' | 'portal' | 'fleet' | 'fleet-updates' | 'policy' | 'audit' | 'webhooks';
+  icon:
+    | 'activity'
+    | 'portal'
+    | 'fleet'
+    | 'fleet-updates'
+    | 'policy'
+    | 'audit'
+    | 'webhooks'
+    | 'sponsors';
 }
 
 export const forkRoutes: readonly RouteObject[] = [
@@ -36,6 +44,10 @@ export const forkRoutes: readonly RouteObject[] = [
   {
     path: '/webhooks',
     lazy: async () => ({ Component: (await import('../pages/audit/WebhooksPage')).default }),
+  },
+  {
+    path: '/catx/sponsors',
+    lazy: async () => ({ Component: (await import('./sponsors/SponsorsPage')).default }),
   },
 ];
 export const forkNavigationItems: readonly ForkNavigationItem[] = [
@@ -82,13 +94,20 @@ export const forkNavigationItems: readonly ForkNavigationItem[] = [
     group: 'operations',
     icon: 'webhooks',
   },
+  {
+    key: 'sponsors',
+    labelKey: 'fork.sponsors.title',
+    path: '/catx/sponsors',
+    group: 'operations',
+    icon: 'sponsors',
+  },
 ];
 
 export const forkNavigationGroups = {
   clients: ['client-activity', 'portal-access'],
   nodes: ['fleet', 'fleet-updates'],
   routing: ['policy-engine'],
-  operations: ['audit', 'webhooks'],
+  operations: ['audit', 'webhooks', 'sponsors'],
 } as const;
 // Keep the fork contract registry as the single source for generated API verification.
 export const forkApiSections = [
@@ -387,6 +406,42 @@ export const forkApiSections = [
         method: 'PUT',
         path: '/panel/api/fork/settings/features',
         summary: 'Update CatX feature flags.',
+      },
+    ],
+  },
+  {
+    id: 'catx-sponsors',
+    title: 'CatX Sponsors',
+    translationKey: 'fork.apiDocs.sponsors',
+    description: 'Authenticated, operator-configured sponsor metadata and safe logo proxying.',
+    endpoints: [
+      {
+        method: 'GET',
+        path: '/panel/api/fork/sponsors',
+        summary: 'Read the active CatX sponsor metadata.',
+        responseSchema: 'SponsorList',
+      },
+      {
+        method: 'GET',
+        path: '/panel/api/fork/sponsors/logo/:name',
+        summary: 'Read a validated active sponsor logo.',
+      },
+      {
+        method: 'GET',
+        path: '/panel/api/fork/sponsors/settings',
+        summary: 'Read sanitized sponsor source settings.',
+      },
+      {
+        method: 'PUT',
+        path: '/panel/api/fork/sponsors/settings',
+        summary: 'Update the operator-configured sponsor source and contact URLs.',
+        requestSchema: {
+          type: 'object',
+          properties: {
+            sourceUrl: { type: 'string' },
+            contactUrl: { type: 'string' },
+          },
+        },
       },
     ],
   },

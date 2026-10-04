@@ -2726,6 +2726,9 @@
     "operations": {
       "title": "Operasi"
     },
+    "sponsors": {
+      "title": "Sponsor"
+    },
     "apiDocs": {
       "labels": {
         "panelApi": "API Panel 3X-UI",
@@ -2740,6 +2743,7 @@
       "portal": "Self-Layanan Portal",
       "fleetUpdates": "Armada Pembaruan",
       "settings": "Fitur CatX-UI",
+      "sponsors": "Sponsor CatX",
       "traffic": "Lalu lintas control"
     },
     "portal": {
@@ -3035,6 +3039,10 @@
         "fleetUpdates": {
           "name": "Pembaruan armada",
           "details": "Merencanakan dan menyelaraskan pembaruan di node yang dikelola."
+        },
+        "sponsors": {
+          "name": "Sponsor",
+          "details": "Menampilkan metadata sponsor yang dikonfigurasi operator melalui permukaan CatX terautentikasi."
         },
         "productionFleetUpdates": {
           "name": "Pembaruan armada produksi",

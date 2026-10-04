@@ -44,6 +44,10 @@ const featureCopy: Record<string, { nameKey: string; detailsKey: string }> = {
     nameKey: 'fork.settings.features.productionFleetUpdates.name',
     detailsKey: 'fork.settings.features.productionFleetUpdates.details',
   },
+  'sponsors.enabled': {
+    nameKey: 'fork.settings.features.sponsors.name',
+    detailsKey: 'fork.settings.features.sponsors.details',
+  },
 };
 
 export default function CatxFeaturesTab() {

@@ -2726,6 +2726,9 @@
     "operations": {
       "title": "运维"
     },
+    "sponsors": {
+      "title": "赞助商"
+    },
     "apiDocs": {
       "labels": {
         "panelApi": "3X-UI 面板 API",
@@ -2740,6 +2743,7 @@
       "portal": "Self-服务 门户",
       "fleetUpdates": "节点集群 更新",
       "settings": "CatX-UI 功能",
+      "sponsors": "CatX 赞助商",
       "traffic": "流量 control"
     },
     "portal": {
@@ -3035,6 +3039,10 @@
         "fleetUpdates": {
           "name": "节点集群更新",
           "details": "规划并协调受管节点的更新。"
+        },
+        "sponsors": {
+          "name": "赞助商",
+          "details": "通过已认证的 CatX 界面显示由运营者配置的赞助商元数据。"
         },
         "productionFleetUpdates": {
           "name": "生产节点集群更新",

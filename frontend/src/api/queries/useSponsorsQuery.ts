@@ -7,8 +7,10 @@ import type { SponsorList } from '@/generated/types';
 const EMPTY: SponsorList = { sponsors: [] };
 
 async function fetchSponsors(): Promise<SponsorList> {
-  const msg = await HttpUtil.get<SponsorList>('/sponsors', undefined, { silent: true });
-  if (!msg?.success || !msg.obj) return EMPTY;
+  const msg = await HttpUtil.get<SponsorList>('/panel/api/fork/sponsors', undefined, {
+    silent: true,
+  });
+  if (!msg?.success || !msg.obj) throw new Error(msg?.msg || 'Failed to load sponsors');
   return { contact: msg.obj.contact, sponsors: msg.obj.sponsors ?? [] };
 }
 
@@ -19,5 +21,14 @@ export function useSponsorsQuery() {
     staleTime: 60 * 60 * 1000,
     retry: false,
   });
-  return { data: query.data ?? EMPTY, fetched: query.isFetched };
+  return {
+    data: query.data ?? EMPTY,
+    fetched: query.isFetched,
+    error:
+      query.error instanceof Error
+        ? query.error.message
+        : query.error
+          ? 'Failed to load sponsors'
+          : undefined,
+  };
 }

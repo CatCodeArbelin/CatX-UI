@@ -26,6 +26,7 @@ const (
 	FlagSelfService     Flag = "self_service.enabled"
 	FlagFleetUpdates    Flag = "fleet_updates.enabled"
 	FlagFleetMutation   Flag = "fleet_updates.mutation.enabled"
+	FlagSponsors        Flag = "sponsors.enabled"
 )
 
 var allFlags = [...]Flag{
@@ -40,6 +41,7 @@ var allFlags = [...]Flag{
 	FlagSelfService,
 	FlagFleetUpdates,
 	FlagFleetMutation,
+	FlagSponsors,
 }
 
 func settingKey(flag Flag) string {
@@ -85,6 +87,7 @@ var managedFeatureFlags = []struct {
 	{FlagSelfService, nil},
 	{FlagFleetUpdates, nil},
 	{FlagFleetMutation, []Flag{FlagFleetUpdates}},
+	{FlagSponsors, nil},
 }
 
 func NewSettings(db *gorm.DB) Settings {

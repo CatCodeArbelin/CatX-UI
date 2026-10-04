@@ -2726,6 +2726,9 @@
     "operations": {
       "title": "營運"
     },
+    "sponsors": {
+      "title": "贊助商"
+    },
     "apiDocs": {
       "labels": {
         "panelApi": "3X-UI 面板 API",
@@ -2740,6 +2743,7 @@
       "portal": "Self-服務 入口網站",
       "fleetUpdates": "節點叢集 更新",
       "settings": "CatX-UI 功能",
+      "sponsors": "CatX 贊助商",
       "traffic": "流量 control"
     },
     "portal": {
@@ -3035,6 +3039,10 @@
         "fleetUpdates": {
           "name": "節點群組更新",
           "details": "規劃並協調受管理節點的更新。"
+        },
+        "sponsors": {
+          "name": "贊助商",
+          "details": "透過已驗證的 CatX 介面顯示由營運者設定的贊助商中繼資料。"
         },
         "productionFleetUpdates": {
           "name": "生產節點群組更新",

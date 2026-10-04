@@ -4,7 +4,7 @@ import { forkApiSections, forkNavigationItems, forkRoutes } from '@/forkext/regi
 
 describe('fork registries', () => {
   it('registers the client activity page through the fork boundary', () => {
-    expect(forkRoutes).toHaveLength(7);
+    expect(forkRoutes).toHaveLength(8);
     expect(forkNavigationItems).toEqual([
       expect.objectContaining({
         key: 'client-activity',
@@ -37,6 +37,12 @@ describe('fork registries', () => {
         path: '/webhooks',
         group: 'operations',
         icon: 'webhooks',
+      }),
+      expect.objectContaining({
+        key: 'sponsors',
+        path: '/catx/sponsors',
+        group: 'operations',
+        icon: 'sponsors',
       }),
     ]);
     const risk = forkApiSections.find((section) => section.id === 'risk-intelligence');

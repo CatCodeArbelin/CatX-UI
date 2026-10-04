@@ -2726,6 +2726,9 @@
     "operations": {
       "title": "Vận hành"
     },
+    "sponsors": {
+      "title": "Nhà tài trợ"
+    },
     "apiDocs": {
       "labels": {
         "panelApi": "API bảng điều khiển 3X-UI",
@@ -2740,6 +2743,7 @@
       "portal": "Self-Dịch vụ Cổng thông tin",
       "fleetUpdates": "Đội máy chủ Các cập nhật",
       "settings": "Tính năng CatX-UI",
+      "sponsors": "Nhà tài trợ CatX",
       "traffic": "Lưu lượng control"
     },
     "portal": {
@@ -3035,6 +3039,10 @@
         "fleetUpdates": {
           "name": "Cập nhật cụm máy chủ",
           "details": "Lập kế hoạch và đồng bộ cập nhật trên các nút được quản lý."
+        },
+        "sponsors": {
+          "name": "Nhà tài trợ",
+          "details": "Hiển thị siêu dữ liệu nhà tài trợ do người vận hành cấu hình trên các giao diện CatX đã xác thực."
         },
         "productionFleetUpdates": {
           "name": "Cập nhật cụm máy chủ sản xuất",

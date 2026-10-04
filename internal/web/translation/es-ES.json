@@ -2726,6 +2726,9 @@
     "operations": {
       "title": "Operaciones"
     },
+    "sponsors": {
+      "title": "Patrocinadores"
+    },
     "apiDocs": {
       "labels": {
         "panelApi": "API del panel 3X-UI",
@@ -2740,6 +2743,7 @@
       "portal": "Portal de autoservicio",
       "fleetUpdates": "Actualizaciones de la flota",
       "settings": "Funciones de CatX-UI",
+      "sponsors": "Patrocinadores de CatX",
       "traffic": "Control del tráfico"
     },
     "portal": {
@@ -3035,6 +3039,10 @@
         "fleetUpdates": {
           "name": "Actualizaciones de la flota",
           "details": "Planifica y reconcilia actualizaciones en nodos gestionados."
+        },
+        "sponsors": {
+          "name": "Patrocinadores",
+          "details": "Muestra metadatos de patrocinadores configurados por el operador mediante superficies CatX autenticadas."
         },
         "productionFleetUpdates": {
           "name": "Actualizaciones de la flota en producción",

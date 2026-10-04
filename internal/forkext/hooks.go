@@ -1,7 +1,6 @@
 // Package forkext contains the fixed, first-party extension boundaries used by
-// CatX-UI. The initial contracts are deliberately no-ops so the upstream
-// execution path remains authoritative until a later work package supplies
-// feature implementations.
+// CatX-UI. Feature modules stay behind these hooks so upstream execution paths
+// remain authoritative when a fork feature is disabled.
 package forkext
 
 import (
@@ -18,6 +17,7 @@ import (
 	"github.com/mhsanaei/3x-ui/v3/internal/forkext/groupquota"
 	"github.com/mhsanaei/3x-ui/v3/internal/forkext/portal"
 	"github.com/mhsanaei/3x-ui/v3/internal/forkext/risk"
+	"github.com/mhsanaei/3x-ui/v3/internal/forkext/sponsors"
 	"github.com/mhsanaei/3x-ui/v3/internal/forkext/trafficcontrol"
 	"github.com/mhsanaei/3x-ui/v3/internal/forkext/trafficpolicy"
 	"github.com/mhsanaei/3x-ui/v3/internal/policy"
@@ -44,6 +44,7 @@ type runtimeConfig struct {
 	selfService    bool
 	fleetUpdates   bool
 	fleetMutation  bool
+	sponsors       bool
 }
 
 func loadRuntimeConfig(db *gorm.DB) (runtimeConfig, error) {
@@ -72,6 +73,7 @@ func loadRuntimeConfig(db *gorm.DB) (runtimeConfig, error) {
 		selfService:    values[FlagSelfService],
 		fleetUpdates:   values[FlagFleetUpdates],
 		fleetMutation:  values[FlagFleetMutation],
+		sponsors:       values[FlagSponsors],
 	}, nil
 }
 
@@ -132,6 +134,7 @@ func disableRuntime() {
 	analytics.SetEvidenceEnabled(false)
 	policy.Configure(nil, false)
 	risk.Configure(nil, false)
+	sponsors.Configure(nil, false)
 }
 
 func applyRuntimeConfig(db *gorm.DB, cfg runtimeConfig) {
@@ -153,6 +156,7 @@ func applyRuntimeConfig(db *gorm.DB, cfg runtimeConfig) {
 	analytics.SetEvidenceEnabled(cfg.analytics && cfg.dns)
 	policy.Configure(db, cfg.policies)
 	risk.Configure(db, cfg.security)
+	sponsors.Configure(db, cfg.sponsors)
 }
 
 // RegisterMigrations is the single database integration point for initial
@@ -203,7 +207,8 @@ func ReloadRuntimeFromSettings(db *gorm.DB) error {
 }
 
 // RegisterRoutes is the protected API integration point for fork endpoints.
-// An empty registration preserves the upstream route set exactly.
+// The controller calls it only after establishing the authenticated panel API
+// group, so modules do not create public admin surfaces accidentally.
 func RegisterRoutes(api *gin.RouterGroup) {
 	portal.RegisterAdminRoutes(api)
 	audit.RegisterRoutes(api)
@@ -217,6 +222,7 @@ func RegisterRoutes(api *gin.RouterGroup) {
 	trafficpolicy.RegisterRoutes(api)
 	fleetupdate.RegisterRoutes(api)
 	risk.RegisterRoutes(api)
+	sponsors.RegisterRoutes(api)
 }
 
 // RegisterPortalRoutes installs the separate client portal surface at the

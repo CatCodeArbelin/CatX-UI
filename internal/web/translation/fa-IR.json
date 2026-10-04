@@ -2726,6 +2726,9 @@
     "operations": {
       "title": "عملیات"
     },
+    "sponsors": {
+      "title": "حامیان"
+    },
     "apiDocs": {
       "labels": {
         "panelApi": "API پنل 3X-UI",
@@ -2740,6 +2743,7 @@
       "portal": "پرتال سلف‌سرویس",
       "fleetUpdates": "به‌روزرسانی‌های ناوگان",
       "settings": "قابلیت‌های CatX-UI",
+      "sponsors": "حامیان CatX",
       "traffic": "کنترل ترافیک"
     },
     "portal": {
@@ -3035,6 +3039,10 @@
         "fleetUpdates": {
           "name": "به‌روزرسانی ناوگان",
           "details": "به‌روزرسانی گره‌های مدیریت‌شده را برنامه‌ریزی و همگرا می‌کند."
+        },
+        "sponsors": {
+          "name": "حامیان",
+          "details": "نمایش فرادادهٔ حامیانِ پیکربندی‌شده توسط اپراتور در سطوح احراز هویت‌شدهٔ CatX."
         },
         "productionFleetUpdates": {
           "name": "به‌روزرسانی ناوگان تولید",

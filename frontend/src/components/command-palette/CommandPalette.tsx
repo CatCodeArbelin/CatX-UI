@@ -13,7 +13,6 @@ import {
   ClusterOutlined,
   CodeOutlined,
   CopyOutlined,
-  CrownOutlined,
   DashboardOutlined,
   DatabaseOutlined,
   DiscordOutlined,
@@ -426,12 +425,6 @@ export default function CommandPalette() {
         keywords: [t(item.labelKey).toLowerCase(), 'fork'],
         icon: <FileTextOutlined />,
       })),
-      {
-        path: '/sponsors',
-        title: t('menu.sponsors'),
-        keywords: ['sponsors', 'sponsor', 'partners'],
-        icon: <CrownOutlined />,
-      },
     ];
 
     pages

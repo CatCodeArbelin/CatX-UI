@@ -8,6 +8,7 @@ and is not presented here as an official CatX documentation website.
 
 For the current public product contract, start with the [CatX-UI root
 README](../README.md), [stable v0.2.0 release notes](32_V0_2_0_RELEASE_NOTES.md),
+[CatX Sponsors contract](33_CATX_SPONSORS.md),
 [contributing guide](../CONTRIBUTING.md), and [security policy](../SECURITY.md).
 CatX installs and updates come only from
 [CatCodeArbelin/CatX-UI](https://github.com/CatCodeArbelin/CatX-UI); do not use

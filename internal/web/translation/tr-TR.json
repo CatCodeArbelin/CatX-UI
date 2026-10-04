@@ -2726,6 +2726,9 @@
     "operations": {
       "title": "İşlemler"
     },
+    "sponsors": {
+      "title": "Sponsorlar"
+    },
     "apiDocs": {
       "labels": {
         "panelApi": "3X-UI panel API'si",
@@ -2740,6 +2743,7 @@
       "portal": "Self-Hizmet Portal",
       "fleetUpdates": "Filo Güncellemeler",
       "settings": "CatX-UI Özellikleri",
+      "sponsors": "CatX Sponsorları",
       "traffic": "Trafik control"
     },
     "portal": {
@@ -3035,6 +3039,10 @@
         "fleetUpdates": {
           "name": "Filo güncellemeleri",
           "details": "Yönetilen düğümlerdeki güncellemeleri planlar ve uzlaştırır."
+        },
+        "sponsors": {
+          "name": "Sponsorlar",
+          "details": "Operatör tarafından yapılandırılan sponsor meta verilerini kimliği doğrulanmış CatX yüzeylerinde gösterir."
         },
         "productionFleetUpdates": {
           "name": "Üretim filosu güncellemeleri",

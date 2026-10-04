@@ -2726,6 +2726,9 @@
     "operations": {
       "title": "運用"
     },
+    "sponsors": {
+      "title": "スポンサー"
+    },
     "apiDocs": {
       "labels": {
         "panelApi": "3X-UI パネル API",
@@ -2740,6 +2743,7 @@
       "portal": "Self-サービス ポータル",
       "fleetUpdates": "フリート 更新",
       "settings": "CatX-UI 機能",
+      "sponsors": "CatX スポンサー",
       "traffic": "トラフィック control"
     },
     "portal": {
@@ -3035,6 +3039,10 @@
         "fleetUpdates": {
           "name": "フリート更新",
           "details": "管理対象ノードの更新を計画し、状態を収束させます。"
+        },
+        "sponsors": {
+          "name": "スポンサー",
+          "details": "オペレーターが設定したスポンサーのメタデータを認証済みの CatX 画面で表示します。"
         },
         "productionFleetUpdates": {
           "name": "本番フリート更新",

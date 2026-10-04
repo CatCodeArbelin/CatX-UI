@@ -2726,6 +2726,9 @@
     "operations": {
       "title": "العمليات"
     },
+    "sponsors": {
+      "title": "الرعاة"
+    },
     "apiDocs": {
       "labels": {
         "panelApi": "واجهة API للوحة 3X-UI",
@@ -2740,6 +2743,7 @@
       "portal": "بوابة الخدمة الذاتية",
       "fleetUpdates": "تحديثات الأسطول",
       "settings": "ميزات CatX-UI",
+      "sponsors": "رعاة CatX",
       "traffic": "التحكم في حركة المرور"
     },
     "portal": {
@@ -3035,6 +3039,10 @@
         "fleetUpdates": {
           "name": "تحديثات الأسطول",
           "details": "تخطيط تحديثات العقد المُدارة ومطابقتها."
+        },
+        "sponsors": {
+          "name": "الرعاة",
+          "details": "عرض بيانات الرعاة المهيأة من المشغل عبر أسطح CatX الموثقة."
         },
         "productionFleetUpdates": {
           "name": "تحديثات الأسطول في بيئة الإنتاج",

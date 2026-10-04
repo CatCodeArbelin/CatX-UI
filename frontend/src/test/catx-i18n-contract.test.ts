@@ -71,9 +71,9 @@ describe('CatX frontend i18n contract', () => {
 
   it('keeps fork navigation fully localized', () => {
     expect(forkNavigationItems.every((item) => item.labelKey.startsWith('fork.'))).toBe(true);
-    expect(forkNavigationItems).toHaveLength(7);
-    expect(new Set(forkNavigationItems.map((item) => item.icon)).size).toBe(7);
-    expect(forkNavigationItems.filter((item) => item.group === 'operations')).toHaveLength(2);
+    expect(forkNavigationItems).toHaveLength(8);
+    expect(new Set(forkNavigationItems.map((item) => item.icon)).size).toBe(8);
+    expect(forkNavigationItems.filter((item) => item.group === 'operations')).toHaveLength(3);
     expect(forkApiSections.every((section) => section.translationKey?.startsWith('fork.'))).toBe(
       true,
     );

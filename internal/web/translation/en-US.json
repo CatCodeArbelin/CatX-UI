@@ -2726,6 +2726,9 @@
     "operations": {
       "title": "Operations"
     },
+    "sponsors": {
+      "title": "Sponsors"
+    },
    "apiDocs": {
     "labels": {
       "panelApi": "3X-UI Panel API",
@@ -2740,6 +2743,7 @@
       "portal": "Self-service portal",
       "fleetUpdates": "Fleet updates",
       "settings": "CatX-UI Features",
+      "sponsors": "CatX Sponsors",
       "traffic": "Traffic control"
     },
    "portal": {
@@ -3046,6 +3050,10 @@
         "fleetUpdates": {
           "name": "Fleet updates",
           "details": "Plan and reconcile updates across managed nodes."
+        },
+        "sponsors": {
+          "name": "Sponsors",
+          "details": "Show operator-configured sponsor metadata through authenticated CatX surfaces."
         },
         "productionFleetUpdates": {
           "name": "Production fleet updates",
