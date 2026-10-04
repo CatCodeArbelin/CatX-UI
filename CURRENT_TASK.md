@@ -6,7 +6,7 @@
 
 ## Status
 
-`CURRENT`
+`COMPLETE — DRAFT PR OPEN FOR REVIEW`
 
 This is the first post-`v0.2.0` CatX product feature. It must not create or
 modify a `v0.2.1` release, move an immutable tag, or change the published
@@ -115,5 +115,15 @@ open for review.
 
 ## Completion record
 
-- pending hosted verification and draft PR creation;
+- implementation commit: `fc010fb701089f3eed8bebb7d85743e19c1164f6`;
+- hosted lint correction: `be6bce6677bc0d50a349db138a0b7229aa576a2e`;
+- draft review PR: [#10](https://github.com/CatCodeArbelin/CatX-UI/pull/10), open,
+  targeting `develop`, intentionally unmerged;
+- hosted required Go, race, frontend, PostgreSQL, fuzz, codegen, build,
+  release-identity, release qualification, and `verify-fork` gates are green
+  for the implementation branch; disposable install/PostgreSQL rehearsal and
+  rolling-release publication are skipped by repository policy;
+- local limitations recorded during verification: CGO/race and SQLite-backed
+  tests require the unavailable local C toolchain; Node 26 was used for the
+  Vitest/OpenAPI tools; the hosted matrix supplied the full required gate;
 - no `v0.2.1` release, tag movement, or stable artifact change.
