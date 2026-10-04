@@ -1,0 +1,79 @@
+name: Sponsors real panel restart smoke
+
+on:
+  push:
+    branches: [chore/sponsors-real-restart-smoke]
+    paths:
+      - '.github/workflows/sponsors-real-restart-smoke.yml'
+      - 'scripts/staging/observe-sponsors-real-linux.sh'
+      - 'internal/forkext/**'
+      - 'internal/web/web.go'
+      - 'internal/web/controller/setting.go'
+      - 'frontend/**'
+      - 'go.mod'
+      - 'go.sum'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sponsors-real-panel:
+    name: Exercise Sponsors on a disposable real panel
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+        with: {fetch-depth: 0}
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install Linux smoke dependencies
+        run: sudo apt-get update && sudo apt-get install --yes --no-install-recommends curl jq unzip
+      - name: Build frontend bundle
+        working-directory: frontend
+        run: npm ci && npm run build
+      - name: Build exact candidate and Xray
+        run: |
+          set -euo pipefail
+          go build -buildvcs=false -ldflags '-s -w' -o "$RUNNER_TEMP/catx-candidate-x-ui" .
+          curl --fail --location --retry 4 --retry-all-errors --retry-delay 2 -o "$RUNNER_TEMP/xray.zip" 'https://github.com/XTLS/Xray-core/releases/download/v26.9.9/Xray-linux-64.zip'
+          unzip -q "$RUNNER_TEMP/xray.zip" xray geoip.dat geosite.dat -d "$RUNNER_TEMP/xray-unpacked"
+          install -m 0755 "$RUNNER_TEMP/xray-unpacked/xray" "$RUNNER_TEMP/xray-linux-amd64"
+          mkdir -p "$RUNNER_TEMP/xray-assets"
+          install -m 0644 "$RUNNER_TEMP/xray-unpacked/geoip.dat" "$RUNNER_TEMP/xray-assets/geoip.dat"
+          install -m 0644 "$RUNNER_TEMP/xray-unpacked/geosite.dat" "$RUNNER_TEMP/xray-assets/geosite.dat"
+      - name: Run focused Sponsors and migration lifecycle tests
+        run: go test -count=1 ./internal/forkext/sponsors ./internal/forkext
+      - name: Run repository verification gates
+        run: make verify-fork
+      - name: Run authenticated real-panel lifecycle
+        env:
+          CATX_SPONSORS_CANDIDATE_BINARY: ${{ runner.temp }}/catx-candidate-x-ui
+          CATX_SPONSORS_CANDIDATE_XRAY_BINARY: ${{ runner.temp }}/xray-linux-amd64
+          CATX_SPONSORS_CANDIDATE_XRAY_ASSET_DIR: ${{ runner.temp }}/xray-assets
+          CATX_SPONSORS_CANDIDATE_SHA: ${{ github.sha }}
+          CATX_SPONSORS_EVIDENCE_DIR: ${{ runner.temp }}/catx-sponsors-real-evidence
+        run: |
+          set -euo pipefail
+          sudo env \
+            "CATX_SPONSORS_CANDIDATE_BINARY=$CATX_SPONSORS_CANDIDATE_BINARY" \
+            "CATX_SPONSORS_CANDIDATE_XRAY_BINARY=$CATX_SPONSORS_CANDIDATE_XRAY_BINARY" \
+            "CATX_SPONSORS_CANDIDATE_XRAY_ASSET_DIR=$CATX_SPONSORS_CANDIDATE_XRAY_ASSET_DIR" \
+            "CATX_SPONSORS_CANDIDATE_SHA=$CATX_SPONSORS_CANDIDATE_SHA" \
+            "CATX_SPONSORS_EVIDENCE_DIR=$CATX_SPONSORS_EVIDENCE_DIR" \
+            bash scripts/staging/observe-sponsors-real-linux.sh
+      - name: Upload sanitized evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sponsors-real-panel-${{ github.run_id }}
+          path: ${{ runner.temp }}/catx-sponsors-real-evidence
+          if-no-files-found: warn
+          retention-days: 30

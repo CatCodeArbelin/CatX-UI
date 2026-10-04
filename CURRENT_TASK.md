@@ -130,7 +130,7 @@ limitations, and the v0.3.0 scope without adding major features.
   Vitest/OpenAPI tools; the hosted matrix supplied the full required gate;
 - no `v0.2.1` release, tag movement, or stable artifact change.
 
-## Post-Sponsors Product Reality Audit — READY FOR MAINTAINER REVIEW
+## Post-Sponsors Product Reality Audit — ACCEPTED INTO DEVELOP
 
 - audit branch: `chore/catx-product-reality-audit`;
 - audited develop SHA: `6207a2d6fc94e91b96006d0ac68f350c355879a8`;
@@ -142,7 +142,19 @@ limitations, and the v0.3.0 scope without adding major features.
 - audit output: `docs/35_CATX_PRODUCT_REALITY_AUDIT.md`;
 - no major feature work, release work, upstream sync, tag movement, or main
   change is authorized in this phase;
-- draft audit PR: [#11](https://github.com/CatCodeArbelin/CatX-UI/pull/11), open,
-  targeting `develop`, and intentionally unmerged for maintainer review;
+- audit PR: [#11](https://github.com/CatCodeArbelin/CatX-UI/pull/11), merged into
+  `develop` with normal merge commit `49a29ad994fe9928c711d9306739ffe161165ce5`;
 - hosted Docs CI passed for audit head
   `0ff542b686783762c0eedcc53060f88cf992226b`.
+
+## Sponsors Real Panel Lifecycle Proof — CURRENT
+
+- lifecycle branch: `chore/sponsors-real-restart-smoke`;
+- starting develop SHA: `49a29ad994fe9928c711d9306739ffe161165ce5`;
+- scope: disposable hosted Linux panel, authenticated Sponsors CRUD/provider
+  flow, real `POST /panel/api/setting/restartPanel`, feature-off/re-enable,
+  provider persistence, Xray/panel health, and migration boundary evidence;
+- harness: `scripts/staging/observe-sponsors-real-linux.sh`;
+- hosted workflow: `.github/workflows/sponsors-real-restart-smoke.yml`;
+- no product feature or runtime source change is authorized by this package;
+- no multi-node qualification, release work, upstream sync, or `main` change.

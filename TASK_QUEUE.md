@@ -958,3 +958,26 @@ This is complete in audit commit `0ff542b686783762c0eedcc53060f88cf992226b`
 with Draft PR [#11](https://github.com/CatCodeArbelin/CatX-UI/pull/11) open and
 Docs CI green. Do not add major features, bump a version, publish a release,
 modify `main` or immutable tags, or merge the audit PR unattended.
+
+# Sponsors Real Panel Lifecycle Proof — CURRENT
+
+Branch: `chore/sponsors-real-restart-smoke`, from `develop` merge
+`49a29ad994fe9928c711d9306739ffe161165ce5`.
+
+Close only the first MUST-FIX evidence gap from the Product Reality Audit:
+prove the integrated Sponsors feature on a disposable hosted Linux panel using
+authenticated APIs, local CRUD, provider authority/persistence, feature-off
+storage-preserving behavior, real `restartPanel`, panel/Xray/UI health, and
+metadata-only audit events. The startup-only Audit schema preparation is
+separate from the lifecycle restart assertions. Existing migration-boundary
+tests prove startup schema preparation versus runtime reload without changing
+runtime architecture.
+
+Harness and workflow:
+
+- `scripts/staging/observe-sponsors-real-linux.sh`;
+- `.github/workflows/sponsors-real-restart-smoke.yml`.
+
+Do not add Sponsors behavior, multi-node qualification, release work, upstream
+sync, or changes to `main`. Leave the lifecycle PR open and unmerged after the
+hosted checks pass.
