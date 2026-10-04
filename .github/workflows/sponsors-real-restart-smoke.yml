@@ -95,6 +95,8 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
         working-directory: frontend
+      - name: Prepare embedded frontend directory
+        run: mkdir -p internal/web/dist && touch internal/web/dist/.gitkeep
       - name: Install golangci-lint
         uses: golangci/golangci-lint-action@v9
         with:
