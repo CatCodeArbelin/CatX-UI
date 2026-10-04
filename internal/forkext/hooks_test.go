@@ -13,6 +13,7 @@ import (
 	"github.com/mhsanaei/3x-ui/v3/internal/forkext/groupquota"
 	"github.com/mhsanaei/3x-ui/v3/internal/forkext/portal"
 	"github.com/mhsanaei/3x-ui/v3/internal/forkext/risk"
+	"github.com/mhsanaei/3x-ui/v3/internal/forkext/sponsors"
 	"github.com/mhsanaei/3x-ui/v3/internal/forkext/trafficcontrol"
 	"github.com/mhsanaei/3x-ui/v3/internal/forkext/trafficpolicy"
 	"github.com/mhsanaei/3x-ui/v3/internal/policy"
@@ -50,6 +51,7 @@ func assertRuntimeState(t *testing.T, enabled bool) {
 		"policies":         policy.Enabled(),
 		"self service":     portal.Enabled(),
 		"security anomaly": risk.Enabled(),
+		"sponsors":         sponsors.Enabled(),
 		"traffic control":  trafficcontrol.Enabled(),
 		"traffic policy":   trafficpolicy.Enabled(),
 	}
@@ -103,6 +105,7 @@ func TestRuntimeReloadAppliesManagedFeatureTransitionsAndSchema(t *testing.T) {
 		"group quota":      &groupquota.State{},
 		"policies":         &policy.Policy{},
 		"security anomaly": &risk.IPHistory{},
+		"sponsors":         &sponsors.Record{},
 		"self service":     &portal.Credential{},
 		"traffic policy":   &trafficpolicy.Policy{},
 	} {

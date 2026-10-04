@@ -895,16 +895,30 @@ Required work:
 - run relevant tests, `make verify`, and `make verify-fork` where available;
 - push an unmerged PR targeting `develop`.
 
-No merge into `develop` is authorized by this package.
+The acceptance review authorized the merge into `develop` after all required
+hosted gates passed.
 
 Completion record:
 
-- implementation commit: `fdba4bc5`;
-- lint-format correction: `9af816ba`;
-- SQLite fixture isolation correction: `8081d83e`;
-- review PR: [#9](https://github.com/CatCodeArbelin/CatX-UI/pull/9), open and
-  intentionally unmerged;
+- acceptance corrections were pushed through `d324840c`;
+- review PR: [#9](https://github.com/CatCodeArbelin/CatX-UI/pull/9), merged into
+  `develop` after hosted acceptance gates passed;
 - hosted required Go, race, frontend, PostgreSQL, fuzz, codegen, build,
   release-identity, and `verify-fork` gates: green;
 - optional rolling-release and disposable rehearsal jobs: skipped by policy;
 - stable `v0.2.0` and its immutable tag remain unchanged.
+
+# CatX Sponsors Management & Product UX — CURRENT
+
+Branch: `feature/catx-sponsors-management`, from merged develop
+`d324840c034c8e9dd2a02f14e1ab4ca0cecbd42b`.
+
+The local CatX database is authoritative in explicit `local` provider mode.
+The secure PR #9 HTTPS feed remains available only in explicit `remote` mode;
+there is no implicit merge and remote import is deferred. This package adds a
+minimal `fork_sponsors` schema, authenticated CRUD/status/provider APIs,
+metadata-only audit integration, safe URL-based logo proxying, deterministic
+ordering, and a CatX-owned management page. It must remain a draft PR and must
+not be merged automatically.
+
+Design/evidence: `docs/34_CATX_SPONSORS_MANAGEMENT.md`.

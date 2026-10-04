@@ -21901,6 +21901,186 @@
             }
           }
         }
+      },
+      "post": {
+        "tags": [
+          "CatX Sponsors"
+        ],
+        "summary": "Create a locally managed sponsor.",
+        "operationId": "post_panel_api_fork_sponsors",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "priority",
+                  "slots",
+                  "destinationUrl",
+                  "title",
+                  "text"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "enabled": {
+                    "type": "boolean"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "priority": {
+                    "type": "integer"
+                  },
+                  "slots": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "dashboard",
+                        "sidebar",
+                        "page"
+                      ]
+                    }
+                  },
+                  "startAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "endAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "destinationUrl": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "logoUrl": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "title": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  },
+                  "text": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  },
+                  "createdAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "updatedAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "type": "object",
+                      "required": [
+                        "id",
+                        "enabled",
+                        "name",
+                        "priority",
+                        "slots",
+                        "destinationUrl",
+                        "title",
+                        "text"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "enabled": {
+                          "type": "boolean"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "priority": {
+                          "type": "integer"
+                        },
+                        "slots": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "enum": [
+                              "dashboard",
+                              "sidebar",
+                              "page"
+                            ]
+                          }
+                        },
+                        "startAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "endAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "destinationUrl": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "logoUrl": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "title": {
+                          "type": "object",
+                          "additionalProperties": {
+                            "type": "string"
+                          }
+                        },
+                        "text": {
+                          "type": "object",
+                          "additionalProperties": {
+                            "type": "string"
+                          }
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/panel/api/fork/sponsors/logo/{name}": {
@@ -21981,7 +22161,8 @@
                         "enabled",
                         "configured",
                         "sourceUrl",
-                        "contactUrl"
+                        "contactUrl",
+                        "providerMode"
                       ],
                       "properties": {
                         "enabled": {
@@ -21995,6 +22176,13 @@
                         },
                         "contactUrl": {
                           "type": "string"
+                        },
+                        "providerMode": {
+                          "type": "string",
+                          "enum": [
+                            "local",
+                            "remote"
+                          ]
                         }
                       }
                     }
@@ -22049,7 +22237,8 @@
                         "enabled",
                         "configured",
                         "sourceUrl",
-                        "contactUrl"
+                        "contactUrl",
+                        "providerMode"
                       ],
                       "properties": {
                         "enabled": {
@@ -22063,9 +22252,537 @@
                         },
                         "contactUrl": {
                           "type": "string"
+                        },
+                        "providerMode": {
+                          "type": "string",
+                          "enum": [
+                            "local",
+                            "remote"
+                          ]
                         }
                       }
                     }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/fork/sponsors/status": {
+      "get": {
+        "tags": [
+          "CatX Sponsors"
+        ],
+        "summary": "Read local/remote provider status and bounded cache state.",
+        "operationId": "get_panel_api_fork_sponsors_status",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "type": "object",
+                      "required": [
+                        "enabled",
+                        "providerMode",
+                        "localSponsorCount",
+                        "activeSponsorCount",
+                        "remoteProviderConfigured",
+                        "cacheState"
+                      ],
+                      "properties": {
+                        "enabled": {
+                          "type": "boolean"
+                        },
+                        "providerMode": {
+                          "type": "string",
+                          "enum": [
+                            "local",
+                            "remote"
+                          ]
+                        },
+                        "localSponsorCount": {
+                          "type": "integer"
+                        },
+                        "activeSponsorCount": {
+                          "type": "integer"
+                        },
+                        "remoteProviderConfigured": {
+                          "type": "boolean"
+                        },
+                        "lastSuccessfulFetch": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "lastError": {
+                          "type": "string"
+                        },
+                        "cacheState": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/fork/sponsors/manage": {
+      "get": {
+        "tags": [
+          "CatX Sponsors"
+        ],
+        "summary": "List all locally managed sponsors in deterministic order.",
+        "operationId": "get_panel_api_fork_sponsors_manage",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "enabled",
+                          "name",
+                          "priority",
+                          "slots",
+                          "destinationUrl",
+                          "title",
+                          "text"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "enabled": {
+                            "type": "boolean"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "priority": {
+                            "type": "integer"
+                          },
+                          "slots": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "dashboard",
+                                "sidebar",
+                                "page"
+                              ]
+                            }
+                          },
+                          "startAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "endAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "destinationUrl": {
+                            "type": "string",
+                            "format": "uri"
+                          },
+                          "logoUrl": {
+                            "type": "string",
+                            "format": "uri"
+                          },
+                          "title": {
+                            "type": "object",
+                            "additionalProperties": {
+                              "type": "string"
+                            }
+                          },
+                          "text": {
+                            "type": "object",
+                            "additionalProperties": {
+                              "type": "string"
+                            }
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/fork/sponsors/{id}": {
+      "get": {
+        "tags": [
+          "CatX Sponsors"
+        ],
+        "summary": "Read one locally managed sponsor.",
+        "operationId": "get_panel_api_fork_sponsors_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "type": "object",
+                      "required": [
+                        "id",
+                        "enabled",
+                        "name",
+                        "priority",
+                        "slots",
+                        "destinationUrl",
+                        "title",
+                        "text"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "enabled": {
+                          "type": "boolean"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "priority": {
+                          "type": "integer"
+                        },
+                        "slots": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "enum": [
+                              "dashboard",
+                              "sidebar",
+                              "page"
+                            ]
+                          }
+                        },
+                        "startAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "endAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "destinationUrl": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "logoUrl": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "title": {
+                          "type": "object",
+                          "additionalProperties": {
+                            "type": "string"
+                          }
+                        },
+                        "text": {
+                          "type": "object",
+                          "additionalProperties": {
+                            "type": "string"
+                          }
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "CatX Sponsors"
+        ],
+        "summary": "Update or enable/disable a locally managed sponsor.",
+        "operationId": "put_panel_api_fork_sponsors_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "priority",
+                  "slots",
+                  "destinationUrl",
+                  "title",
+                  "text"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "enabled": {
+                    "type": "boolean"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "priority": {
+                    "type": "integer"
+                  },
+                  "slots": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "dashboard",
+                        "sidebar",
+                        "page"
+                      ]
+                    }
+                  },
+                  "startAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "endAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "destinationUrl": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "logoUrl": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "title": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  },
+                  "text": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  },
+                  "createdAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "updatedAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "type": "object",
+                      "required": [
+                        "id",
+                        "enabled",
+                        "name",
+                        "priority",
+                        "slots",
+                        "destinationUrl",
+                        "title",
+                        "text"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "enabled": {
+                          "type": "boolean"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "priority": {
+                          "type": "integer"
+                        },
+                        "slots": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "enum": [
+                              "dashboard",
+                              "sidebar",
+                              "page"
+                            ]
+                          }
+                        },
+                        "startAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "endAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "destinationUrl": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "logoUrl": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "title": {
+                          "type": "object",
+                          "additionalProperties": {
+                            "type": "string"
+                          }
+                        },
+                        "text": {
+                          "type": "object",
+                          "additionalProperties": {
+                            "type": "string"
+                          }
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "CatX Sponsors"
+        ],
+        "summary": "Delete a locally managed sponsor.",
+        "operationId": "delete_panel_api_fork_sponsors_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
                   }
                 }
               }

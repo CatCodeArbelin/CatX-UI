@@ -2,11 +2,11 @@
 
 ## Work Package
 
-`CatX Sponsors`
+`CatX Sponsors Management & Product UX`
 
 ## Status
 
-`COMPLETE`
+`CURRENT`
 
 This is the first post-`v0.2.0` CatX product feature. It must not create or
 modify a `v0.2.1` release, move an immutable tag, or change the published
@@ -14,21 +14,21 @@ modify a `v0.2.1` release, move an immutable tag, or change the published
 
 ## Baseline
 
-- branch: `feature/catx-sponsors`;
-- starting branch: synchronized `origin/develop`;
+- branch: `feature/catx-sponsors-management`;
+- starting branch: merged `origin/develop` at `d324840c034c8e9dd2a02f14e1ab4ca0cecbd42b`;
 - starting `origin/main`: `070212b7c3ddf92cf303c4f352481a86f30d14b4`;
-- starting `origin/develop`: `b4f26cf2827c74592b6b733f0a2e9f24745622d0`;
+- starting `origin/develop`: `d324840c034c8e9dd2a02f14e1ab4ca0cecbd42b`;
 - stable tag: `v0.2.0 → 2b1760e98e665bde388e94c420bd22aa182fe2b0`;
 - upstream base: `MHSanaei/3x-ui v3.9.0`;
 - Xray: `26.9.30`.
 
 ## Goal
 
-Build a first CatX-owned Sponsors module with an authenticated panel API and a
-localized frontend page/sidebar/dashboard presentation. The data source must
-be explicitly configured by an operator, disabled by default, bounded, and
-safe for remote metadata. The CatX module must not depend on or copy the
-upstream Sanaei sponsor feed or source implementation.
+Turn the CatX Sponsors provider into a practical operator-managed product. The
+CatX database is authoritative in explicit `local` provider mode; the secure
+PR #9 HTTPS feed remains available only in explicit `remote` mode. The admin
+surface must support safe CRUD, scheduling, deterministic ordering,
+localization, preview, provider status, and reversible feature-off behavior.
 
 The upstream Sponsors implementation was inspected before coding. Its useful
 shape and visual components may be reused through narrow adapters, but CatX
@@ -58,64 +58,62 @@ and feature behavior.
 
 ## Scope
 
-- add the authoritative `sponsors.enabled` fork feature flag;
-- add fork-owned backend configuration, bounded HTTPS metadata fetch/cache,
-  active-window filtering, safe logo proxying, authenticated API routes, and
-  tests under `internal/forkext/sponsors/`;
-- persist only source/contact configuration through the existing settings
-  mechanism; no new database table or runtime schema mutation;
-- add a CatX-owned `/catx/sponsors` frontend route and registry entry;
-- route existing authenticated sponsor slots through the CatX API;
-- remove the unauthenticated login-page sponsor request;
-- preserve RTL behavior and provide EN/RU/FA-compatible visible text;
-- document the API/security contract and verification evidence.
+- add a minimal fork-owned `fork_sponsors` model with explicit SQLite and
+  PostgreSQL migration coverage;
+- make local DB sponsors the default source of truth, with explicit local or
+  remote provider mode and no ambiguous merge behavior;
+- add authenticated fork CRUD/status/provider APIs, server-side validation,
+  deterministic ordering, active-window filtering, safe remote logo URL
+  proxying, and metadata-only audit events;
+- add a CatX-owned management page under `frontend/src/forkext/sponsors/` with
+  list/create/edit/enable-disable/delete, scheduling, slots, localization,
+  logo URL, destination URL, preview, and provider status;
+- preserve only runtime-supported slots: dashboard, sidebar, and page;
+- keep the existing production rendering path compatible with local and
+  explicit remote providers; feature-off remains storage-preserving and
+  network-free;
+- document the source-of-truth decision, schema, migration, API, security,
+  audit, restart behavior, tests, and deferred import follow-up.
 
 ## Non-goals
 
-- no merge into `develop` from this branch;
+- no merge of the management PR; it must remain a draft PR for maintainer
+  review;
 - no `v0.2.1` release, tag, Docker publication, or stable artifact change;
+- no payments, billing, invoicing, ad bidding, tracking pixels, targeting,
+  CRM, affiliate, or self-service sponsor purchasing;
+- no silent remote/local merging and no automatic destructive remote import;
 - no copy of `internal/web/service/panel/sponsor.go`;
-- no dependency on `sponsors.sanaei.dev`;
 - no decrypted traffic, cookies, credentials, or sensitive HTTP bodies;
-- no database migration unless implementation evidence proves the existing
-  settings mechanism cannot represent the small configuration;
 - no unrelated upstream refactor, generated-file hand edit, or repository-wide
   formatting.
 
 ## Safety and recovery
 
-Feature disabled or unconfigured returns an empty sponsor set without a remote
-request. Only bounded HTTPS metadata is accepted. Redirects, hosts, resolved
-addresses, response sizes, logo names, content types, active dates, and link
-schemes are validated. Cached known-good data remains available during a
-temporary fetch failure; no network call is made while a service lock is held.
-Configuration changes invalidate the cache. Recovery is configuration-level:
-disable `sponsors.enabled` or clear the source URL, then reload fork settings;
-the normal known-good empty/previous-cache behavior remains available without
-altering Xray, routing, or database schema.
+Feature disabled returns no rendering, remote fetch, import, logo fetch, or
+background sync while retaining local records. Local CRUD is transactional and
+validated; remote mode retains the PR #9 bounded HTTPS cache and SSRF policy.
+Logo URLs are validated at save time and fetched only through the safe client.
+Recovery is configuration-level: disable `sponsors.enabled`, select `local`, or
+clear provider URLs, then reload the panel. No Xray, routing, or upstream
+database state is changed.
 
 ## Verification gate
 
-Before requesting review, run relevant Go unit tests including race coverage,
-frontend tests/typecheck, `git diff --check`, `make verify`, and
-`make verify-fork` where the required toolchain is available. Record unavailable
-local checks and rely on hosted required checks. Do not merge this Sponsors PR.
+Before requesting review, run SQLite and PostgreSQL migration/CRUD tests,
+restart/reload coverage, audit coverage, frontend tests/typecheck, generated
+OpenAPI/docs checks, `git diff --check`, `make verify`, and `make verify-fork`
+where the required toolchain is available. Record unavailable local checks and
+rely on hosted required checks. Do not merge this management PR.
 
 ## Completion condition
 
-Implementation, tests, documentation, and feature-disabled compatibility are
-complete; the branch is pushed; hosted required checks are green; and an
-unmerged PR targeting `develop` is open for review.
+Implementation, tests, documentation, migration evidence, feature-disabled
+compatibility, and restart behavior are complete; the branch is pushed; hosted
+required checks are green; and a draft, unmerged PR targeting `develop` is
+open for review.
 
 ## Completion record
 
-- implementation commit: `fdba4bc5`;
-- lint-format correction: `9af816ba`;
-- test-isolation correction: `8081d83e`;
-- PR: [#9](https://github.com/CatCodeArbelin/CatX-UI/pull/9), open and
-  unmerged against `develop`;
-- hosted required checks: green, including full Go tests, race, frontend,
-  PostgreSQL durability, fuzz smoke, codegen, builds, release identity, and
-  both `verify-fork` jobs;
-- optional rolling release and disposable rehearsal jobs: skipped by policy;
+- pending hosted verification and draft PR creation;
 - no `v0.2.1` release, tag movement, or stable artifact change.

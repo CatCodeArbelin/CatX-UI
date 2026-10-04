@@ -37,6 +37,7 @@ export default function FeatureOffState({
     webhooks: 'fork.webhooks.title',
     self_service: 'fork.apiDocs.portal',
     fleet_updates: 'fork.fleetUpdate.title',
+    sponsors: 'fork.sponsors.title',
   };
   const featureLabel = feature ? t(labels[feature]) : t('fork.common.featureOffTitle');
   return (

@@ -120,6 +120,11 @@ func prepareRuntimeSchema(db *gorm.DB, cfg runtimeConfig) error {
 			return fmt.Errorf("prepare security-anomaly schema: %w", err)
 		}
 	}
+	if cfg.sponsors {
+		if err := sponsors.Migrate(db); err != nil {
+			return fmt.Errorf("prepare sponsors schema: %w", err)
+		}
+	}
 	return nil
 }
 
@@ -330,7 +335,7 @@ func GroupQuotaRebaselineClient(tx *gorm.DB, email string, up, down int64) error
 }
 
 func MigrationModels() []any {
-	return append(append(append(groupquota.Models(), trafficpolicy.Models()...), &portal.Credential{}, &portal.HostGrant{}), &fleetupdate.Campaign{}, &fleetupdate.Target{})
+	return append(append(append(append(groupquota.Models(), trafficpolicy.Models()...), &portal.Credential{}, &portal.HostGrant{}), &fleetupdate.Campaign{}, &fleetupdate.Target{}), sponsors.Models()...)
 }
 
 // Start is the lifecycle integration point for fork-owned goroutines. The
