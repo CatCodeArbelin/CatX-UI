@@ -1,0 +1,164 @@
+---
+title: Policies (CatX-UI)
+description: Policy data and explainable WP-4B enforcement capabilities.
+  Quarantine is safety state; only a bounded quarantine-release temporary
+  override can release it. Managed DNS and SafeSearch apply only to supported
+  Xray-observed DNS paths.
+full: true
+_openapi:
+  preload:
+    - ./public/openapi.json
+  toc:
+    - depth: 2
+      title: Return policy data feature status.
+      url: '#return-policy-data-feature-status'
+    - depth: 2
+      title: List policies.
+      url: '#list-policies'
+    - depth: 2
+      title: Create a policy data record.
+      url: '#create-a-policy-data-record'
+    - depth: 2
+      title: Read one policy data record.
+      url: '#read-one-policy-data-record'
+    - depth: 2
+      title: Delete a policy and its fork-owned assignments and overrides.
+      url: '#delete-a-policy-and-its-fork-owned-assignments-and-overrides'
+    - depth: 2
+      title: Update one policy data record.
+      url: '#update-one-policy-data-record'
+    - depth: 2
+      title: List client and group policy assignments.
+      url: '#list-client-and-group-policy-assignments'
+    - depth: 2
+      title: Assign a policy to an existing upstream client or group.
+      url: '#assign-a-policy-to-an-existing-upstream-client-or-group'
+    - depth: 2
+      title: Delete an assignment.
+      url: '#delete-an-assignment'
+    - depth: 2
+      title: Update an assignment.
+      url: '#update-an-assignment'
+    - depth: 2
+      title: List explicit policy override metadata.
+      url: '#list-explicit-policy-override-metadata'
+    - depth: 2
+      title: Create explicit override metadata.
+      url: '#create-explicit-override-metadata'
+    - depth: 2
+      title: Delete an explicit override.
+      url: '#delete-an-explicit-override'
+    - depth: 2
+      title: Update an explicit override.
+      url: '#update-an-explicit-override'
+    - depth: 2
+      title: List non-expired temporary override metadata.
+      url: '#list-non-expired-temporary-override-metadata'
+    - depth: 2
+      title: Create a persisted temporary override with explicit start and expiry.
+      url: '#create-a-persisted-temporary-override-with-explicit-start-and-expiry'
+    - depth: 2
+      title: Delete a temporary override.
+      url: '#delete-a-temporary-override'
+    - depth: 2
+      title: Update a temporary override.
+      url: '#update-a-temporary-override'
+    - depth: 2
+      title: List durable policy schedules with current and next-active state.
+      url: '#list-durable-policy-schedules-with-current-and-next-active-state'
+    - depth: 2
+      title: Create a validated IANA-timezone weekly policy schedule.
+      url: '#create-a-validated-iana-timezone-weekly-policy-schedule'
+    - depth: 2
+      title: Read one policy schedule and its current state.
+      url: '#read-one-policy-schedule-and-its-current-state'
+    - depth: 2
+      title: Delete a policy schedule.
+      url: '#delete-a-policy-schedule'
+    - depth: 2
+      title: Update a policy schedule.
+      url: '#update-a-policy-schedule'
+    - depth: 2
+      title: Inspect deterministic policy-data precedence without returning an Xray
+        decision.
+      url: '#inspect-deterministic-policy-data-precedence-without-returning-an-xray-decision'
+    - depth: 2
+      title: Simulate a persisted policy decision without applying Xray changes.
+      url: '#simulate-a-persisted-policy-decision-without-applying-xray-changes'
+    - depth: 2
+      title: Explain the winning policy decision and losing candidates.
+      url: '#explain-the-winning-policy-decision-and-losing-candidates'
+    - depth: 2
+      title: Preview route fragments from the real policy compiler.
+      url: '#preview-route-fragments-from-the-real-policy-compiler'
+  structuredData:
+    headings:
+      - content: Return policy data feature status.
+        id: return-policy-data-feature-status
+      - content: List policies.
+        id: list-policies
+      - content: Create a policy data record.
+        id: create-a-policy-data-record
+      - content: Read one policy data record.
+        id: read-one-policy-data-record
+      - content: Delete a policy and its fork-owned assignments and overrides.
+        id: delete-a-policy-and-its-fork-owned-assignments-and-overrides
+      - content: Update one policy data record.
+        id: update-one-policy-data-record
+      - content: List client and group policy assignments.
+        id: list-client-and-group-policy-assignments
+      - content: Assign a policy to an existing upstream client or group.
+        id: assign-a-policy-to-an-existing-upstream-client-or-group
+      - content: Delete an assignment.
+        id: delete-an-assignment
+      - content: Update an assignment.
+        id: update-an-assignment
+      - content: List explicit policy override metadata.
+        id: list-explicit-policy-override-metadata
+      - content: Create explicit override metadata.
+        id: create-explicit-override-metadata
+      - content: Delete an explicit override.
+        id: delete-an-explicit-override
+      - content: Update an explicit override.
+        id: update-an-explicit-override
+      - content: List non-expired temporary override metadata.
+        id: list-non-expired-temporary-override-metadata
+      - content: Create a persisted temporary override with explicit start and expiry.
+        id: create-a-persisted-temporary-override-with-explicit-start-and-expiry
+      - content: Delete a temporary override.
+        id: delete-a-temporary-override
+      - content: Update a temporary override.
+        id: update-a-temporary-override
+      - content: List durable policy schedules with current and next-active state.
+        id: list-durable-policy-schedules-with-current-and-next-active-state
+      - content: Create a validated IANA-timezone weekly policy schedule.
+        id: create-a-validated-iana-timezone-weekly-policy-schedule
+      - content: Read one policy schedule and its current state.
+        id: read-one-policy-schedule-and-its-current-state
+      - content: Delete a policy schedule.
+        id: delete-a-policy-schedule
+      - content: Update a policy schedule.
+        id: update-a-policy-schedule
+      - content: Inspect deterministic policy-data precedence without returning an Xray
+          decision.
+        id: inspect-deterministic-policy-data-precedence-without-returning-an-xray-decision
+      - content: Simulate a persisted policy decision without applying Xray changes.
+        id: simulate-a-persisted-policy-decision-without-applying-xray-changes
+      - content: Explain the winning policy decision and losing candidates.
+        id: explain-the-winning-policy-decision-and-losing-candidates
+      - content: Preview route fragments from the real policy compiler.
+        id: preview-route-fragments-from-the-real-policy-compiler
+    contents: []
+---
+
+{/* This file was generated by Fumadocs. Do not edit this file directly. Any changes should be made by running the generation command again. */}
+
+export default function Layout(props) {
+  const { OpenAPIPage } = props.components ?? {};
+  return (
+    <>
+      {props.children}
+      <OpenAPIPage document="./public/openapi.json" webhooks={[]} operations={[{"path":"/panel/api/policies/status","method":"get"},{"path":"/panel/api/policies","method":"get"},{"path":"/panel/api/policies","method":"post"},{"path":"/panel/api/policies/{id}","method":"get"},{"path":"/panel/api/policies/{id}","method":"delete"},{"path":"/panel/api/policies/{id}","method":"put"},{"path":"/panel/api/policies/assignments","method":"get"},{"path":"/panel/api/policies/assignments","method":"post"},{"path":"/panel/api/policies/assignments/{id}","method":"delete"},{"path":"/panel/api/policies/assignments/{id}","method":"put"},{"path":"/panel/api/policies/overrides","method":"get"},{"path":"/panel/api/policies/overrides","method":"post"},{"path":"/panel/api/policies/overrides/{id}","method":"delete"},{"path":"/panel/api/policies/overrides/{id}","method":"put"},{"path":"/panel/api/policies/temporary-overrides","method":"get"},{"path":"/panel/api/policies/temporary-overrides","method":"post"},{"path":"/panel/api/policies/temporary-overrides/{id}","method":"delete"},{"path":"/panel/api/policies/temporary-overrides/{id}","method":"put"},{"path":"/panel/api/policies/schedules","method":"get"},{"path":"/panel/api/policies/schedules","method":"post"},{"path":"/panel/api/policies/schedules/{id}","method":"get"},{"path":"/panel/api/policies/schedules/{id}","method":"delete"},{"path":"/panel/api/policies/schedules/{id}","method":"put"},{"path":"/panel/api/policies/resolve","method":"get"},{"path":"/panel/api/policies/simulate","method":"get"},{"path":"/panel/api/policies/explain","method":"get"},{"path":"/panel/api/policies/explain-route","method":"get"}]} showTitle />
+    </>
+  );
+}

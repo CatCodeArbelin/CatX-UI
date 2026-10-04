@@ -1673,6 +1673,176 @@
         ],
         "type": "object"
       },
+      "AuditEvent": {
+        "description": "AuditEvent is the authoritative, metadata-only record of a privileged\noperation. Payloads are never accepted by this model.",
+        "properties": {
+          "actorId": {
+            "type": "string"
+          },
+          "actorName": {
+            "type": "string"
+          },
+          "actorType": {
+            "type": "string"
+          },
+          "authMethod": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "eventType": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "metadata": {
+            "type": "string"
+          },
+          "nodeId": {
+            "type": "string"
+          },
+          "nodeScope": {
+            "type": "string"
+          },
+          "outcome": {
+            "type": "string"
+          },
+          "requestId": {
+            "type": "string"
+          },
+          "sourceIp": {
+            "type": "string"
+          },
+          "statusCode": {
+            "type": "integer"
+          },
+          "targetRef": {
+            "type": "string"
+          },
+          "targetType": {
+            "type": "string"
+          },
+          "tokenId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "actorType",
+          "createdAt",
+          "eventType",
+          "id",
+          "outcome",
+          "requestId"
+        ],
+        "type": "object"
+      },
+      "AuditRetentionSettings": {
+        "properties": {
+          "auditDays": {
+            "type": "integer"
+          },
+          "deadLetterDays": {
+            "type": "integer"
+          },
+          "deliveryDays": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "auditDays",
+          "deadLetterDays",
+          "deliveryDays"
+        ],
+        "type": "object"
+      },
+      "Campaign": {
+        "properties": {
+          "batchSize": {
+            "type": "integer"
+          },
+          "canaryCount": {
+            "type": "integer"
+          },
+          "channel": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "dryRun": {
+            "type": "boolean"
+          },
+          "error": {
+            "type": "string"
+          },
+          "healthTimeoutSecs": {
+            "type": "integer"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "maxParallel": {
+            "type": "integer"
+          },
+          "mutationAuthorized": {
+            "type": "boolean"
+          },
+          "name": {
+            "type": "string"
+          },
+          "releaseApiUrl": {
+            "type": "string"
+          },
+          "releaseHtmlUrl": {
+            "type": "string"
+          },
+          "releaseTag": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "soakSeconds": {
+            "type": "integer"
+          },
+          "state": {
+            "type": "string"
+          },
+          "stopOnFailure": {
+            "type": "boolean"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "batchSize",
+          "canaryCount",
+          "channel",
+          "createdAt",
+          "dryRun",
+          "healthTimeoutSecs",
+          "id",
+          "maxParallel",
+          "mutationAuthorized",
+          "name",
+          "releaseApiUrl",
+          "releaseHtmlUrl",
+          "releaseTag",
+          "revision",
+          "soakSeconds",
+          "state",
+          "stopOnFailure",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
       "Client": {
         "description": "Client represents a client configuration for Xray inbounds with traffic limits and settings.",
         "properties": {
@@ -2445,6 +2615,121 @@
         ],
         "type": "object"
       },
+      "CredentialView": {
+        "properties": {
+          "clientId": {
+            "type": "integer"
+          },
+          "createdAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "expiresAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "lastUsed": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "clientId",
+          "createdAt",
+          "enabled",
+          "expiresAt",
+          "id",
+          "lastUsed"
+        ],
+        "type": "object"
+      },
+      "DeliveryPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/WebhookDelivery"
+            },
+            "type": "array"
+          },
+          "next": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
+      },
+      "Event": {
+        "properties": {
+          "acknowledgedAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "clientEmail": {
+            "type": "string"
+          },
+          "confidence": {
+            "type": "number"
+          },
+          "evidence": {
+            "type": "string"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "observedAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "scoreContribution": {
+            "type": "integer"
+          },
+          "sourceNode": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "clientEmail",
+          "confidence",
+          "evidence",
+          "id",
+          "kind",
+          "observedAt",
+          "scoreContribution",
+          "state"
+        ],
+        "type": "object"
+      },
+      "EventPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AuditEvent"
+            },
+            "type": "array"
+          },
+          "next": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "type": "object"
+      },
       "FallbackParentInfo": {
         "description": "FallbackParentInfo carries everything the frontend needs to rewrite a\nchild inbound's client link: where to connect (the master's address\nand port) and which path matched on the master's fallbacks array.\nThe frontend already has the master inbound in its dbInbounds list,\nso we only ship identifiers + the match path here.",
         "properties": {
@@ -2824,6 +3109,43 @@
         ],
         "type": "object"
       },
+      "HostGrant": {
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "hostId": {
+            "type": "integer"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "subjectId": {
+            "type": "integer"
+          },
+          "subjectType": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "createdAt",
+          "enabled",
+          "hostId",
+          "id",
+          "subjectId",
+          "subjectType",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
       "HostGroup": {
         "properties": {
           "allowInsecure": {
@@ -3027,6 +3349,60 @@
           "limit",
           "registered",
           "remaining"
+        ],
+        "type": "object"
+      },
+      "IPHistory": {
+        "description": "IPHistory is the durable fork-owned extension of the existing IP\nobservation path. It contains metadata only and never payload data.",
+        "properties": {
+          "asn": {
+            "type": "integer"
+          },
+          "clientEmail": {
+            "type": "string"
+          },
+          "country": {
+            "type": "string"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "ingestedAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "ip": {
+            "type": "string"
+          },
+          "metadataConfidence": {
+            "type": "number"
+          },
+          "metadataSource": {
+            "type": "string"
+          },
+          "metadataState": {
+            "type": "string"
+          },
+          "nodeGuid": {
+            "type": "string"
+          },
+          "observedAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "source": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "clientEmail",
+          "id",
+          "ingestedAt",
+          "ip",
+          "metadataConfidence",
+          "metadataState",
+          "observedAt",
+          "source"
         ],
         "type": "object"
       },
@@ -3396,6 +3772,44 @@
           "id",
           "total",
           "up"
+        ],
+        "type": "object"
+      },
+      "IssuedToken": {
+        "properties": {
+          "clientId": {
+            "type": "integer"
+          },
+          "createdAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "expiresAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "lastUsed": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "token": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "clientId",
+          "createdAt",
+          "enabled",
+          "expiresAt",
+          "id",
+          "lastUsed",
+          "token"
         ],
         "type": "object"
       },
@@ -3817,6 +4231,62 @@
         ],
         "type": "object"
       },
+      "NodeSnapshot": {
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "guid": {
+            "type": "string"
+          },
+          "iD": {
+            "type": "integer"
+          },
+          "lastHeartbeat": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "panelVersion": {
+            "type": "string"
+          },
+          "port": {
+            "type": "integer"
+          },
+          "scheme": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "transitive": {
+            "type": "boolean"
+          },
+          "xrayState": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "address",
+          "enabled",
+          "guid",
+          "iD",
+          "lastHeartbeat",
+          "name",
+          "panelVersion",
+          "port",
+          "scheme",
+          "status",
+          "transitive",
+          "xrayState"
+        ],
+        "type": "object"
+      },
       "NodeView": {
         "description": "NodeView is the browser/API read contract for nodes. Credentials are\nwrite-only: responses expose only whether a node has a token configured.",
         "properties": {
@@ -4079,6 +4549,12 @@
             "format": "int64",
             "type": "integer"
           },
+          "rollbackHealthy": {
+            "type": "boolean"
+          },
+          "rolledBack": {
+            "type": "boolean"
+          },
           "runId": {
             "example": "1735689600123456789",
             "type": "string"
@@ -4091,6 +4567,8 @@
         "required": [
           "exitCode",
           "finishedAt",
+          "rollbackHealthy",
+          "rolledBack",
           "runId",
           "state"
         ],
@@ -4155,6 +4633,218 @@
           "online",
           "tag",
           "up"
+        ],
+        "type": "object"
+      },
+      "Plan": {
+        "properties": {
+          "batchSize": {
+            "type": "integer"
+          },
+          "canaryCount": {
+            "type": "integer"
+          },
+          "channel": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "dryRun": {
+            "type": "boolean"
+          },
+          "error": {
+            "type": "string"
+          },
+          "healthTimeoutSecs": {
+            "type": "integer"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "maxParallel": {
+            "type": "integer"
+          },
+          "mutationAuthorized": {
+            "type": "boolean"
+          },
+          "name": {
+            "type": "string"
+          },
+          "releaseApiUrl": {
+            "type": "string"
+          },
+          "releaseHtmlUrl": {
+            "type": "string"
+          },
+          "releaseTag": {
+            "type": "string"
+          },
+          "revision": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "soakSeconds": {
+            "type": "integer"
+          },
+          "state": {
+            "type": "string"
+          },
+          "stopOnFailure": {
+            "type": "boolean"
+          },
+          "targets": {
+            "items": {
+              "$ref": "#/components/schemas/Target"
+            },
+            "type": "array"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "batchSize",
+          "canaryCount",
+          "channel",
+          "createdAt",
+          "dryRun",
+          "healthTimeoutSecs",
+          "id",
+          "maxParallel",
+          "mutationAuthorized",
+          "name",
+          "releaseApiUrl",
+          "releaseHtmlUrl",
+          "releaseTag",
+          "revision",
+          "soakSeconds",
+          "state",
+          "stopOnFailure",
+          "targets",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "PlanRequest": {
+        "properties": {
+          "batchSize": {
+            "type": "integer"
+          },
+          "canaryCount": {
+            "type": "integer"
+          },
+          "channel": {
+            "type": "string"
+          },
+          "confirmProduction": {
+            "type": "boolean"
+          },
+          "dryRun": {
+            "type": "boolean"
+          },
+          "healthTimeoutSecs": {
+            "type": "integer"
+          },
+          "maxParallel": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "nodeIds": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array"
+          },
+          "soakSeconds": {
+            "type": "integer"
+          },
+          "stopOnFailure": {
+            "nullable": true,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "batchSize",
+          "canaryCount",
+          "channel",
+          "confirmProduction",
+          "dryRun",
+          "healthTimeoutSecs",
+          "maxParallel",
+          "name",
+          "nodeIds",
+          "soakSeconds"
+        ],
+        "type": "object"
+      },
+      "Policy": {
+        "description": "Policy contains desired policy only. Traffic bytes remain authoritative in\nxray.ClientTraffic; this table never accumulates a second traffic counter.",
+        "properties": {
+          "activeDownloadBps": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "activeUploadBps": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "clientEmail": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "quotaBytes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "throttleDownloadBps": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "throttleUploadBps": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "updatedAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "windowSeconds": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "activeDownloadBps",
+          "activeUploadBps",
+          "clientEmail",
+          "enabled",
+          "id",
+          "quotaBytes",
+          "throttleDownloadBps",
+          "throttleUploadBps",
+          "updatedAt",
+          "windowSeconds"
+        ],
+        "type": "object"
+      },
+      "PortalSettings": {
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "enabled"
         ],
         "type": "object"
       },
@@ -4327,6 +5017,107 @@
           "tls13",
           "tlsVersion",
           "x25519"
+        ],
+        "type": "object"
+      },
+      "ReleaseSnapshot": {
+        "properties": {
+          "apiUrl": {
+            "type": "string"
+          },
+          "channel": {
+            "type": "string"
+          },
+          "checksumVerified": {
+            "type": "boolean"
+          },
+          "htmlUrl": {
+            "type": "string"
+          },
+          "tag": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "apiUrl",
+          "channel",
+          "checksumVerified",
+          "htmlUrl",
+          "tag"
+        ],
+        "type": "object"
+      },
+      "RetentionRequest": {
+        "properties": {
+          "auditDays": {
+            "type": "integer"
+          },
+          "deadLetterDays": {
+            "type": "integer"
+          },
+          "deliveryDays": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "auditDays",
+          "deadLetterDays",
+          "deliveryDays"
+        ],
+        "type": "object"
+      },
+      "RetentionSettings": {
+        "properties": {
+          "eventDays": {
+            "type": "integer"
+          },
+          "ipDays": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "eventDays",
+          "ipDays"
+        ],
+        "type": "object"
+      },
+      "Score": {
+        "properties": {
+          "calculatedAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "clientEmail": {
+            "type": "string"
+          },
+          "confidence": {
+            "type": "number"
+          },
+          "evidence": {
+            "type": "integer"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "score": {
+            "type": "integer"
+          },
+          "state": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "calculatedAt",
+          "clientEmail",
+          "confidence",
+          "evidence",
+          "id",
+          "score",
+          "state",
+          "version"
         ],
         "type": "object"
       },
@@ -4578,6 +5369,52 @@
         ],
         "type": "object"
       },
+      "State": {
+        "description": "State stores a cumulative-counter checkpoint and lifecycle ownership. The\ncurrent usage is always derived as client_traffics - baseline.",
+        "properties": {
+          "clientEmail": {
+            "type": "string"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "lastError": {
+            "type": "string"
+          },
+          "lifecycle": {
+            "type": "string"
+          },
+          "owner": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "windowEnd": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "windowStart": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "clientEmail",
+          "id",
+          "lifecycle",
+          "owner",
+          "reason",
+          "updatedAt",
+          "windowEnd",
+          "windowStart"
+        ],
+        "type": "object"
+      },
       "SubBalancer": {
         "description": "SubBalancer is one extra JSON-subscription config document whose members are\nthe selected inbounds' proxy outbounds. SortOrder shares SubSortIndex semantics.",
         "properties": {
@@ -4646,6 +5483,192 @@
           "remark",
           "sortOrder",
           "strategy",
+          "updatedAt"
+        ],
+        "type": "object"
+      },
+      "Summary": {
+        "properties": {
+          "calculatedAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "clientEmail": {
+            "type": "string"
+          },
+          "confidence": {
+            "type": "number"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/Event"
+            },
+            "type": "array"
+          },
+          "evidence": {
+            "type": "integer"
+          },
+          "ipHistory": {
+            "items": {
+              "$ref": "#/components/schemas/IPHistory"
+            },
+            "type": "array"
+          },
+          "score": {
+            "type": "integer"
+          },
+          "state": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "calculatedAt",
+          "clientEmail",
+          "confidence",
+          "enabled",
+          "events",
+          "evidence",
+          "ipHistory",
+          "score",
+          "state"
+        ],
+        "type": "object"
+      },
+      "Suppression": {
+        "properties": {
+          "clientEmail": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "expiresAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "clientEmail",
+          "createdAt",
+          "expiresAt",
+          "id",
+          "kind"
+        ],
+        "type": "object"
+      },
+      "Target": {
+        "properties": {
+          "attempts": {
+            "type": "integer"
+          },
+          "blockedReason": {
+            "type": "string"
+          },
+          "campaignId": {
+            "type": "integer"
+          },
+          "dispatchAt": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "dispatchEvidence": {
+            "type": "string"
+          },
+          "dispatchKey": {
+            "type": "string"
+          },
+          "dispatchStatus": {
+            "type": "string"
+          },
+          "error": {
+            "type": "string"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "initialVersion": {
+            "type": "string"
+          },
+          "nodeGuid": {
+            "type": "string"
+          },
+          "nodeId": {
+            "type": "integer"
+          },
+          "nodeName": {
+            "type": "string"
+          },
+          "observedStatus": {
+            "type": "string"
+          },
+          "observedVersion": {
+            "type": "string"
+          },
+          "observedXray": {
+            "type": "string"
+          },
+          "rollbackHealthy": {
+            "type": "boolean"
+          },
+          "rolledBack": {
+            "type": "boolean"
+          },
+          "runId": {
+            "type": "string"
+          },
+          "soakStartedAt": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "updateExitCode": {
+            "nullable": true,
+            "type": "integer"
+          },
+          "updateFinishedAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "updateState": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "attempts",
+          "campaignId",
+          "dispatchKey",
+          "id",
+          "initialVersion",
+          "nodeGuid",
+          "nodeId",
+          "nodeName",
+          "observedStatus",
+          "observedVersion",
+          "observedXray",
+          "rollbackHealthy",
+          "rolledBack",
+          "state",
           "updatedAt"
         ],
         "type": "object"
@@ -4777,6 +5800,207 @@
         ],
         "type": "object"
       },
+      "View": {
+        "properties": {
+          "activeDownloadBps": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "activeUploadBps": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "clientEmail": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "enforcement": {
+            "type": "string"
+          },
+          "enforcementNote": {
+            "type": "string"
+          },
+          "id": {
+            "type": "integer"
+          },
+          "lifecycle": {
+            "type": "string"
+          },
+          "owner": {
+            "type": "string"
+          },
+          "quotaBytes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "remainingBytes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "throttleDownloadBps": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "throttleUploadBps": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "updatedAt": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "usedBytes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "windowEnd": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "windowSeconds": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "windowStart": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "activeDownloadBps",
+          "activeUploadBps",
+          "clientEmail",
+          "enabled",
+          "enforcement",
+          "id",
+          "lifecycle",
+          "owner",
+          "quotaBytes",
+          "reason",
+          "remainingBytes",
+          "throttleDownloadBps",
+          "throttleUploadBps",
+          "updatedAt",
+          "usedBytes",
+          "windowEnd",
+          "windowSeconds",
+          "windowStart"
+        ],
+        "type": "object"
+      },
+      "WebhookDelivery": {
+        "properties": {
+          "attempt": {
+            "type": "integer"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "deliveredAt": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "endpointId": {
+            "type": "string"
+          },
+          "eventId": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "lastError": {
+            "type": "string"
+          },
+          "nextAttemptAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "attempt",
+          "createdAt",
+          "endpointId",
+          "eventId",
+          "id",
+          "nextAttemptAt",
+          "status"
+        ],
+        "type": "object"
+      },
+      "WebhookEndpoint": {
+        "properties": {
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "eventTypes": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "createdAt",
+          "enabled",
+          "eventTypes",
+          "id",
+          "name",
+          "updatedAt",
+          "url"
+        ],
+        "type": "object"
+      },
+      "WebhookEndpointRequest": {
+        "properties": {
+          "eventTypes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "name": {
+            "type": "string"
+          },
+          "secret": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "eventTypes",
+          "name",
+          "secret",
+          "url"
+        ],
+        "type": "object"
+      },
       "WebSocketEnvelope": {
         "type": "object",
         "required": [
@@ -4871,6 +6095,42 @@
     {
       "name": "WebSocket",
       "description": "Real-time status updates via WebSocket. Connect once at <code>ws://<panel>/ws</code> to receive a stream of JSON messages without polling. Requires an authenticated session cookie (Bearer token auth is not supported). Each message has a <code>type</code> field that identifies the payload shape."
+    },
+    {
+      "name": "Client activity analytics",
+      "description": "Read-only destination and session metadata collected by the optional analytics pipeline. No request content, cookies, credentials, or Authorization headers are exposed."
+    },
+    {
+      "name": "Policies (CatX-UI)",
+      "description": "Policy data and explainable WP-4B enforcement capabilities. Quarantine is safety state; only a bounded quarantine-release temporary override can release it. Managed DNS and SafeSearch apply only to supported Xray-observed DNS paths."
+    },
+    {
+      "name": "Traffic control",
+      "description": "Capability and reconciliation endpoints for the CatX shaping substrate. WP-6A does not define speed-limit policy."
+    },
+    {
+      "name": "Fleet updates",
+      "description": "Protected Stage A update campaign planning and reconciliation; production dispatch is disabled."
+    },
+    {
+      "name": "Risk intelligence",
+      "description": "Metadata-only, explainable risk signals. Informational only; no automatic enforcement is performed."
+    },
+    {
+      "name": "Audit / Webhooks / Metrics",
+      "description": "Durable metadata-only audit records, signed webhook delivery, and bounded Prometheus metrics."
+    },
+    {
+      "name": "Self-service portal",
+      "description": "Dedicated client portal sessions with metadata-only self-service access."
+    },
+    {
+      "name": "CatX-UI Features",
+      "description": "Protected CatX feature flags and restart requirement."
+    },
+    {
+      "name": "CatX Sponsors",
+      "description": "Authenticated, operator-configured sponsor metadata and safe logo proxying."
     }
   ],
   "paths": {
@@ -6658,6 +7918,8 @@
                   "obj": {
                     "exitCode": 0,
                     "finishedAt": 1735689612,
+                    "rollbackHealthy": false,
+                    "rolledBack": false,
                     "runId": "1735689600123456789",
                     "state": "success"
                   }
@@ -15477,6 +16739,143 @@
         }
       }
     },
+    "/panel/api/clients/groups/quota/{name}": {
+      "get": {
+        "tags": [
+          "Subscription Server"
+        ],
+        "summary": "Read shared group quota state, including authoritative-counter usage, remaining bytes, active/pending multiplier, and depletion state.",
+        "operationId": "get_panel_api_clients_groups_quota_name",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "description": "Group name (URL-encoded).",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Subscription Server"
+        ],
+        "summary": "Update group quota configuration. Multiplier changes are pending until the next group reset/rebaseline and do not reprice existing usage.",
+        "operationId": "put_panel_api_clients_groups_quota_name",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "description": "Group name (URL-encoded).",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              },
+              "example": {
+                "quotaBytes": 107374182400,
+                "multiplierPpm": 1000000,
+                "resetPeriod": "monthly",
+                "resetDay": 1
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/clients/groups/quota/{name}/reset": {
+      "post": {
+        "tags": [
+          "Subscription Server"
+        ],
+        "summary": "Reset group quota carry and membership bases, activate the pending multiplier, and re-enable only clients owned by this group quota.",
+        "operationId": "post_panel_api_clients_groups_quota_name_reset",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "description": "Group name (URL-encoded).",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/{jsonPath}{subid}": {
       "get": {
         "tags": [
@@ -16481,6 +17880,4198 @@
             }
           }
         ]
+      }
+    },
+    "/panel/api/analytics/status": {
+      "get": {
+        "tags": [
+          "Client activity analytics"
+        ],
+        "summary": "Return whether analytics collection and activity queries are enabled.",
+        "operationId": "get_panel_api_analytics_status",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/analytics/settings": {
+      "get": {
+        "tags": [
+          "Client activity analytics"
+        ],
+        "summary": "Read analytics privacy and retention settings.",
+        "operationId": "get_panel_api_analytics_settings",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Client activity analytics"
+        ],
+        "summary": "Update DNS intelligence and fork-owned analytics retention.",
+        "operationId": "post_panel_api_analytics_settings",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "dnsIntelligence": {
+                    "type": "boolean"
+                  },
+                  "retention": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/analytics/clients/{email}/activity": {
+      "get": {
+        "tags": [
+          "Client activity analytics"
+        ],
+        "summary": "Return a paginated client destination activity timeline.",
+        "operationId": "get_panel_api_analytics_clients_email_activity",
+        "parameters": [
+          {
+            "name": "email",
+            "in": "path",
+            "required": true,
+            "description": "Existing upstream client identity.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "description": "Start time in milliseconds since epoch.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "description": "End time in milliseconds since epoch.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "integer",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/analytics/clients/{email}/sessions": {
+      "get": {
+        "tags": [
+          "Client activity analytics"
+        ],
+        "summary": "Return a paginated client session history.",
+        "operationId": "get_panel_api_analytics_clients_email_sessions",
+        "parameters": [
+          {
+            "name": "email",
+            "in": "path",
+            "required": true,
+            "description": "Existing upstream client identity.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "description": "Start time in milliseconds since epoch.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "description": "End time in milliseconds since epoch.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "integer",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/analytics/clients/{email}/dns": {
+      "get": {
+        "tags": [
+          "Client activity analytics"
+        ],
+        "summary": "Return paginated metadata-only DNS observations for an existing client.",
+        "operationId": "get_panel_api_analytics_clients_email_dns",
+        "parameters": [
+          {
+            "name": "email",
+            "in": "path",
+            "required": true,
+            "description": "Existing upstream client identity.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "description": "Start time in milliseconds since epoch.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "description": "End time in milliseconds since epoch.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "integer",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/analytics/traffic": {
+      "get": {
+        "tags": [
+          "Client activity analytics"
+        ],
+        "summary": "Return historical upstream traffic totals and metadata-derived service/category breakdowns.",
+        "operationId": "get_panel_api_analytics_traffic",
+        "parameters": [
+          {
+            "name": "clientEmail",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "description": "Start time in milliseconds since epoch.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "description": "End time in milliseconds since epoch.",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/analytics/clients/{email}/traffic": {
+      "get": {
+        "tags": [
+          "Client activity analytics"
+        ],
+        "summary": "Return one existing client’s historical upstream traffic and metadata breakdown.",
+        "operationId": "get_panel_api_analytics_clients_email_traffic",
+        "parameters": [
+          {
+            "name": "email",
+            "in": "path",
+            "required": true,
+            "description": "Existing upstream client identity.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "description": "Start time in milliseconds since epoch.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "description": "End time in milliseconds since epoch.",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/policies/status": {
+      "get": {
+        "tags": [
+          "Policies (CatX-UI)"
+        ],
+        "summary": "Return policy data feature status.",
+        "operationId": "get_panel_api_policies_status",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/policies": {
+      "get": {
+        "tags": [
+          "Policies (CatX-UI)"
+        ],
+        "summary": "List policies.",
+        "operationId": "get_panel_api_policies",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Policies (CatX-UI)"
+        ],
+        "summary": "Create a policy data record.",
+        "operationId": "post_panel_api_policies",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/policies/{id}": {
+      "get": {
+        "tags": [
+          "Policies (CatX-UI)"
+        ],
+        "summary": "Read one policy data record.",
+        "operationId": "get_panel_api_policies_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Policies (CatX-UI)"
+        ],
+        "summary": "Update one policy data record.",
+        "operationId": "put_panel_api_policies_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Policies (CatX-UI)"
+        ],
+        "summary": "Delete a policy and its fork-owned assignments and overrides.",
+        "operationId": "delete_panel_api_policies_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/policies/assignments": {
+      "get": {
+        "tags": [
+          "Policies (CatX-UI)"
+        ],
+        "summary": "List client and group policy assignments.",
+        "operationId": "get_panel_api_policies_assignments",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Policies (CatX-UI)"
+        ],
+        "summary": "Assign a policy to an existing upstream client or group.",
+        "operationId": "post_panel_api_policies_assignments",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/policies/assignments/{id}": {
+      "delete": {
+        "tags": [
+          "Policies (CatX-UI)"
+        ],
+        "summary": "Delete an assignment.",
+        "operationId": "delete_panel_api_policies_assignments_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Policies (CatX-UI)"
+        ],
+        "summary": "Update an assignment.",
+        "operationId": "put_panel_api_policies_assignments_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/policies/overrides": {
+      "get": {
+        "tags": [
+          "Policies (CatX-UI)"
+        ],
+        "summary": "List explicit policy override metadata.",
+        "operationId": "get_panel_api_policies_overrides",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Policies (CatX-UI)"
+        ],
+        "summary": "Create explicit override metadata.",
+        "operationId": "post_panel_api_policies_overrides",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/policies/overrides/{id}": {
+      "delete": {
+        "tags": [
+          "Policies (CatX-UI)"
+        ],
+        "summary": "Delete an explicit override.",
+        "operationId": "delete_panel_api_policies_overrides_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Policies (CatX-UI)"
+        ],
+        "summary": "Update an explicit override.",
+        "operationId": "put_panel_api_policies_overrides_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/policies/temporary-overrides": {
+      "get": {
+        "tags": [
+          "Policies (CatX-UI)"
+        ],
+        "summary": "List non-expired temporary override metadata.",
+        "operationId": "get_panel_api_policies_temporary_overrides",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Policies (CatX-UI)"
+        ],
+        "summary": "Create a persisted temporary override with explicit start and expiry.",
+        "operationId": "post_panel_api_policies_temporary_overrides",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/policies/temporary-overrides/{id}": {
+      "delete": {
+        "tags": [
+          "Policies (CatX-UI)"
+        ],
+        "summary": "Delete a temporary override.",
+        "operationId": "delete_panel_api_policies_temporary_overrides_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Policies (CatX-UI)"
+        ],
+        "summary": "Update a temporary override.",
+        "operationId": "put_panel_api_policies_temporary_overrides_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/policies/schedules": {
+      "get": {
+        "tags": [
+          "Policies (CatX-UI)"
+        ],
+        "summary": "List durable policy schedules with current and next-active state.",
+        "operationId": "get_panel_api_policies_schedules",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Policies (CatX-UI)"
+        ],
+        "summary": "Create a validated IANA-timezone weekly policy schedule.",
+        "operationId": "post_panel_api_policies_schedules",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/policies/schedules/{id}": {
+      "get": {
+        "tags": [
+          "Policies (CatX-UI)"
+        ],
+        "summary": "Read one policy schedule and its current state.",
+        "operationId": "get_panel_api_policies_schedules_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Policies (CatX-UI)"
+        ],
+        "summary": "Update a policy schedule.",
+        "operationId": "put_panel_api_policies_schedules_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Policies (CatX-UI)"
+        ],
+        "summary": "Delete a policy schedule.",
+        "operationId": "delete_panel_api_policies_schedules_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/policies/resolve": {
+      "get": {
+        "tags": [
+          "Policies (CatX-UI)"
+        ],
+        "summary": "Inspect deterministic policy-data precedence without returning an Xray decision.",
+        "operationId": "get_panel_api_policies_resolve",
+        "parameters": [
+          {
+            "name": "clientEmail",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "groupName",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "at",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/policies/simulate": {
+      "get": {
+        "tags": [
+          "Policies (CatX-UI)"
+        ],
+        "summary": "Simulate a persisted policy decision without applying Xray changes.",
+        "operationId": "get_panel_api_policies_simulate",
+        "parameters": [
+          {
+            "name": "clientEmail",
+            "in": "query",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "groupName",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "domain",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ip",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "service",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "at",
+            "in": "query",
+            "required": false,
+            "description": "",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/policies/explain": {
+      "get": {
+        "tags": [
+          "Policies (CatX-UI)"
+        ],
+        "summary": "Explain the winning policy decision and losing candidates.",
+        "operationId": "get_panel_api_policies_explain",
+        "parameters": [
+          {
+            "name": "clientEmail",
+            "in": "query",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/policies/explain-route": {
+      "get": {
+        "tags": [
+          "Policies (CatX-UI)"
+        ],
+        "summary": "Preview route fragments from the real policy compiler.",
+        "operationId": "get_panel_api_policies_explain_route",
+        "parameters": [
+          {
+            "name": "clientEmail",
+            "in": "query",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/traffic-control/status": {
+      "get": {
+        "tags": [
+          "Traffic control"
+        ],
+        "summary": "Return local shaping capability and current reconciliation status.",
+        "operationId": "get_panel_api_traffic_control_status",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/traffic-control/capabilities": {
+      "get": {
+        "tags": [
+          "Traffic control"
+        ],
+        "summary": "Probe tc, nftables, IFB, explicit interfaces, and privilege capability.",
+        "operationId": "get_panel_api_traffic_control_capabilities",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/traffic-control/reconcile": {
+      "post": {
+        "tags": [
+          "Traffic control"
+        ],
+        "summary": "Apply a validated CatX-owned shaping substrate desired state on this node.",
+        "operationId": "post_panel_api_traffic_control_reconcile",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/traffic-control/clients/{email}/policy": {
+      "get": {
+        "tags": [
+          "Traffic control"
+        ],
+        "summary": "Read fixed-window traffic policy, lifecycle, usage, and enforcement capability.",
+        "operationId": "get_panel_api_traffic_control_clients_email_policy",
+        "parameters": [
+          {
+            "name": "email",
+            "in": "path",
+            "required": true,
+            "description": "Client email.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Traffic control"
+        ],
+        "summary": "Set a fixed/tumbling-window client policy; rolling windows are unsupported.",
+        "operationId": "put_panel_api_traffic_control_clients_email_policy",
+        "parameters": [
+          {
+            "name": "email",
+            "in": "path",
+            "required": true,
+            "description": "Client email.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/traffic-control/clients/{email}/policy/reset": {
+      "post": {
+        "tags": [
+          "Traffic control"
+        ],
+        "summary": "Reset the fixed-window checkpoint and release only a soft-quota throttle.",
+        "operationId": "post_panel_api_traffic_control_clients_email_policy_reset",
+        "parameters": [
+          {
+            "name": "email",
+            "in": "path",
+            "required": true,
+            "description": "Client email.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/fleet-updates/campaigns": {
+      "post": {
+        "tags": [
+          "Fleet updates"
+        ],
+        "summary": "Create a dry-run update campaign plan.",
+        "operationId": "post_panel_api_fleet_updates_campaigns",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "$ref": "#/components/schemas/Plan"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": {
+                    "batchSize": 0,
+                    "canaryCount": 0,
+                    "channel": "",
+                    "createdAt": "2025-01-01T00:00:00Z",
+                    "dryRun": false,
+                    "error": "",
+                    "healthTimeoutSecs": 0,
+                    "id": 0,
+                    "maxParallel": 0,
+                    "mutationAuthorized": false,
+                    "name": "",
+                    "releaseApiUrl": "",
+                    "releaseHtmlUrl": "",
+                    "releaseTag": "",
+                    "revision": 0,
+                    "soakSeconds": 0,
+                    "state": "",
+                    "stopOnFailure": false,
+                    "targets": [
+                      {
+                        "attempts": 0,
+                        "blockedReason": "",
+                        "campaignId": 0,
+                        "dispatchAt": null,
+                        "dispatchEvidence": "",
+                        "dispatchKey": "",
+                        "dispatchStatus": "",
+                        "error": "",
+                        "id": 0,
+                        "initialVersion": "",
+                        "nodeGuid": "",
+                        "nodeId": 0,
+                        "nodeName": "",
+                        "observedStatus": "",
+                        "observedVersion": "",
+                        "observedXray": "",
+                        "rollbackHealthy": false,
+                        "rolledBack": false,
+                        "runId": "",
+                        "soakStartedAt": null,
+                        "state": "",
+                        "updateExitCode": null,
+                        "updateFinishedAt": 0,
+                        "updateState": "",
+                        "updatedAt": "2025-01-01T00:00:00Z"
+                      }
+                    ],
+                    "updatedAt": "2025-01-01T00:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Fleet updates"
+        ],
+        "summary": "List update campaigns.",
+        "operationId": "get_panel_api_fleet_updates_campaigns",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Campaign"
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": [
+                    {
+                      "batchSize": 0,
+                      "canaryCount": 0,
+                      "channel": "",
+                      "createdAt": "2025-01-01T00:00:00Z",
+                      "dryRun": false,
+                      "error": "",
+                      "healthTimeoutSecs": 0,
+                      "id": 0,
+                      "maxParallel": 0,
+                      "mutationAuthorized": false,
+                      "name": "",
+                      "releaseApiUrl": "",
+                      "releaseHtmlUrl": "",
+                      "releaseTag": "",
+                      "revision": 0,
+                      "soakSeconds": 0,
+                      "state": "",
+                      "stopOnFailure": false,
+                      "updatedAt": "2025-01-01T00:00:00Z"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/fleet-updates/campaigns/{id}": {
+      "get": {
+        "tags": [
+          "Fleet updates"
+        ],
+        "summary": "Read a campaign and immutable target snapshot.",
+        "operationId": "get_panel_api_fleet_updates_campaigns_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "$ref": "#/components/schemas/Plan"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": {
+                    "batchSize": 0,
+                    "canaryCount": 0,
+                    "channel": "",
+                    "createdAt": "2025-01-01T00:00:00Z",
+                    "dryRun": false,
+                    "error": "",
+                    "healthTimeoutSecs": 0,
+                    "id": 0,
+                    "maxParallel": 0,
+                    "mutationAuthorized": false,
+                    "name": "",
+                    "releaseApiUrl": "",
+                    "releaseHtmlUrl": "",
+                    "releaseTag": "",
+                    "revision": 0,
+                    "soakSeconds": 0,
+                    "state": "",
+                    "stopOnFailure": false,
+                    "targets": [
+                      {
+                        "attempts": 0,
+                        "blockedReason": "",
+                        "campaignId": 0,
+                        "dispatchAt": null,
+                        "dispatchEvidence": "",
+                        "dispatchKey": "",
+                        "dispatchStatus": "",
+                        "error": "",
+                        "id": 0,
+                        "initialVersion": "",
+                        "nodeGuid": "",
+                        "nodeId": 0,
+                        "nodeName": "",
+                        "observedStatus": "",
+                        "observedVersion": "",
+                        "observedXray": "",
+                        "rollbackHealthy": false,
+                        "rolledBack": false,
+                        "runId": "",
+                        "soakStartedAt": null,
+                        "state": "",
+                        "updateExitCode": null,
+                        "updateFinishedAt": 0,
+                        "updateState": "",
+                        "updatedAt": "2025-01-01T00:00:00Z"
+                      }
+                    ],
+                    "updatedAt": "2025-01-01T00:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/fleet-updates/campaigns/{id}/reconcile": {
+      "post": {
+        "tags": [
+          "Fleet updates"
+        ],
+        "summary": "Reconcile a campaign safely.",
+        "operationId": "post_panel_api_fleet_updates_campaigns_id_reconcile",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "$ref": "#/components/schemas/Campaign"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": {
+                    "batchSize": 0,
+                    "canaryCount": 0,
+                    "channel": "",
+                    "createdAt": "2025-01-01T00:00:00Z",
+                    "dryRun": false,
+                    "error": "",
+                    "healthTimeoutSecs": 0,
+                    "id": 0,
+                    "maxParallel": 0,
+                    "mutationAuthorized": false,
+                    "name": "",
+                    "releaseApiUrl": "",
+                    "releaseHtmlUrl": "",
+                    "releaseTag": "",
+                    "revision": 0,
+                    "soakSeconds": 0,
+                    "state": "",
+                    "stopOnFailure": false,
+                    "updatedAt": "2025-01-01T00:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/fleet-updates/campaigns/{id}/abort": {
+      "post": {
+        "tags": [
+          "Fleet updates"
+        ],
+        "summary": "Abort a campaign.",
+        "operationId": "post_panel_api_fleet_updates_campaigns_id_abort",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "$ref": "#/components/schemas/Campaign"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": {
+                    "batchSize": 0,
+                    "canaryCount": 0,
+                    "channel": "",
+                    "createdAt": "2025-01-01T00:00:00Z",
+                    "dryRun": false,
+                    "error": "",
+                    "healthTimeoutSecs": 0,
+                    "id": 0,
+                    "maxParallel": 0,
+                    "mutationAuthorized": false,
+                    "name": "",
+                    "releaseApiUrl": "",
+                    "releaseHtmlUrl": "",
+                    "releaseTag": "",
+                    "revision": 0,
+                    "soakSeconds": 0,
+                    "state": "",
+                    "stopOnFailure": false,
+                    "updatedAt": "2025-01-01T00:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/fleet-updates/campaigns/{id}/retry": {
+      "post": {
+        "tags": [
+          "Fleet updates"
+        ],
+        "summary": "Retry failed or unknown targets.",
+        "operationId": "post_panel_api_fleet_updates_campaigns_id_retry",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "$ref": "#/components/schemas/Campaign"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": {
+                    "batchSize": 0,
+                    "canaryCount": 0,
+                    "channel": "",
+                    "createdAt": "2025-01-01T00:00:00Z",
+                    "dryRun": false,
+                    "error": "",
+                    "healthTimeoutSecs": 0,
+                    "id": 0,
+                    "maxParallel": 0,
+                    "mutationAuthorized": false,
+                    "name": "",
+                    "releaseApiUrl": "",
+                    "releaseHtmlUrl": "",
+                    "releaseTag": "",
+                    "revision": 0,
+                    "soakSeconds": 0,
+                    "state": "",
+                    "stopOnFailure": false,
+                    "updatedAt": "2025-01-01T00:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/risk/clients/{email}": {
+      "get": {
+        "tags": [
+          "Risk intelligence"
+        ],
+        "summary": "Return the client risk score, evidence timeline, and source IP history.",
+        "operationId": "get_panel_api_risk_clients_email",
+        "parameters": [
+          {
+            "name": "email",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "$ref": "#/components/schemas/Summary"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": {
+                    "calculatedAt": 0,
+                    "clientEmail": "",
+                    "confidence": 0,
+                    "enabled": false,
+                    "events": [
+                      {
+                        "acknowledgedAt": 0,
+                        "clientEmail": "",
+                        "confidence": 0,
+                        "evidence": "",
+                        "id": 0,
+                        "kind": "",
+                        "observedAt": 0,
+                        "scoreContribution": 0,
+                        "sourceNode": "",
+                        "state": ""
+                      }
+                    ],
+                    "evidence": 0,
+                    "ipHistory": [
+                      {
+                        "asn": 0,
+                        "clientEmail": "",
+                        "country": "",
+                        "id": 0,
+                        "ingestedAt": 0,
+                        "ip": "",
+                        "metadataConfidence": 0,
+                        "metadataSource": "",
+                        "metadataState": "",
+                        "nodeGuid": "",
+                        "observedAt": 0,
+                        "source": ""
+                      }
+                    ],
+                    "score": 0,
+                    "state": ""
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/risk/clients/{email}/events/{id}/ack": {
+      "post": {
+        "tags": [
+          "Risk intelligence"
+        ],
+        "summary": "Acknowledge a risk event.",
+        "operationId": "post_panel_api_risk_clients_email_events_id_ack",
+        "parameters": [
+          {
+            "name": "email",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/risk/clients/{email}/suppress": {
+      "post": {
+        "tags": [
+          "Risk intelligence"
+        ],
+        "summary": "Create an expiring informational signal suppression.",
+        "operationId": "post_panel_api_risk_clients_email_suppress",
+        "parameters": [
+          {
+            "name": "email",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string"
+                  },
+                  "expiresAt": {
+                    "type": "integer"
+                  },
+                  "reason": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/risk/clients/{email}/ip-history": {
+      "delete": {
+        "tags": [
+          "Risk intelligence"
+        ],
+        "summary": "Delete the client IP history without deleting upstream accounting.",
+        "operationId": "delete_panel_api_risk_clients_email_ip_history",
+        "parameters": [
+          {
+            "name": "email",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/risk/clients/{email}/events": {
+      "delete": {
+        "tags": [
+          "Risk intelligence"
+        ],
+        "summary": "Delete the client risk event history.",
+        "operationId": "delete_panel_api_risk_clients_email_events",
+        "parameters": [
+          {
+            "name": "email",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/risk/settings": {
+      "get": {
+        "tags": [
+          "Risk intelligence"
+        ],
+        "summary": "Read independent risk retention settings.",
+        "operationId": "get_panel_api_risk_settings",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "$ref": "#/components/schemas/RetentionSettings"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": {
+                    "eventDays": 0,
+                    "ipDays": 0
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Risk intelligence"
+        ],
+        "summary": "Update independent risk retention settings.",
+        "operationId": "post_panel_api_risk_settings",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RetentionSettings"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "$ref": "#/components/schemas/RetentionSettings"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": {
+                    "eventDays": 0,
+                    "ipDays": 0
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/fork/audit/events": {
+      "get": {
+        "tags": [
+          "Audit / Webhooks / Metrics"
+        ],
+        "summary": "List durable audit events.",
+        "operationId": "get_panel_api_fork_audit_events",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "$ref": "#/components/schemas/EventPage"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": {
+                    "items": [
+                      {
+                        "actorId": "",
+                        "actorName": "",
+                        "actorType": "",
+                        "authMethod": "",
+                        "createdAt": "2025-01-01T00:00:00Z",
+                        "eventType": "",
+                        "id": "",
+                        "metadata": "",
+                        "nodeId": "",
+                        "nodeScope": "",
+                        "outcome": "",
+                        "requestId": "",
+                        "sourceIp": "",
+                        "statusCode": 0,
+                        "targetRef": "",
+                        "targetType": "",
+                        "tokenId": ""
+                      }
+                    ],
+                    "next": ""
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Audit / Webhooks / Metrics"
+        ],
+        "summary": "Delete audit events before a timestamp.",
+        "operationId": "delete_panel_api_fork_audit_events",
+        "parameters": [
+          {
+            "name": "before",
+            "in": "query",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/fork/audit/events/{id}": {
+      "get": {
+        "tags": [
+          "Audit / Webhooks / Metrics"
+        ],
+        "summary": "Read one sanitized audit event.",
+        "operationId": "get_panel_api_fork_audit_events_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "$ref": "#/components/schemas/AuditEvent"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": {
+                    "actorId": "",
+                    "actorName": "",
+                    "actorType": "",
+                    "authMethod": "",
+                    "createdAt": "2025-01-01T00:00:00Z",
+                    "eventType": "",
+                    "id": "",
+                    "metadata": "",
+                    "nodeId": "",
+                    "nodeScope": "",
+                    "outcome": "",
+                    "requestId": "",
+                    "sourceIp": "",
+                    "statusCode": 0,
+                    "targetRef": "",
+                    "targetType": "",
+                    "tokenId": ""
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/fork/audit/webhooks": {
+      "get": {
+        "tags": [
+          "Audit / Webhooks / Metrics"
+        ],
+        "summary": "List webhook destinations without secrets.",
+        "operationId": "get_panel_api_fork_audit_webhooks",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/WebhookEndpoint"
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": [
+                    {
+                      "createdAt": "2025-01-01T00:00:00Z",
+                      "enabled": false,
+                      "eventTypes": "",
+                      "id": "",
+                      "name": "",
+                      "updatedAt": "2025-01-01T00:00:00Z",
+                      "url": ""
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Audit / Webhooks / Metrics"
+        ],
+        "summary": "Create a public HTTPS webhook destination.",
+        "operationId": "post_panel_api_fork_audit_webhooks",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebhookEndpointRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "$ref": "#/components/schemas/WebhookEndpoint"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": {
+                    "createdAt": "2025-01-01T00:00:00Z",
+                    "enabled": false,
+                    "eventTypes": "",
+                    "id": "",
+                    "name": "",
+                    "updatedAt": "2025-01-01T00:00:00Z",
+                    "url": ""
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/fork/audit/webhooks/{id}": {
+      "delete": {
+        "tags": [
+          "Audit / Webhooks / Metrics"
+        ],
+        "summary": "Delete a webhook destination.",
+        "operationId": "delete_panel_api_fork_audit_webhooks_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/fork/audit/webhooks/{id}/replay": {
+      "post": {
+        "tags": [
+          "Audit / Webhooks / Metrics"
+        ],
+        "summary": "Queue the latest audit event for delivery to a destination.",
+        "operationId": "post_panel_api_fork_audit_webhooks_id_replay",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "$ref": "#/components/schemas/WebhookDelivery"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": {
+                    "attempt": 0,
+                    "createdAt": "2025-01-01T00:00:00Z",
+                    "deliveredAt": null,
+                    "endpointId": "",
+                    "eventId": "",
+                    "id": "",
+                    "lastError": "",
+                    "nextAttemptAt": "2025-01-01T00:00:00Z",
+                    "status": ""
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/fork/audit/webhooks/deliveries": {
+      "get": {
+        "tags": [
+          "Audit / Webhooks / Metrics"
+        ],
+        "summary": "List webhook delivery attempts.",
+        "operationId": "get_panel_api_fork_audit_webhooks_deliveries",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "$ref": "#/components/schemas/DeliveryPage"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": {
+                    "items": [
+                      {
+                        "attempt": 0,
+                        "createdAt": "2025-01-01T00:00:00Z",
+                        "deliveredAt": null,
+                        "endpointId": "",
+                        "eventId": "",
+                        "id": "",
+                        "lastError": "",
+                        "nextAttemptAt": "2025-01-01T00:00:00Z",
+                        "status": ""
+                      }
+                    ],
+                    "next": ""
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/fork/audit/webhooks/deliveries/{id}/replay": {
+      "post": {
+        "tags": [
+          "Audit / Webhooks / Metrics"
+        ],
+        "summary": "Replay a delivery with a new delivery ID.",
+        "operationId": "post_panel_api_fork_audit_webhooks_deliveries_id_replay",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "$ref": "#/components/schemas/WebhookDelivery"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": {
+                    "attempt": 0,
+                    "createdAt": "2025-01-01T00:00:00Z",
+                    "deliveredAt": null,
+                    "endpointId": "",
+                    "eventId": "",
+                    "id": "",
+                    "lastError": "",
+                    "nextAttemptAt": "2025-01-01T00:00:00Z",
+                    "status": ""
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/fork/audit/retention": {
+      "get": {
+        "tags": [
+          "Audit / Webhooks / Metrics"
+        ],
+        "summary": "Read audit and webhook retention.",
+        "operationId": "get_panel_api_fork_audit_retention",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "$ref": "#/components/schemas/AuditRetentionSettings"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": {
+                    "auditDays": 0,
+                    "deadLetterDays": 0,
+                    "deliveryDays": 0
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Audit / Webhooks / Metrics"
+        ],
+        "summary": "Update audit and webhook retention.",
+        "operationId": "post_panel_api_fork_audit_retention",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuditRetentionSettings"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "$ref": "#/components/schemas/AuditRetentionSettings"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": {
+                    "auditDays": 0,
+                    "deadLetterDays": 0,
+                    "deliveryDays": 0
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/fork/metrics": {
+      "get": {
+        "tags": [
+          "Audit / Webhooks / Metrics"
+        ],
+        "summary": "Prometheus metrics with fixed bounded labels.",
+        "operationId": "get_panel_api_fork_metrics",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/portal/auth": {
+      "post": {
+        "tags": [
+          "Self-service portal"
+        ],
+        "summary": "Establish a dedicated portal session from a one-time-issued portal token.",
+        "operationId": "post_portal_auth",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/portal/me": {
+      "get": {
+        "tags": [
+          "Self-service portal"
+        ],
+        "summary": "Read the authenticated client profile and subscription status.",
+        "operationId": "get_portal_me",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/portal/devices": {
+      "get": {
+        "tags": [
+          "Self-service portal"
+        ],
+        "summary": "List devices owned by the authenticated client.",
+        "operationId": "get_portal_devices",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/portal/devices/{id}": {
+      "put": {
+        "tags": [
+          "Self-service portal"
+        ],
+        "summary": "Rename an owned device.",
+        "operationId": "put_portal_devices_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Self-service portal"
+        ],
+        "summary": "Revoke an owned device.",
+        "operationId": "delete_portal_devices_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/portal/hosts": {
+      "get": {
+        "tags": [
+          "Self-service portal"
+        ],
+        "summary": "List sanitized visible connection hosts.",
+        "operationId": "get_portal_hosts",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/portal/traffic": {
+      "get": {
+        "tags": [
+          "Self-service portal"
+        ],
+        "summary": "Read own traffic, quota, and expiry status.",
+        "operationId": "get_portal_traffic",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/portal/access/rotate": {
+      "post": {
+        "tags": [
+          "Self-service portal"
+        ],
+        "summary": "Rotate own portal access and invalidate existing sessions.",
+        "operationId": "post_portal_access_rotate",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/portal/access/revoke": {
+      "post": {
+        "tags": [
+          "Self-service portal"
+        ],
+        "summary": "Revoke own portal access and invalidate existing sessions.",
+        "operationId": "post_portal_access_revoke",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/portal/credentials": {
+      "get": {
+        "tags": [
+          "Self-service portal"
+        ],
+        "summary": "Admin-only portal credential inventory.",
+        "operationId": "get_panel_api_portal_credentials",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/CredentialView"
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": [
+                    {
+                      "clientId": 0,
+                      "createdAt": 0,
+                      "enabled": false,
+                      "expiresAt": 0,
+                      "id": 0,
+                      "lastUsed": 0
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Self-service portal"
+        ],
+        "summary": "Admin-only one-time portal token issuance.",
+        "operationId": "post_panel_api_portal_credentials",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "$ref": "#/components/schemas/IssuedToken"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": {
+                    "clientId": 0,
+                    "createdAt": 0,
+                    "enabled": false,
+                    "expiresAt": 0,
+                    "id": 0,
+                    "lastUsed": 0,
+                    "token": ""
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/portal/credentials/{clientId}/rotate": {
+      "post": {
+        "tags": [
+          "Self-service portal"
+        ],
+        "summary": "Admin-only portal token rotation.",
+        "operationId": "post_panel_api_portal_credentials_clientId_rotate",
+        "parameters": [
+          {
+            "name": "clientId",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "$ref": "#/components/schemas/IssuedToken"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": {
+                    "clientId": 0,
+                    "createdAt": 0,
+                    "enabled": false,
+                    "expiresAt": 0,
+                    "id": 0,
+                    "lastUsed": 0,
+                    "token": ""
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/portal/credentials/{clientId}/revoke": {
+      "post": {
+        "tags": [
+          "Self-service portal"
+        ],
+        "summary": "Admin-only portal token revocation.",
+        "operationId": "post_panel_api_portal_credentials_clientId_revoke",
+        "parameters": [
+          {
+            "name": "clientId",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/portal/settings": {
+      "get": {
+        "tags": [
+          "Self-service portal"
+        ],
+        "summary": "Read the admin-only portal feature setting.",
+        "operationId": "get_panel_api_portal_settings",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Self-service portal"
+        ],
+        "summary": "Update the admin-only portal feature setting.",
+        "operationId": "post_panel_api_portal_settings",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/portal/host-grants": {
+      "get": {
+        "tags": [
+          "Self-service portal"
+        ],
+        "summary": "Admin-only host visibility grant inventory.",
+        "operationId": "get_panel_api_portal_host_grants",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/HostGrant"
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": [
+                    {
+                      "createdAt": "2025-01-01T00:00:00Z",
+                      "enabled": false,
+                      "hostId": 0,
+                      "id": 0,
+                      "subjectId": 0,
+                      "subjectType": "",
+                      "updatedAt": "2025-01-01T00:00:00Z"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Self-service portal"
+        ],
+        "summary": "Admin-only positive host visibility grant.",
+        "operationId": "post_panel_api_portal_host_grants",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HostGrant"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "$ref": "#/components/schemas/HostGrant"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": {
+                    "createdAt": "2025-01-01T00:00:00Z",
+                    "enabled": false,
+                    "hostId": 0,
+                    "id": 0,
+                    "subjectId": 0,
+                    "subjectType": "",
+                    "updatedAt": "2025-01-01T00:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/portal/host-grants/{id}": {
+      "delete": {
+        "tags": [
+          "Self-service portal"
+        ],
+        "summary": "Admin-only host visibility grant deletion.",
+        "operationId": "delete_panel_api_portal_host_grants_id",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/fork/settings/features": {
+      "get": {
+        "tags": [
+          "CatX-UI Features"
+        ],
+        "summary": "Read CatX feature flags and restart requirement.",
+        "operationId": "get_panel_api_fork_settings_features",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "CatX-UI Features"
+        ],
+        "summary": "Update CatX feature flags.",
+        "operationId": "put_panel_api_fork_settings_features",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/fork/sponsors": {
+      "get": {
+        "tags": [
+          "CatX Sponsors"
+        ],
+        "summary": "Read the active CatX sponsor metadata.",
+        "operationId": "get_panel_api_fork_sponsors",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "$ref": "#/components/schemas/SponsorList"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": {
+                    "contact": "https://t.me/example",
+                    "sponsors": [
+                      {
+                        "enable": true,
+                        "from": "2026-10-01T00:00:00Z",
+                        "id": "acme-2026-10",
+                        "link": "https://acme.example/?utm_source=3x-ui",
+                        "logo": "/sponsors/logo/acme.png",
+                        "name": "Acme VPS",
+                        "slots": [
+                          ""
+                        ],
+                        "text": {},
+                        "title": {},
+                        "until": "2026-11-01T00:00:00Z"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/fork/sponsors/logo/{name}": {
+      "get": {
+        "tags": [
+          "CatX Sponsors"
+        ],
+        "summary": "Read a validated active sponsor logo.",
+        "operationId": "get_panel_api_fork_sponsors_logo_name",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Validated sponsor image bytes.",
+            "content": {
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/webp": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The logo is not part of an active sponsor set."
+          },
+          "503": {
+            "description": "The configured sponsor source or logo is unavailable."
+          }
+        }
+      }
+    },
+    "/panel/api/fork/sponsors/settings": {
+      "get": {
+        "tags": [
+          "CatX Sponsors"
+        ],
+        "summary": "Read sanitized sponsor source settings.",
+        "operationId": "get_panel_api_fork_sponsors_settings",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "type": "object",
+                      "required": [
+                        "enabled",
+                        "configured",
+                        "sourceUrl",
+                        "contactUrl"
+                      ],
+                      "properties": {
+                        "enabled": {
+                          "type": "boolean"
+                        },
+                        "configured": {
+                          "type": "boolean"
+                        },
+                        "sourceUrl": {
+                          "type": "string"
+                        },
+                        "contactUrl": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "CatX Sponsors"
+        ],
+        "summary": "Update the operator-configured sponsor source and contact URLs.",
+        "operationId": "put_panel_api_fork_sponsors_settings",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "sourceUrl": {
+                    "type": "string"
+                  },
+                  "contactUrl": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "type": "object",
+                      "required": [
+                        "enabled",
+                        "configured",
+                        "sourceUrl",
+                        "contactUrl"
+                      ],
+                      "properties": {
+                        "enabled": {
+                          "type": "boolean"
+                        },
+                        "configured": {
+                          "type": "boolean"
+                        },
+                        "sourceUrl": {
+                          "type": "string"
+                        },
+                        "contactUrl": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     }
   }
