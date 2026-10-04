@@ -4,7 +4,7 @@
 
 CatX-UI — поддерживаемый downstream-форк [3x-ui](https://github.com/MHSanaei/3x-ui) для управления Xray. Это отдельный проект CatCodeArbelin, а не официальный проект upstream и не продукт, одобренный авторами 3x-ui.
 
-Стабильная версия **v0.1.0** основана на **MHSanaei/3x-ui v3.8.5** и включает **Xray 26.9.9**. Внутренний Go-путь `github.com/mhsanaei/3x-ui/v3` сохранён ради совместимости.
+Стабильная версия **v0.2.0** основана на **MHSanaei/3x-ui v3.9.0** и включает **Xray 26.9.30**. Внутренний Go-путь `github.com/mhsanaei/3x-ui/v3` сохранён ради совместимости.
 
 ## Что добавляет CatX
 
@@ -19,7 +19,7 @@ CatX-UI — поддерживаемый downstream-форк [3x-ui](https://git
 
 ```bash
 bash <(curl -Ls https://raw.githubusercontent.com/CatCodeArbelin/CatX-UI/main/install.sh)
-bash <(curl -Ls https://raw.githubusercontent.com/CatCodeArbelin/CatX-UI/main/install.sh) v0.1.0
+bash <(curl -Ls https://raw.githubusercontent.com/CatCodeArbelin/CatX-UI/main/install.sh) v0.2.0
 ```
 
 `dev-latest` — отдельный rolling dev-канал, а RC-теги предназначены только для тестирования. Команды `x-ui update` и `x-ui update-dev` выбирают stable и dev соответственно. Обновление использует snapshot → validate → stage → healthcheck и пытается автоматически вернуть предыдущую рабочую версию при ошибке.
@@ -29,10 +29,10 @@ bash <(curl -Ls https://raw.githubusercontent.com/CatCodeArbelin/CatX-UI/main/in
 ```bash
 docker run -d --name catx-ui --cap-add=NET_ADMIN --cap-add=NET_RAW \
   -v "$PWD/db:/etc/x-ui" -v "$PWD/cert:/root/cert" -p 2053:2053 \
-  --restart unless-stopped ghcr.io/catcodearbelin/catx-ui:v0.1.0
+  --restart unless-stopped ghcr.io/catcodearbelin/catx-ui:v0.2.0
 ```
 
-Доступны алиасы `v0.1.0`, `0.1.0` и `latest` для `linux/amd64`, `linux/arm64`, `linux/arm/v7`, `linux/arm/v6` и `linux/386`. SQLite используется по умолчанию; PostgreSQL задаётся через `XUI_DB_TYPE` и `XUI_DB_DSN`.
+Доступны алиасы `v0.2.0`, `0.2.0` и `latest` для `linux/amd64`, `linux/arm64`, `linux/arm/v7`, `linux/arm/v6` и `linux/386`. SQLite используется по умолчанию; PostgreSQL задаётся через `XUI_DB_TYPE` и `XUI_DB_DSN`.
 
 ## Ограничения приватности
 
@@ -41,7 +41,7 @@ CatX использует только метаданные: домены/DNS, S
 ## Документация и ссылки
 
 - [Документация в репозитории](docs/README.md)
-- [Стабильный релиз v0.1.0](https://github.com/CatCodeArbelin/CatX-UI/releases/tag/v0.1.0)
+- [Стабильный релиз v0.2.0](https://github.com/CatCodeArbelin/CatX-UI/releases/tag/v0.2.0)
 - [Issues](https://github.com/CatCodeArbelin/CatX-UI/issues) · [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md)
 
 CatX сохраняет GPLv3 и upstream-уведомления. См. [LICENSE](LICENSE) и [английский README](/README.md) для полной информации.

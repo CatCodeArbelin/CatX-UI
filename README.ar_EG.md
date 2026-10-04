@@ -4,7 +4,7 @@
 
 CatX-UI هو fork downstream تتم صيانته من [3x-ui](https://github.com/MHSanaei/3x-ui) لإدارة Xray. للمشروع مستودع وقناة إصدارات مستقلان لدى CatCodeArbelin؛ وهو ليس مشروع upstream الرسمي ولا يدّعي تأييد مطوري 3x-ui.
 
-الإصدار المستقر **v0.1.0** مبني على **MHSanaei/3x-ui v3.8.5** ويتضمن **Xray 26.9.9**. تم الحفاظ على مسار Go الداخلي `github.com/mhsanaei/3x-ui/v3` للتوافق.
+الإصدار المستقر **v0.2.0** مبني على **MHSanaei/3x-ui v3.9.0** ويتضمن **Xray 26.9.30**. تم الحفاظ على مسار Go الداخلي `github.com/mhsanaei/3x-ui/v3` للتوافق.
 
 ## طبقات CatX
 
@@ -19,7 +19,7 @@ CatX-UI هو fork downstream تتم صيانته من [3x-ui](https://github.com
 
 ```bash
 bash <(curl -Ls https://raw.githubusercontent.com/CatCodeArbelin/CatX-UI/main/install.sh)
-bash <(curl -Ls https://raw.githubusercontent.com/CatCodeArbelin/CatX-UI/main/install.sh) v0.1.0
+bash <(curl -Ls https://raw.githubusercontent.com/CatCodeArbelin/CatX-UI/main/install.sh) v0.2.0
 ```
 
 `dev-latest` قناة تطوير rolling، ووسوم RC للاختبار فقط. يستخدم `x-ui update` قناة stable ويستخدم `x-ui update-dev` قناة dev. يتحقق updater من checksum ويحاول استعادة النسخة والإعدادات وقاعدة البيانات السابقة إذا فشل التفعيل.
@@ -29,10 +29,10 @@ bash <(curl -Ls https://raw.githubusercontent.com/CatCodeArbelin/CatX-UI/main/in
 ```bash
 docker run -d --name catx-ui --cap-add=NET_ADMIN --cap-add=NET_RAW \
   -v "$PWD/db:/etc/x-ui" -v "$PWD/cert:/root/cert" -p 2053:2053 \
-  --restart unless-stopped ghcr.io/catcodearbelin/catx-ui:v0.1.0
+  --restart unless-stopped ghcr.io/catcodearbelin/catx-ui:v0.2.0
 ```
 
-الوسوم `v0.1.0` و`0.1.0` و`latest` متاحة للمنصات `linux/amd64` و`linux/arm64` و`linux/arm/v7` و`linux/arm/v6` و`linux/386`. SQLite هو الافتراضي، وPostgreSQL يُضبط بواسطة `XUI_DB_TYPE` و`XUI_DB_DSN`.
+الوسوم `v0.2.0` و`0.2.0` و`latest` متاحة للمنصات `linux/amd64` و`linux/arm64` و`linux/arm/v7` و`linux/arm/v6` و`linux/386`. SQLite هو الافتراضي، وPostgreSQL يُضبط بواسطة `XUI_DB_TYPE` و`XUI_DB_DSN`.
 
 ## حدود الخصوصية
 
@@ -41,7 +41,7 @@ docker run -d --name catx-ui --cap-add=NET_ADMIN --cap-add=NET_RAW \
 ## الروابط
 
 - [توثيق المستودع المحلي](docs/README.md)
-- [الإصدار المستقر v0.1.0](https://github.com/CatCodeArbelin/CatX-UI/releases/tag/v0.1.0)
+- [الإصدار المستقر v0.2.0](https://github.com/CatCodeArbelin/CatX-UI/releases/tag/v0.2.0)
 - [Issues](https://github.com/CatCodeArbelin/CatX-UI/issues) · [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md)
 
 يحافظ CatX على التزامات GPLv3 وإشعارات upstream. راجع [LICENSE](LICENSE) و[README الإنجليزي](/README.md) للتفاصيل.

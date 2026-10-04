@@ -759,7 +759,7 @@ Completion record:
 - Xray version after sync: `26.9.30`;
 - release publication and tag movement: not performed.
 
-# CatX v0.2.0 Release Qualification — CURRENT
+# CatX v0.2.0 Release Qualification — COMPLETE
 
 Branch: `feature/v0.2.0-release-qualification`
 
@@ -783,7 +783,13 @@ Release identity:
 - RC Docker qualification: [run 37149015510](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37149015510), job `111295304468` — PASS on attempt 4; both GHCR aliases resolve to manifest `sha256:cc7021156c971ac1f23d3b9728a5720afcd5a3d04e76ea62495efd4eaf762adf` with OCI revision `f9178025d79e8bc403cf7f3f77f83aab3028965a`;
 - upstream: `MHSanaei/3x-ui v3.9.0` at `3cd4bf504c3cd8ea9b1c1fdb032a9796c5c43ddb`;
 - upstream integration merge: `c5f2e4e0165d96577af3f0e9d3b40810a98e7764`;
-- Xray: `26.9.30`.
+- Xray: `26.9.30`;
+- stable qualified source: `848458862223cb8b21b8cd30babaccb06fff76c5`;
+- final `main`: `2b1760e98e665bde388e94c420bd22aa182fe2b0`;
+- immutable stable tag: `v0.2.0 → 2b1760e98e665bde388e94c420bd22aa182fe2b0`;
+- stable release/workflow: [v0.2.0](https://github.com/CatCodeArbelin/CatX-UI/releases/tag/v0.2.0), [run 37159138757](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37159138757);
+- stable Docker: [run 37159138735](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37159138735), manifest `sha256:5b8e14ce8076d05569162806eb6e2c5644e39aabac242cd2cc72bc7a18cf4f8`, five required Linux platforms, OCI revision final `main`;
+- actual-public stable observer: [run 37163392991](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37163392991), artifact `11288491810` — PASS, including public updater identity, locale, VLESS/Xray, Traffic Control/quota, v0.1.0 upgrade/rollback, and real restart lifecycle.
 
 Required evidence is maintained in
 `docs/31_V0_2_0_RELEASE_QUALIFICATION.md`: exact candidate SHAs, release
@@ -800,8 +806,8 @@ contain only the required RC-to-stable identity/evidence change. The optional
 Claude review workflow is not a release gate unless repository governance
 explicitly requires it.
 
-The package is complete only after stable qualification and publication, or
-with an exact documented blocker and the required final status phrase.
+The package is complete: stable qualification and publication passed, with no
+product/runtime blocker and immutable tags verified.
 
 # Operating Rules
 
