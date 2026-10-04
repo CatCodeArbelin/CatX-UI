@@ -22,9 +22,9 @@ describe('buildScriptCommand', () => {
   });
 
   it('pins a specific version by passing the tag to the CatX install.sh', () => {
-    const cmd = buildScriptCommand({ ...base, version: 'v0.1.0' });
+    const cmd = buildScriptCommand({ ...base, version: 'v0.2.0' });
     expect(cmd).toBe(
-      'bash <(curl -Ls https://raw.githubusercontent.com/CatCodeArbelin/CatX-UI/main/install.sh) v0.1.0',
+      'bash <(curl -Ls https://raw.githubusercontent.com/CatCodeArbelin/CatX-UI/main/install.sh) v0.2.0',
     );
   });
 

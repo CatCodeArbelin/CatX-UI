@@ -40,8 +40,10 @@ upstream application tag. Security-only and documentation-only upstream
 changes still use the same review boundary, but their qualification scope may
 be smaller. Discovery never merges or publishes anything.
 
-The current CatX recorded base is `MHSanaei/3x-ui v3.8.5`; the strategy dry
-run assessed the newer stable `v3.9.0` separately from product integration.
+The current CatX stable base is `MHSanaei/3x-ui v3.9.0`, pinned to
+`3cd4bf504c3cd8ea9b1c1fdb032a9796c5c43ddb`. The earlier strategy package
+recorded `v3.8.5` as the pre-sync base and assessed `v3.9.0` as a dry run
+before the separately qualified product integration.
 
 ## Canonical sync procedure
 

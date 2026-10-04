@@ -6,12 +6,12 @@
 
 ## Status
 
-`CURRENT`
+`COMPLETE`
 
-This package qualifies the already-integrated upstream `v3.9.0` CatX
-develop state for one public `v0.2.0-rc.1` release, actual-public-artifact
-observation, and stable `v0.2.0` publication only if the exact RC passes.
-This is not an upstream sync and does not add product features.
+This package qualified the already-integrated upstream `v3.9.0` CatX develop
+state for one public `v0.2.0-rc.1` release, actual-public-artifact observation,
+and stable `v0.2.0` publication. This was not an upstream sync and did not add
+product features.
 
 ## Release baseline
 
@@ -30,7 +30,12 @@ This is not an upstream sync and does not add product features.
 - Xray: `26.9.30`
 - existing stable tag: `v0.1.0`
 - `v0.2.0-rc.1` tag: `v0.2.0-rc.1 → f9178025d79e8bc403cf7f3f77f83aab3028965a` (annotated, immutable)
-- `v0.2.0` tag: not created
+- `v0.2.0` tag: `v0.2.0 → 2b1760e98e665bde388e94c420bd22aa182fe2b0` (annotated, immutable)
+- final `origin/main`: `2b1760e98e665bde388e94c420bd22aa182fe2b0`
+- stable release: [v0.2.0](https://github.com/CatCodeArbelin/CatX-UI/releases/tag/v0.2.0)
+- stable release workflow: [run 37159138757](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37159138757)
+- stable Docker: [run 37159138735](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37159138735)
+- actual-public stable observer: [run 37163392991](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37163392991), artifact `11288491810`
 
 `origin/main` is an ancestor of the release baseline. No legitimate main-only
 commits require reconciliation before qualification.
@@ -124,10 +129,10 @@ review or blocking an otherwise qualified release.
 
 ## Completion condition
 
-Do not mark this package complete until the final public stable qualification
-record contains the RC and stable candidate/tag/release/observer/Docker/main
-SHAs and URLs, migration/upgrade/backup/restore/updater/rollback evidence,
-runtime and product-reality evidence, and immutable-tag verification.
+The final public stable qualification record contains the RC and stable
+candidate/tag/release/observer/Docker/main SHAs and URLs,
+migration/upgrade/backup/restore/updater/rollback evidence, runtime and
+product-reality evidence, and immutable-tag verification.
 
 At completion set this file and `TASK_QUEUE.md` to `COMPLETE`. Finish with
 exactly one required release status phrase from the package request.

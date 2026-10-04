@@ -19,8 +19,18 @@ independent settings. CatX is maintained in its own repository and release
 channel; it is not an official upstream project and is not endorsed by
 MHSanaei or the 3x-ui maintainers.
 
-Stable `v0.1.0` is based on **MHSanaei/3x-ui v3.8.5** and bundles **Xray
-26.9.9**. The internal Go module/import path remains
+<!-- CATX_VERSION_STATUS_START -->
+
+| Component | Version |
+| --- | --- |
+| CatX | v0.2.0 |
+| Upstream | 3x-ui v3.9.0 |
+| Xray | 26.9.30 |
+
+<!-- CATX_VERSION_STATUS_END -->
+
+CatX `v0.2.0` is based on **MHSanaei/3x-ui v3.9.0** and bundles **Xray
+26.9.30**. The internal Go module/import path remains
 `github.com/mhsanaei/3x-ui/v3` for upstream compatibility.
 
 ## What is included
@@ -52,10 +62,10 @@ identity and checksums before activation:
 bash <(curl -Ls https://raw.githubusercontent.com/CatCodeArbelin/CatX-UI/main/install.sh)
 ```
 
-Install a specific release, including stable `v0.1.0`:
+Install a specific release, including stable `v0.2.0`:
 
 ```bash
-bash <(curl -Ls https://raw.githubusercontent.com/CatCodeArbelin/CatX-UI/main/install.sh) v0.1.0
+bash <(curl -Ls https://raw.githubusercontent.com/CatCodeArbelin/CatX-UI/main/install.sh) v0.2.0
 ```
 
 `dev-latest` is an opt-in rolling development channel. RC tags are for
@@ -74,10 +84,10 @@ recovery snapshot if an update reports rollback failure.
 The published stable image is:
 
 ```text
-ghcr.io/catcodearbelin/catx-ui:v0.1.0
+ghcr.io/catcodearbelin/catx-ui:v0.2.0
 ```
 
-The stable aliases `v0.1.0`, `0.1.0`, and `latest` are published for
+The stable aliases `v0.2.0`, `0.2.0`, and `latest` are published for
 `linux/amd64`, `linux/arm64`, `linux/arm/v7`, `linux/arm/v6`, and `linux/386`.
 
 ```bash
@@ -85,7 +95,7 @@ docker run -d --name catx-ui \
   --cap-add=NET_ADMIN --cap-add=NET_RAW \
   -v "$PWD/db:/etc/x-ui" -v "$PWD/cert:/root/cert" \
   -p 2053:2053 --restart unless-stopped \
-  ghcr.io/catcodearbelin/catx-ui:v0.1.0
+  ghcr.io/catcodearbelin/catx-ui:v0.2.0
 ```
 
 The repository [`docker-compose.yml`](docker-compose.yml) builds the same
@@ -106,6 +116,19 @@ or multi-node deployments through `XUI_DB_TYPE=postgres` and
 `XUI_DB_DSN`. Use the panel migration/backup paths; do not replace database
 files by hand.
 
+## Upstream maintenance
+
+CatX follows a reviewed, merge-based upstream process. A new upstream stable
+release is first pinned to an exact tag on an isolated
+`sync/upstream-vX.Y.Z` branch. CatX then inspects conflicts and sensitive
+paths, runs the applicable backend, migration, frontend, Xray, and runtime
+checks, and merges the qualified result into `develop` before a separate CatX
+release qualification.
+
+A clean Git merge is not proof of semantic compatibility. Upstream changes
+are never merged automatically or directly into `main`; conflict resolution
+and release promotion remain reviewed operations.
+
 ## Security and privacy boundaries
 
 CatX collects only the metadata needed for its documented panel, insight, and
@@ -125,7 +148,7 @@ feature without changing the upstream-compatible baseline.
 
 - [CatX repository documentation](docs/README.md) — local/in-repository docs;
   no independent public CatX documentation site is claimed yet.
-- [Stable v0.1.0 release](https://github.com/CatCodeArbelin/CatX-UI/releases/tag/v0.1.0)
+- [Stable v0.2.0 release](https://github.com/CatCodeArbelin/CatX-UI/releases/tag/v0.2.0)
 - [All CatX releases](https://github.com/CatCodeArbelin/CatX-UI/releases)
 - [Issues and feature requests](https://github.com/CatCodeArbelin/CatX-UI/issues)
 - [Security policy](SECURITY.md)
