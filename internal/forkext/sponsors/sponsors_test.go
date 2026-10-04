@@ -13,9 +13,10 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+
+	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
 )
 
 type rewriteTransport struct {
