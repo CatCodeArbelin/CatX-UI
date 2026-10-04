@@ -71,7 +71,8 @@ jq -e '.obj.enabled == true and .obj.providerMode == "local"' "$RUN_DIR/sponsors
 body=$(jq -nc --arg id "$ID" --arg d "$DEST" --arg l "$LOGO" '{id:$id,enabled:true,name:"CatX real smoke",priority:7,slots:["dashboard","sidebar","page"],destinationUrl:$d,logoUrl:$l,title:{"en-US":"CatX smoke title"},text:{"en-US":"Synthetic sponsor"}}')
 mutate POST /fork/sponsors "$body" "$RUN_DIR/create.json"
 get /fork/sponsors/manage "$RUN_DIR/manage-create.json"; get "/fork/sponsors/$ID" "$RUN_DIR/read.json"; get /fork/sponsors "$RUN_DIR/public-create.json"
-jq -e --arg id "$ID" 'any(.obj[]?; .id == $id) or any(.obj.sponsors[]?; .id == $id)' "$RUN_DIR/manage-create.json" "$RUN_DIR/public-create.json" >/dev/null || fail 'created Sponsor not visible'
+jq -e --arg id "$ID" 'any(.obj[]?; .id == $id)' "$RUN_DIR/manage-create.json" >/dev/null || fail 'created Sponsor missing from management list'
+jq -e --arg id "$ID" 'any(.obj.sponsors[]?; .id == $id)' "$RUN_DIR/public-create.json" >/dev/null || fail 'created Sponsor missing from public list'
 updated=$(jq '.name="CatX real smoke updated" | .priority=3' <<< "$body")
 mutate PUT "/fork/sponsors/$ID" "$updated" "$RUN_DIR/update.json"
 jq -e '.obj.name == "CatX real smoke updated" and .obj.priority == 3' "$RUN_DIR/update.json" >/dev/null || fail 'UPDATE did not persist'
