@@ -3,11 +3,15 @@ package trafficpolicy
 import (
 	"context"
 	"errors"
+	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
+	"github.com/gin-gonic/gin"
 	"github.com/mhsanaei/3x-ui/v3/internal/forkext/trafficcontrol"
 	"github.com/mhsanaei/3x-ui/v3/internal/xray"
 )
@@ -146,6 +150,43 @@ func TestGenericUserMarkPathRemainsUnsupported(t *testing.T) {
 	}
 	if _, err := ReconcileRemote(context.TODO(), nil, View{}); !errors.Is(err, trafficcontrol.ErrUnsupported) {
 		t.Fatalf("ReconcileRemote error = %v", err)
+	}
+}
+
+func TestDisabledPolicyRouteExposesTypedFeatureState(t *testing.T) {
+	Configure(nil, false)
+	t.Cleanup(func() { Configure(nil, false) })
+	gin.SetMode(gin.TestMode)
+	router := gin.New()
+	RegisterRoutes(router.Group("/panel/api"))
+	response := httptest.NewRecorder()
+	router.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/panel/api/traffic-control/clients/alice/policy", nil))
+	if response.Code != http.StatusConflict || !strings.Contains(response.Body.String(), `"state":"feature_off"`) || !strings.Contains(response.Body.String(), `"featureDisabled":true`) {
+		t.Fatalf("disabled policy response = %d %s", response.Code, response.Body.String())
+	}
+}
+
+func TestUnconfiguredPolicyRouteExposesTypedFeatureState(t *testing.T) {
+	db, err := gorm.Open(sqlite.Open("file:traffic-policy-unconfigured?mode=memory&cache=shared"), &gorm.Config{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := db.AutoMigrate(&Policy{}, &State{}, &xray.ClientTraffic{}); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.Create(&xray.ClientTraffic{Email: "unconfigured@example.com", Enable: true}).Error; err != nil {
+		t.Fatal(err)
+	}
+	Configure(db, true)
+	t.Cleanup(func() { Configure(nil, false) })
+
+	gin.SetMode(gin.TestMode)
+	router := gin.New()
+	RegisterRoutes(router.Group("/panel/api"))
+	response := httptest.NewRecorder()
+	router.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/panel/api/traffic-control/clients/unconfigured@example.com/policy", nil))
+	if response.Code != http.StatusOK || !strings.Contains(response.Body.String(), `"state":"unconfigured"`) || !strings.Contains(response.Body.String(), `"featureDisabled":false`) {
+		t.Fatalf("unconfigured policy response = %d %s", response.Code, response.Body.String())
 	}
 }
 

@@ -56,7 +56,7 @@ export default function WebhooksPage() {
     if (endpointResult.success && endpointResult.obj) setEndpoints(endpointResult.obj);
     if (deliveryResult.success && deliveryResult.obj) setDeliveries(deliveryResult.obj.items);
     if (!endpointResult.success || !deliveryResult.success)
-      setError(endpointResult.msg || deliveryResult.msg || t('fork.webhooks.labels.error'));
+      setError(t('fork.webhooks.labels.error'));
   }, [t]);
   useEffect(() => {
     const timer = window.setTimeout(() => void load(), 0);

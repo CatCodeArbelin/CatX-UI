@@ -4,6 +4,20 @@ import type { HttpResponse } from '@/api/http-init';
 import { getMessage } from './messageBus';
 
 type RespEnvelope = { success?: unknown; msg?: unknown; obj?: unknown; featureDisabled?: unknown };
+type ErrorBody = {
+  msg?: string;
+  message?: string;
+  obj?: unknown;
+  featureDisabled?: boolean;
+};
+
+function featureDisabledIn(value: unknown): boolean {
+  return (
+    !!value &&
+    typeof value === 'object' &&
+    (value as { featureDisabled?: unknown }).featureDisabled === true
+  );
+}
 
 export class Msg<T = unknown> {
   success: boolean;
@@ -77,7 +91,7 @@ export class HttpUtil {
         typeof d.msg === 'string' ? d.msg : '',
         d.obj ?? null,
         resp.status,
-        d.featureDisabled === true,
+        d.featureDisabled === true || featureDisabledIn(d.obj),
       );
     }
     return typeof data === 'object' ? (data as Msg) : new Msg(false, 'unknown data:', data);
@@ -98,7 +112,7 @@ export class HttpUtil {
       const err = error as {
         response?: {
           status?: number;
-          data?: { msg?: string; message?: string; featureDisabled?: boolean };
+          data?: ErrorBody;
         };
         message?: string;
         status?: number;
@@ -107,9 +121,9 @@ export class HttpUtil {
       const errorMsg = new Msg<T>(
         false,
         data?.msg || data?.message || err.message || 'Request failed',
-        null,
+        (data?.obj as T | null) ?? null,
         typeof err.status === 'number' ? err.status : err.response?.status,
-        data?.featureDisabled === true,
+        data?.featureDisabled === true || featureDisabledIn(data?.obj),
       );
       if (!silent) {
         console.error('GET request failed:', error);
@@ -134,7 +148,7 @@ export class HttpUtil {
       const err = error as {
         response?: {
           status?: number;
-          data?: { msg?: string; message?: string; featureDisabled?: boolean };
+          data?: ErrorBody;
         };
         message?: string;
         status?: number;
@@ -143,9 +157,9 @@ export class HttpUtil {
       const errorMsg = new Msg<T>(
         false,
         data?.msg || data?.message || err.message || 'Request failed',
-        null,
+        (data?.obj as T | null) ?? null,
         typeof err.status === 'number' ? err.status : err.response?.status,
-        data?.featureDisabled === true,
+        data?.featureDisabled === true || featureDisabledIn(data?.obj),
       );
       if (!silent) {
         console.error('POST request failed:', error);
@@ -167,7 +181,7 @@ export class HttpUtil {
       const err = error as {
         response?: {
           status?: number;
-          data?: { msg?: string; message?: string; featureDisabled?: boolean };
+          data?: ErrorBody;
         };
         message?: string;
         status?: number;
@@ -176,9 +190,9 @@ export class HttpUtil {
       const errorMsg = new Msg<T>(
         false,
         data?.msg || data?.message || err.message || 'Request failed',
-        null,
+        (data?.obj as T | null) ?? null,
         typeof err.status === 'number' ? err.status : err.response?.status,
-        data?.featureDisabled === true,
+        data?.featureDisabled === true || featureDisabledIn(data?.obj),
       );
       if (!silent) this._handleMsg(errorMsg);
       return errorMsg;
@@ -200,7 +214,7 @@ export class HttpUtil {
       const err = error as {
         response?: {
           status?: number;
-          data?: { msg?: string; message?: string; featureDisabled?: boolean };
+          data?: ErrorBody;
         };
         message?: string;
         status?: number;
@@ -209,9 +223,9 @@ export class HttpUtil {
       const errorMsg = new Msg<T>(
         false,
         data?.msg || data?.message || err.message || 'Request failed',
-        null,
+        (data?.obj as T | null) ?? null,
         typeof err.status === 'number' ? err.status : err.response?.status,
-        data?.featureDisabled === true,
+        data?.featureDisabled === true || featureDisabledIn(data?.obj),
       );
       if (!silent) this._handleMsg(errorMsg);
       return errorMsg;

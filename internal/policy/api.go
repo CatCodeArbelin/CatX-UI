@@ -65,7 +65,9 @@ func response(c *gin.Context, obj any) {
 func fail(c *gin.Context, status int, msg string) {
 	c.JSON(status, gin.H{"success": false, "msg": msg})
 }
-func unavailable(c *gin.Context) { fail(c, http.StatusConflict, "policies are disabled") }
+func unavailable(c *gin.Context) {
+	c.JSON(http.StatusConflict, gin.H{"success": false, "msg": "policies are disabled", "obj": gin.H{"state": "feature_off", "featureDisabled": true}})
+}
 func parseID(c *gin.Context) (uint, bool) {
 	n, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil || n == 0 {
@@ -157,11 +159,14 @@ func RegisterRoutes(api *gin.RouterGroup) {
 	if api == nil {
 		return
 	}
-	api.GET("/policies/status", func(c *gin.Context) { response(c, gin.H{"enabled": Enabled(), "enforcement": false}) })
+	api.GET("/policies/status", func(c *gin.Context) {
+		enabled := Enabled()
+		response(c, gin.H{"enabled": enabled, "enforcement": false, "state": map[bool]string{true: "active", false: "feature_off"}[enabled], "featureDisabled": !enabled})
+	})
 	api.GET("/policies", func(c *gin.Context) {
 		r, ok := current()
 		if !ok {
-			response(c, gin.H{"enabled": false, "items": []Policy{}})
+			response(c, gin.H{"enabled": false, "items": []Policy{}, "state": "feature_off", "featureDisabled": true})
 			return
 		}
 		rows, err := r.ListPolicies(c.Request.Context())
@@ -169,7 +174,7 @@ func RegisterRoutes(api *gin.RouterGroup) {
 			fail(c, 500, "policy data unavailable")
 			return
 		}
-		response(c, gin.H{"enabled": true, "items": rows})
+		response(c, gin.H{"enabled": true, "items": rows, "state": "active", "featureDisabled": false})
 	})
 	api.POST("/policies", createPolicy)
 	api.GET("/policies/:id", getPolicy)
@@ -292,7 +297,7 @@ func createAssignment(c *gin.Context) {
 func listAssignments(c *gin.Context) {
 	r, ok := current()
 	if !ok {
-		response(c, gin.H{"enabled": false, "items": []PolicyAssignment{}})
+		response(c, gin.H{"enabled": false, "items": []PolicyAssignment{}, "state": "feature_off", "featureDisabled": true})
 		return
 	}
 	rows, err := r.ListAssignments(c.Request.Context())
@@ -300,7 +305,7 @@ func listAssignments(c *gin.Context) {
 		fail(c, 500, "policy data unavailable")
 		return
 	}
-	response(c, gin.H{"enabled": true, "items": rows})
+	response(c, gin.H{"enabled": true, "items": rows, "state": "active", "featureDisabled": false})
 }
 
 func deleteAssignment(c *gin.Context) {
@@ -368,7 +373,7 @@ func createOverride(c *gin.Context) {
 func listOverrides(c *gin.Context) {
 	r, ok := current()
 	if !ok {
-		response(c, gin.H{"enabled": false, "items": []PolicyOverride{}})
+		response(c, gin.H{"enabled": false, "items": []PolicyOverride{}, "state": "feature_off", "featureDisabled": true})
 		return
 	}
 	rows, err := r.ListOverrides(c.Request.Context())
@@ -376,7 +381,7 @@ func listOverrides(c *gin.Context) {
 		fail(c, 500, "policy data unavailable")
 		return
 	}
-	response(c, gin.H{"enabled": true, "items": rows})
+	response(c, gin.H{"enabled": true, "items": rows, "state": "active", "featureDisabled": false})
 }
 
 func deleteOverride(c *gin.Context) {
@@ -444,7 +449,7 @@ func createTemporary(c *gin.Context) {
 func listTemporary(c *gin.Context) {
 	r, ok := current()
 	if !ok {
-		response(c, gin.H{"enabled": false, "items": []TemporaryOverride{}})
+		response(c, gin.H{"enabled": false, "items": []TemporaryOverride{}, "state": "feature_off", "featureDisabled": true})
 		return
 	}
 	rows, err := r.ListTemporaryOverrides(c.Request.Context(), time.Now().UnixMilli())
@@ -452,7 +457,7 @@ func listTemporary(c *gin.Context) {
 		fail(c, 500, "policy data unavailable")
 		return
 	}
-	response(c, gin.H{"enabled": true, "items": rows})
+	response(c, gin.H{"enabled": true, "items": rows, "state": "active", "featureDisabled": false})
 }
 
 func deleteTemporary(c *gin.Context) {
@@ -512,7 +517,7 @@ func scheduleResponse(s PolicySchedule, at int64) gin.H {
 func listSchedules(c *gin.Context) {
 	r, ok := current()
 	if !ok {
-		response(c, gin.H{"enabled": false, "items": []gin.H{}})
+		response(c, gin.H{"enabled": false, "items": []gin.H{}, "state": "feature_off", "featureDisabled": true})
 		return
 	}
 	rows, err := r.ListSchedules(c.Request.Context())
@@ -525,7 +530,7 @@ func listSchedules(c *gin.Context) {
 	for _, row := range rows {
 		items = append(items, scheduleResponse(row, at))
 	}
-	response(c, gin.H{"enabled": true, "items": items})
+	response(c, gin.H{"enabled": true, "items": items, "state": "active", "featureDisabled": false})
 }
 
 func createSchedule(c *gin.Context) {

@@ -3,23 +3,23 @@ package policysim
 import (
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/gin-gonic/gin"
-
 	"github.com/mhsanaei/3x-ui/v3/internal/policy"
 )
 
-func TestDisabledSimulationIsReadOnlyNoOp(t *testing.T) {
+func TestDisabledSimulationExposesTypedFeatureState(t *testing.T) {
 	policy.Configure(nil, false)
+	t.Cleanup(func() { policy.Configure(nil, false) })
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
 	RegisterRoutes(router.Group("/panel/api"))
-	req := httptest.NewRequest(http.MethodGet, "/panel/api/policies/simulate?clientEmail=alice%40example.test&domain=example.test", nil)
-	res := httptest.NewRecorder()
-	router.ServeHTTP(res, req)
-	if res.Code != http.StatusOK || res.Body.String() == "" {
-		t.Fatalf("disabled simulation response: %d %s", res.Code, res.Body.String())
+	response := httptest.NewRecorder()
+	router.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/panel/api/policies/simulate?clientEmail=alice", nil))
+	if response.Code != http.StatusOK || !strings.Contains(response.Body.String(), `"state":"feature_off"`) || !strings.Contains(response.Body.String(), `"featureDisabled":true`) {
+		t.Fatalf("simulation response = %d %s", response.Code, response.Body.String())
 	}
 }
 

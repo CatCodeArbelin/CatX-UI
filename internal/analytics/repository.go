@@ -532,6 +532,10 @@ func activityEnvelope(c *gin.Context, obj any) {
 	c.JSON(http.StatusOK, gin.H{"success": true, "msg": "", "obj": obj})
 }
 
+func activityFeatureState(enabled bool) gin.H {
+	return gin.H{"state": map[bool]string{true: "active", false: "feature_off"}[enabled], "featureDisabled": !enabled}
+}
+
 // RegisterActivityRoutes exposes read-only analytics views through the fixed
 // fork route hook. It never returns raw log lines or any content data.
 func RegisterActivityRoutes(api *gin.RouterGroup) {
@@ -540,7 +544,12 @@ func RegisterActivityRoutes(api *gin.RouterGroup) {
 	}
 	api.GET("/analytics/status", func(c *gin.Context) {
 		status := CurrentStatus()
-		activityEnvelope(c, gin.H{"enabled": status.Enabled, "dnsIntelligence": status.DNSIntelligence})
+		obj := gin.H{"enabled": status.Enabled, "dnsIntelligence": status.DNSIntelligence}
+		for key, value := range activityFeatureState(status.Enabled) {
+			obj[key] = value
+		}
+		obj["dnsState"] = map[bool]string{true: "active", false: "feature_off"}[status.DNSIntelligence]
+		activityEnvelope(c, obj)
 	})
 	api.GET("/analytics/traffic", func(c *gin.Context) {
 		configured.RLock()
@@ -560,7 +569,11 @@ func RegisterActivityRoutes(api *gin.RouterGroup) {
 			c.JSON(http.StatusInternalServerError, gin.H{"success": false, "msg": "traffic history unavailable"})
 			return
 		}
-		activityEnvelope(c, gin.H{"enabled": enabled, "history": result})
+		obj := gin.H{"enabled": enabled, "history": result}
+		for key, value := range activityFeatureState(enabled) {
+			obj[key] = value
+		}
+		activityEnvelope(c, obj)
 	})
 	api.GET("/analytics/clients/:email/traffic", func(c *gin.Context) {
 		configured.RLock()
@@ -579,7 +592,11 @@ func RegisterActivityRoutes(api *gin.RouterGroup) {
 			c.JSON(http.StatusInternalServerError, gin.H{"success": false, "msg": "traffic history unavailable"})
 			return
 		}
-		activityEnvelope(c, gin.H{"enabled": enabled, "history": result})
+		obj := gin.H{"enabled": enabled, "history": result}
+		for key, value := range activityFeatureState(enabled) {
+			obj[key] = value
+		}
+		activityEnvelope(c, obj)
 	})
 	api.GET("/analytics/clients/:email/activity", func(c *gin.Context) {
 		configured.RLock()
@@ -598,7 +615,11 @@ func RegisterActivityRoutes(api *gin.RouterGroup) {
 			c.JSON(http.StatusInternalServerError, gin.H{"success": false, "msg": "analytics unavailable"})
 			return
 		}
-		activityEnvelope(c, gin.H{"enabled": enabled, "items": page.Items, "page": query.Page, "pageSize": query.PageSize, "total": page.Total, "from": query.From, "to": query.To})
+		obj := gin.H{"enabled": enabled, "items": page.Items, "page": query.Page, "pageSize": query.PageSize, "total": page.Total, "from": query.From, "to": query.To}
+		for key, value := range activityFeatureState(enabled) {
+			obj[key] = value
+		}
+		activityEnvelope(c, obj)
 	})
 	api.GET("/analytics/clients/:email/sessions", func(c *gin.Context) {
 		configured.RLock()
@@ -617,7 +638,11 @@ func RegisterActivityRoutes(api *gin.RouterGroup) {
 			c.JSON(http.StatusInternalServerError, gin.H{"success": false, "msg": "analytics unavailable"})
 			return
 		}
-		activityEnvelope(c, gin.H{"enabled": enabled, "items": page.Items, "page": query.Page, "pageSize": query.PageSize, "total": page.Total, "from": query.From, "to": query.To})
+		obj := gin.H{"enabled": enabled, "items": page.Items, "page": query.Page, "pageSize": query.PageSize, "total": page.Total, "from": query.From, "to": query.To}
+		for key, value := range activityFeatureState(enabled) {
+			obj[key] = value
+		}
+		activityEnvelope(c, obj)
 	})
 	api.GET("/analytics/clients/:email/dns", func(c *gin.Context) {
 		configured.RLock()
@@ -636,6 +661,12 @@ func RegisterActivityRoutes(api *gin.RouterGroup) {
 			c.JSON(http.StatusInternalServerError, gin.H{"success": false, "msg": "DNS intelligence unavailable"})
 			return
 		}
-		activityEnvelope(c, gin.H{"enabled": enabled && dnsEnabled, "items": page.Items, "page": query.Page, "pageSize": query.PageSize, "total": page.Total, "from": query.From, "to": query.To})
+		featureEnabled := enabled && dnsEnabled
+		obj := gin.H{"enabled": featureEnabled, "items": page.Items, "page": query.Page, "pageSize": query.PageSize, "total": page.Total, "from": query.From, "to": query.To}
+		for key, value := range activityFeatureState(featureEnabled) {
+			obj[key] = value
+		}
+		obj["feature"] = "dns_intelligence"
+		activityEnvelope(c, obj)
 	})
 }

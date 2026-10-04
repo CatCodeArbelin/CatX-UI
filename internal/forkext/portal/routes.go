@@ -22,6 +22,7 @@ func RegisterAdminRoutes(api *gin.RouterGroup) {
 	}
 	g := api.Group("/portal")
 	g.GET("/settings", adminSettings)
+	g.GET("/options", adminOptions)
 	g.POST("/settings", adminSetSettings)
 	g.GET("/credentials", adminCredentials)
 	g.POST("/credentials", adminIssue)
@@ -68,6 +69,65 @@ func RegisterPortalRoutes(g *gin.RouterGroup, secret []byte, basePath string, se
 func adminSettings(c *gin.Context) {
 	_, on := db()
 	c.JSON(http.StatusOK, gin.H{"success": true, "obj": PortalSettings{Enabled: on}})
+}
+
+type adminOption struct {
+	ID    int    `json:"id"`
+	Label string `json:"label"`
+}
+
+// adminOptions is a read-only selector adapter over the upstream client,
+// group, and host tables. It deliberately selects labels and stable IDs only;
+// credentials and other client secrets never cross this boundary.
+func adminOptions(c *gin.Context) {
+	database, on := db()
+	if !on || database == nil {
+		c.JSON(http.StatusConflict, gin.H{"success": false, "msg": "self-service is disabled", "obj": gin.H{"state": "feature_off", "featureDisabled": true}})
+		return
+	}
+	var clients []struct {
+		ID    int
+		Email string
+	}
+	if err := database.Model(&model.ClientRecord{}).Select("id, email").Order("email asc").Find(&clients).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "msg": "portal options unavailable"})
+		return
+	}
+	var groups []model.ClientGroup
+	if err := database.Select("id, name").Order("name asc").Find(&groups).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "msg": "portal options unavailable"})
+		return
+	}
+	var hosts []struct {
+		ID      int
+		Remark  string
+		Address string
+		Port    int
+	}
+	if err := database.Model(&model.Host{}).Select("id, remark, address, port").Where("is_disabled = ? AND is_hidden = ?", false, false).Order("remark asc, id asc").Find(&hosts).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "msg": "portal options unavailable"})
+		return
+	}
+	clientOptions := make([]adminOption, 0, len(clients))
+	for _, row := range clients {
+		clientOptions = append(clientOptions, adminOption{ID: row.ID, Label: row.Email})
+	}
+	groupOptions := make([]adminOption, 0, len(groups))
+	for _, row := range groups {
+		groupOptions = append(groupOptions, adminOption{ID: row.Id, Label: row.Name})
+	}
+	hostOptions := make([]adminOption, 0, len(hosts))
+	for _, row := range hosts {
+		label := row.Remark
+		if row.Address != "" {
+			label += " · " + row.Address
+		}
+		if row.Port != 0 {
+			label += ":" + strconv.Itoa(row.Port)
+		}
+		hostOptions = append(hostOptions, adminOption{ID: row.ID, Label: label})
+	}
+	c.JSON(http.StatusOK, gin.H{"success": true, "obj": gin.H{"clients": clientOptions, "groups": groupOptions, "hosts": hostOptions, "state": "active", "featureDisabled": false}})
 }
 
 func adminSetSettings(c *gin.Context) {

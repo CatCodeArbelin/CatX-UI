@@ -49,6 +49,7 @@ import type {
 } from '@/hooks/useClients';
 import { useFail2banStatusQuery, getLimitIpNotice } from '@/api/queries/useFail2banStatusQuery';
 import ClientRenewalFields from './ClientRenewalFields';
+import TrafficPolicyPanel from './TrafficPolicyPanel';
 import { ClientFormSchema, ClientCreateFormSchema, type ClientFormValues } from '@/schemas/client';
 import './ClientFormModal.css';
 
@@ -1502,6 +1503,15 @@ export default function ClientFormModal({
                     </>
                   ),
                 },
+                ...(isEdit && client?.email
+                  ? [
+                      {
+                        key: 'traffic',
+                        label: t('fork.common.labels.trafficControl'),
+                        children: <TrafficPolicyPanel email={client.email} />,
+                      },
+                    ]
+                  : []),
               ]}
             />
           </Form>

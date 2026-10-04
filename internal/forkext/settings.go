@@ -68,10 +68,12 @@ type Settings struct {
 // settings page. It deliberately excludes reserved flags that have no active
 // runtime behavior.
 type FeatureFlagInfo struct {
-	Key             Flag   `json:"key"`
-	Enabled         bool   `json:"enabled"`
-	Requires        []Flag `json:"requires,omitempty"`
-	RestartRequired bool   `json:"restartRequired"`
+	Key             Flag         `json:"key"`
+	Enabled         bool         `json:"enabled"`
+	Active          bool         `json:"active"`
+	State           RuntimeState `json:"state"`
+	Requires        []Flag       `json:"requires,omitempty"`
+	RestartRequired bool         `json:"restartRequired"`
 }
 
 var managedFeatureFlags = []struct {
@@ -174,11 +176,14 @@ func (s Settings) FeatureFlags() ([]FeatureFlagInfo, error) {
 		if err != nil {
 			return nil, err
 		}
+		active, state := featureRuntimeStatus(feature.flag, enabled)
 		result = append(result, FeatureFlagInfo{
 			Key:             feature.flag,
 			Enabled:         enabled,
+			Active:          active,
+			State:           state,
 			Requires:        feature.requires,
-			RestartRequired: true,
+			RestartRequired: state == RuntimeStateRestartRequired,
 		})
 	}
 	return result, nil

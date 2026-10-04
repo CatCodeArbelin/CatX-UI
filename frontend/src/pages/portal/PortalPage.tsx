@@ -86,7 +86,7 @@ export default function PortalPage() {
         return;
       }
       setClient(null);
-      setError(me.msg || t('fork.portal.loginRequired'));
+      setError(t('fork.portal.loginRequired'));
       return;
     }
     const failed = [deviceResult, hostResult, trafficResult, csrfResult].find(
@@ -97,7 +97,7 @@ export default function PortalPage() {
     setHosts(hostResult.obj || []);
     setTraffic(trafficResult.obj);
     setCsrf(csrfResult.obj || '');
-    setError(failed?.msg || '');
+    setError(failed ? t('fork.portal.actionFailed') : '');
   }, [t]);
 
   useEffect(() => {
@@ -112,7 +112,7 @@ export default function PortalPage() {
       { silent: true },
     );
     if (!result.success) {
-      setError(result.msg || t('fork.portal.invalidToken'));
+      setError(t('fork.portal.invalidToken'));
       return;
     }
     setCsrf(result.obj?.csrfToken || '');
@@ -126,7 +126,7 @@ export default function PortalPage() {
         method === 'patch'
           ? await HttpUtil.put(portalPath(path), body, options)
           : await HttpUtil.delete(portalPath(path), options);
-      if (!result.success) setError(result.msg || t('fork.portal.actionFailed'));
+      if (!result.success) setError(t('fork.portal.actionFailed'));
       else await load();
     },
     [csrf, load, t],

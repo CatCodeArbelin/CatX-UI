@@ -3,7 +3,15 @@ import { Alert, Button, Card, List, Space, Switch, Tag, Typography, message } fr
 import { useTranslation } from 'react-i18next';
 import { HttpUtil } from '@/utils';
 
-type Feature = { key: string; enabled: boolean; requires?: string[]; restartRequired: boolean };
+type FeatureState = 'feature_off' | 'active' | 'initializing' | 'restart_required' | 'error';
+type Feature = {
+  key: string;
+  enabled: boolean;
+  active: boolean;
+  state: FeatureState;
+  requires?: string[];
+  restartRequired: boolean;
+};
 type FeatureResponse = { items: Feature[]; restartRequired: boolean };
 const path = '/panel/api/fork/settings/features';
 
@@ -64,7 +72,7 @@ export default function CatxFeaturesTab() {
     setLoading(true);
     const result = await HttpUtil.get<FeatureResponse>(path, undefined, { silent: true });
     if (!result.success || !result.obj) {
-      setError(result.msg || t('fork.settings.loadFailed'));
+      setError(t('fork.settings.loadFailed'));
     } else {
       const next = Object.fromEntries(result.obj.items.map((item) => [item.key, item.enabled]));
       setItems(result.obj.items);
@@ -91,6 +99,15 @@ export default function CatxFeaturesTab() {
   const missingDependencies = (item: Feature) =>
     (item.requires || []).filter((dependency) => !values[dependency]);
   const featureName = (key: string) => t(featureCopy[key]?.nameKey || key);
+  const stateLabel = (state: FeatureState) => t(`fork.common.states.${state}`);
+  const stateColor = (state: FeatureState) =>
+    state === 'active'
+      ? 'green'
+      : state === 'error'
+        ? 'red'
+        : state === 'initializing'
+          ? 'blue'
+          : 'gold';
   const dirty = JSON.stringify(values) !== JSON.stringify(savedValues);
 
   async function save() {
@@ -102,7 +119,7 @@ export default function CatxFeaturesTab() {
       { headers: { 'Content-Type': 'application/json' }, silent: true },
     );
     if (!result.success || !result.obj) {
-      setError(result.msg || t('fork.settings.saveFailed'));
+      setError(t('fork.settings.saveFailed'));
     } else {
       const next = Object.fromEntries(result.obj.items.map((item) => [item.key, item.enabled]));
       setItems(result.obj.items);
@@ -122,12 +139,14 @@ export default function CatxFeaturesTab() {
         {/* Go-i18n reserves "description" in locale message trees. */}
         <Typography.Paragraph type="secondary">{t('fork.settings.intro')}</Typography.Paragraph>
       </div>
-      <Alert
-        type="warning"
-        showIcon
-        message={t('fork.settings.restartRequired')}
-        description={t('fork.settings.restartRequiredDescription')}
-      />
+      {items.some((item) => item.restartRequired) && (
+        <Alert
+          type="warning"
+          showIcon
+          message={t('fork.settings.restartRequired')}
+          description={t('fork.settings.restartRequiredDescription')}
+        />
+      )}
       {invalidDependencies.length > 0 && (
         <Alert
           type="warning"
@@ -173,15 +192,16 @@ export default function CatxFeaturesTab() {
                   title={
                     <Space size="small">
                       <Typography.Text>{featureName(item.key)}</Typography.Text>
-                      <Typography.Text type="secondary" code>
-                        {item.key}
-                      </Typography.Text>
+                      <Tag color={stateColor(item.state)}>{stateLabel(item.state)}</Tag>
                     </Space>
                   }
                   description={
                     <Space direction="vertical" size={2}>
                       <Typography.Text type="secondary">
                         {t(featureCopy[item.key]?.detailsKey || item.key)}
+                      </Typography.Text>
+                      <Typography.Text type="secondary">
+                        {t('fork.settings.runtimeState')}: {stateLabel(item.state)}
                       </Typography.Text>
                       {blocked && (
                         <Tag color="gold">

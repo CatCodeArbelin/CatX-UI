@@ -80,6 +80,8 @@ type View struct {
 	RemainingBytes    int64  `json:"remainingBytes"`
 	Enforcement       string `json:"enforcement"`
 	EnforcementNote   string `json:"enforcementNote,omitempty"`
+	State             string `json:"state"`
+	FeatureDisabled   bool   `json:"featureDisabled"`
 	EnforcementActive bool   `json:"-"`
 }
 
@@ -284,6 +286,7 @@ func effectiveView(tx *gorm.DB, email string) (View, error) {
 		remaining = p.QuotaBytes - used
 	}
 	v := View{Policy: p, Lifecycle: state.Lifecycle, Owner: state.Owner, Reason: state.Reason, WindowStart: state.WindowStart, WindowEnd: state.WindowEnd, UsedBytes: used, RemainingBytes: remaining, EnforcementActive: state.EnforcementActive}
+	v.State = "active"
 	if state.Lifecycle == StateDisabled {
 		v.Enforcement, v.EnforcementNote = StateDisabled, state.Reason
 	} else if !trafficcontrol.StatusView().UserAttribution {
@@ -535,6 +538,14 @@ func RegisterRoutes(api *gin.RouterGroup) {
 	g.GET("/:email/policy", func(c *gin.Context) {
 		v, err := Get(c.Param("email"))
 		if err != nil {
+			if errors.Is(err, ErrDisabled) {
+				c.JSON(http.StatusConflict, gin.H{"success": false, "msg": err.Error(), "obj": gin.H{"state": "feature_off", "featureDisabled": true}})
+				return
+			}
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				c.JSON(http.StatusOK, gin.H{"success": true, "msg": "", "obj": gin.H{"state": "unconfigured", "featureDisabled": false}})
+				return
+			}
 			c.JSON(http.StatusBadRequest, gin.H{"success": false, "msg": err.Error()})
 			return
 		}

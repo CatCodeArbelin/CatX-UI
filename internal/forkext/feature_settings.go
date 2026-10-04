@@ -1,27 +1,44 @@
 package forkext
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
+
+var errFeatureSettingsUnavailable = errors.New("feature settings unavailable")
+
+func readFeatureSettings() (gin.H, error) {
+	db := currentSettingsDB()
+	if db == nil {
+		return nil, errFeatureSettingsUnavailable
+	}
+	items, err := NewSettings(db).FeatureFlags()
+	if err != nil {
+		return nil, errFeatureSettingsUnavailable
+	}
+	restartRequired := false
+	for _, item := range items {
+		if item.RestartRequired {
+			restartRequired = true
+			break
+		}
+	}
+	return gin.H{"items": items, "restartRequired": restartRequired}, nil
+}
 
 func registerFeatureSettingsRoutes(api *gin.RouterGroup) {
 	if api == nil {
 		return
 	}
 	api.GET("/fork/settings/features", func(c *gin.Context) {
-		db := currentSettingsDB()
-		if db == nil {
-			c.JSON(http.StatusServiceUnavailable, gin.H{"success": false, "msg": "feature settings unavailable"})
-			return
-		}
-		items, err := NewSettings(db).FeatureFlags()
+		payload, err := readFeatureSettings()
 		if err != nil {
 			c.JSON(http.StatusServiceUnavailable, gin.H{"success": false, "msg": "feature settings unavailable"})
 			return
 		}
-		c.JSON(http.StatusOK, gin.H{"success": true, "msg": "", "obj": gin.H{"items": items, "restartRequired": true}})
+		c.JSON(http.StatusOK, gin.H{"success": true, "msg": "", "obj": payload})
 	})
 	api.PUT("/fork/settings/features", func(c *gin.Context) {
 		db := currentSettingsDB()
@@ -44,11 +61,11 @@ func registerFeatureSettingsRoutes(api *gin.RouterGroup) {
 			c.JSON(http.StatusBadRequest, gin.H{"success": false, "msg": err.Error()})
 			return
 		}
-		items, err := NewSettings(db).FeatureFlags()
+		payload, err := readFeatureSettings()
 		if err != nil {
 			c.JSON(http.StatusServiceUnavailable, gin.H{"success": false, "msg": "feature settings unavailable"})
 			return
 		}
-		c.JSON(http.StatusOK, gin.H{"success": true, "msg": "feature settings saved", "obj": gin.H{"items": items, "restartRequired": true}})
+		c.JSON(http.StatusOK, gin.H{"success": true, "msg": "feature settings saved", "obj": payload})
 	})
 }

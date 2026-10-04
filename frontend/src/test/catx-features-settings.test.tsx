@@ -12,31 +12,78 @@ vi.mock('@/api/queries/useAllSettings', () => ({
 }));
 
 const items = [
-  { key: 'analytics.enabled', enabled: false, restartRequired: true },
+  {
+    key: 'analytics.enabled',
+    enabled: false,
+    active: false,
+    state: 'feature_off',
+    restartRequired: true,
+  },
   {
     key: 'dns_intelligence.enabled',
     enabled: false,
+    active: false,
+    state: 'feature_off',
     requires: ['analytics.enabled'],
     restartRequired: true,
   },
-  { key: 'policies.enabled', enabled: false, restartRequired: true },
-  { key: 'traffic_control.enabled', enabled: false, restartRequired: true },
+  {
+    key: 'policies.enabled',
+    enabled: false,
+    active: false,
+    state: 'feature_off',
+    restartRequired: true,
+  },
+  {
+    key: 'traffic_control.enabled',
+    enabled: false,
+    active: false,
+    state: 'feature_off',
+    restartRequired: true,
+  },
   {
     key: 'security_anomaly.enabled',
     enabled: false,
+    active: false,
+    state: 'feature_off',
     requires: ['analytics.enabled'],
     restartRequired: true,
   },
-  { key: 'audit.enabled', enabled: false, restartRequired: true },
-  { key: 'self_service.enabled', enabled: false, restartRequired: true },
-  { key: 'fleet_updates.enabled', enabled: false, restartRequired: true },
+  {
+    key: 'audit.enabled',
+    enabled: false,
+    active: false,
+    state: 'feature_off',
+    restartRequired: true,
+  },
+  {
+    key: 'self_service.enabled',
+    enabled: false,
+    active: false,
+    state: 'feature_off',
+    restartRequired: true,
+  },
+  {
+    key: 'fleet_updates.enabled',
+    enabled: false,
+    active: false,
+    state: 'feature_off',
+    restartRequired: true,
+  },
   {
     key: 'fleet_updates.mutation.enabled',
     enabled: false,
+    active: false,
+    state: 'feature_off',
     requires: ['fleet_updates.enabled'],
     restartRequired: true,
   },
 ];
+const savedItems = items.map((item) =>
+  item.key === 'analytics.enabled' || item.key === 'dns_intelligence.enabled'
+    ? { ...item, enabled: true, state: 'restart_required', restartRequired: true }
+    : item,
+);
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -46,7 +93,9 @@ test('reads feature flags, enforces dependencies, and saves with restart guidanc
     .mockResolvedValue(new Msg(true, '', { items, restartRequired: true }));
   const put = vi
     .spyOn(HttpUtil, 'put')
-    .mockImplementation(async () => new Msg(true, '', { items, restartRequired: true }));
+    .mockImplementation(
+      async () => new Msg(true, '', { items: savedItems, restartRequired: true }),
+    );
   renderWithProviders(
     <MemoryRouter>
       <CatxFeaturesTab />
@@ -54,14 +103,14 @@ test('reads feature flags, enforces dependencies, and saves with restart guidanc
   );
 
   await waitFor(() => expect(get).toHaveBeenCalledOnce());
-  expect(screen.getByText('Panel restart required')).toBeTruthy();
+  expect(screen.queryByText('Panel restart required')).toBeNull();
   expect(screen.getByText('Analytics').tagName).not.toBe('CODE');
   expect(
     screen.getByText(
       'Collect and show metadata-only activity, DNS, session, and traffic insights.',
     ),
   ).toBeTruthy();
-  expect(screen.getByText('analytics.enabled').tagName).toBe('CODE');
+  expect(screen.queryByText('analytics.enabled', { exact: true })).toBeNull();
   const switches = screen.getAllByRole('switch');
   expect(switches[1].getAttribute('disabled')).not.toBeNull();
   fireEvent.click(switches[0]);
@@ -69,6 +118,7 @@ test('reads feature flags, enforces dependencies, and saves with restart guidanc
   fireEvent.click(screen.getByRole('button', { name: 'Save feature settings' }));
 
   await waitFor(() => expect(put).toHaveBeenCalledOnce());
+  expect(screen.getByText('Panel restart required')).toBeTruthy();
   expect(put.mock.calls[0][1]).toMatchObject({
     flags: { 'analytics.enabled': true, 'dns_intelligence.enabled': true },
   });

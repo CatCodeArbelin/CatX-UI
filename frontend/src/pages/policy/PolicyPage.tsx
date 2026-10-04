@@ -3,6 +3,8 @@ import {
   Alert,
   Button,
   Card,
+  Collapse,
+  DatePicker,
   Empty,
   Form,
   Input,
@@ -16,6 +18,7 @@ import {
   Table,
   Tabs,
   Tag,
+  TimePicker,
   Typography,
   message,
 } from 'antd';
@@ -27,6 +30,13 @@ import FeatureOffState from '@/components/fork/FeatureOffState';
 import { isKnownForkFeatureUnavailable } from '@/lib/fork-feature';
 import { i18n } from '@/i18n/react';
 import { useTranslation } from 'react-i18next';
+import type { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
+import {
+  mergeStructuredPolicyDefinition,
+  policyDefinitionSummary,
+  structuredFromPolicyDefinition,
+} from './policyDefinition';
 import './PolicyPage.css';
 
 type Policy = {
@@ -135,6 +145,10 @@ const POLICY_CATEGORIES = [
 
 const formatMinute = (value: number) =>
   `${String(Math.floor(value / 60)).padStart(2, '0')}:${String(value % 60).padStart(2, '0')}`;
+const minuteValue = (value: Dayjs | null | undefined) =>
+  value ? value.hour() * 60 + value.minute() : 0;
+const minutePickerValue = (value: number) =>
+  dayjs().startOf('day').add(Math.max(0, value), 'minute');
 
 const targetTypeLabel = (value: string) =>
   i18n.t(`fork.policy.labels.${value}`, { defaultValue: value });
@@ -157,6 +171,7 @@ export default function PolicyPage() {
   const [featureOff, setFeatureOff] = useState(false);
   const [editing, setEditing] = useState<Policy | null>(null);
   const [policyModal, setPolicyModal] = useState(false);
+  const [advancedSpec, setAdvancedSpec] = useState('{}');
   const [form] = Form.useForm();
   const [simForm] = Form.useForm();
   const [assignmentForm] = Form.useForm();
@@ -196,7 +211,7 @@ export default function PolicyPage() {
         setLoading(false);
         return;
       }
-      if (!p.success) setError(p.msg || t('fork.policy.loadFailed'));
+      if (!p.success) setError(t('fork.policy.loadFailed'));
       setEnabled(p.obj?.enabled !== false);
       setPolicies(p.obj?.items || []);
       setAssignments(a.obj?.items || []);
@@ -220,13 +235,14 @@ export default function PolicyPage() {
     } catch {
       policySpec = {};
     }
+    const structured = structuredFromPolicyDefinition(policySpec);
+    setAdvancedSpec(JSON.stringify(policySpec, null, 2));
     form.setFieldsValue({
       name: policy?.name || '',
       description: policy?.description || '',
       priority: policy?.priority || 0,
       enabled: policy?.enabled ?? true,
-      spec: policy?.spec || '{\n  "action": "allow",\n  "destinations": ["example.com"]\n}',
-      categories: Array.isArray(policySpec.categories) ? policySpec.categories : [],
+      ...structured,
     });
     setPolicyModal(true);
   };
@@ -235,20 +251,43 @@ export default function PolicyPage() {
     description?: string;
     priority?: number;
     enabled?: boolean;
-    spec: string;
+    action: string;
+    services?: string[];
     categories?: string[];
+    destinations?: string[];
+    quarantine?: boolean;
+    quarantineAllowlist?: string[];
+    managedDns?: boolean;
+    safeSearch?: boolean;
+    resolver?: string;
+    scheduleRef?: string;
   }) => {
     let spec: Record<string, unknown>;
     try {
-      spec = parseSpec(values.spec);
+      spec = parseSpec(advancedSpec);
     } catch (err) {
       message.error((err as Error).message);
       return;
     }
-    const payloadSpec = { ...spec };
-    if (values.categories?.length) payloadSpec.categories = values.categories;
-    else delete payloadSpec.categories;
-    const payload = { ...values, spec: payloadSpec };
+    const payloadSpec = mergeStructuredPolicyDefinition(spec, {
+      action: values.action || '',
+      services: values.services || [],
+      categories: values.categories || [],
+      destinations: values.destinations || [],
+      quarantine: values.quarantine === true,
+      quarantineAllowlist: values.quarantineAllowlist || [],
+      managedDns: values.managedDns === true,
+      safeSearch: values.safeSearch === true,
+      resolver: values.resolver || '',
+      scheduleRef: values.scheduleRef || '',
+    });
+    const payload = {
+      name: values.name,
+      description: values.description,
+      priority: values.priority,
+      enabled: values.enabled,
+      spec: payloadSpec,
+    };
     const result = editing
       ? await HttpUtil.put(`/panel/api/policies/${editing.id}`, payload)
       : await HttpUtil.post('/panel/api/policies', payload);
@@ -282,7 +321,7 @@ export default function PolicyPage() {
       silent: true,
     });
     if (result.success && result.obj) setSimulation(result.obj);
-    else message.error(result.msg || t('fork.policy.simulationFailed'));
+    else message.error(t('fork.policy.simulationFailed'));
     setSimLoading(false);
   };
 
@@ -300,8 +339,8 @@ export default function PolicyPage() {
     {
       title: t('fork.policy.labels.specification'),
       render: (_, row) => (
-        <Typography.Text code ellipsis={{ tooltip: row.spec }}>
-          {row.spec}
+        <Typography.Text ellipsis>
+          {policyDefinitionSummary(row.spec) || t('fork.common.unknown')}
         </Typography.Text>
       ),
     },
@@ -331,7 +370,8 @@ export default function PolicyPage() {
   const assignmentColumns: ColumnsType<Assignment> = [
     {
       title: t('fork.policy.labels.policy'),
-      render: (_, row) => policies.find((p) => p.id === row.policyId)?.name || `#${row.policyId}`,
+      render: (_, row) =>
+        policies.find((p) => p.id === row.policyId)?.name || t('fork.common.unknown'),
     },
     {
       title: t('fork.policy.labels.target'),
@@ -357,7 +397,8 @@ export default function PolicyPage() {
   const overrideColumns = (path: string): ColumnsType<Override> => [
     {
       title: t('fork.policy.labels.policy'),
-      render: (_, row) => policies.find((p) => p.id === row.policyId)?.name || `#${row.policyId}`,
+      render: (_, row) =>
+        policies.find((p) => p.id === row.policyId)?.name || t('fork.common.unknown'),
     },
     {
       title: t('fork.policy.labels.target'),
@@ -384,7 +425,8 @@ export default function PolicyPage() {
   const scheduleColumns: ColumnsType<Schedule> = [
     {
       title: t('fork.policy.labels.policy'),
-      render: (_, row) => policies.find((p) => p.id === row.policyId)?.name || `#${row.policyId}`,
+      render: (_, row) =>
+        policies.find((p) => p.id === row.policyId)?.name || t('fork.common.unknown'),
     },
     { title: t('fork.policy.labels.ianaTimezone'), dataIndex: 'timezone' },
     { title: t('fork.policy.labels.weekdays'), dataIndex: 'weekdays' },
@@ -595,7 +637,12 @@ export default function PolicyPage() {
                             try {
                               void createRecord(
                                 '/panel/api/policies/temporary-overrides',
-                                { ...values, value: parseSpec(String(values.value || '{}')) },
+                                {
+                                  ...values,
+                                  startsAt: values.startsAt?.valueOf?.() || 0,
+                                  expiresAt: values.expiresAt?.valueOf?.() || 0,
+                                  value: parseSpec(String(values.value || '{}')),
+                                },
                                 temporaryForm,
                               );
                             } catch (err) {
@@ -633,10 +680,10 @@ export default function PolicyPage() {
                             />
                           </Form.Item>
                           <Form.Item name="startsAt" rules={[{ required: true }]}>
-                            <InputNumber placeholder={t('fork.policy.labels.startsMs')} />
+                            <DatePicker showTime placeholder={t('fork.policy.labels.startsAt')} />
                           </Form.Item>
                           <Form.Item name="expiresAt" rules={[{ required: true }]}>
-                            <InputNumber placeholder={t('fork.policy.labels.expiresMs')} />
+                            <DatePicker showTime placeholder={t('fork.policy.labels.expiresAt')} />
                           </Form.Item>
                           <Form.Item name="value" initialValue="{}">
                             <Input placeholder={t('fork.policy.labels.valueJson')} />
@@ -668,7 +715,15 @@ export default function PolicyPage() {
                           form={scheduleForm}
                           layout="inline"
                           onFinish={(values) =>
-                            void createRecord('/panel/api/policies/schedules', values, scheduleForm)
+                            void createRecord(
+                              '/panel/api/policies/schedules',
+                              {
+                                ...values,
+                                startMinute: minuteValue(values.startMinute),
+                                endMinute: minuteValue(values.endMinute),
+                              },
+                              scheduleForm,
+                            )
                           }
                         >
                           <Form.Item name="policyId" rules={[{ required: true }]}>
@@ -694,17 +749,23 @@ export default function PolicyPage() {
                           </Form.Item>
                           <Form.Item
                             name="startMinute"
-                            initialValue={9 * 60}
+                            initialValue={minutePickerValue(9 * 60)}
                             rules={[{ required: true }]}
                           >
-                            <InputNumber placeholder={t('fork.policy.labels.startMinute')} />
+                            <TimePicker
+                              format="HH:mm"
+                              placeholder={t('fork.policy.labels.startTime')}
+                            />
                           </Form.Item>
                           <Form.Item
                             name="endMinute"
-                            initialValue={17 * 60}
+                            initialValue={minutePickerValue(17 * 60)}
                             rules={[{ required: true }]}
                           >
-                            <InputNumber placeholder={t('fork.policy.labels.endMinute')} />
+                            <TimePicker
+                              format="HH:mm"
+                              placeholder={t('fork.policy.labels.endTime')}
+                            />
                           </Form.Item>
                           <Button type="primary" htmlType="submit">
                             {t('fork.policy.addSchedule')}
@@ -802,13 +863,29 @@ export default function PolicyPage() {
               <Switch />
             </Form.Item>
           </Space>
-          <Form.Item
-            name="spec"
-            label={t('fork.policy.labels.policyJson')}
-            rules={[{ required: true }]}
-          >
-            <Input.TextArea rows={10} spellCheck={false} />
-          </Form.Item>
+          <div className="policy-form-grid">
+            <Form.Item
+              name="action"
+              label={t('fork.policy.labels.action')}
+              rules={[{ required: true }]}
+            >
+              <Select
+                options={[
+                  { value: 'allow', label: t('fork.policy.labels.allow') },
+                  { value: 'deny', label: t('fork.policy.labels.deny') },
+                ]}
+              />
+            </Form.Item>
+            <Form.Item name="scheduleRef" label={t('fork.policy.labels.scheduleRef')}>
+              <Input />
+            </Form.Item>
+            <Form.Item name="services" label={t('fork.policy.labels.services')}>
+              <Select mode="tags" tokenSeparators={[',']} />
+            </Form.Item>
+            <Form.Item name="destinations" label={t('fork.policy.labels.destinations')}>
+              <Select mode="tags" tokenSeparators={[',']} />
+            </Form.Item>
+          </div>
           <Alert
             type="info"
             showIcon
@@ -822,6 +899,54 @@ export default function PolicyPage() {
               placeholder={t('fork.policy.labels.optionalCategoryTargets')}
             />
           </Form.Item>
+          <div className="policy-form-grid">
+            <Form.Item
+              name="quarantine"
+              label={t('fork.policy.labels.quarantine')}
+              valuePropName="checked"
+            >
+              <Switch />
+            </Form.Item>
+            <Form.Item
+              name="managedDns"
+              label={t('fork.policy.labels.managedDns')}
+              valuePropName="checked"
+            >
+              <Switch />
+            </Form.Item>
+            <Form.Item
+              name="safeSearch"
+              label={t('fork.policy.labels.safeSearch')}
+              valuePropName="checked"
+            >
+              <Switch />
+            </Form.Item>
+            <Form.Item name="resolver" label={t('fork.policy.labels.resolver')}>
+              <Input />
+            </Form.Item>
+            <Form.Item
+              name="quarantineAllowlist"
+              label={t('fork.policy.labels.quarantineAllowlist')}
+            >
+              <Select mode="tags" tokenSeparators={[',']} />
+            </Form.Item>
+          </div>
+          <Collapse
+            items={[
+              {
+                key: 'advanced',
+                label: t('fork.policy.labels.advancedJson'),
+                children: (
+                  <Input.TextArea
+                    rows={8}
+                    value={advancedSpec}
+                    spellCheck={false}
+                    onChange={(event) => setAdvancedSpec(event.target.value)}
+                  />
+                ),
+              },
+            ]}
+          />
         </Form>
       </Modal>
     </ForkAdminPageShell>
@@ -829,15 +954,21 @@ export default function PolicyPage() {
 }
 
 function SimulationView({ value }: { value: Simulation }) {
+  const noOpReason =
+    value.noOpReason === 'policies are disabled'
+      ? i18n.t('fork.common.featureOffDescription')
+      : value.noOpReason === 'no effective policy'
+        ? i18n.t('fork.policy.noEffectivePolicy')
+        : value.noOpReason;
   if (!value.enabled) {
-    return <Alert className="policy-result" type="info" message={value.noOpReason} />;
+    return <Alert className="policy-result" type="info" message={noOpReason} />;
   }
   if (!value.decision) {
     return (
       <Alert
         className="policy-result"
         type="info"
-        message={value.noOpReason || i18n.t('fork.policy.noEffectivePolicy')}
+        message={noOpReason || i18n.t('fork.policy.noEffectivePolicy')}
       />
     );
   }

@@ -2963,7 +2963,7 @@ export const sections: readonly Section[] = [
     title: 'Policies (CatX-UI)',
     translationKey: 'fork.apiDocs.policies',
     description:
-      'Policy data and explainable WP-4B enforcement capabilities. Quarantine is safety state; only a bounded quarantine-release temporary override can release it. Managed DNS and SafeSearch apply only to supported Xray-observed DNS paths.',
+      'Policy data and explainable enforcement capabilities. Quarantine is a safety state; only a bounded quarantine-release temporary override can release it. Managed DNS and SafeSearch apply only to supported Xray-observed DNS paths.',
     endpoints: [
       {
         method: 'GET',
@@ -3171,7 +3171,7 @@ export const sections: readonly Section[] = [
     title: 'Traffic control',
     translationKey: 'fork.apiDocs.traffic',
     description:
-      'Capability and reconciliation endpoints for the CatX shaping substrate. WP-6A does not define speed-limit policy.',
+      'Capability and reconciliation endpoints for the CatX shaping substrate. Speed-limit policy is exposed through the traffic-control policy surface.',
     endpoints: [
       {
         method: 'GET',

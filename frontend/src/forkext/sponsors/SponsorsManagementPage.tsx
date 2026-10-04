@@ -206,7 +206,7 @@ export default function SponsorsManagementPage() {
       (response) => !response.success,
     );
     if (failed) {
-      setError(failed.msg || t('pages.sponsors.loadFailed'));
+      setError(t('pages.sponsors.loadFailed'));
     } else {
       setSettings(settingsResponse.obj || null);
       setStatus(statusResponse.obj || null);
@@ -248,7 +248,7 @@ export default function SponsorsManagementPage() {
       ? await HttpUtil.put<ManagedSponsor>(path, sponsorRequestFromForm(values), JSON_HEADERS)
       : await HttpUtil.post<ManagedSponsor>(path, sponsorRequestFromForm(values), JSON_HEADERS);
     if (!result.success) {
-      messageApi.error(result.msg || t('pages.sponsors.saveFailed'));
+      messageApi.error(t('pages.sponsors.saveFailed'));
     } else {
       messageApi.success(t('pages.sponsors.saved'));
       setModalOpen(false);
@@ -267,7 +267,7 @@ export default function SponsorsManagementPage() {
         const result = await HttpUtil.delete(
           `/panel/api/fork/sponsors/${encodeURIComponent(record.id)}`,
         );
-        if (!result.success) throw new Error(result.msg || t('pages.sponsors.deleteFailed'));
+        if (!result.success) throw new Error(t('pages.sponsors.deleteFailed'));
         messageApi.success(t('pages.sponsors.deleted'));
         if (selected?.id === record.id) setSelected(null);
         await load();
@@ -281,7 +281,7 @@ export default function SponsorsManagementPage() {
       { ...inputFromRecord(record), enabled },
       JSON_HEADERS,
     );
-    if (!result.success) messageApi.error(result.msg || t('pages.sponsors.saveFailed'));
+    if (!result.success) messageApi.error(t('pages.sponsors.saveFailed'));
     else await load();
   };
 
@@ -291,7 +291,7 @@ export default function SponsorsManagementPage() {
       values,
       JSON_HEADERS,
     );
-    if (!result.success) messageApi.error(result.msg || t('pages.sponsors.saveFailed'));
+    if (!result.success) messageApi.error(t('pages.sponsors.saveFailed'));
     else {
       messageApi.success(t('pages.sponsors.saved'));
       await load();

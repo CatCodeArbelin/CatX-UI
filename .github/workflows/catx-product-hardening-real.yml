@@ -1,0 +1,94 @@
+name: CatX v0.3 product hardening qualification
+
+on:
+  push:
+    branches: [feature/v0.3-product-hardening]
+    paths:
+      - '.github/workflows/catx-product-hardening-real.yml'
+      - 'scripts/staging/observe-product-hardening-real-linux.sh'
+      - 'scripts/staging/observe-product-hardening-real-browser.mjs'
+      - 'internal/forkext/**'
+      - 'internal/analytics/**'
+      - 'internal/policy/**'
+      - 'internal/policysim/**'
+      - 'internal/web/web.go'
+      - 'internal/web/controller/**'
+      - 'frontend/**'
+      - 'go.mod'
+      - 'go.sum'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  real-panel:
+    name: Disposable real-panel lifecycle and browser qualification
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+        with: {fetch-depth: 0}
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install Linux qualification dependencies
+        run: sudo apt-get update && sudo apt-get install --yes --no-install-recommends curl jq unzip
+      - name: Build frontend bundle
+        working-directory: frontend
+        run: npm ci && npm run build
+      - name: Install Chromium for real-panel browser qualification
+        working-directory: frontend
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/ms-playwright
+        run: npx playwright install --with-deps chromium
+      - name: Build exact candidate and Xray
+        run: |
+          set -euo pipefail
+          go build -buildvcs=false -ldflags '-s -w' -o "$RUNNER_TEMP/catx-hardening-candidate-x-ui" .
+          curl --fail --location --retry 4 --retry-all-errors --retry-delay 2 -o "$RUNNER_TEMP/xray.zip" 'https://github.com/XTLS/Xray-core/releases/download/v26.9.9/Xray-linux-64.zip'
+          unzip -q "$RUNNER_TEMP/xray.zip" xray geoip.dat geosite.dat -d "$RUNNER_TEMP/xray-unpacked"
+          install -m 0755 "$RUNNER_TEMP/xray-unpacked/xray" "$RUNNER_TEMP/xray-linux-amd64"
+          mkdir -p "$RUNNER_TEMP/xray-assets"
+          install -m 0644 "$RUNNER_TEMP/xray-unpacked/geoip.dat" "$RUNNER_TEMP/xray-assets/geoip.dat"
+          install -m 0644 "$RUNNER_TEMP/xray-unpacked/geosite.dat" "$RUNNER_TEMP/xray-assets/geosite.dat"
+      - name: Run repository qualification before the real panel
+        run: |
+          set -euo pipefail
+          go test -count=1 ./internal/analytics ./internal/policy ./internal/policysim ./internal/forkext/trafficpolicy ./internal/forkext
+          make verify
+          make verify-fork
+      - name: Run authenticated hardening lifecycle on the real panel
+        env:
+          CATX_HARDENING_CANDIDATE_BINARY: ${{ runner.temp }}/catx-hardening-candidate-x-ui
+          CATX_HARDENING_CANDIDATE_XRAY_BINARY: ${{ runner.temp }}/xray-linux-amd64
+          CATX_HARDENING_CANDIDATE_XRAY_ASSET_DIR: ${{ runner.temp }}/xray-assets
+          CATX_HARDENING_CANDIDATE_SHA: ${{ github.sha }}
+          CATX_HARDENING_EVIDENCE_DIR: ${{ runner.temp }}/catx-hardening-real-evidence
+          CATX_HARDENING_RUN_BROWSER: '1'
+          PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/ms-playwright
+        run: |
+          set -euo pipefail
+          sudo env \
+            "CATX_HARDENING_CANDIDATE_BINARY=$CATX_HARDENING_CANDIDATE_BINARY" \
+            "CATX_HARDENING_CANDIDATE_XRAY_BINARY=$CATX_HARDENING_CANDIDATE_XRAY_BINARY" \
+            "CATX_HARDENING_CANDIDATE_XRAY_ASSET_DIR=$CATX_HARDENING_CANDIDATE_XRAY_ASSET_DIR" \
+            "CATX_HARDENING_CANDIDATE_SHA=$CATX_HARDENING_CANDIDATE_SHA" \
+            "CATX_HARDENING_EVIDENCE_DIR=$CATX_HARDENING_EVIDENCE_DIR" \
+            "CATX_HARDENING_RUN_BROWSER=$CATX_HARDENING_RUN_BROWSER" \
+            "PLAYWRIGHT_BROWSERS_PATH=$PLAYWRIGHT_BROWSERS_PATH" \
+            bash scripts/staging/observe-product-hardening-real-linux.sh
+      - name: Upload sanitized real-panel evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: catx-product-hardening-real-${{ github.run_id }}
+          path: ${{ runner.temp }}/catx-hardening-real-evidence
+          if-no-files-found: warn
+          retention-days: 30

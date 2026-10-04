@@ -124,6 +124,10 @@ func prepareRuntimeSchema(db *gorm.DB, cfg runtimeConfig) error {
 }
 
 func disableRuntime() {
+	disableRuntimeWithError("")
+}
+
+func disableRuntimeWithError(runtimeErr string) {
 	portal.Configure(nil, false)
 	fleetupdate.Configure(nil, false)
 	audit.Configure(nil, false)
@@ -135,6 +139,7 @@ func disableRuntime() {
 	policy.Configure(nil, false)
 	risk.Configure(nil, false)
 	sponsors.Configure(nil, false)
+	publishRuntimeSnapshot(runtimeConfig{}, true, runtimeErr)
 }
 
 func applyRuntimeConfig(db *gorm.DB, cfg runtimeConfig) {
@@ -157,6 +162,7 @@ func applyRuntimeConfig(db *gorm.DB, cfg runtimeConfig) {
 	policy.Configure(db, cfg.policies)
 	risk.Configure(db, cfg.security)
 	sponsors.Configure(db, cfg.sponsors)
+	publishRuntimeSnapshot(cfg, true, "")
 }
 
 // RegisterMigrations is the single database integration point for initial
@@ -166,17 +172,17 @@ func RegisterMigrations(db *gorm.DB) error {
 	setSettingsDB(db)
 	if db != nil {
 		if err := migrateSponsorsSchema(db); err != nil {
-			disableRuntime()
+			disableRuntimeWithError(err.Error())
 			return fmt.Errorf("migrate sponsors schema: %w", err)
 		}
 	}
 	cfg, err := loadRuntimeConfig(db)
 	if err != nil {
-		disableRuntime()
+		disableRuntimeWithError(err.Error())
 		return err
 	}
 	if err := prepareRuntimeSchema(db, cfg); err != nil {
-		disableRuntime()
+		disableRuntimeWithError(err.Error())
 		return err
 	}
 	return nil
@@ -190,7 +196,7 @@ var migrateSponsorsSchema = sponsors.Migrate
 func ConfigureRuntimeFromSettings(db *gorm.DB) error {
 	cfg, err := loadRuntimeConfig(db)
 	if err != nil {
-		disableRuntime()
+		disableRuntimeWithError(err.Error())
 		return err
 	}
 	applyRuntimeConfig(db, cfg)
@@ -203,7 +209,7 @@ func ReloadRuntimeFromSettings(db *gorm.DB) error {
 	setSettingsDB(db)
 	cfg, err := loadRuntimeConfig(db)
 	if err != nil {
-		disableRuntime()
+		disableRuntimeWithError(err.Error())
 		return err
 	}
 	applyRuntimeConfig(db, cfg)

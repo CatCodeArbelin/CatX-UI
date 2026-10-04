@@ -1,4 +1,23 @@
-export type FeatureResponse = { status?: number; msg?: string; featureDisabled?: boolean };
+export type ForkRuntimeState =
+  | 'feature_off'
+  | 'active'
+  | 'disabled'
+  | 'initializing'
+  | 'restart_required'
+  | 'empty'
+  | 'unconfigured'
+  | 'unsupported'
+  | 'degraded'
+  | 'error'
+  | 'loading';
+
+export type FeatureResponse = {
+  status?: number;
+  msg?: string;
+  featureDisabled?: boolean;
+  state?: ForkRuntimeState;
+  obj?: unknown;
+};
 
 export type ForkFeature =
   | 'analytics'
@@ -9,7 +28,8 @@ export type ForkFeature =
   | 'fleet_updates'
   | 'policies'
   | 'risk'
-  | 'sponsors';
+  | 'sponsors'
+  | 'traffic_control';
 
 /**
  * Only feature-owned entrypoints may use the legacy 404 fallback. A normal
@@ -20,7 +40,12 @@ export function isKnownForkFeatureUnavailable(
   response: FeatureResponse | null | undefined,
   feature: ForkFeature,
 ): boolean {
-  if (response?.featureDisabled === true) return true;
+  const object =
+    response?.obj && typeof response.obj === 'object' && !Array.isArray(response.obj)
+      ? (response.obj as { featureDisabled?: boolean; state?: ForkRuntimeState })
+      : undefined;
+  if (response?.featureDisabled === true || object?.featureDisabled === true) return true;
+  if (response?.state === 'feature_off' || object?.state === 'feature_off') return true;
   if (
     feature === 'self_service' &&
     response?.msg?.trim().toLowerCase() === 'self-service is disabled'
@@ -36,6 +61,7 @@ export function isKnownForkFeatureUnavailable(
     'fleet_updates',
     'policies',
     'risk',
+    'traffic_control',
   ]);
   return (
     featureOwnedEntrypoint.has(feature) &&

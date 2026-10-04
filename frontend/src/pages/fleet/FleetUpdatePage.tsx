@@ -60,7 +60,7 @@ export default function FleetUpdatePage() {
       setFeatureOff(true);
       setError('');
     } else if (result.success) setCampaigns(result.obj || []);
-    else setError(result.msg);
+    else setError(t('fork.fleetUpdate.failure'));
   }, []);
   useEffect(() => {
     void load();
@@ -80,11 +80,11 @@ export default function FleetUpdatePage() {
     if (result.success && result.obj) {
       setSelected(result.obj);
       await load();
-    } else setError(result.msg);
+    } else setError(t('fork.fleetUpdate.failure'));
   }
   async function action(id: number, action: 'abort' | 'retry' | 'reconcile') {
     const result = await HttpUtil.post(`/panel/api/fleet-updates/campaigns/${id}/${action}`);
-    if (!result.success) setError(result.msg);
+    if (!result.success) setError(t('fork.fleetUpdate.failure'));
     await load();
   }
   return (

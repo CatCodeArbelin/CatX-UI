@@ -21,8 +21,8 @@ import { LinkTags, linkMetaText, parseLinkParts } from '@/lib/xray/link-label';
 import { QrPanel } from '@/pages/inbounds/qr';
 import ClientHwidListModal from '@/components/clients/ClientHwidList';
 import ConfigBlock from '@/components/clients/ConfigBlock';
-import TrafficPolicyPanel from './TrafficPolicyPanel';
 import RiskIntelligencePanel from './RiskIntelligencePanel';
+import TrafficPolicyPanel from './TrafficPolicyPanel';
 import {
   buildWireguardClientConfig,
   findWireguardInbounds,
@@ -618,7 +618,7 @@ export default function ClientInfoModal({
               </tbody>
             </table>
 
-            <TrafficPolicyPanel email={client.email} />
+            <TrafficPolicyPanel email={client.email} readOnly />
             <RiskIntelligencePanel email={client.email} />
 
             {showSubscription && subLink && (

@@ -46,7 +46,7 @@ export default function AuditPage() {
       setFeatureOff(true);
       setError('');
     } else if (result.success && result.obj) setRows(result.obj.items);
-    else setError(result.msg || t('fork.audit.labels.error'));
+    else setError(t('fork.audit.labels.error'));
   }, [eventType, t]);
   useEffect(() => {
     const timer = window.setTimeout(() => void load(), 0);
@@ -66,7 +66,10 @@ export default function AuditPage() {
     },
     { title: t('fork.audit.labels.actor'), render: (_, row) => row.actorName || row.actorType },
     { title: t('fork.audit.labels.target'), render: (_, row) => row.targetType || '—' },
-    { title: 'Node', render: (_, row) => row.nodeScope || 'local' },
+    {
+      title: t('fork.common.node'),
+      render: (_, row) => row.nodeScope || t('fork.common.local'),
+    },
     { title: t('fork.audit.labels.request'), dataIndex: 'requestId', ellipsis: true },
     {
       title: t('fork.audit.details'),

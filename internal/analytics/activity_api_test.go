@@ -34,7 +34,7 @@ func TestActivityRoutesAreExactNoOpWhenDisabled(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/panel/api/analytics/clients/alice/activity", nil)
 	resp := httptest.NewRecorder()
 	router.ServeHTTP(resp, req)
-	if resp.Code != http.StatusOK || !strings.Contains(resp.Body.String(), `"enabled":false`) {
+	if resp.Code != http.StatusOK || !strings.Contains(resp.Body.String(), `"enabled":false`) || !strings.Contains(resp.Body.String(), `"state":"feature_off"`) || !strings.Contains(resp.Body.String(), `"featureDisabled":true`) {
 		t.Fatalf("disabled response = %d %s", resp.Code, resp.Body.String())
 	}
 }
@@ -62,7 +62,7 @@ func TestTrafficHistoryRouteReturnsBoundedHistoryShape(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/panel/api/analytics/clients/alice/traffic?from=1&to=2000", nil)
 	resp := httptest.NewRecorder()
 	router.ServeHTTP(resp, req)
-	if resp.Code != http.StatusOK || !strings.Contains(resp.Body.String(), `"serviceBreakdown":[]`) || !strings.Contains(resp.Body.String(), `"categoryBreakdown":[]`) {
+	if resp.Code != http.StatusOK || !strings.Contains(resp.Body.String(), `"serviceBreakdown":[]`) || !strings.Contains(resp.Body.String(), `"categoryBreakdown":[]`) || !strings.Contains(resp.Body.String(), `"state":"active"`) {
 		t.Fatalf("unexpected traffic response: %d %s", resp.Code, resp.Body.String())
 	}
 }

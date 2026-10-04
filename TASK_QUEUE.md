@@ -981,3 +981,26 @@ Harness and workflow:
 Do not add Sponsors behavior, multi-node qualification, release work, upstream
 sync, or changes to `main`. Leave the lifecycle PR open and unmerged after the
 hosted checks pass.
+
+# CatX v0.3 Product Hardening — CURRENT
+
+Branch: `feature/v0.3-product-hardening`
+
+Base: `chore/sponsors-real-restart-smoke` at
+`f2152a90992abbdfe402fd5694aa41cceeaddfe6`.
+
+This focused package hardens the existing CatX product after maintainer review:
+operator UX, typed runtime states, English/Russian localization, behavior-based
+tests, proven backend corrections, and complete qualification material. It
+preserves the Sponsors real-panel lifecycle evidence, does not add a major
+architecture, and stops before Human Review. No release, tag, `main` merge,
+upstream sync, or automatic publication is part of this package.
+
+Required order:
+
+1. UI/UX and shared state presentation;
+2. English/Russian CatX localization;
+3. unit, SQLite/PostgreSQL, authenticated API, restart, frontend, and real-panel browser tests;
+4. only fixes demonstrated by failed behavioral contracts;
+5. full qualification and exact candidate review material;
+6. stop pending maintainer Human Review.

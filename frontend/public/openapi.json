@@ -6102,11 +6102,11 @@
     },
     {
       "name": "Policies (CatX-UI)",
-      "description": "Policy data and explainable WP-4B enforcement capabilities. Quarantine is safety state; only a bounded quarantine-release temporary override can release it. Managed DNS and SafeSearch apply only to supported Xray-observed DNS paths."
+      "description": "Policy data and explainable enforcement capabilities. Quarantine is a safety state; only a bounded quarantine-release temporary override can release it. Managed DNS and SafeSearch apply only to supported Xray-observed DNS paths."
     },
     {
       "name": "Traffic control",
-      "description": "Capability and reconciliation endpoints for the CatX shaping substrate. WP-6A does not define speed-limit policy."
+      "description": "Capability and reconciliation endpoints for the CatX shaping substrate. Speed-limit policy is exposed through the traffic-control policy surface."
     },
     {
       "name": "Fleet updates",
@@ -21587,6 +21587,68 @@
                       "type": "string"
                     },
                     "obj": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/portal/options": {
+      "get": {
+        "tags": [
+          "Self-service portal"
+        ],
+        "summary": "Read searchable client, group, and host labels for admin selectors.",
+        "operationId": "get_panel_api_portal_options",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {
+                      "type": "object",
+                      "properties": {
+                        "clients": {
+                          "type": "array",
+                          "items": {
+                            "type": "object"
+                          }
+                        },
+                        "groups": {
+                          "type": "array",
+                          "items": {
+                            "type": "object"
+                          }
+                        },
+                        "hosts": {
+                          "type": "array",
+                          "items": {
+                            "type": "object"
+                          }
+                        },
+                        "state": {
+                          "type": "string",
+                          "enum": [
+                            "active",
+                            "feature_off"
+                          ]
+                        },
+                        "featureDisabled": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
                   }
                 }
               }

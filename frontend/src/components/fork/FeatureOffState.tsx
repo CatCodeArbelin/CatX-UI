@@ -1,8 +1,9 @@
-import { Alert, Button, Space, Typography } from 'antd';
+import { Button } from 'antd';
 import { SettingOutlined } from '@ant-design/icons';
 import { useInRouterContext, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import type { ForkFeature } from '@/lib/fork-feature';
+import CatxState from './CatxState';
 
 function FeatureSettingsLink() {
   const navigate = useNavigate();
@@ -28,31 +29,12 @@ export default function FeatureOffState({
 }) {
   const { t } = useTranslation();
   const inRouter = useInRouterContext();
-  const labels: Record<ForkFeature, string> = {
-    analytics: 'fork.activity.title',
-    dns_intelligence: 'fork.common.labels.enableDns',
-    policies: 'fork.policy.title',
-    risk: 'fork.apiDocs.risk',
-    audit: 'fork.audit.title',
-    webhooks: 'fork.webhooks.title',
-    self_service: 'fork.apiDocs.portal',
-    fleet_updates: 'fork.fleetUpdate.title',
-    sponsors: 'fork.sponsors.title',
-  };
-  const featureLabel = feature ? t(labels[feature]) : t('fork.common.featureOffTitle');
   return (
-    <Alert
-      type="info"
-      showIcon
-      message={
-        messageKey ? t(messageKey) : t('fork.common.featureOffTitle', { feature: featureLabel })
-      }
-      description={
-        <Space direction="vertical" size={2}>
-          <Typography.Text>{t('fork.common.featureOffDescription')}</Typography.Text>
-          {inRouter && <FeatureSettingsLink />}
-        </Space>
-      }
+    <CatxState
+      state="feature_off"
+      feature={feature}
+      title={messageKey ? t(messageKey) : undefined}
+      action={inRouter ? <FeatureSettingsLink /> : undefined}
     />
   );
 }

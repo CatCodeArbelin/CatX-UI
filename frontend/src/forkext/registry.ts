@@ -402,6 +402,21 @@ export const forkApiSections = [
         summary: 'Read the admin-only portal feature setting.',
       },
       {
+        method: 'GET',
+        path: '/panel/api/portal/options',
+        summary: 'Read searchable client, group, and host labels for admin selectors.',
+        responseObjectSchema: {
+          type: 'object',
+          properties: {
+            clients: { type: 'array', items: { type: 'object' } },
+            groups: { type: 'array', items: { type: 'object' } },
+            hosts: { type: 'array', items: { type: 'object' } },
+            state: { type: 'string', enum: ['active', 'feature_off'] },
+            featureDisabled: { type: 'boolean' },
+          },
+        },
+      },
+      {
         method: 'POST',
         path: '/panel/api/portal/settings',
         summary: 'Update the admin-only portal feature setting.',

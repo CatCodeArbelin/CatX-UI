@@ -7,7 +7,7 @@ import {
   Empty,
   Form,
   Input,
-  InputNumber,
+  Select,
   Space,
   Switch,
   Table,
@@ -34,6 +34,12 @@ type Grant = {
   hostId: number;
   enabled: boolean;
 };
+type PortalOption = { id: number; label: string };
+type PortalOptions = {
+  clients: PortalOption[];
+  groups: PortalOption[];
+  hosts: PortalOption[];
+};
 
 export default function PortalAdminPage() {
   const { t } = useTranslation();
@@ -47,25 +53,32 @@ export default function PortalAdminPage() {
   const [error, setError] = useState('');
   const [enabled, setEnabled] = useState(false);
   const [featureOff, setFeatureOff] = useState(false);
+  const [options, setOptions] = useState<PortalOptions>({ clients: [], groups: [], hosts: [] });
+  const [grantForm] = Form.useForm();
+  const subjectType = Form.useWatch('subjectType', grantForm) || 'client';
   const load = useCallback(async () => {
-    const [settings, c, g] = await Promise.all([
+    const [settings, optionResult, c, g] = await Promise.all([
       HttpUtil.get<{ enabled: boolean }>('/panel/api/portal/settings', undefined, { silent: true }),
+      HttpUtil.get<PortalOptions>('/panel/api/portal/options', undefined, { silent: true }),
       HttpUtil.get<Credential[]>('/panel/api/portal/credentials', undefined, { silent: true }),
       HttpUtil.get<Grant[]>('/panel/api/portal/host-grants', undefined, { silent: true }),
     ]);
     if (
-      [settings, c, g].some((response) => isKnownForkFeatureUnavailable(response, 'self_service'))
+      [settings, optionResult, c, g].some((response) =>
+        isKnownForkFeatureUnavailable(response, 'self_service'),
+      )
     ) {
       setFeatureOff(true);
       setError('');
       return;
     }
-    const failed = [settings, c, g].find((response) => !response.success);
+    const failed = [settings, optionResult, c, g].find((response) => !response.success);
     if (failed) {
-      setError(failed.msg || t('fork.portal.actionFailed'));
+      setError(t('fork.portal.actionFailed'));
       return;
     }
     setEnabled(Boolean(settings.obj?.enabled));
+    setOptions(optionResult.obj || { clients: [], groups: [], hosts: [] });
     setCredentials(c.obj || []);
     setGrants(g.obj || []);
   }, [t]);
@@ -78,14 +91,16 @@ export default function PortalAdminPage() {
       clientId,
     });
     if (result.success && result.obj) setToken(result.obj.token);
-    else setError(result.msg);
+    else setError(t('fork.portal.actionFailed'));
     await load();
   }
   async function grant(values: { subjectType: string; subjectId: number; hostId: number }) {
     const result = await HttpUtil.post('/panel/api/portal/host-grants', values);
-    if (!result.success) setError(result.msg);
+    if (!result.success) setError(t('fork.portal.actionFailed'));
     await load();
   }
+  const optionLabel = (items: PortalOption[], id: number) =>
+    items.find((item) => item.id === id)?.label || t('fork.common.unknown');
   return (
     <ForkAdminPageShell pageClass="portal-admin-page">
       <Space direction="vertical" style={{ width: '100%' }} size="large">
@@ -113,7 +128,7 @@ export default function PortalAdminPage() {
                     enabled: value,
                   });
                   if (result.success) setEnabled(value);
-                  else setError(result.msg);
+                  else setError(t('fork.portal.actionFailed'));
                 }}
               />
             </Space>
@@ -129,7 +144,12 @@ export default function PortalAdminPage() {
                 label={t('fork.portal.clientId')}
                 rules={[{ required: true }]}
               >
-                <InputNumber min={1} />
+                <Select
+                  showSearch
+                  optionFilterProp="label"
+                  options={options.clients.map((item) => ({ value: item.id, label: item.label }))}
+                  style={{ minWidth: 240 }}
+                />
               </Form.Item>
               <Button htmlType="submit" type="primary">
                 {t('fork.portal.issue')}
@@ -141,7 +161,10 @@ export default function PortalAdminPage() {
               rowKey="id"
               dataSource={credentials}
               columns={[
-                { title: t('fork.portal.clientId'), dataIndex: 'clientId' },
+                {
+                  title: t('fork.portal.clientId'),
+                  render: (_, row) => optionLabel(options.clients, row.clientId),
+                },
                 {
                   title: t('fork.common.status'),
                   render: (_, row) =>
@@ -182,27 +205,46 @@ export default function PortalAdminPage() {
           <Card size="small">
             <Typography.Title level={3}>{t('fork.portal.grants')}</Typography.Title>
             <Form
+              form={grantForm}
               layout="inline"
+              initialValues={{ subjectType: 'client' }}
               onFinish={(values: { subjectType: string; subjectId: number; hostId: number }) =>
                 void grant(values)
               }
             >
               <Form.Item
                 name="subjectType"
-                initialValue="client"
                 label={t('fork.portal.subjectType')}
+                rules={[{ required: true }]}
               >
-                <Input placeholder={t('fork.portal.subjectTypePlaceholder')} />
+                <Select
+                  options={[
+                    { value: 'client', label: t('fork.policy.labels.client') },
+                    { value: 'group', label: t('fork.policy.labels.group') },
+                  ]}
+                />
               </Form.Item>
               <Form.Item
                 name="subjectId"
                 label={t('fork.portal.subjectId')}
                 rules={[{ required: true }]}
               >
-                <InputNumber min={1} />
+                <Select
+                  showSearch
+                  optionFilterProp="label"
+                  options={(subjectType === 'group' ? options.groups : options.clients).map(
+                    (item) => ({ value: item.id, label: item.label }),
+                  )}
+                  style={{ minWidth: 220 }}
+                />
               </Form.Item>
               <Form.Item name="hostId" label={t('fork.portal.hostId')} rules={[{ required: true }]}>
-                <InputNumber min={1} />
+                <Select
+                  showSearch
+                  optionFilterProp="label"
+                  options={options.hosts.map((item) => ({ value: item.id, label: item.label }))}
+                  style={{ minWidth: 240 }}
+                />
               </Form.Item>
               <Button htmlType="submit" type="primary">
                 {t('fork.portal.grant')}
@@ -214,9 +256,13 @@ export default function PortalAdminPage() {
               columns={[
                 {
                   title: t('fork.portal.subject'),
-                  render: (_, row) => `${row.subjectType}:${row.subjectId}`,
+                  render: (_, row) =>
+                    `${row.subjectType === 'group' ? t('fork.policy.labels.group') : t('fork.policy.labels.client')}: ${optionLabel(row.subjectType === 'group' ? options.groups : options.clients, row.subjectId)}`,
                 },
-                { title: t('fork.portal.hostId'), dataIndex: 'hostId' },
+                {
+                  title: t('fork.portal.hostId'),
+                  render: (_, row) => optionLabel(options.hosts, row.hostId),
+                },
                 {
                   title: t('fork.common.actions'),
                   render: (_, row) => (

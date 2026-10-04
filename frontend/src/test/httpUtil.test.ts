@@ -93,6 +93,21 @@ describe('HttpUtil', () => {
     expect(console.error).not.toHaveBeenCalled();
   });
 
+  it('preserves typed feature state from a thrown non-2xx envelope', async () => {
+    mockRequest.mockRejectedValue(
+      new HttpError(409, 'Conflict', {
+        success: false,
+        msg: 'policies are disabled',
+        obj: { state: 'feature_off', featureDisabled: true },
+      }),
+    );
+
+    const msg = await HttpUtil.get('/panel/api/policies', undefined, { silent: true });
+
+    expect(msg.obj).toEqual({ state: 'feature_off', featureDisabled: true });
+    expect(msg.featureDisabled).toBe(true);
+  });
+
   it('maps a thrown native error to a failure Msg via its message', async () => {
     mockRequest.mockRejectedValue(new Error('Network down'));
 

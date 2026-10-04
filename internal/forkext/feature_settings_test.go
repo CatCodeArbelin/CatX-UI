@@ -21,8 +21,12 @@ type featureSettingsEnvelope struct {
 
 func newFeatureSettingsTestRouter(t *testing.T) *gin.Engine {
 	t.Helper()
+	disableRuntime()
 	setSettingsDB(newSettingsTestDB(t))
-	t.Cleanup(func() { setSettingsDB(nil) })
+	t.Cleanup(func() {
+		setSettingsDB(nil)
+		disableRuntime()
+	})
 
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
@@ -54,8 +58,8 @@ func TestFeatureSettingsRoutesExposeJSONContractAndPersistFlags(t *testing.T) {
 	if !loaded.Success {
 		t.Fatalf("GET success=%v msg=%q", loaded.Success, loaded.Msg)
 	}
-	if !loaded.Obj.RestartRequired {
-		t.Fatal("GET restartRequired = false, want true")
+	if loaded.Obj.RestartRequired {
+		t.Fatal("GET restartRequired = true, want false for the disabled runtime")
 	}
 	if len(loaded.Obj.Items) != len(managedFeatureFlags) {
 		t.Fatalf("GET item count = %d, want %d", len(loaded.Obj.Items), len(managedFeatureFlags))
@@ -63,6 +67,9 @@ func TestFeatureSettingsRoutesExposeJSONContractAndPersistFlags(t *testing.T) {
 	for _, item := range loaded.Obj.Items {
 		if item.Enabled {
 			t.Errorf("default %q = true, want false", item.Key)
+		}
+		if item.Active || item.State != RuntimeStateFeatureOff || item.RestartRequired {
+			t.Errorf("default %q runtime metadata = active:%v state:%q restart:%v, want off", item.Key, item.Active, item.State, item.RestartRequired)
 		}
 		if item.Key == FlagWebhooks || item.Key == FlagMetrics {
 			t.Errorf("reserved flag %q leaked into managed settings", item.Key)
@@ -88,6 +95,13 @@ func TestFeatureSettingsRoutesExposeJSONContractAndPersistFlags(t *testing.T) {
 	saved := decodeFeatureSettings(t, put)
 	if !saved.Success || !saved.Obj.RestartRequired {
 		t.Fatalf("PUT envelope = %+v, want success with restart metadata", saved)
+	}
+	for _, item := range saved.Obj.Items {
+		if item.Key == FlagAnalytics || item.Key == FlagDNSIntelligence {
+			if item.Active || item.State != RuntimeStateRestartRequired || !item.RestartRequired {
+				t.Errorf("saved %q runtime metadata = active:%v state:%q restart:%v, want restart-required", item.Key, item.Active, item.State, item.RestartRequired)
+			}
+		}
 	}
 	if savedItems := boolFromItems(saved.Obj.Items); !savedItems[FlagAnalytics] || !savedItems[FlagDNSIntelligence] {
 		t.Fatalf("PUT response omitted enabled dependency state: %+v", savedItems)

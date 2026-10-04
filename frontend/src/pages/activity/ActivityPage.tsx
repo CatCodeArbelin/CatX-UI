@@ -22,13 +22,16 @@ import type { ColumnsType } from 'antd/es/table';
 import { SearchOutlined } from '@ant-design/icons';
 import { HttpUtil } from '@/utils';
 import ForkAdminPageShell from '@/components/fork/ForkAdminPageShell';
-import FeatureOffState from '@/components/fork/FeatureOffState';
+import CatxState from '@/components/fork/CatxState';
 import { i18n } from '@/i18n/react';
 import { useTranslation } from 'react-i18next';
+import type { ForkRuntimeState } from '@/lib/fork-feature';
 import './ActivityPage.css';
 
 type Page<T> = {
   enabled: boolean;
+  state?: ForkRuntimeState;
+  featureDisabled?: boolean;
   items: T[];
   page: number;
   pageSize: number;
@@ -84,6 +87,10 @@ type Retention = {
 type Settings = {
   enabled: boolean;
   dnsIntelligence: boolean;
+  state?: ForkRuntimeState;
+  dnsState?: ForkRuntimeState;
+  featureDisabled?: boolean;
+  restartRequired?: boolean;
   retention: Retention;
   privacy: { metadataOnly: boolean; classificationsMayBeUncertain: boolean };
 };
@@ -111,7 +118,7 @@ const bytes = (value: number) => {
 };
 const provenance = (source: string, value: string) => (
   <Tag>
-    {source || 'unknown'} · {value || 'unknown'}
+    {source || i18n.t('fork.common.unknown')} · {value || i18n.t('fork.common.unknown')}
   </Tag>
 );
 const confidence = (level?: string, value?: number, conflict?: boolean) =>
@@ -119,7 +126,8 @@ const confidence = (level?: string, value?: number, conflict?: boolean) =>
     <Tag color="warning">{i18n.t('fork.activity.labels.ambiguous')}</Tag>
   ) : (
     <Tag>
-      {level || 'unknown'} · {typeof value === 'number' ? `${Math.round(value * 100)}%` : '—'}
+      {level || i18n.t('fork.common.unknown')} ·{' '}
+      {typeof value === 'number' ? `${Math.round(value * 100)}%` : '—'}
     </Tag>
   );
 
@@ -192,13 +200,7 @@ export default function ActivityPage() {
           !dnsResult.success ||
           !trafficResult.success
         ) {
-          setError(
-            eventResult.msg ||
-              sessionResult.msg ||
-              dnsResult.msg ||
-              trafficResult.msg ||
-              t('fork.activity.error'),
-          );
+          setError(t('fork.activity.error'));
           return;
         }
         setEvents(eventResult.obj);
@@ -238,7 +240,7 @@ export default function ActivityPage() {
       { silent: true },
     );
     if (result.success && result.obj) setSettings(result.obj);
-    else setSettingsError(result.msg || t('fork.activity.labels.saveError'));
+    else setSettingsError(t('fork.activity.labels.saveError'));
   };
 
   const eventColumns: ColumnsType<Event> = [
@@ -248,7 +250,10 @@ export default function ActivityPage() {
       render: (_, row) => row.domain || row.destinationIp || '—',
     },
     { title: t('fork.activity.labels.service'), render: (_, row) => row.service || '—' },
-    { title: t('fork.activity.labels.category'), render: (_, row) => row.category || 'unknown' },
+    {
+      title: t('fork.activity.labels.category'),
+      render: (_, row) => row.category || t('fork.common.unknown'),
+    },
     {
       title: t('fork.activity.labels.asnCountry'),
       render: (_, row) =>
@@ -286,7 +291,7 @@ export default function ActivityPage() {
     },
     {
       title: t('fork.activity.labels.category'),
-      render: (_, row) => enrichmentFor(row)?.category || 'unknown',
+      render: (_, row) => enrichmentFor(row)?.category || t('fork.common.unknown'),
     },
     {
       title: t('fork.activity.labels.asnCountry'),
@@ -320,8 +325,19 @@ export default function ActivityPage() {
       render: (_, row) => provenance(row.source, row.provenance),
     },
   ];
-  const analyticsDisabled = events?.enabled === false || sessions?.enabled === false;
-  const dnsDisabled = dns?.enabled === false || settings?.dnsIntelligence === false;
+  const analyticsState: ForkRuntimeState =
+    settings?.state ||
+    events?.state ||
+    sessions?.state ||
+    (settings?.enabled === false || events?.enabled === false || sessions?.enabled === false
+      ? 'feature_off'
+      : 'active');
+  const dnsState: ForkRuntimeState =
+    settings?.dnsState ||
+    dns?.state ||
+    (dns?.enabled === false || settings?.dnsIntelligence === false ? 'feature_off' : 'active');
+  const analyticsDisabled = analyticsState !== 'active';
+  const dnsDisabled = dnsState !== 'active';
 
   return (
     <ForkAdminPageShell pageClass="activity-page">
@@ -363,9 +379,9 @@ export default function ActivityPage() {
               {!email && <Empty description={t('fork.activity.enter')} />}
             </>
           )}
-          {analyticsDisabled && <FeatureOffState feature="analytics" />}
+          {analyticsDisabled && <CatxState state={analyticsState} feature="analytics" />}
           {email && !analyticsDisabled && dnsDisabled && (
-            <FeatureOffState feature="dns_intelligence" />
+            <CatxState state={dnsState} feature="dns_intelligence" />
           )}
           {error && <Alert type="error" showIcon message={error} />}
           {email && !analyticsDisabled && (
@@ -398,7 +414,8 @@ export default function ActivityPage() {
                               <Typography.Text strong>
                                 {event.domain || event.destinationIp || '—'}
                               </Typography.Text>{' '}
-                              · {event.service || 'unknown'} · {event.category || 'unknown'}{' '}
+                              · {event.service || t('fork.common.unknown')} ·{' '}
+                              {event.category || t('fork.common.unknown')}{' '}
                               {confidence(
                                 event.classificationLevel,
                                 event.classificationConfidence ?? event.confidence,
@@ -490,7 +507,9 @@ export default function ActivityPage() {
                           <Tag>
                             {t('fork.activity.labels.inbounds')}: {traffic.history.inbounds}
                           </Tag>
-                          <Tag>Nodes: {traffic.history.nodes}</Tag>
+                          <Tag>
+                            {t('fork.activity.labels.nodes')}: {traffic.history.nodes}
+                          </Tag>
                         </div>
                         <Table<TrafficBreakdown>
                           rowKey="name"

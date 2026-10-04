@@ -25,11 +25,13 @@ type Input struct {
 }
 
 type Result struct {
-	Enabled    bool                         `json:"enabled"`
-	Input      Input                        `json:"input"`
-	Decision   *policy.Decision             `json:"decision,omitempty"`
-	Route      []policycompiler.RulePreview `json:"route"`
-	NoOpReason string                       `json:"noOpReason,omitempty"`
+	Enabled         bool                         `json:"enabled"`
+	State           string                       `json:"state"`
+	FeatureDisabled bool                         `json:"featureDisabled"`
+	Input           Input                        `json:"input"`
+	Decision        *policy.Decision             `json:"decision,omitempty"`
+	Route           []policycompiler.RulePreview `json:"route"`
+	NoOpReason      string                       `json:"noOpReason,omitempty"`
 }
 
 func RegisterRoutes(api *gin.RouterGroup) {
@@ -64,7 +66,7 @@ func simulate(c *gin.Context) {
 		return
 	}
 	if !policy.Enabled() {
-		c.JSON(http.StatusOK, gin.H{"success": true, "msg": "", "obj": Result{Enabled: false, Input: in, Route: []policycompiler.RulePreview{}, NoOpReason: "policies are disabled"}})
+		c.JSON(http.StatusOK, gin.H{"success": true, "msg": "", "obj": Result{Enabled: false, State: "feature_off", FeatureDisabled: true, Input: in, Route: []policycompiler.RulePreview{}, NoOpReason: "policies are disabled"}})
 		return
 	}
 	decision, err := policy.ResolveCurrentDecision(c.Request.Context(), in.ClientEmail, in.GroupName, in.At)
@@ -72,7 +74,7 @@ func simulate(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "msg": "policy simulation unavailable"})
 		return
 	}
-	result := Result{Enabled: true, Input: in, Decision: decision, Route: []policycompiler.RulePreview{}}
+	result := Result{Enabled: true, State: "active", Input: in, Decision: decision, Route: []policycompiler.RulePreview{}}
 	if decision == nil {
 		result.NoOpReason = "no effective policy"
 		c.JSON(http.StatusOK, gin.H{"success": true, "msg": "", "obj": result})

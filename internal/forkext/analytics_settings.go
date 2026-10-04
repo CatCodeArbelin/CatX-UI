@@ -32,6 +32,10 @@ type retentionDays struct {
 type analyticsSettingsResponse struct {
 	Enabled         bool          `json:"enabled"`
 	DNSIntelligence bool          `json:"dnsIntelligence"`
+	State           RuntimeState  `json:"state"`
+	DNSState        RuntimeState  `json:"dnsState"`
+	FeatureDisabled bool          `json:"featureDisabled"`
+	RestartRequired bool          `json:"restartRequired"`
 	Retention       retentionDays `json:"retention"`
 	Privacy         struct {
 		MetadataOnly bool `json:"metadataOnly"`
@@ -101,6 +105,20 @@ func saveRetention(db *gorm.DB, key string, days int) error {
 func analyticsSettings(db *gorm.DB) analyticsSettingsResponse {
 	status := analytics.CurrentStatus()
 	result := analyticsSettingsResponse{Enabled: status.Enabled, DNSIntelligence: status.DNSIntelligence, Retention: retentionFromPolicy(status.Retention)}
+	configuredAnalytics := status.Enabled
+	configuredDNS := status.DNSIntelligence
+	if db != nil {
+		if value, err := NewSettings(db).Enabled(FlagAnalytics); err == nil {
+			configuredAnalytics = value
+		}
+		if value, err := NewSettings(db).Enabled(FlagDNSIntelligence); err == nil {
+			configuredDNS = value
+		}
+	}
+	_, result.State = featureRuntimeStatus(FlagAnalytics, configuredAnalytics)
+	_, result.DNSState = featureRuntimeStatus(FlagDNSIntelligence, configuredDNS)
+	result.FeatureDisabled = result.State == RuntimeStateFeatureOff
+	result.RestartRequired = result.State == RuntimeStateRestartRequired || result.DNSState == RuntimeStateRestartRequired
 	result.Privacy.MetadataOnly = true
 	result.Privacy.Uncertain = true
 	if db != nil {
