@@ -65,6 +65,9 @@ fetching/import, logo fetches, and background sync. A panel restart/reload
 reconfigures the provider without reinitializing upstream database state.
 Sponsor schema preparation runs only in the canonical startup migration
 lifecycle; runtime reload does not call `sponsors.Migrate`.
+The upstream Sanaei sponsor implementation remains in upstream-owned source for
+low-divergence compatibility, but CatX does not register its legacy public
+routes; all production Sponsor data uses the CatX fork boundary.
 Migration tests cover clean and existing SQLite/PostgreSQL databases; lifecycle
 tests cover enable, restart/reload, disable, persistence, and retained data.
 
