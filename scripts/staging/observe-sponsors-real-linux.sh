@@ -68,7 +68,7 @@ mutate PUT /fork/sponsors/settings '{"providerMode":"local","sourceUrl":"","cont
 panel_restart sponsors-enabled
 jq -e '.obj.enabled == true and .obj.providerMode == "local"' "$RUN_DIR/sponsors-status-sponsors-enabled.json" >/dev/null || fail 'Sponsors did not enable LOCAL'
 
-body=$(jq -nc --arg id "$ID" --arg d "$DEST" --arg l "$LOGO" '{id:$id,enabled:true,name:"CatX real smoke",priority:7,slots:["dashboard","sidebar","page"],destinationUrl:$d,logoUrl:$l,title:{"en-US":"CatX smoke title"},text:{"en-US":"Synthetic sponsor"}')
+body=$(jq -nc --arg id "$ID" --arg d "$DEST" --arg l "$LOGO" '{id:$id,enabled:true,name:"CatX real smoke",priority:7,slots:["dashboard","sidebar","page"],destinationUrl:$d,logoUrl:$l,title:{"en-US":"CatX smoke title"},text:{"en-US":"Synthetic sponsor"}}')
 mutate POST /fork/sponsors "$body" "$RUN_DIR/create.json"
 get /fork/sponsors/manage "$RUN_DIR/manage-create.json"; get "/fork/sponsors/$ID" "$RUN_DIR/read.json"; get /fork/sponsors "$RUN_DIR/public-create.json"
 jq -e --arg id "$ID" 'any(.obj[]?; .id == $id) or any(.obj.sponsors[]?; .id == $id)' "$RUN_DIR/manage-create.json" "$RUN_DIR/public-create.json" >/dev/null || fail 'created Sponsor not visible'
