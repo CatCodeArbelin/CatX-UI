@@ -4,7 +4,7 @@ export type InstallMethod = 'script' | 'docker';
 
 export interface InstallOptions {
   method: InstallMethod;
-  /** A release tag like `v0.1.0`, or empty/`latest` for the latest release. */
+  /** A release tag like `v0.2.0`, or empty/`latest` for the latest release. */
   version: string;
   enableFail2ban: boolean;
   panelPort: string;

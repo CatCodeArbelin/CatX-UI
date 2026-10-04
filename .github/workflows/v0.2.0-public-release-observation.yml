@@ -33,7 +33,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ inputs.release_commit }}
+          # Run the observer code from the dispatched diagnostic branch while
+          # keeping release_commit as the immutable public-release identity.
+          ref: ${{ github.ref }}
           fetch-depth: 0
 
       - uses: actions/setup-node@v7

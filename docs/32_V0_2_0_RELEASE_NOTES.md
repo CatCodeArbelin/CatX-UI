@@ -1,11 +1,9 @@
 # CatX-UI v0.2.0 Release Notes
 
-Status: `DRAFT — pending v0.2.0-rc.1 and stable qualification`
+Status: `FINAL — v0.2.0 published and qualified`
 
 These notes describe the integrated CatX v0.2.0 behavior that is being
-qualified. They do not replace the immutable historical v0.1.0 notes and do
-not claim a public release before the release workflow and actual-public smoke
-checks pass.
+qualified. They do not replace the immutable historical v0.1.0 notes.
 
 ## Foundation
 
@@ -61,7 +59,12 @@ of runtime support.
 ## Qualification status
 
 The public `v0.2.0-rc.1` is the first planned and only preauthorized RC. A
-second RC is allowed only for a genuine source, release identity/artifact,
-migration/update/rollback, or runtime defect discovered during public RC
-observation. If RC observation is green, stable must reuse the same proven
-product/runtime source without a stable-only product patch.
+second RC was not required: public RC observation was green, and stable reused
+the same proven product/runtime source without a stable-only product patch.
+
+Stable `v0.2.0` is published from final main SHA
+`2b1760e98e665bde388e94c420bd22aa182fe2b0`. The annotated immutable tag,
+canonical release workflow, CatX-owned multi-arch GHCR image, and actual-public
+stable observer all passed. The public observer also passed the real
+`v0.1.0 → v0.2.0` upgrade/rollback path and enabled/disabled `restartPanel`
+lifecycle checks.
