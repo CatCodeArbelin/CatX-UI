@@ -932,3 +932,29 @@ Completion record:
   fuzz/codegen/builds, release qualification, and `verify-fork`; policy-skipped
   disposable rehearsal and rolling-release publication jobs were not run;
 - no `main`, release, tag, or stable `v0.2.0` state changed.
+
+# Full CatX Product Reality Audit — CURRENT
+
+Branch: `chore/catx-product-reality-audit`.
+
+Starting develop SHA: `6207a2d6fc94e91b96006d0ac68f350c355879a8`, immediately
+after the accepted Sponsors Management PR #10 merge.
+
+Audit the actual integrated product rather than roadmap or route existence:
+
+- upstream 3x-ui v3.9.0 core and Xray lifecycle;
+- Insight, DNS intelligence, Policy, Traffic Control, Risk, Audit, Webhooks,
+  Metrics, Portal, Fleet, Fleet Update, and Sponsors;
+- UI exposure, representative runtime evidence, single-node and multi-node
+  reality, feature-off behavior, restart behavior, and explicit limitations;
+- product, migration, frontend, harness, documentation, infrastructure, and
+  intentional-limitation classifications;
+- `MUST FIX BEFORE v0.3.0`, `SHOULD FIX BEFORE v0.3.0`, `SAFE TO DEFER`, and
+  `DOCUMENTATION ONLY` scope.
+
+Create `docs/35_CATX_PRODUCT_REALITY_AUDIT.md`, make only narrow proven audit
+corrections with regression coverage, and open a Draft PR targeting `develop`.
+This is complete in audit commit `0ff542b686783762c0eedcc53060f88cf992226b`
+with Draft PR [#11](https://github.com/CatCodeArbelin/CatX-UI/pull/11) open and
+Docs CI green. Do not add major features, bump a version, publish a release,
+modify `main` or immutable tags, or merge the audit PR unattended.
