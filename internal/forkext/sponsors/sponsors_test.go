@@ -35,7 +35,7 @@ func (t rewriteTransport) RoundTrip(request *http.Request) (*http.Response, erro
 
 func sponsorsTestDB(t *testing.T) *gorm.DB {
 	t.Helper()
-	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{})
+	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
 	if err != nil {
 		t.Skipf("sqlite unavailable: %v", err)
 	}
