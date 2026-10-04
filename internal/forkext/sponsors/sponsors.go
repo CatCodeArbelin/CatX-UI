@@ -27,9 +27,10 @@ import (
 )
 
 const (
-	sourceSettingKey  = "fork.sponsors.source_url"
-	contactSettingKey = "fork.sponsors.contact_url"
-	logoPathPrefix    = "/panel/api/fork/sponsors/logo/"
+	sourceSettingKey   = "fork.sponsors.source_url"
+	contactSettingKey  = "fork.sponsors.contact_url"
+	providerSettingKey = "fork.sponsors.provider_mode"
+	logoPathPrefix     = "/panel/api/fork/sponsors/logo/"
 
 	metadataTTL        = time.Hour
 	errorTTL           = 10 * time.Minute
@@ -108,8 +109,9 @@ type SponsorList struct {
 }
 
 type settings struct {
-	sourceURL  string
-	contactURL string
+	sourceURL    string
+	contactURL   string
+	providerMode ProviderMode
 }
 
 type cachedList struct {
@@ -129,10 +131,12 @@ type cachedLogo struct {
 
 var runtimeState struct {
 	sync.RWMutex
-	db      *gorm.DB
-	enabled bool
-	list    cachedList
-	logos   map[string]cachedLogo
+	db        *gorm.DB
+	enabled   bool
+	list      cachedList
+	logos     map[string]cachedLogo
+	lastFetch time.Time
+	lastError string
 }
 
 // httpClientFactory is replaceable in package tests so local httptest servers
@@ -146,6 +150,8 @@ func Configure(db *gorm.DB, enabled bool) {
 	if runtimeState.db != db || runtimeState.enabled != enabled {
 		runtimeState.list = cachedList{}
 		runtimeState.logos = nil
+		runtimeState.lastFetch = time.Time{}
+		runtimeState.lastError = ""
 	}
 	runtimeState.db = db
 	runtimeState.enabled = enabled
@@ -161,6 +167,7 @@ func RegisterRoutes(api *gin.RouterGroup) {
 	group.GET("/logo/:name", logoHandler)
 	group.GET("/settings", settingsHandler)
 	group.PUT("/settings", updateSettingsHandler)
+	registerManagementRoutes(group)
 }
 
 func listHandler(c *gin.Context) {
@@ -187,10 +194,11 @@ func logoHandler(c *gin.Context) {
 }
 
 type settingsResponse struct {
-	Enabled    bool   `json:"enabled"`
-	Configured bool   `json:"configured"`
-	SourceURL  string `json:"sourceUrl"`
-	ContactURL string `json:"contactUrl"`
+	Enabled      bool         `json:"enabled"`
+	Configured   bool         `json:"configured"`
+	SourceURL    string       `json:"sourceUrl"`
+	ContactURL   string       `json:"contactUrl"`
+	ProviderMode ProviderMode `json:"providerMode"`
 }
 
 func settingsHandler(c *gin.Context) {
@@ -205,7 +213,7 @@ func settingsHandler(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"success": true, "obj": settingsResponse{
-		Enabled: enabled, Configured: current.sourceURL != "", SourceURL: current.sourceURL, ContactURL: current.contactURL,
+		Enabled: enabled, Configured: current.sourceURL != "", SourceURL: current.sourceURL, ContactURL: current.contactURL, ProviderMode: current.providerMode,
 	}})
 }
 
@@ -216,26 +224,35 @@ func updateSettingsHandler(c *gin.Context) {
 		return
 	}
 	var input struct {
-		SourceURL  string `json:"sourceUrl"`
-		ContactURL string `json:"contactUrl"`
+		SourceURL    string       `json:"sourceUrl"`
+		ContactURL   string       `json:"contactUrl"`
+		ProviderMode ProviderMode `json:"providerMode"`
 	}
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "msg": "invalid sponsors settings"})
 		return
 	}
-	next, err := validateSettings(settings{sourceURL: input.SourceURL, contactURL: input.ContactURL})
+	current, err := readSettings(db)
+	if err != nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"success": false, "msg": "sponsors settings unavailable"})
+		return
+	}
+	if input.ProviderMode == "" {
+		input.ProviderMode = current.providerMode
+	}
+	next, err := validateSettings(settings{sourceURL: input.SourceURL, contactURL: input.ContactURL, providerMode: input.ProviderMode})
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "msg": err.Error()})
 		return
 	}
-	if err := saveSettings(db, next); err != nil {
+	if err := saveSettingsAndAudit(c, db, next); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "msg": "sponsors settings save failed"})
 		return
 	}
 	invalidateCache()
 	_, enabled := runtime()
 	c.JSON(http.StatusOK, gin.H{"success": true, "msg": "sponsors settings saved", "obj": settingsResponse{
-		Enabled: enabled, Configured: next.sourceURL != "", SourceURL: next.sourceURL, ContactURL: next.contactURL,
+		Enabled: enabled, Configured: next.sourceURL != "", SourceURL: next.sourceURL, ContactURL: next.contactURL, ProviderMode: next.providerMode,
 	}})
 }
 
@@ -245,10 +262,17 @@ func runtime() (*gorm.DB, bool) {
 	return runtimeState.db, runtimeState.enabled
 }
 
+func Enabled() bool {
+	_, enabled := runtime()
+	return enabled
+}
+
 func invalidateCache() {
 	runtimeState.Lock()
 	runtimeState.list = cachedList{}
 	runtimeState.logos = nil
+	runtimeState.lastFetch = time.Time{}
+	runtimeState.lastError = ""
 	runtimeState.Unlock()
 }
 
@@ -272,39 +296,69 @@ func readSettings(db *gorm.DB) (settings, error) {
 	if err != nil {
 		return settings{}, err
 	}
-	return validateSettings(settings{sourceURL: source, contactURL: contact})
+	provider, err := read(providerSettingKey)
+	if err != nil {
+		return settings{}, err
+	}
+	if provider == "" {
+		provider = string(ProviderLocal)
+	}
+	return validateSettings(settings{sourceURL: source, contactURL: contact, providerMode: ProviderMode(provider)})
 }
 
 func saveSettings(db *gorm.DB, value settings) error {
 	return db.Transaction(func(tx *gorm.DB) error {
-		for key, next := range map[string]string{
-			sourceSettingKey:  value.sourceURL,
-			contactSettingKey: value.contactURL,
-		} {
-			var row model.Setting
-			err := tx.Where("key = ?", key).First(&row).Error
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				if next == "" {
-					continue
-				}
-				if err := tx.Create(&model.Setting{Key: key, Value: next}).Error; err != nil {
-					return err
-				}
-				continue
-			}
-			if err != nil {
-				return err
-			}
-			row.Value = next
-			if err := tx.Save(&row).Error; err != nil {
-				return err
-			}
-		}
-		return nil
+		return saveSettingsTx(tx, value)
 	})
 }
 
+func saveSettingsAndAudit(c *gin.Context, db *gorm.DB, value settings) error {
+	return db.Transaction(func(tx *gorm.DB) error {
+		if err := saveSettingsTx(tx, value); err != nil {
+			return err
+		}
+		return recordAuditTarget(c, tx, "provider_config", "sponsors_provider", "settings")
+	})
+}
+
+func saveSettingsTx(tx *gorm.DB, value settings) error {
+	if tx == nil {
+		return errors.New("database unavailable")
+	}
+	for key, next := range map[string]string{
+		sourceSettingKey:   value.sourceURL,
+		contactSettingKey:  value.contactURL,
+		providerSettingKey: string(value.providerMode),
+	} {
+		var row model.Setting
+		err := tx.Where("key = ?", key).First(&row).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			if next == "" {
+				continue
+			}
+			if err := tx.Create(&model.Setting{Key: key, Value: next}).Error; err != nil {
+				return err
+			}
+			continue
+		}
+		if err != nil {
+			return err
+		}
+		row.Value = next
+		if err := tx.Save(&row).Error; err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func validateSettings(value settings) (settings, error) {
+	if value.providerMode == "" {
+		value.providerMode = ProviderLocal
+	}
+	if value.providerMode != ProviderLocal && value.providerMode != ProviderRemote {
+		return settings{}, errors.New("provider mode must be local or remote")
+	}
 	var err error
 	if value.sourceURL, err = normalizedRemoteURL(value.sourceURL); err != nil {
 		return settings{}, fmt.Errorf("invalid source URL: %w", err)
@@ -328,6 +382,9 @@ func currentSponsors(now time.Time) (SponsorList, error) {
 	if err != nil {
 		return SponsorList{}, err
 	}
+	if config.providerMode == ProviderLocal {
+		return localSponsorList(db, config.contactURL, now)
+	}
 	if config.sourceURL == "" {
 		return SponsorList{Contact: config.contactURL, Sponsors: []Sponsor{}}, nil
 	}
@@ -347,8 +404,11 @@ func currentSponsors(now time.Time) (SponsorList, error) {
 	defer runtimeState.Unlock()
 	if fetchErr == nil {
 		runtimeState.list = cachedList{source: config.sourceURL, list: fetched, retryAt: now.Add(metadataTTL)}
+		runtimeState.lastFetch = now.UTC()
+		runtimeState.lastError = ""
 		return activeSponsors(fetched, config.contactURL, now), nil
 	}
+	runtimeState.lastError = fetchErr.Error()
 	if cached.source == config.sourceURL && cached.list != nil {
 		runtimeState.list = cachedList{source: config.sourceURL, list: cached.list, err: fetchErr, retryAt: now.Add(errorTTL)}
 		return activeSponsors(cached.list, config.contactURL, now), nil
@@ -433,9 +493,6 @@ func contains(values []string, wanted string) bool {
 var errUnknownLogo = errors.New("unknown sponsor logo")
 
 func currentLogo(name string, now time.Time) ([]byte, string, error) {
-	if !logoNameRE.MatchString(name) {
-		return nil, "", errUnknownLogo
-	}
 	db, enabled := runtime()
 	if !enabled {
 		return nil, "", errUnknownLogo
@@ -443,6 +500,12 @@ func currentLogo(name string, now time.Time) ([]byte, string, error) {
 	config, err := readSettings(db)
 	if err != nil {
 		return nil, "", err
+	}
+	if config.providerMode == ProviderLocal {
+		return localSponsorLogo(db, name, now)
+	}
+	if !logoNameRE.MatchString(name) {
+		return nil, "", errUnknownLogo
 	}
 	if config.sourceURL == "" {
 		return nil, "", errUnknownLogo

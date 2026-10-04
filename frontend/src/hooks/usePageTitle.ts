@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useLocation } from 'react-router';
 import { useTranslation } from 'react-i18next';
 
-const TITLE_KEYS: Record<string, string> = {
+export const TITLE_KEYS: Record<string, string> = {
   '/': 'menu.dashboard',
   '/inbounds': 'menu.inbounds',
   '/clients': 'menu.clients',
@@ -16,6 +16,7 @@ const TITLE_KEYS: Record<string, string> = {
   '/api-docs': 'menu.apiDocs',
   '/sponsors': 'menu.sponsors',
   '/catx/sponsors': 'fork.sponsors.title',
+  '/catx/sponsors/manage': 'pages.sponsors.managementTitle',
 };
 
 export function usePageTitle() {

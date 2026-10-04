@@ -10,24 +10,56 @@ _openapi:
       title: Read the active CatX sponsor metadata.
       url: '#read-the-active-catx-sponsor-metadata'
     - depth: 2
+      title: Create a locally managed sponsor.
+      url: '#create-a-locally-managed-sponsor'
+    - depth: 2
       title: Read a validated active sponsor logo.
       url: '#read-a-validated-active-sponsor-logo'
     - depth: 2
       title: Read sanitized sponsor source settings.
       url: '#read-sanitized-sponsor-source-settings'
     - depth: 2
-      title: Update the operator-configured sponsor source and contact URLs.
-      url: '#update-the-operator-configured-sponsor-source-and-contact-urls'
+      title: Update the operator-configured provider mode, source, and contact URLs.
+      url: '#update-the-operator-configured-provider-mode-source-and-contact-urls'
+    - depth: 2
+      title: Read local/remote provider status and bounded cache state.
+      url: '#read-localremote-provider-status-and-bounded-cache-state'
+    - depth: 2
+      title: List all locally managed sponsors in deterministic order.
+      url: '#list-all-locally-managed-sponsors-in-deterministic-order'
+    - depth: 2
+      title: Read one locally managed sponsor.
+      url: '#read-one-locally-managed-sponsor'
+    - depth: 2
+      title: Delete a locally managed sponsor.
+      url: '#delete-a-locally-managed-sponsor'
+    - depth: 2
+      title: Replace a locally managed sponsor; the path ID is authoritative and
+        omitted fields are cleared or defaulted deterministically.
+      url: '#replace-a-locally-managed-sponsor-the-path-id-is-authoritative-and-omitted-fields-are-cleared-or-defaulted-deterministically'
   structuredData:
     headings:
       - content: Read the active CatX sponsor metadata.
         id: read-the-active-catx-sponsor-metadata
+      - content: Create a locally managed sponsor.
+        id: create-a-locally-managed-sponsor
       - content: Read a validated active sponsor logo.
         id: read-a-validated-active-sponsor-logo
       - content: Read sanitized sponsor source settings.
         id: read-sanitized-sponsor-source-settings
-      - content: Update the operator-configured sponsor source and contact URLs.
-        id: update-the-operator-configured-sponsor-source-and-contact-urls
+      - content: Update the operator-configured provider mode, source, and contact URLs.
+        id: update-the-operator-configured-provider-mode-source-and-contact-urls
+      - content: Read local/remote provider status and bounded cache state.
+        id: read-localremote-provider-status-and-bounded-cache-state
+      - content: List all locally managed sponsors in deterministic order.
+        id: list-all-locally-managed-sponsors-in-deterministic-order
+      - content: Read one locally managed sponsor.
+        id: read-one-locally-managed-sponsor
+      - content: Delete a locally managed sponsor.
+        id: delete-a-locally-managed-sponsor
+      - content: Replace a locally managed sponsor; the path ID is authoritative and
+          omitted fields are cleared or defaulted deterministically.
+        id: replace-a-locally-managed-sponsor-the-path-id-is-authoritative-and-omitted-fields-are-cleared-or-defaulted-deterministically
     contents: []
 ---
 
@@ -38,7 +70,7 @@ export default function Layout(props) {
   return (
     <>
       {props.children}
-      <OpenAPIPage document="./public/openapi.json" webhooks={[]} operations={[{"path":"/panel/api/fork/sponsors","method":"get"},{"path":"/panel/api/fork/sponsors/logo/{name}","method":"get"},{"path":"/panel/api/fork/sponsors/settings","method":"get"},{"path":"/panel/api/fork/sponsors/settings","method":"put"}]} showTitle />
+      <OpenAPIPage document="./public/openapi.json" webhooks={[]} operations={[{"path":"/panel/api/fork/sponsors","method":"get"},{"path":"/panel/api/fork/sponsors","method":"post"},{"path":"/panel/api/fork/sponsors/logo/{name}","method":"get"},{"path":"/panel/api/fork/sponsors/settings","method":"get"},{"path":"/panel/api/fork/sponsors/settings","method":"put"},{"path":"/panel/api/fork/sponsors/status","method":"get"},{"path":"/panel/api/fork/sponsors/manage","method":"get"},{"path":"/panel/api/fork/sponsors/{id}","method":"get"},{"path":"/panel/api/fork/sponsors/{id}","method":"delete"},{"path":"/panel/api/fork/sponsors/{id}","method":"put"}]} showTitle />
     </>
   );
 }

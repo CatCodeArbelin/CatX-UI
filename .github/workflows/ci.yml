@@ -60,6 +60,7 @@ jobs:
     env:
       XUI_DB_TYPE: postgres
       XUI_DB_DSN: "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=xui_durable sslmode=disable"
+      XUI_TEST_PG_DSN: "postgres://postgres:postgres@127.0.0.1:5432/xui_durable?sslmode=disable"
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-go@v7
@@ -89,6 +90,12 @@ jobs:
           passed=$(grep -c -- '^--- PASS' /tmp/postgres-schema.log || true)
           if [ "$passed" -lt 3 ]; then
             echo "expected at least 3 passing PostgreSQL schema tests, got $passed" >&2
+            exit 1
+          fi
+          go test ./internal/forkext/sponsors -run '^TestSponsorsSchemaPostgres$' -count=1 -v | tee /tmp/postgres-sponsors.log
+          passed=$(grep -c -- '^--- PASS: TestSponsorsSchemaPostgres' /tmp/postgres-sponsors.log || true)
+          if [ "$passed" -ne 1 ]; then
+            echo "expected exactly 1 passing Sponsors PostgreSQL schema test, got $passed" >&2
             exit 1
           fi
 

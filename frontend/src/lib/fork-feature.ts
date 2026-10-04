@@ -8,7 +8,8 @@ export type ForkFeature =
   | 'self_service'
   | 'fleet_updates'
   | 'policies'
-  | 'risk';
+  | 'risk'
+  | 'sponsors';
 
 /**
  * Only feature-owned entrypoints may use the legacy 404 fallback. A normal

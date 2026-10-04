@@ -4,7 +4,7 @@ import { forkApiSections, forkNavigationItems, forkRoutes } from '@/forkext/regi
 
 describe('fork registries', () => {
   it('registers the client activity page through the fork boundary', () => {
-    expect(forkRoutes).toHaveLength(8);
+    expect(forkRoutes).toHaveLength(9);
     expect(forkNavigationItems).toEqual([
       expect.objectContaining({
         key: 'client-activity',
@@ -44,6 +44,12 @@ describe('fork registries', () => {
         group: 'operations',
         icon: 'sponsors',
       }),
+      expect.objectContaining({
+        key: 'sponsors-management',
+        path: '/catx/sponsors/manage',
+        group: 'operations',
+        icon: 'sponsors',
+      }),
     ]);
     const risk = forkApiSections.find((section) => section.id === 'risk-intelligence');
     expect(risk?.endpoints).toHaveLength(7);
@@ -72,6 +78,16 @@ describe('fork registries', () => {
         'GET /portal/traffic',
         'POST /portal/access/rotate',
         'POST /portal/access/revoke',
+      ]),
+    );
+    const sponsors = forkApiSections.find((section) => section.id === 'catx-sponsors');
+    expect(sponsors?.endpoints.map((endpoint) => `${endpoint.method} ${endpoint.path}`)).toEqual(
+      expect.arrayContaining([
+        'GET /panel/api/fork/sponsors/status',
+        'GET /panel/api/fork/sponsors/manage',
+        'POST /panel/api/fork/sponsors',
+        'PUT /panel/api/fork/sponsors/:id',
+        'DELETE /panel/api/fork/sponsors/:id',
       ]),
     );
   });

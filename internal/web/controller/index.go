@@ -34,6 +34,13 @@ type IndexController struct {
 	tgbot          tgbot.Tgbot
 }
 
+// Keep the upstream sponsor handlers available in the fork source without
+// registering their legacy routes in CatX production composition.
+var (
+	_ = (*IndexController).sponsors
+	_ = (*IndexController).sponsorLogo
+)
+
 // NewIndexController creates a new IndexController and initializes its routes.
 func NewIndexController(g *gin.RouterGroup) *IndexController {
 	a := &IndexController{}
@@ -45,8 +52,6 @@ func NewIndexController(g *gin.RouterGroup) *IndexController {
 func (a *IndexController) initRouter(g *gin.RouterGroup) {
 	g.GET("/", a.index)
 	g.GET("/csrf-token", a.csrfToken)
-	g.GET("/sponsors", a.sponsors)
-	g.GET("/sponsors/logo/:name", a.sponsorLogo)
 
 	g.POST("/login", middleware.CSRFMiddleware(), a.login)
 	g.POST("/logout", middleware.CSRFMiddleware(), a.logout)

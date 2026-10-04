@@ -164,6 +164,12 @@ func applyRuntimeConfig(db *gorm.DB, cfg runtimeConfig) {
 // state; database startup performs that as a separate lifecycle step.
 func RegisterMigrations(db *gorm.DB) error {
 	setSettingsDB(db)
+	if db != nil {
+		if err := migrateSponsorsSchema(db); err != nil {
+			disableRuntime()
+			return fmt.Errorf("migrate sponsors schema: %w", err)
+		}
+	}
 	cfg, err := loadRuntimeConfig(db)
 	if err != nil {
 		disableRuntime()
@@ -175,6 +181,8 @@ func RegisterMigrations(db *gorm.DB) error {
 	}
 	return nil
 }
+
+var migrateSponsorsSchema = sponsors.Migrate
 
 // ConfigureRuntimeFromSettings configures in-process fork services only. The
 // caller must prepare schema first; keeping this separate prevents a panel
@@ -189,16 +197,12 @@ func ConfigureRuntimeFromSettings(db *gorm.DB) error {
 	return nil
 }
 
-// ReloadRuntimeFromSettings is the panel-restart boundary. It prepares any
-// newly enabled fork schema before publishing the new in-process state.
+// ReloadRuntimeFromSettings is the panel-restart boundary. It only publishes
+// new in-process state; database schema preparation belongs to startup.
 func ReloadRuntimeFromSettings(db *gorm.DB) error {
 	setSettingsDB(db)
 	cfg, err := loadRuntimeConfig(db)
 	if err != nil {
-		disableRuntime()
-		return err
-	}
-	if err := prepareRuntimeSchema(db, cfg); err != nil {
 		disableRuntime()
 		return err
 	}
@@ -330,7 +334,7 @@ func GroupQuotaRebaselineClient(tx *gorm.DB, email string, up, down int64) error
 }
 
 func MigrationModels() []any {
-	return append(append(append(groupquota.Models(), trafficpolicy.Models()...), &portal.Credential{}, &portal.HostGrant{}), &fleetupdate.Campaign{}, &fleetupdate.Target{})
+	return append(append(append(append(groupquota.Models(), trafficpolicy.Models()...), &portal.Credential{}, &portal.HostGrant{}), &fleetupdate.Campaign{}, &fleetupdate.Target{}), sponsors.Models()...)
 }
 
 // Start is the lifecycle integration point for fork-owned goroutines. The

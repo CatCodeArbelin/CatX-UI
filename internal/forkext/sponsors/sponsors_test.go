@@ -60,10 +60,12 @@ func useTestClient(t *testing.T, serverURL string) {
 
 func configureTestRuntime(t *testing.T, db *gorm.DB, source string, enabled bool) {
 	t.Helper()
+	mode := ProviderLocal
 	if source != "" {
-		if err := saveSettings(db, settings{sourceURL: source}); err != nil {
-			t.Fatal(err)
-		}
+		mode = ProviderRemote
+	}
+	if err := saveSettings(db, settings{sourceURL: source, providerMode: mode}); err != nil {
+		t.Fatal(err)
 	}
 	Configure(db, enabled)
 	t.Cleanup(func() { Configure(nil, false) })
@@ -90,6 +92,9 @@ func TestDisabledSponsorsDoNotFetchRemoteData(t *testing.T) {
 
 func TestUnconfiguredSponsorsDoNotFetchRemoteData(t *testing.T) {
 	db := sponsorsTestDB(t)
+	if err := Migrate(db); err != nil {
+		t.Fatal(err)
+	}
 	Configure(db, true)
 	t.Cleanup(func() { Configure(nil, false) })
 	list, err := currentSponsors(time.Now())

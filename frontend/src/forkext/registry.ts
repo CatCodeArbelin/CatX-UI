@@ -16,6 +16,31 @@ export interface ForkNavigationItem {
     | 'sponsors';
 }
 
+const managedSponsorSchema = {
+  type: 'object',
+  required: ['id', 'enabled', 'name', 'priority', 'slots', 'destinationUrl', 'title', 'text'],
+  properties: {
+    id: { type: 'string' },
+    enabled: { type: 'boolean' },
+    name: { type: 'string' },
+    priority: { type: 'integer' },
+    slots: { type: 'array', items: { type: 'string', enum: ['dashboard', 'sidebar', 'page'] } },
+    startAt: { type: 'string', format: 'date-time' },
+    endAt: { type: 'string', format: 'date-time' },
+    destinationUrl: { type: 'string', format: 'uri' },
+    logoUrl: { type: 'string', format: 'uri' },
+    title: { type: 'object', additionalProperties: { type: 'string' } },
+    text: { type: 'object', additionalProperties: { type: 'string' } },
+    createdAt: { type: 'string', format: 'date-time' },
+    updatedAt: { type: 'string', format: 'date-time' },
+  },
+} as const;
+
+const managedSponsorInputSchema = {
+  ...managedSponsorSchema,
+  required: ['enabled', 'name', 'priority', 'slots', 'destinationUrl', 'title', 'text'],
+} as const;
+
 export const forkRoutes: readonly RouteObject[] = [
   {
     path: '/fleet-updates',
@@ -48,6 +73,10 @@ export const forkRoutes: readonly RouteObject[] = [
   {
     path: '/catx/sponsors',
     lazy: async () => ({ Component: (await import('./sponsors/SponsorsPage')).default }),
+  },
+  {
+    path: '/catx/sponsors/manage',
+    lazy: async () => ({ Component: (await import('./sponsors/SponsorsManagementPage')).default }),
   },
 ];
 export const forkNavigationItems: readonly ForkNavigationItem[] = [
@@ -101,13 +130,20 @@ export const forkNavigationItems: readonly ForkNavigationItem[] = [
     group: 'operations',
     icon: 'sponsors',
   },
+  {
+    key: 'sponsors-management',
+    labelKey: 'fork.sponsors.title',
+    path: '/catx/sponsors/manage',
+    group: 'operations',
+    icon: 'sponsors',
+  },
 ];
 
 export const forkNavigationGroups = {
   clients: ['client-activity', 'portal-access'],
   nodes: ['fleet', 'fleet-updates'],
   routing: ['policy-engine'],
-  operations: ['audit', 'webhooks', 'sponsors'],
+  operations: ['audit', 'webhooks', 'sponsors', 'sponsors-management'],
 } as const;
 // Keep the fork contract registry as the single source for generated API verification.
 export const forkApiSections = [
@@ -444,36 +480,97 @@ export const forkApiSections = [
         summary: 'Read sanitized sponsor source settings.',
         responseObjectSchema: {
           type: 'object',
-          required: ['enabled', 'configured', 'sourceUrl', 'contactUrl'],
+          required: ['enabled', 'configured', 'sourceUrl', 'contactUrl', 'providerMode'],
           properties: {
             enabled: { type: 'boolean' },
             configured: { type: 'boolean' },
             sourceUrl: { type: 'string' },
             contactUrl: { type: 'string' },
+            providerMode: { type: 'string', enum: ['local', 'remote'] },
           },
         },
       },
       {
         method: 'PUT',
         path: '/panel/api/fork/sponsors/settings',
-        summary: 'Update the operator-configured sponsor source and contact URLs.',
+        summary: 'Update the operator-configured provider mode, source, and contact URLs.',
         requestSchema: {
           type: 'object',
           properties: {
             sourceUrl: { type: 'string' },
             contactUrl: { type: 'string' },
+            providerMode: { type: 'string', enum: ['local', 'remote'] },
           },
         },
         responseObjectSchema: {
           type: 'object',
-          required: ['enabled', 'configured', 'sourceUrl', 'contactUrl'],
+          required: ['enabled', 'configured', 'sourceUrl', 'contactUrl', 'providerMode'],
           properties: {
             enabled: { type: 'boolean' },
             configured: { type: 'boolean' },
             sourceUrl: { type: 'string' },
             contactUrl: { type: 'string' },
+            providerMode: { type: 'string', enum: ['local', 'remote'] },
           },
         },
+      },
+      {
+        method: 'GET',
+        path: '/panel/api/fork/sponsors/status',
+        summary: 'Read local/remote provider status and bounded cache state.',
+        responseObjectSchema: {
+          type: 'object',
+          required: [
+            'enabled',
+            'providerMode',
+            'localSponsorCount',
+            'activeSponsorCount',
+            'remoteProviderConfigured',
+            'cacheState',
+          ],
+          properties: {
+            enabled: { type: 'boolean' },
+            providerMode: { type: 'string', enum: ['local', 'remote'] },
+            localSponsorCount: { type: 'integer' },
+            activeSponsorCount: { type: 'integer' },
+            remoteProviderConfigured: { type: 'boolean' },
+            lastSuccessfulFetch: { type: 'string', format: 'date-time' },
+            lastError: { type: 'string' },
+            cacheState: { type: 'string' },
+          },
+        },
+      },
+      {
+        method: 'GET',
+        path: '/panel/api/fork/sponsors/manage',
+        summary: 'List all locally managed sponsors in deterministic order.',
+        responseObjectSchema: { type: 'array', items: managedSponsorSchema },
+      },
+      {
+        method: 'POST',
+        path: '/panel/api/fork/sponsors',
+        summary: 'Create a locally managed sponsor.',
+        requestSchema: managedSponsorInputSchema,
+        responseObjectSchema: managedSponsorSchema,
+      },
+      {
+        method: 'GET',
+        path: '/panel/api/fork/sponsors/:id',
+        summary: 'Read one locally managed sponsor.',
+        responseObjectSchema: managedSponsorSchema,
+      },
+      {
+        method: 'PUT',
+        path: '/panel/api/fork/sponsors/:id',
+        summary:
+          'Replace a locally managed sponsor; the path ID is authoritative and omitted fields are cleared or defaulted deterministically.',
+        requestSchema: managedSponsorInputSchema,
+        responseObjectSchema: managedSponsorSchema,
+      },
+      {
+        method: 'DELETE',
+        path: '/panel/api/fork/sponsors/:id',
+        summary: 'Delete a locally managed sponsor.',
       },
     ],
   },
