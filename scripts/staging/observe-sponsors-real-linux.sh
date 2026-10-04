@@ -89,8 +89,8 @@ get /fork/sponsors "$RUN_DIR/public-local.json"; jq -e --arg id "$ID" 'any(.obj.
 mutate PUT /fork/settings/features '{"flags":{"sponsors.enabled":false}}' "$RUN_DIR/sponsors-disabled.json"
 panel_restart feature-off false; get /fork/sponsors/status "$RUN_DIR/status-off.json"
 jq -e '.obj.enabled == false and .obj.providerMode == "local" and .obj.localSponsorCount == 1 and .obj.cacheState == "disabled"' "$RUN_DIR/status-off.json" >/dev/null || fail 'feature-off status wrong'
-expect GET /fork/sponsors '' 503 "$RUN_DIR/public-off.json"; expect GET "/fork/sponsors/logo/$ID" '' 503 "$RUN_DIR/logo-off.json"; expect GET /fork/sponsors/manage '' 503 "$RUN_DIR/manage-off.json"
-jq -e '.featureDisabled == true' "$RUN_DIR/public-off.json" >/dev/null || fail 'feature-off response not explicit'
+expect GET /fork/sponsors '' 200 "$RUN_DIR/public-off.json"; expect GET "/fork/sponsors/logo/$ID" '' 404 "$RUN_DIR/logo-off.json"; expect GET /fork/sponsors/manage '' 503 "$RUN_DIR/manage-off.json"
+jq -e '.success == true and (.obj.sponsors | length == 0)' "$RUN_DIR/public-off.json" >/dev/null || fail 'feature-off public list was not empty'
 log 'PASS: feature-off retained storage and disabled metadata/logo/rendering'
 mutate PUT /fork/settings/features '{"flags":{"sponsors.enabled":true}}' "$RUN_DIR/sponsors-reenabled.json"
 panel_restart feature-on-again; get /fork/sponsors "$RUN_DIR/public-reenabled.json"; jq -e --arg id "$ID" 'any(.obj.sponsors[]?; .id == $id)' "$RUN_DIR/public-reenabled.json" >/dev/null || fail 're-enabled Sponsor missing'
