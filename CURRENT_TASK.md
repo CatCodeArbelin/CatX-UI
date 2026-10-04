@@ -6,7 +6,7 @@
 
 ## Status
 
-`COMPLETE — PR #10 MERGED; PRODUCT REALITY AUDIT IN PROGRESS`
+`COMPLETE — PR #10 MERGED; PRODUCT REALITY AUDIT READY FOR MAINTAINER REVIEW`
 
 This is the first post-`v0.2.0` CatX product feature. It must not create or
 modify a `v0.2.1` release, move an immutable tag, or change the published
@@ -118,8 +118,9 @@ limitations, and the v0.3.0 scope without adding major features.
 
 - implementation commit: `fc010fb701089f3eed8bebb7d85743e19c1164f6`;
 - hosted lint correction: `be6bce6677bc0d50a349db138a0b7229aa576a2e`;
-- draft review PR: [#10](https://github.com/CatCodeArbelin/CatX-UI/pull/10), open,
-  targeting `develop`, intentionally unmerged;
+- historical review PR: [#10](https://github.com/CatCodeArbelin/CatX-UI/pull/10),
+  merged into `develop` at `6207a2d6fc94e91b96006d0ac68f350c355879a8` after the
+  hosted acceptance gates passed;
 - hosted required Go, race, frontend, PostgreSQL, fuzz, codegen, build,
   release-identity, release qualification, and `verify-fork` gates are green
   for the implementation branch; disposable install/PostgreSQL rehearsal and
@@ -129,7 +130,7 @@ limitations, and the v0.3.0 scope without adding major features.
   Vitest/OpenAPI tools; the hosted matrix supplied the full required gate;
 - no `v0.2.1` release, tag movement, or stable artifact change.
 
-## Post-Sponsors Product Reality Audit — CURRENT
+## Post-Sponsors Product Reality Audit — READY FOR MAINTAINER REVIEW
 
 - audit branch: `chore/catx-product-reality-audit`;
 - audited develop SHA: `6207a2d6fc94e91b96006d0ac68f350c355879a8`;
@@ -141,4 +142,7 @@ limitations, and the v0.3.0 scope without adding major features.
 - audit output: `docs/35_CATX_PRODUCT_REALITY_AUDIT.md`;
 - no major feature work, release work, upstream sync, tag movement, or main
   change is authorized in this phase;
-- the audit PR must remain open and unmerged for maintainer review.
+- draft audit PR: [#11](https://github.com/CatCodeArbelin/CatX-UI/pull/11), open,
+  targeting `develop`, and intentionally unmerged for maintainer review;
+- hosted Docs CI passed for audit head
+  `0ff542b686783762c0eedcc53060f88cf992226b`.
