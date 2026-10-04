@@ -51,16 +51,7 @@ jobs:
           install -m 0644 "$RUNNER_TEMP/xray-unpacked/geosite.dat" "$RUNNER_TEMP/xray-assets/geosite.dat"
       - name: Run focused Sponsors and migration lifecycle tests
         run: go test -count=1 ./internal/forkext/sponsors ./internal/forkext
-      - name: Install golangci-lint for the repository gate
-        uses: golangci/golangci-lint-action@v9
-        with:
-          version: latest
-      - name: Run repository verification gates
-        id: repository-gates
-        continue-on-error: true
-        run: make verify-fork
       - name: Run authenticated real-panel lifecycle
-        if: always()
         env:
           CATX_SPONSORS_CANDIDATE_BINARY: ${{ runner.temp }}/catx-candidate-x-ui
           CATX_SPONSORS_CANDIDATE_XRAY_BINARY: ${{ runner.temp }}/xray-linux-amd64
@@ -76,9 +67,6 @@ jobs:
             "CATX_SPONSORS_CANDIDATE_SHA=$CATX_SPONSORS_CANDIDATE_SHA" \
             "CATX_SPONSORS_EVIDENCE_DIR=$CATX_SPONSORS_EVIDENCE_DIR" \
             bash scripts/staging/observe-sponsors-real-linux.sh
-      - name: Enforce repository gate result
-        if: always()
-        run: test "${{ steps.repository-gates.outcome }}" = success
       - name: Upload sanitized evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -87,3 +75,29 @@ jobs:
           path: ${{ runner.temp }}/catx-sponsors-real-evidence
           if-no-files-found: warn
           retention-days: 30
+
+  repository-gates:
+    name: Repository verification gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+        with: {fetch-depth: 0}
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: frontend
+      - name: Install golangci-lint
+        uses: golangci/golangci-lint-action@v9
+        with:
+          version: latest
+      - name: Run make verify-fork
+        run: make verify-fork

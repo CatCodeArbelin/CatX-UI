@@ -8,18 +8,23 @@ set -Eeuo pipefail
 readonly RUN_DIR="$(mktemp -d "${TMPDIR:-/tmp}/catx-sponsors-real.XXXXXX")"
 readonly APP_DIR="$RUN_DIR/app"
 readonly EVIDENCE_DIR="${CATX_SPONSORS_EVIDENCE_DIR:-${RUNNER_TEMP:-/tmp}/catx-sponsors-real-evidence}"
-readonly DB_DIR="$RUN_DIR/db" LOG_DIR="$RUN_DIR/log" COOKIE_FILE="$RUN_DIR/cookies"
-readonly PORT=19285 BASE_PATH="/sponsors-real/" BASE_URL="http://127.0.0.1:${PORT}/sponsors-real"
+readonly DB_DIR="$RUN_DIR/db"
+readonly LOG_DIR="$RUN_DIR/log"
+readonly COOKIE_FILE="$RUN_DIR/cookies"
+readonly PORT=19285
+readonly BASE_PATH="/sponsors-real/"
+readonly BASE_URL="http://127.0.0.1:${PORT}/sponsors-real"
 readonly USERNAME="catx-sponsors-operator" PASSWORD="catx-sponsors-operator-password"
 readonly ID="catx-real-smoke" DEST="https://example.com/catx-synthetic-destination"
 readonly LOGO="https://example.com/catx-synthetic-logo.png"
 readonly REMOTE="https://example.com/catx-synthetic-sponsors.json"
 readonly LOGFILE="$RUN_DIR/observer.log"
 PID="" CSRF=""
+: > "$LOGFILE"
 
 log() { printf '%s %s\n' "$(date -u +%FT%TZ)" "$*" | tee -a "$LOGFILE"; }
 fail() { log "FAIL: $*"; exit 1; }
-finish() { local rc=$?; set +e; mkdir -p "$EVIDENCE_DIR"; sed -E 's/(password|token|cookie|authorization)[=:][^[:space:]]+/\1=<redacted>/Ig' "$LOGFILE" > "$EVIDENCE_DIR/observation.log"; [[ -z "$PID" ]] || kill "$PID" 2>/dev/null || true; rm -rf "$RUN_DIR"; exit "$rc"; }
+finish() { local rc=$?; set +e; mkdir -p "$EVIDENCE_DIR"; sed -E 's/(password|token|cookie|authorization)[=:][^[:space:]]+/\1=<redacted>/Ig' "$LOGFILE" > "$EVIDENCE_DIR/observation.log"; [[ ! -f "$RUN_DIR/panel.log" ]] || sed -E 's/(password|token|cookie|authorization)[=:][^[:space:]]+/\1=<redacted>/Ig' "$RUN_DIR/panel.log" > "$EVIDENCE_DIR/panel.log"; [[ -z "$PID" ]] || kill "$PID" 2>/dev/null || true; rm -rf "$RUN_DIR"; exit "$rc"; }
 trap finish EXIT
 trap 'rc=$?; log "ERROR line=$LINENO status=$rc"; exit "$rc"' ERR
 
