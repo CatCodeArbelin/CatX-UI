@@ -34,6 +34,13 @@ type IndexController struct {
 	tgbot          tgbot.Tgbot
 }
 
+// Keep the upstream sponsor handlers available in the fork source without
+// registering their legacy routes in CatX production composition.
+var (
+	_ = (*IndexController).sponsors
+	_ = (*IndexController).sponsorLogo
+)
+
 // NewIndexController creates a new IndexController and initializes its routes.
 func NewIndexController(g *gin.RouterGroup) *IndexController {
 	a := &IndexController{}
