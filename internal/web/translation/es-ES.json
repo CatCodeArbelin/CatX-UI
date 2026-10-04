@@ -2409,8 +2409,6 @@
       "placementDashboardDesc": "Espacio premium en la parte superior del panel, un patrocinador a la vez.",
       "placementSidebar": "Tarjeta lateral",
       "placementSidebarDesc": "Se muestra en todas las páginas del panel, rotando entre patrocinadores.",
-      "placementLogin": "Página de inicio de sesión",
-      "placementLoginDesc": "La ve el administrador en cada inicio de sesión.",
       "placementPage": "Página de patrocinadores",
       "placementPageDesc": "Aparece aquí con logo, descripción y enlace.",
       "available": "Disponible",

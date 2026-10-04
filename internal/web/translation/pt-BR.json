@@ -2409,8 +2409,6 @@
       "placementDashboardDesc": "Espaço premium no topo do painel, um patrocinador por vez.",
       "placementSidebar": "Cartão lateral",
       "placementSidebarDesc": "Exibido em todas as páginas do painel, alternando entre patrocinadores.",
-      "placementLogin": "Página de login",
-      "placementLoginDesc": "Visto pelo administrador a cada login.",
       "placementPage": "Página de patrocinadores",
       "placementPageDesc": "Listado aqui com logo, descrição e link.",
       "available": "Disponível",

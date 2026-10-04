@@ -2409,8 +2409,6 @@
       "placementDashboardDesc": "ダッシュボード上部のプレミアム枠。一度に 1 社のみ。",
       "placementSidebar": "サイドバーカード",
       "placementSidebarDesc": "パネルの全ページに表示され、スポンサー間でローテーションします。",
-      "placementLogin": "ログインページ",
-      "placementLoginDesc": "管理者がログインするたびに表示されます。",
       "placementPage": "スポンサーページ",
       "placementPageDesc": "ロゴ、説明、リンク付きでここに掲載されます。",
       "available": "空きあり",

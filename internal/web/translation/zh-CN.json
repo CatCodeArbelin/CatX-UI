@@ -2409,8 +2409,6 @@
       "placementDashboardDesc": "仪表盘顶部的高级位置，每次仅一家赞助商。",
       "placementSidebar": "侧边栏卡片",
       "placementSidebarDesc": "在面板所有页面显示，并在赞助商之间轮换。",
-      "placementLogin": "登录页",
-      "placementLoginDesc": "管理员每次登录时都能看到。",
       "placementPage": "赞助商页面",
       "placementPageDesc": "在此页面展示徽标、简介和链接。",
       "available": "可预订",
