@@ -51,6 +51,10 @@ jobs:
           install -m 0644 "$RUNNER_TEMP/xray-unpacked/geosite.dat" "$RUNNER_TEMP/xray-assets/geosite.dat"
       - name: Run focused Sponsors and migration lifecycle tests
         run: go test -count=1 ./internal/forkext/sponsors ./internal/forkext
+      - name: Install golangci-lint for the repository gate
+        uses: golangci/golangci-lint-action@v9
+        with:
+          version: latest
       - name: Run repository verification gates
         run: make verify-fork
       - name: Run authenticated real-panel lifecycle
