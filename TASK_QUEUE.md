@@ -867,7 +867,7 @@ security/recovery blockers
 
 Use Luna Medium for the majority of implementation work.
 
-# CatX Sponsors — CURRENT
+# CatX Sponsors — COMPLETE
 
 Branch: `feature/catx-sponsors`.
 
@@ -896,3 +896,15 @@ Required work:
 - push an unmerged PR targeting `develop`.
 
 No merge into `develop` is authorized by this package.
+
+Completion record:
+
+- implementation commit: `fdba4bc5`;
+- lint-format correction: `9af816ba`;
+- SQLite fixture isolation correction: `8081d83e`;
+- review PR: [#9](https://github.com/CatCodeArbelin/CatX-UI/pull/9), open and
+  intentionally unmerged;
+- hosted required Go, race, frontend, PostgreSQL, fuzz, codegen, build,
+  release-identity, and `verify-fork` gates: green;
+- optional rolling-release and disposable rehearsal jobs: skipped by policy;
+- stable `v0.2.0` and its immutable tag remain unchanged.

@@ -6,7 +6,7 @@
 
 ## Status
 
-`CURRENT`
+`COMPLETE`
 
 This is the first post-`v0.2.0` CatX product feature. It must not create or
 modify a `v0.2.1` release, move an immutable tag, or change the published
@@ -106,3 +106,16 @@ local checks and rely on hosted required checks. Do not merge this Sponsors PR.
 Implementation, tests, documentation, and feature-disabled compatibility are
 complete; the branch is pushed; hosted required checks are green; and an
 unmerged PR targeting `develop` is open for review.
+
+## Completion record
+
+- implementation commit: `fdba4bc5`;
+- lint-format correction: `9af816ba`;
+- test-isolation correction: `8081d83e`;
+- PR: [#9](https://github.com/CatCodeArbelin/CatX-UI/pull/9), open and
+  unmerged against `develop`;
+- hosted required checks: green, including full Go tests, race, frontend,
+  PostgreSQL durability, fuzz smoke, codegen, builds, release identity, and
+  both `verify-fork` jobs;
+- optional rolling release and disposable rehearsal jobs: skipped by policy;
+- no `v0.2.1` release, tag movement, or stable artifact change.
