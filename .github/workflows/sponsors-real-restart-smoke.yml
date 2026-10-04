@@ -56,8 +56,11 @@ jobs:
         with:
           version: latest
       - name: Run repository verification gates
+        id: repository-gates
+        continue-on-error: true
         run: make verify-fork
       - name: Run authenticated real-panel lifecycle
+        if: always()
         env:
           CATX_SPONSORS_CANDIDATE_BINARY: ${{ runner.temp }}/catx-candidate-x-ui
           CATX_SPONSORS_CANDIDATE_XRAY_BINARY: ${{ runner.temp }}/xray-linux-amd64
@@ -73,6 +76,9 @@ jobs:
             "CATX_SPONSORS_CANDIDATE_SHA=$CATX_SPONSORS_CANDIDATE_SHA" \
             "CATX_SPONSORS_EVIDENCE_DIR=$CATX_SPONSORS_EVIDENCE_DIR" \
             bash scripts/staging/observe-sponsors-real-linux.sh
+      - name: Enforce repository gate result
+        if: always()
+        run: test "${{ steps.repository-gates.outcome }}" = success
       - name: Upload sanitized evidence
         if: always()
         uses: actions/upload-artifact@v4
