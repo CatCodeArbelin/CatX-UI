@@ -49,7 +49,7 @@ get() { local path=$1 out=$2 code; code=$(curl -sS -b "$COOKIE_FILE" -o "$out" -
 expect() { local method=$1 path=$2 body=$3 want=$4 out=$5 code; code=$(curl -sS -b "$COOKIE_FILE" -c "$COOKIE_FILE" -X "$method" -H 'Content-Type: application/json' -H "X-CSRF-Token: $CSRF" --data "$body" -o "$out" -w '%{http_code}' "$BASE_URL/panel/api$path" || true); [[ "$code" == $want ]] || fail "$method $path HTTP $code $(cat "$out")"; }
 mutate() { expect "$1" "$2" "$3" '2*' "$4"; jq -e '.success == true' "$4" >/dev/null || fail "$1 $2 unsuccessful"; }
 health() { local label=$1; local check_sponsors=${2:-true}; get /server/status "$RUN_DIR/status-$label.json"; jq -e '(.obj.xray.state == "running") or (.obj.xrayState == "running")' "$RUN_DIR/status-$label.json" >/dev/null || fail "Xray not running $label"; if [[ "$check_sponsors" == true ]]; then curl --fail -sS -b "$COOKIE_FILE" "$BASE_URL/catx/sponsors" -o "$RUN_DIR/page-$label.html"; fi; get /fork/sponsors/status "$RUN_DIR/sponsors-status-$label.json"; ! grep -Fq sponsors.sanaei.dev "$RUN_DIR/panel.log" || fail "Sanaei request marker"; }
-panel_restart() { local label=$1; mutate POST /setting/restartPanel '{}' "$RUN_DIR/restart-$label.json"; sleep 4; grep -Fq 'Web server restarted successfully.' "$RUN_DIR/panel.log" || fail "web restart $label"; grep -Fq 'Sub server restarted successfully.' "$RUN_DIR/panel.log" || fail "sub restart $label"; wait_panel; login; health "$label"; log "PASS: real restartPanel recovered $label"; }
+panel_restart() { local label=$1; local check_sponsors=${2:-true}; mutate POST /setting/restartPanel '{}' "$RUN_DIR/restart-$label.json"; sleep 4; grep -Fq 'Web server restarted successfully.' "$RUN_DIR/panel.log" || fail "web restart $label"; grep -Fq 'Sub server restarted successfully.' "$RUN_DIR/panel.log" || fail "sub restart $label"; wait_panel; login; health "$label" "$check_sponsors"; log "PASS: real restartPanel recovered $label"; }
 startup_restart() { stop; start; wait_panel; login; health audit-schema-startup false; log 'PASS: setup-only startup prepared Audit schema'; }
 
 start; wait_panel; login
@@ -86,7 +86,7 @@ panel_restart local-persistence; get /fork/sponsors/status "$RUN_DIR/status-loca
 jq -e '.obj.enabled == true and .obj.providerMode == "local" and .obj.localSponsorCount == 1' "$RUN_DIR/status-local.json" >/dev/null || fail 'local persistence failed'
 get /fork/sponsors "$RUN_DIR/public-local.json"; jq -e --arg id "$ID" 'any(.obj.sponsors[]?; .id == $id)' "$RUN_DIR/public-local.json" >/dev/null || fail 'local Sponsor lost after restart'
 mutate PUT /fork/settings/features '{"flags":{"sponsors.enabled":false}}' "$RUN_DIR/sponsors-disabled.json"
-panel_restart feature-off; get /fork/sponsors/status "$RUN_DIR/status-off.json"
+panel_restart feature-off false; get /fork/sponsors/status "$RUN_DIR/status-off.json"
 jq -e '.obj.enabled == false and .obj.providerMode == "local" and .obj.localSponsorCount == 1 and .obj.cacheState == "disabled"' "$RUN_DIR/status-off.json" >/dev/null || fail 'feature-off status wrong'
 expect GET /fork/sponsors '' 503 "$RUN_DIR/public-off.json"; expect GET "/fork/sponsors/logo/$ID" '' 503 "$RUN_DIR/logo-off.json"; expect GET /fork/sponsors/manage '' 503 "$RUN_DIR/manage-off.json"
 jq -e '.featureDisabled == true' "$RUN_DIR/public-off.json" >/dev/null || fail 'feature-off response not explicit'
@@ -95,7 +95,7 @@ mutate PUT /fork/settings/features '{"flags":{"sponsors.enabled":true}}' "$RUN_D
 panel_restart feature-on-again; get /fork/sponsors "$RUN_DIR/public-reenabled.json"; jq -e --arg id "$ID" 'any(.obj.sponsors[]?; .id == $id)' "$RUN_DIR/public-reenabled.json" >/dev/null || fail 're-enabled Sponsor missing'
 
 mutate PUT /fork/sponsors/settings "$(jq -nc --arg s "$REMOTE" '{providerMode:"remote",sourceUrl:$s,contactUrl:""}')" "$RUN_DIR/provider-remote.json"
-panel_restart remote-provider; get /fork/sponsors/status "$RUN_DIR/status-remote.json"
+panel_restart remote-provider false; get /fork/sponsors/status "$RUN_DIR/status-remote.json"
 jq -e '.obj.enabled == true and .obj.providerMode == "remote" and .obj.remoteProviderConfigured == true' "$RUN_DIR/status-remote.json" >/dev/null || fail 'REMOTE provider did not persist'
 expect GET /fork/sponsors '' 503 "$RUN_DIR/public-remote.json"; ! grep -Fq "$ID" "$RUN_DIR/public-remote.json" || fail 'REMOTE returned mixed local data'
 mutate PUT /fork/sponsors/settings '{"providerMode":"local","sourceUrl":"","contactUrl":""}' "$RUN_DIR/provider-local-again.json"
