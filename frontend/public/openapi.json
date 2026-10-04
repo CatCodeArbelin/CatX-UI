@@ -21923,23 +21923,33 @@
         ],
         "responses": {
           "200": {
-            "description": "Successful response",
+            "description": "Validated sponsor image bytes.",
             "content": {
-              "application/json": {
+              "image/png": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean"
-                    },
-                    "msg": {
-                      "type": "string"
-                    },
-                    "obj": {}
-                  }
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/webp": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
                 }
               }
             }
+          },
+          "404": {
+            "description": "The logo is not part of an active sponsor set."
+          },
+          "503": {
+            "description": "The configured sponsor source or logo is unavailable."
           }
         }
       }
@@ -21965,7 +21975,29 @@
                     "msg": {
                       "type": "string"
                     },
-                    "obj": {}
+                    "obj": {
+                      "type": "object",
+                      "required": [
+                        "enabled",
+                        "configured",
+                        "sourceUrl",
+                        "contactUrl"
+                      ],
+                      "properties": {
+                        "enabled": {
+                          "type": "boolean"
+                        },
+                        "configured": {
+                          "type": "boolean"
+                        },
+                        "sourceUrl": {
+                          "type": "string"
+                        },
+                        "contactUrl": {
+                          "type": "string"
+                        }
+                      }
+                    }
                   }
                 }
               }
@@ -22011,7 +22043,29 @@
                     "msg": {
                       "type": "string"
                     },
-                    "obj": {}
+                    "obj": {
+                      "type": "object",
+                      "required": [
+                        "enabled",
+                        "configured",
+                        "sourceUrl",
+                        "contactUrl"
+                      ],
+                      "properties": {
+                        "enabled": {
+                          "type": "boolean"
+                        },
+                        "configured": {
+                          "type": "boolean"
+                        },
+                        "sourceUrl": {
+                          "type": "string"
+                        },
+                        "contactUrl": {
+                          "type": "string"
+                        }
+                      }
+                    }
                   }
                 }
               }

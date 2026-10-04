@@ -425,11 +425,33 @@ export const forkApiSections = [
         method: 'GET',
         path: '/panel/api/fork/sponsors/logo/:name',
         summary: 'Read a validated active sponsor logo.',
+        responses: {
+          '200': {
+            description: 'Validated sponsor image bytes.',
+            content: {
+              'image/png': { schema: { type: 'string', format: 'binary' } },
+              'image/webp': { schema: { type: 'string', format: 'binary' } },
+              'image/jpeg': { schema: { type: 'string', format: 'binary' } },
+            },
+          },
+          '404': { description: 'The logo is not part of an active sponsor set.' },
+          '503': { description: 'The configured sponsor source or logo is unavailable.' },
+        },
       },
       {
         method: 'GET',
         path: '/panel/api/fork/sponsors/settings',
         summary: 'Read sanitized sponsor source settings.',
+        responseObjectSchema: {
+          type: 'object',
+          required: ['enabled', 'configured', 'sourceUrl', 'contactUrl'],
+          properties: {
+            enabled: { type: 'boolean' },
+            configured: { type: 'boolean' },
+            sourceUrl: { type: 'string' },
+            contactUrl: { type: 'string' },
+          },
+        },
       },
       {
         method: 'PUT',
@@ -438,6 +460,16 @@ export const forkApiSections = [
         requestSchema: {
           type: 'object',
           properties: {
+            sourceUrl: { type: 'string' },
+            contactUrl: { type: 'string' },
+          },
+        },
+        responseObjectSchema: {
+          type: 'object',
+          required: ['enabled', 'configured', 'sourceUrl', 'contactUrl'],
+          properties: {
+            enabled: { type: 'boolean' },
+            configured: { type: 'boolean' },
             sourceUrl: { type: 'string' },
             contactUrl: { type: 'string' },
           },

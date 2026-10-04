@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -197,6 +198,7 @@ func TestSettingsRejectCredentialsAndNonHTTPS(t *testing.T) {
 	for _, value := range []settings{
 		{sourceURL: "http://public.example/feed.json"},
 		{sourceURL: "https://user:pass@public.example/feed.json"},
+		{sourceURL: "https://public.example:bad/feed.json"},
 		{contactURL: "http://public.example/contact"},
 	} {
 		if _, err := validateSettings(value); err == nil {
@@ -228,10 +230,95 @@ func TestMetadataFetchRejectsMalformedAndOversizedBodies(t *testing.T) {
 }
 
 func TestSafeDialerRejectsPrivateAddresses(t *testing.T) {
-	for _, address := range []string{"127.0.0.1:443", "10.0.0.1:443", "[::1]:443"} {
+	for _, address := range []string{
+		"127.0.0.1:443",
+		"10.0.0.1:443",
+		"100.64.0.1:443",
+		"192.0.2.1:443",
+		"198.18.0.1:443",
+		"198.51.100.1:443",
+		"203.0.113.1:443",
+		"224.0.0.1:443",
+		"240.0.0.1:443",
+		"[::1]:443",
+		"[fc00::1]:443",
+		"[fe80::1]:443",
+		"[ff02::1]:443",
+		"[2001:db8::1]:443",
+		"[::ffff:192.0.2.1]:443",
+	} {
 		if _, err := safeDialContext(context.Background(), "tcp", address); err == nil {
 			t.Fatalf("safeDialContext(%q) unexpectedly succeeded", address)
 		}
+	}
+}
+
+func TestIsPublicIPRejectsSpecialPurposeAddresses(t *testing.T) {
+	for _, raw := range []string{
+		"0.0.0.1",
+		"10.0.0.1",
+		"100.64.0.1",
+		"127.0.0.1",
+		"169.254.1.1",
+		"172.16.0.1",
+		"192.0.0.1",
+		"192.31.196.1",
+		"192.52.193.1",
+		"192.88.99.1",
+		"192.168.0.1",
+		"198.18.0.1",
+		"198.51.100.1",
+		"203.0.113.1",
+		"224.0.0.1",
+		"240.0.0.1",
+		"::1",
+		"fc00::1",
+		"fe80::1",
+		"ff00::1",
+		"2001:2::1",
+		"2001:10::1",
+		"2001:20::1",
+		"2001:3::1",
+		"2002::1",
+		"3fff::1",
+		"100::1",
+		"::ffff:198.51.100.1",
+	} {
+		if isPublicIP(net.ParseIP(raw)) {
+			t.Errorf("isPublicIP(%q) = true, want false", raw)
+		}
+	}
+	for _, raw := range []string{"1.1.1.1", "2606:4700:4700::1111"} {
+		if !isPublicIP(net.ParseIP(raw)) {
+			t.Errorf("isPublicIP(%q) = false, want true", raw)
+		}
+	}
+}
+
+func TestSafeClientRedirectPolicyRejectsUnsafeURLForms(t *testing.T) {
+	client := newSafeHTTPClient()
+	for _, raw := range []string{
+		"http://public.example/feed.json",
+		"https://user:pass@public.example/feed.json",
+	} {
+		parsed, err := url.Parse(raw)
+		if err != nil {
+			t.Fatalf("parse %q: %v", raw, err)
+		}
+		request := &http.Request{URL: parsed}
+		if err := client.CheckRedirect(request, nil); err == nil {
+			t.Fatalf("redirect to %q unexpectedly succeeded", raw)
+		}
+	}
+}
+
+func TestCatxSlotsDoNotAdvertiseUnauthenticatedLogin(t *testing.T) {
+	raw := &SponsorList{Sponsors: []Sponsor{{
+		ID: "login", Name: "Login", Slots: []string{"login", "page"}, Until: time.Now().Add(time.Hour), Link: "https://brand.example/",
+	}}}
+	got := activeSponsors(raw, "", time.Now())
+	if len(got.Sponsors) != 1 || len(got.Sponsors[0].Slots) != 1 || got.Sponsors[0].Slots[0] != "page" {
+		t.Fatalf("active sponsor slots = %#v, want only page", got.Sponsors)
 	}
 }
 

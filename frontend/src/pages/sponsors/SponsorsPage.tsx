@@ -5,7 +5,6 @@ import { Alert, Button, Col, ConfigProvider, Layout, Row, Spin, Tag, Typography 
 import {
   CrownOutlined,
   DashboardOutlined,
-  LoginOutlined,
   MenuUnfoldOutlined,
   PlusOutlined,
 } from '@ant-design/icons';
@@ -69,12 +68,6 @@ export default function SponsorsPage() {
       icon: <MenuUnfoldOutlined />,
       title: t('pages.sponsors.placementSidebar'),
       desc: t('pages.sponsors.placementSidebarDesc'),
-    },
-    {
-      slot: 'login',
-      icon: <LoginOutlined />,
-      title: t('pages.sponsors.placementLogin'),
-      desc: t('pages.sponsors.placementLoginDesc'),
     },
     {
       slot: 'page',
