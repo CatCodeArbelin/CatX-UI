@@ -2,7 +2,9 @@ import { screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { beforeEach, expect, test, vi } from 'vitest';
 
-import SponsorsManagementPage from '@/forkext/sponsors/SponsorsManagementPage';
+import SponsorsManagementPage, {
+  sponsorRequestFromForm,
+} from '@/forkext/sponsors/SponsorsManagementPage';
 import { HttpUtil, Msg } from '@/utils';
 import { renderWithProviders } from './test-utils';
 
@@ -77,4 +79,37 @@ test('makes local CRUD controls read-only while remote provider is selected', as
   expect(await screen.findByText('Local One')).toBeTruthy();
   expect(screen.getByRole('button', { name: /Create/ }).getAttribute('disabled')).not.toBeNull();
   expect(screen.getByText(/Remote mode is read-only/)).toBeTruthy();
+});
+
+test('sends a complete replacement representation, including explicit clears and zero priority', () => {
+  const request = sponsorRequestFromForm({
+    id: 'local-one',
+    enabled: false,
+    name: 'Replacement',
+    priority: 0,
+    slots: ['page'],
+    window: undefined,
+    destinationUrl: 'https://example.com/replacement',
+    logoUrl: '',
+    titleEn: 'Replacement',
+    titleRu: undefined,
+    titleFa: undefined,
+    textEn: undefined,
+    textRu: undefined,
+    textFa: undefined,
+  });
+
+  expect(request).toEqual({
+    id: 'local-one',
+    enabled: false,
+    name: 'Replacement',
+    priority: 0,
+    slots: ['page'],
+    startAt: '',
+    endAt: '',
+    destinationUrl: 'https://example.com/replacement',
+    logoUrl: '',
+    title: { 'en-US': 'Replacement' },
+    text: {},
+  });
 });

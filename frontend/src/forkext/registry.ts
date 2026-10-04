@@ -38,7 +38,7 @@ const managedSponsorSchema = {
 
 const managedSponsorInputSchema = {
   ...managedSponsorSchema,
-  required: ['name', 'priority', 'slots', 'destinationUrl', 'title', 'text'],
+  required: ['enabled', 'name', 'priority', 'slots', 'destinationUrl', 'title', 'text'],
 } as const;
 
 export const forkRoutes: readonly RouteObject[] = [
@@ -493,12 +493,13 @@ export const forkApiSections = [
       {
         method: 'PUT',
         path: '/panel/api/fork/sponsors/settings',
-        summary: 'Update the operator-configured sponsor source and contact URLs.',
+        summary: 'Update the operator-configured provider mode, source, and contact URLs.',
         requestSchema: {
           type: 'object',
           properties: {
             sourceUrl: { type: 'string' },
             contactUrl: { type: 'string' },
+            providerMode: { type: 'string', enum: ['local', 'remote'] },
           },
         },
         responseObjectSchema: {
@@ -561,7 +562,8 @@ export const forkApiSections = [
       {
         method: 'PUT',
         path: '/panel/api/fork/sponsors/:id',
-        summary: 'Update or enable/disable a locally managed sponsor.',
+        summary:
+          'Replace a locally managed sponsor; the path ID is authoritative and omitted fields are cleared or defaulted deterministically.',
         requestSchema: managedSponsorInputSchema,
         responseObjectSchema: managedSponsorSchema,
       },

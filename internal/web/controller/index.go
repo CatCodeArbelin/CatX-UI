@@ -45,8 +45,6 @@ func NewIndexController(g *gin.RouterGroup) *IndexController {
 func (a *IndexController) initRouter(g *gin.RouterGroup) {
 	g.GET("/", a.index)
 	g.GET("/csrf-token", a.csrfToken)
-	g.GET("/sponsors", a.sponsors)
-	g.GET("/sponsors/logo/:name", a.sponsorLogo)
 
 	g.POST("/login", middleware.CSRFMiddleware(), a.login)
 	g.POST("/logout", middleware.CSRFMiddleware(), a.logout)

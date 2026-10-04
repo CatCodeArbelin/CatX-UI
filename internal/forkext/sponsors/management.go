@@ -13,6 +13,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgconn"
 	"gorm.io/gorm"
 
 	"github.com/mhsanaei/3x-ui/v3/internal/forkext/audit"
@@ -69,6 +70,8 @@ type sponsorStatus struct {
 	LastError                string       `json:"lastError,omitempty"`
 	CacheState               string       `json:"cacheState"`
 }
+
+var errSponsorIDConflict = errors.New("sponsor ID already exists")
 
 func registerManagementRoutes(group *gin.RouterGroup) {
 	group.GET("/status", statusHandler)
@@ -165,12 +168,20 @@ func createManagedHandler(c *gin.Context) {
 		return
 	}
 	if err := db.Transaction(func(tx *gorm.DB) error {
+		var existing Record
+		lookupErr := tx.Select("id").Where("id = ?", record.ID).First(&existing).Error
+		if lookupErr == nil {
+			return errSponsorIDConflict
+		}
+		if !errors.Is(lookupErr, gorm.ErrRecordNotFound) {
+			return lookupErr
+		}
 		if err := tx.Create(record).Error; err != nil {
 			return err
 		}
 		return recordAudit(c, tx, "create", record.ID)
 	}); err != nil {
-		if errors.Is(err, gorm.ErrDuplicatedKey) {
+		if errors.Is(err, errSponsorIDConflict) || errors.Is(err, gorm.ErrDuplicatedKey) || isSponsorDuplicateError(err) {
 			c.JSON(http.StatusConflict, gin.H{"success": false, "msg": "sponsor ID already exists"})
 			return
 		}
@@ -472,11 +483,11 @@ func normalizeRecordInput(input sponsorRecordInput, existing *Record) (*Record, 
 		return nil, errors.New("sponsor ID must contain only letters, digits, dot, underscore, or hyphen")
 	}
 	name := strings.TrimSpace(input.Name)
-	if name == "" && existing != nil {
-		name = existing.Name
-	}
 	if name == "" || len([]rune(name)) > maxNameLength || strings.ContainsAny(name, "<>") {
 		return nil, fmt.Errorf("sponsor name must be 1-%d characters without HTML", maxNameLength)
+	}
+	if input.Enabled == nil {
+		return nil, errors.New("enabled is required")
 	}
 	if input.Priority < -10000 || input.Priority > 10000 {
 		return nil, errors.New("sponsor priority must be between -10000 and 10000")
@@ -516,12 +527,7 @@ func normalizeRecordInput(input sponsorRecordInput, existing *Record) (*Record, 
 	if err != nil {
 		return nil, fmt.Errorf("invalid text: %w", err)
 	}
-	enabled := true
-	if input.Enabled != nil {
-		enabled = *input.Enabled
-	} else if existing != nil {
-		enabled = existing.Enabled
-	}
+	enabled := *input.Enabled
 	slotsJSON, _ := json.Marshal(slots)
 	titleJSON, _ := json.Marshal(title)
 	textJSON, _ := json.Marshal(text)
@@ -530,6 +536,14 @@ func normalizeRecordInput(input sponsorRecordInput, existing *Record) (*Record, 
 		record.CreatedAt = existing.CreatedAt
 	}
 	return record, nil
+}
+
+func isSponsorDuplicateError(err error) bool {
+	if isSQLiteSponsorDuplicateError(err) {
+		return true
+	}
+	var pgErr *pgconn.PgError
+	return errors.As(err, &pgErr) && pgErr.Code == "23505"
 }
 
 func parseManagementTime(raw, field string) (*time.Time, error) {

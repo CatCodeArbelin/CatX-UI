@@ -6290,60 +6290,6 @@
         }
       }
     },
-    "/sponsors": {
-      "get": {
-        "tags": [
-          "Authentication"
-        ],
-        "summary": "Public. Active paid sponsor placements read from the project sponsors.json (cached for 1h); entries outside their from/until window are dropped. Logos are proxied by the panel at /sponsors/logo/{name}. Used by the login page and panel sponsor slots.",
-        "operationId": "get_sponsors",
-        "responses": {
-          "200": {
-            "description": "Successful response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean"
-                    },
-                    "msg": {
-                      "type": "string"
-                    },
-                    "obj": {
-                      "$ref": "#/components/schemas/SponsorList"
-                    }
-                  }
-                },
-                "example": {
-                  "success": true,
-                  "obj": {
-                    "contact": "https://t.me/example",
-                    "sponsors": [
-                      {
-                        "enable": true,
-                        "from": "2026-10-01T00:00:00Z",
-                        "id": "acme-2026-10",
-                        "link": "https://acme.example/?utm_source=3x-ui",
-                        "logo": "/sponsors/logo/acme.png",
-                        "name": "Acme VPS",
-                        "slots": [
-                          ""
-                        ],
-                        "text": {},
-                        "title": {},
-                        "until": "2026-11-01T00:00:00Z"
-                      }
-                    ]
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/getTwoFactorEnable": {
       "post": {
         "tags": [
@@ -21915,6 +21861,7 @@
               "schema": {
                 "type": "object",
                 "required": [
+                  "enabled",
                   "name",
                   "priority",
                   "slots",
@@ -22197,7 +22144,7 @@
         "tags": [
           "CatX Sponsors"
         ],
-        "summary": "Update the operator-configured sponsor source and contact URLs.",
+        "summary": "Update the operator-configured provider mode, source, and contact URLs.",
         "operationId": "put_panel_api_fork_sponsors_settings",
         "requestBody": {
           "required": true,
@@ -22211,6 +22158,13 @@
                   },
                   "contactUrl": {
                     "type": "string"
+                  },
+                  "providerMode": {
+                    "type": "string",
+                    "enum": [
+                      "local",
+                      "remote"
+                    ]
                   }
                 }
               }
@@ -22564,7 +22518,7 @@
         "tags": [
           "CatX Sponsors"
         ],
-        "summary": "Update or enable/disable a locally managed sponsor.",
+        "summary": "Replace a locally managed sponsor; the path ID is authoritative and omitted fields are cleared or defaulted deterministically.",
         "operationId": "put_panel_api_fork_sponsors_id",
         "parameters": [
           {
@@ -22584,6 +22538,7 @@
               "schema": {
                 "type": "object",
                 "required": [
+                  "enabled",
                   "name",
                   "priority",
                   "slots",

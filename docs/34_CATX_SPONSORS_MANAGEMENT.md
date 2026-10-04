@@ -41,6 +41,14 @@ localized content, destination/logo URLs, production-style preview, and
 provider status. Only dashboard, sidebar, and page are offered; login is not a
 CatX slot.
 
+`PUT /panel/api/fork/sponsors/{id}` is a full replacement. The path ID is
+authoritative; the body must explicitly provide `enabled`, `name`, `priority`,
+non-empty supported `slots`, and an HTTPS `destinationUrl`. Empty `startAt`,
+`endAt`, and `logoUrl` clear those fields. A missing or empty title map
+deterministically falls back to `en-US: name`; an omitted or empty text map
+clears localized text. Priority zero is valid. The UI always submits the full
+representation, so stale fields cannot survive an edit.
+
 ## Security and audit
 
 All validation is server-side: bounded IDs/text/locales, HTTPS URLs without
@@ -55,6 +63,8 @@ is enabled; sponsor content and URLs are not copied into audit metadata.
 Disabling Sponsors preserves local records but prevents rendering, remote
 fetching/import, logo fetches, and background sync. A panel restart/reload
 reconfigures the provider without reinitializing upstream database state.
+Sponsor schema preparation runs only in the canonical startup migration
+lifecycle; runtime reload does not call `sponsors.Migrate`.
 Migration tests cover clean and existing SQLite/PostgreSQL databases; lifecycle
 tests cover enable, restart/reload, disable, persistence, and retained data.
 

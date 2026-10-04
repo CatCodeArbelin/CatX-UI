@@ -70,7 +70,7 @@ func allManagedFeatures(enabled bool) map[Flag]bool {
 	return result
 }
 
-func TestRuntimeReloadAppliesManagedFeatureTransitionsAndSchema(t *testing.T) {
+func TestRuntimeReloadAppliesManagedFeatureTransitionsWithoutSchemaMigration(t *testing.T) {
 	disableRuntime()
 	t.Cleanup(disableRuntime)
 	db := newRuntimeTestDB(t, "forkext-runtime-transitions")
@@ -96,22 +96,21 @@ func TestRuntimeReloadAppliesManagedFeatureTransitionsAndSchema(t *testing.T) {
 		t.Fatalf("reload enabled runtime: %v", err)
 	}
 	assertRuntimeState(t, true)
-	if !db.Migrator().HasTable(&analytics.DestinationObservation{}) {
-		t.Fatal("newly enabled analytics schema is missing")
-	}
 	for name, target := range map[string]any{
+		"analytics":        &analytics.DestinationObservation{},
 		"audit":            &audit.AuditEvent{},
 		"fleet updates":    &fleetupdate.Campaign{},
 		"group quota":      &groupquota.State{},
 		"policies":         &policy.Policy{},
 		"security anomaly": &risk.IPHistory{},
-		"sponsors":         &sponsors.Record{},
-		"self service":     &portal.Credential{},
 		"traffic policy":   &trafficpolicy.Policy{},
 	} {
-		if !db.Migrator().HasTable(target) {
-			t.Errorf("newly enabled %s schema is missing", name)
+		if db.Migrator().HasTable(target) {
+			t.Errorf("runtime reload migrated %s schema", name)
 		}
+	}
+	if !db.Migrator().HasTable(&sponsors.Record{}) {
+		t.Fatal("canonical startup migration did not prepare sponsors schema")
 	}
 	if db.Migrator().HasTable(&model.User{}) || db.Migrator().HasTable(&model.HistoryOfSeeders{}) {
 		t.Fatal("runtime reload ran upstream database initialization or seeders")
@@ -140,6 +139,54 @@ func TestRuntimeReloadAppliesManagedFeatureTransitionsAndSchema(t *testing.T) {
 		t.Fatalf("reload re-enabled runtime: %v", err)
 	}
 	assertRuntimeState(t, true)
+}
+
+func TestRuntimeReloadDoesNotMigrateSponsorsOrLoseData(t *testing.T) {
+	disableRuntime()
+	t.Cleanup(disableRuntime)
+	db := newRuntimeTestDB(t, "forkext-sponsors-reload-boundary")
+	originalMigrate := migrateSponsorsSchema
+	migrations := 0
+	migrateSponsorsSchema = func(db *gorm.DB) error {
+		migrations++
+		return originalMigrate(db)
+	}
+	t.Cleanup(func() { migrateSponsorsSchema = originalMigrate })
+
+	if err := RegisterMigrations(db); err != nil {
+		t.Fatalf("register migrations: %v", err)
+	}
+	if migrations != 1 {
+		t.Fatalf("startup sponsor migrations = %d, want 1", migrations)
+	}
+	record := sponsors.Record{
+		ID:             "reload-persistent",
+		Enabled:        true,
+		Name:           "Persistent sponsor",
+		SlotsJSON:      `["page"]`,
+		DestinationURL: "https://example.com/",
+		TitleJSON:      `{"en-US":"Persistent sponsor"}`,
+		TextJSON:       `{}`,
+	}
+	if err := db.Create(&record).Error; err != nil {
+		t.Fatalf("create sponsor: %v", err)
+	}
+	if err := NewSettings(db).UpdateFeatures(allManagedFeatures(true)); err != nil {
+		t.Fatalf("enable features: %v", err)
+	}
+	if err := ReloadRuntimeFromSettings(db); err != nil {
+		t.Fatalf("reload runtime: %v", err)
+	}
+	if migrations != 1 {
+		t.Fatalf("runtime reload sponsor migrations = %d, want unchanged startup count", migrations)
+	}
+	var persisted sponsors.Record
+	if err := db.First(&persisted, "id = ?", record.ID).Error; err != nil {
+		t.Fatalf("read persisted sponsor: %v", err)
+	}
+	if persisted.Name != record.Name {
+		t.Fatalf("persisted sponsor = %+v, want name %q", persisted, record.Name)
+	}
 }
 
 func TestRuntimeReloadFailureDoesNotLeaveFeaturesEnabled(t *testing.T) {

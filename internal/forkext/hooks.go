@@ -120,11 +120,6 @@ func prepareRuntimeSchema(db *gorm.DB, cfg runtimeConfig) error {
 			return fmt.Errorf("prepare security-anomaly schema: %w", err)
 		}
 	}
-	if cfg.sponsors {
-		if err := sponsors.Migrate(db); err != nil {
-			return fmt.Errorf("prepare sponsors schema: %w", err)
-		}
-	}
 	return nil
 }
 
@@ -169,6 +164,12 @@ func applyRuntimeConfig(db *gorm.DB, cfg runtimeConfig) {
 // state; database startup performs that as a separate lifecycle step.
 func RegisterMigrations(db *gorm.DB) error {
 	setSettingsDB(db)
+	if db != nil {
+		if err := migrateSponsorsSchema(db); err != nil {
+			disableRuntime()
+			return fmt.Errorf("migrate sponsors schema: %w", err)
+		}
+	}
 	cfg, err := loadRuntimeConfig(db)
 	if err != nil {
 		disableRuntime()
@@ -180,6 +181,8 @@ func RegisterMigrations(db *gorm.DB) error {
 	}
 	return nil
 }
+
+var migrateSponsorsSchema = sponsors.Migrate
 
 // ConfigureRuntimeFromSettings configures in-process fork services only. The
 // caller must prepare schema first; keeping this separate prevents a panel
@@ -194,16 +197,12 @@ func ConfigureRuntimeFromSettings(db *gorm.DB) error {
 	return nil
 }
 
-// ReloadRuntimeFromSettings is the panel-restart boundary. It prepares any
-// newly enabled fork schema before publishing the new in-process state.
+// ReloadRuntimeFromSettings is the panel-restart boundary. It only publishes
+// new in-process state; database schema preparation belongs to startup.
 func ReloadRuntimeFromSettings(db *gorm.DB) error {
 	setSettingsDB(db)
 	cfg, err := loadRuntimeConfig(db)
 	if err != nil {
-		disableRuntime()
-		return err
-	}
-	if err := prepareRuntimeSchema(db, cfg); err != nil {
 		disableRuntime()
 		return err
 	}

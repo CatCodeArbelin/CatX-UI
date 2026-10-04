@@ -14,6 +14,7 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
+	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
 	"github.com/mhsanaei/3x-ui/v3/internal/forkext/audit"
 )
 
@@ -53,6 +54,7 @@ func TestLocalSponsorsMigrationCRUDRestartAndFeatureOff(t *testing.T) {
 	router := managementRouter()
 	created := performJSON(t, router, http.MethodPost, "/panel/api/fork/sponsors", sponsorRecordInput{
 		ID:             "local-one",
+		Enabled:        boolPointer(true),
 		Name:           "Local One",
 		Priority:       4,
 		Slots:          []string{"sidebar", "page"},
@@ -118,6 +120,7 @@ func TestRemoteProviderMakesLocalCRUDReadOnly(t *testing.T) {
 	t.Cleanup(func() { Configure(nil, false) })
 
 	response := performJSON(t, managementRouter(), http.MethodPost, "/panel/api/fork/sponsors", sponsorRecordInput{
+		Enabled:        boolPointer(true),
 		Name:           "Remote blocked",
 		Slots:          []string{"page"},
 		DestinationURL: "https://example.com/",
@@ -145,6 +148,7 @@ func TestSponsorManagementWritesMetadataOnlyAuditEvents(t *testing.T) {
 	router := managementRouter()
 	response := performJSON(t, router, http.MethodPost, "/panel/api/fork/sponsors", sponsorRecordInput{
 		ID:             "audited",
+		Enabled:        boolPointer(true),
 		Name:           "Audited",
 		Slots:          []string{"page"},
 		DestinationURL: "https://example.com/",
@@ -192,8 +196,107 @@ func TestSponsorsSchemaPostgres(t *testing.T) {
 	if err := Migrate(db); err != nil {
 		t.Fatal(err)
 	}
+	if err := db.AutoMigrate(&model.Setting{}); err != nil {
+		t.Fatal(err)
+	}
 	if !db.Migrator().HasTable(&Record{}) {
 		t.Fatal("sponsors table was not migrated in PostgreSQL")
+	}
+	saveSettingsForTest(t, db, ProviderLocal)
+	Configure(db, true)
+	t.Cleanup(func() { Configure(nil, false) })
+	input := sponsorRecordInput{
+		ID:             "postgres-duplicate",
+		Enabled:        boolPointer(true),
+		Name:           "Postgres duplicate",
+		Slots:          []string{"page"},
+		DestinationURL: "https://example.com/",
+	}
+	router := managementRouter()
+	if response := performJSON(t, router, http.MethodPost, "/panel/api/fork/sponsors", input); response.Code != http.StatusCreated {
+		t.Fatalf("first PostgreSQL create status = %d, body = %s", response.Code, response.Body.String())
+	}
+	if response := performJSON(t, router, http.MethodPost, "/panel/api/fork/sponsors", input); response.Code != http.StatusConflict {
+		t.Fatalf("duplicate PostgreSQL create status = %d, body = %s", response.Code, response.Body.String())
+	}
+}
+
+func TestDuplicateSponsorIDSQLiteReturnsConflict(t *testing.T) {
+	db := sponsorsTestDB(t)
+	if err := Migrate(db); err != nil {
+		t.Fatal(err)
+	}
+	saveSettingsForTest(t, db, ProviderLocal)
+	Configure(db, true)
+	t.Cleanup(func() { Configure(nil, false) })
+	input := sponsorRecordInput{
+		ID:             "sqlite-duplicate",
+		Enabled:        boolPointer(true),
+		Name:           "SQLite duplicate",
+		Slots:          []string{"page"},
+		DestinationURL: "https://example.com/",
+	}
+	router := managementRouter()
+	if response := performJSON(t, router, http.MethodPost, "/panel/api/fork/sponsors", input); response.Code != http.StatusCreated {
+		t.Fatalf("first SQLite create status = %d, body = %s", response.Code, response.Body.String())
+	}
+	if response := performJSON(t, router, http.MethodPost, "/panel/api/fork/sponsors", input); response.Code != http.StatusConflict {
+		t.Fatalf("duplicate SQLite create status = %d, body = %s", response.Code, response.Body.String())
+	}
+}
+
+func TestSponsorPUTIsFullReplacementAndPathIDWins(t *testing.T) {
+	db := sponsorsTestDB(t)
+	if err := Migrate(db); err != nil {
+		t.Fatal(err)
+	}
+	saveSettingsForTest(t, db, ProviderLocal)
+	Configure(db, true)
+	t.Cleanup(func() { Configure(nil, false) })
+	router := managementRouter()
+	initial := sponsorRecordInput{
+		ID:             "replace-me",
+		Enabled:        boolPointer(true),
+		Name:           "Before replacement",
+		Priority:       5,
+		Slots:          []string{"dashboard", "sidebar"},
+		StartAt:        "2026-01-01T00:00:00Z",
+		EndAt:          "2026-12-31T00:00:00Z",
+		DestinationURL: "https://example.com/old",
+		LogoURL:        "https://example.com/old.png",
+		Title:          map[string]string{"en-US": "Old title"},
+		Text:           map[string]string{"en-US": "Old text"},
+	}
+	if response := performJSON(t, router, http.MethodPost, "/panel/api/fork/sponsors", initial); response.Code != http.StatusCreated {
+		t.Fatalf("initial create status = %d, body = %s", response.Code, response.Body.String())
+	}
+	replacement := sponsorRecordInput{
+		ID:             "must-be-ignored",
+		Enabled:        boolPointer(false),
+		Name:           "After replacement",
+		Priority:       0,
+		Slots:          []string{"page"},
+		DestinationURL: "https://example.com/new",
+	}
+	response := performJSON(t, router, http.MethodPut, "/panel/api/fork/sponsors/replace-me", replacement)
+	if response.Code != http.StatusOK {
+		t.Fatalf("replacement status = %d, body = %s", response.Code, response.Body.String())
+	}
+	var envelope struct {
+		Obj managedSponsor `json:"obj"`
+	}
+	if err := json.Unmarshal(response.Body.Bytes(), &envelope); err != nil {
+		t.Fatal(err)
+	}
+	got := envelope.Obj
+	if got.ID != "replace-me" || got.Enabled || got.Name != "After replacement" || got.Priority != 0 || strings.Join(got.Slots, ",") != "page" {
+		t.Fatalf("replacement retained identity/state: %+v", got)
+	}
+	if got.StartAt != "" || got.EndAt != "" || got.LogoURL != "" || got.DestinationURL != "https://example.com/new" {
+		t.Fatalf("replacement retained cleared fields: %+v", got)
+	}
+	if got.Title["en-US"] != "After replacement" || len(got.Text) != 0 {
+		t.Fatalf("replacement localized fields = title=%#v text=%#v", got.Title, got.Text)
 	}
 }
 
@@ -228,6 +331,7 @@ func TestLocalSponsorsCapSidebarSlots(t *testing.T) {
 
 func TestNormalizeRecordInputRejectsUnsafeOrUnsupportedFields(t *testing.T) {
 	base := sponsorRecordInput{
+		Enabled:        boolPointer(true),
 		Name:           "Valid sponsor",
 		Slots:          []string{"page", "dashboard"},
 		DestinationURL: "https://example.com/",
@@ -237,11 +341,15 @@ func TestNormalizeRecordInputRejectsUnsafeOrUnsupportedFields(t *testing.T) {
 		t.Fatalf("valid sponsor = %#v, err = %v", record, err)
 	}
 	for name, input := range map[string]sponsorRecordInput{
-		"login slot":       {Name: "x", Slots: []string{"login"}, DestinationURL: "https://example.com/", Title: map[string]string{"en-US": "x"}},
-		"http destination": {Name: "x", Slots: []string{"page"}, DestinationURL: "http://example.com/", Title: map[string]string{"en-US": "x"}},
-		"credential URL":   {Name: "x", Slots: []string{"page"}, DestinationURL: "https://u:p@example.com/", Title: map[string]string{"en-US": "x"}},
-		"HTML title":       {Name: "x", Slots: []string{"page"}, DestinationURL: "https://example.com/", Title: map[string]string{"en-US": "<script>"}},
-		"bad schedule":     {Name: "x", Slots: []string{"page"}, StartAt: "2026-01-02T00:00:00Z", EndAt: "2026-01-01T00:00:00Z", DestinationURL: "https://example.com/", Title: map[string]string{"en-US": "x"}},
+		"missing enabled":  {Name: "x", Slots: []string{"page"}, DestinationURL: "https://example.com/", Title: map[string]string{"en-US": "x"}},
+		"missing name":     {Enabled: boolPointer(true), Slots: []string{"page"}, DestinationURL: "https://example.com/", Title: map[string]string{"en-US": "x"}},
+		"empty slots":      {Enabled: boolPointer(true), Name: "x", DestinationURL: "https://example.com/", Title: map[string]string{"en-US": "x"}},
+		"login slot":       {Enabled: boolPointer(true), Name: "x", Slots: []string{"login"}, DestinationURL: "https://example.com/", Title: map[string]string{"en-US": "x"}},
+		"http destination": {Enabled: boolPointer(true), Name: "x", Slots: []string{"page"}, DestinationURL: "http://example.com/", Title: map[string]string{"en-US": "x"}},
+		"credential URL":   {Enabled: boolPointer(true), Name: "x", Slots: []string{"page"}, DestinationURL: "https://u:p@example.com/", Title: map[string]string{"en-US": "x"}},
+		"HTML title":       {Enabled: boolPointer(true), Name: "x", Slots: []string{"page"}, DestinationURL: "https://example.com/", Title: map[string]string{"en-US": "<script>"}},
+		"bad schedule":     {Enabled: boolPointer(true), Name: "x", Slots: []string{"page"}, StartAt: "2026-01-02T00:00:00Z", EndAt: "2026-01-01T00:00:00Z", DestinationURL: "https://example.com/", Title: map[string]string{"en-US": "x"}},
+		"invalid time":     {Enabled: boolPointer(true), Name: "x", Slots: []string{"page"}, StartAt: "not-a-time", DestinationURL: "https://example.com/", Title: map[string]string{"en-US": "x"}},
 	} {
 		if _, err := normalizeRecordInput(input, nil); err == nil {
 			t.Errorf("%s unexpectedly succeeded", name)
@@ -251,6 +359,7 @@ func TestNormalizeRecordInputRejectsUnsafeOrUnsupportedFields(t *testing.T) {
 
 func TestNormalizeSlotsAreDeterministicAndOpenEndedDatesAreJSONSafe(t *testing.T) {
 	record, err := normalizeRecordInput(sponsorRecordInput{
+		Enabled:        boolPointer(true),
 		Name:           "Ordered",
 		Slots:          []string{"page", "sidebar", "dashboard", "sidebar"},
 		DestinationURL: "https://example.com/",

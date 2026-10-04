@@ -19,8 +19,8 @@ _openapi:
       title: Read sanitized sponsor source settings.
       url: '#read-sanitized-sponsor-source-settings'
     - depth: 2
-      title: Update the operator-configured sponsor source and contact URLs.
-      url: '#update-the-operator-configured-sponsor-source-and-contact-urls'
+      title: Update the operator-configured provider mode, source, and contact URLs.
+      url: '#update-the-operator-configured-provider-mode-source-and-contact-urls'
     - depth: 2
       title: Read local/remote provider status and bounded cache state.
       url: '#read-localremote-provider-status-and-bounded-cache-state'
@@ -34,8 +34,9 @@ _openapi:
       title: Delete a locally managed sponsor.
       url: '#delete-a-locally-managed-sponsor'
     - depth: 2
-      title: Update or enable/disable a locally managed sponsor.
-      url: '#update-or-enabledisable-a-locally-managed-sponsor'
+      title: Replace a locally managed sponsor; the path ID is authoritative and
+        omitted fields are cleared or defaulted deterministically.
+      url: '#replace-a-locally-managed-sponsor-the-path-id-is-authoritative-and-omitted-fields-are-cleared-or-defaulted-deterministically'
   structuredData:
     headings:
       - content: Read the active CatX sponsor metadata.
@@ -46,8 +47,8 @@ _openapi:
         id: read-a-validated-active-sponsor-logo
       - content: Read sanitized sponsor source settings.
         id: read-sanitized-sponsor-source-settings
-      - content: Update the operator-configured sponsor source and contact URLs.
-        id: update-the-operator-configured-sponsor-source-and-contact-urls
+      - content: Update the operator-configured provider mode, source, and contact URLs.
+        id: update-the-operator-configured-provider-mode-source-and-contact-urls
       - content: Read local/remote provider status and bounded cache state.
         id: read-localremote-provider-status-and-bounded-cache-state
       - content: List all locally managed sponsors in deterministic order.
@@ -56,8 +57,9 @@ _openapi:
         id: read-one-locally-managed-sponsor
       - content: Delete a locally managed sponsor.
         id: delete-a-locally-managed-sponsor
-      - content: Update or enable/disable a locally managed sponsor.
-        id: update-or-enabledisable-a-locally-managed-sponsor
+      - content: Replace a locally managed sponsor; the path ID is authoritative and
+          omitted fields are cleared or defaulted deterministically.
+        id: replace-a-locally-managed-sponsor-the-path-id-is-authoritative-and-omitted-fields-are-cleared-or-defaulted-deterministically
     contents: []
 ---
 

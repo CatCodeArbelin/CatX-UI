@@ -120,7 +120,7 @@ function inputFromRecord(record: ManagedSponsor): SponsorFormValues {
   };
 }
 
-function bodyFromForm(values: SponsorFormValues) {
+export function sponsorRequestFromForm(values: SponsorFormValues) {
   const title = Object.fromEntries(
     [
       ['en-US', values.titleEn],
@@ -245,8 +245,8 @@ export default function SponsorsManagementPage() {
       ? `/panel/api/fork/sponsors/${encodeURIComponent(editing.id)}`
       : '/panel/api/fork/sponsors';
     const result = editing
-      ? await HttpUtil.put<ManagedSponsor>(path, bodyFromForm(values), JSON_HEADERS)
-      : await HttpUtil.post<ManagedSponsor>(path, bodyFromForm(values), JSON_HEADERS);
+      ? await HttpUtil.put<ManagedSponsor>(path, sponsorRequestFromForm(values), JSON_HEADERS)
+      : await HttpUtil.post<ManagedSponsor>(path, sponsorRequestFromForm(values), JSON_HEADERS);
     if (!result.success) {
       messageApi.error(result.msg || t('pages.sponsors.saveFailed'));
     } else {
