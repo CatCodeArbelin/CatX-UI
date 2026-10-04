@@ -25,6 +25,12 @@ Evidence was collected from:
   [Fork Verification run 37216324233](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37216324233),
   [Docs CI run 37216324242](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37216324242),
   and [Release run 37216324232](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37216324232);
+- the follow-up hosted real-panel Sponsors lifecycle on disposable Linux at
+  [run 37231820831](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37231820831),
+  head `6043359f4967c5329122e8e653bad090bc7945b8`, based on the accepted
+  develop merge `49a29ad994fe9928c711d9306739ffe161165ce5`; its lifecycle job
+  and repository `make verify-fork` gate both passed, with sanitized evidence
+  artifact `sponsors-real-panel-37231820831`;
 - the prior public stable observer evidence recorded in
   [docs/31_V0_2_0_RELEASE_QUALIFICATION.md](./31_V0_2_0_RELEASE_QUALIFICATION.md),
   including real panel/Xray restart, feature-off, traffic, policy, and
@@ -70,11 +76,11 @@ Evidence labels in the matrix:
 | Self-service Portal                     | YES         | YES (`/portal-access`)                          | PARTIAL        | YES         | NO EVIDENCE | YES         | PARTIAL        | Portal ownership/session tests exist; no external-client end-to-end run here.                                                    |
 | Fleet dashboard                         | YES         | YES (`/fleet`)                                  | PARTIAL        | YES         | NO EVIDENCE | YES         | PARTIAL        | Inventory and capability surfaces exist; multi-node live evidence is not complete.                                               |
 | Fleet Update                            | YES         | YES (`/fleet-updates`)                          | PARTIAL        | YES         | NO EVIDENCE | YES         | PARTIAL        | Planning/reconciliation is implemented; mutation is separately gated and not assumed active.                                     |
-| Sponsors feature flag                   | YES         | YES                                             | YES            | YES         | N/A         | YES         | PARTIAL        | Exact acceptance suite proves disabled/no-fetch and reload boundary; isolated real panel restart is still a v0.3.0 evidence gap. |
-| Sponsors local provider                 | YES         | YES (`/catx/sponsors`, `/catx/sponsors/manage`) | YES            | YES         | YES         | YES         | PARTIAL        | SQLite/PostgreSQL CRUD, audit, PUT, and feature-off tests pass; no multi-node replication by design.                             |
-| Sponsors remote provider                | YES         | YES                                             | YES            | YES         | N/A         | YES         | PARTIAL        | HTTPS/SSRF/redirect/size/MIME tests pass; remote mode is read-only and operator-source-only.                                     |
+| Sponsors feature flag                   | YES         | YES                                             | YES            | YES         | N/A         | YES         | YES            | Hosted disposable-panel lifecycle proves feature-off retention, re-enable, health, and real `restartPanel`; no multi-node claim.     |
+| Sponsors local provider                 | YES         | YES (`/catx/sponsors`, `/catx/sponsors/manage`) | YES            | YES         | YES         | YES         | YES            | Hosted lifecycle proves local CRUD and records survive a real panel restart; no multi-node replication by design.                  |
+| Sponsors remote provider                | YES         | YES                                             | YES            | YES         | N/A         | YES         | YES            | Hosted lifecycle proves LOCAL → REMOTE → LOCAL authority and persistence; HTTPS/SSRF/redirect/size/MIME tests still bound the source. |
 | Sponsors scheduling, slots, preview     | YES         | YES                                             | YES            | YES         | N/A         | YES         | PARTIAL        | Deterministic windows/slot caps and frontend preview tests pass; login slot is intentionally unsupported by CatX.                |
-| Sponsors audit and persistence          | YES         | YES                                             | YES            | YES         | N/A         | YES         | PARTIAL        | Metadata-only atomic mutation audit and startup/reload migration instrumentation pass.                                           |
+| Sponsors audit and persistence          | YES         | YES                                             | YES            | YES         | N/A         | YES         | YES            | Hosted lifecycle records metadata-only CRUD/provider/disable/enable/delete events and proves startup migration is separate from reload. |
 
 ## Reality findings by classification
 
@@ -115,6 +121,10 @@ path.
   accepted exact SHA; release staging remains a policy-gated follow-up.
 - Existing roadmap/task documents used `DONE` broadly without a per-capability
   runtime evidence matrix. This audit supplies that missing reality record.
+- The first real-panel attempts were blocked by harness/workflow defects, not
+  Sponsors runtime behavior: route/contract assertions and lifecycle setup
+  were corrected, and the repository gate now installs Playwright Chromium for
+  the browser-backed Storybook project before `make verify-fork`.
 
 ### Intentional limitations
 
@@ -132,13 +142,19 @@ path.
 
 ## v0.3.0 scope decision
 
+### Closed first MUST-FIX evidence gap
+
+The isolated Sponsors restart evidence gap is closed by the hosted run above.
+The disposable panel exercised authenticated local CRUD, real
+`POST /panel/api/setting/restartPanel`, feature-off/re-enable with retained
+storage, local persistence, LOCAL → REMOTE → LOCAL authority, panel/Xray/UI
+health, and metadata-only audit events. The startup-only Audit schema
+preparation remained separate from runtime reload, and the full repository
+gate passed on the same workflow run.
+
 ### MUST FIX BEFORE v0.3.0
 
-1. Add a disposable end-to-end Sponsors smoke that uses the real panel,
-   authenticated management API, local CRUD, provider persistence, feature
-   disable/re-enable, and the real `POST /panel/api/setting/restartPanel`,
-   asserting data survives and no schema migration runs during restart.
-2. Run a representative multi-node reality qualification for Policy, Traffic,
+1. Run a representative multi-node reality qualification for Policy, Traffic,
    Risk, Fleet, Portal, and Sponsors, or narrow their product claims to the
    single-node evidence that actually exists.
 
@@ -170,10 +186,9 @@ path.
 
 ## Corrections made during this audit
 
-Only the audit work-package records were updated: `CURRENT_TASK.md`,
-`TASK_QUEUE.md`, and this document. No major feature, runtime behavior,
-database schema, version, release, tag, or `main` change was made during the
-audit.
+The lifecycle follow-up updated only the disposable observer, its workflow,
+and this evidence record. No major feature, runtime behavior, database schema,
+version, release, tag, or `main` change was made.
 
 ## Final invariants
 
