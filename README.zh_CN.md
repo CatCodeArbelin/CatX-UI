@@ -4,7 +4,7 @@
 
 CatX-UI 是一个持续维护的 [3x-ui](https://github.com/MHSanaei/3x-ui) 下游 fork，用于管理 Xray。它由 CatCodeArbelin 在独立仓库和发布渠道中维护，不是 upstream 的官方项目，也不代表获得上游维护者的认可。
 
-稳定版 **v0.1.0** 基于 **MHSanaei/3x-ui v3.8.5**，内置 **Xray 26.9.9**。为了保持兼容性，内部 Go 模块路径 `github.com/mhsanaei/3x-ui/v3` 不变。
+稳定版 **v0.2.0** 基于 **MHSanaei/3x-ui v3.9.0**，内置 **Xray 26.9.30**。为了保持兼容性，内部 Go 模块路径 `github.com/mhsanaei/3x-ui/v3` 不变。
 
 ## CatX 能力
 
@@ -19,7 +19,7 @@ CatX-UI 是一个持续维护的 [3x-ui](https://github.com/MHSanaei/3x-ui) 下�
 
 ```bash
 bash <(curl -Ls https://raw.githubusercontent.com/CatCodeArbelin/CatX-UI/main/install.sh)
-bash <(curl -Ls https://raw.githubusercontent.com/CatCodeArbelin/CatX-UI/main/install.sh) v0.1.0
+bash <(curl -Ls https://raw.githubusercontent.com/CatCodeArbelin/CatX-UI/main/install.sh) v0.2.0
 ```
 
 `dev-latest` 是可选的滚动开发渠道，RC 标签仅用于测试。`x-ui update` 使用 stable，`x-ui update-dev` 使用 dev。更新器会校验 checksum；激活失败时会尝试恢复之前的可用程序、配置和数据库。
@@ -29,10 +29,10 @@ bash <(curl -Ls https://raw.githubusercontent.com/CatCodeArbelin/CatX-UI/main/in
 ```bash
 docker run -d --name catx-ui --cap-add=NET_ADMIN --cap-add=NET_RAW \
   -v "$PWD/db:/etc/x-ui" -v "$PWD/cert:/root/cert" -p 2053:2053 \
-  --restart unless-stopped ghcr.io/catcodearbelin/catx-ui:v0.1.0
+  --restart unless-stopped ghcr.io/catcodearbelin/catx-ui:v0.2.0
 ```
 
-稳定别名 `v0.1.0`、`0.1.0` 和 `latest` 支持 `linux/amd64`、`linux/arm64`、`linux/arm/v7`、`linux/arm/v6` 和 `linux/386`。默认数据库为 SQLite；PostgreSQL 使用 `XUI_DB_TYPE` 和 `XUI_DB_DSN` 配置。
+稳定别名 `v0.2.0`、`0.2.0` 和 `latest` 支持 `linux/amd64`、`linux/arm64`、`linux/arm/v7`、`linux/arm/v6` 和 `linux/386`。默认数据库为 SQLite；PostgreSQL 使用 `XUI_DB_TYPE` 和 `XUI_DB_DSN` 配置。
 
 ## 隐私边界
 
@@ -41,7 +41,7 @@ CatX 只收集所需的元数据：DNS/域名、可见的 SNI、目的地 IP/端
 ## 链接
 
 - [仓库内文档](docs/README.md)
-- [稳定版 v0.1.0](https://github.com/CatCodeArbelin/CatX-UI/releases/tag/v0.1.0)
+- [稳定版 v0.2.0](https://github.com/CatCodeArbelin/CatX-UI/releases/tag/v0.2.0)
 - [Issues](https://github.com/CatCodeArbelin/CatX-UI/issues) · [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md)
 
 CatX 保留 GPLv3 义务和上游版权/许可声明。完整信息请查看 [LICENSE](LICENSE) 和[英文 README](/README.md)。

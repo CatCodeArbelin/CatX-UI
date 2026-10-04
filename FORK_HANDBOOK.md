@@ -1,7 +1,7 @@
 # 3x-ui Maintained Fork — Engineering Handoff Pack
 
 Status: **final engineering specification / coding-agent handoff**  
-Upstream baseline: **MHSanaei/3x-ui v3.8.5**  
+Current upstream base: **MHSanaei/3x-ui v3.9.0**
 Requirement freeze date: **2026-09-23**
 
 This package defines a maintainable downstream fork of 3x-ui that:
@@ -53,7 +53,7 @@ v3.9.0-custom.1
 ```
 
 The historical `v3.8.5-custom.N` examples above are design examples. The
-current CatX release identity uses `v0.1.0-rc.N` and `v0.1.0`, with Stable,
+current CatX release identity uses `v0.2.0-rc.N` and `v0.2.0`, with Stable,
 RC, and Dev semantics defined in the release qualification documents.
 
 ## Quality commands

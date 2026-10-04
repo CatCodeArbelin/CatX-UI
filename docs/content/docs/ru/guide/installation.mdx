@@ -30,7 +30,7 @@ bash <(curl -Ls https://raw.githubusercontent.com/CatCodeArbelin/CatX-UI/main/in
 Чтобы установить **конкретную версию**, добавьте её тег:
 
 ```bash title="pinned version"
-bash <(curl -Ls https://raw.githubusercontent.com/CatCodeArbelin/CatX-UI/main/install.sh) v0.1.0
+bash <(curl -Ls https://raw.githubusercontent.com/CatCodeArbelin/CatX-UI/main/install.sh) v0.2.0
 ```
 
 Чтобы установить скользящую **dev**-сборку (последний предварительный релиз по
@@ -77,7 +77,7 @@ docker run -d \
   --network=host \
   --restart=unless-stopped \
   --name catx-ui \
-  ghcr.io/catcodearbelin/catx-ui:v0.1.0
+  ghcr.io/catcodearbelin/catx-ui:v0.2.0
 ```
 
 Том `db/` хранит базу данных SQLite (`/etc/x-ui/x-ui.db`), а `cert/` — TLS-сертификаты,
