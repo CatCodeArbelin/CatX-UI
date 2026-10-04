@@ -6,7 +6,7 @@
 
 ## Status
 
-`COMPLETE — DRAFT PR OPEN FOR REVIEW`
+`COMPLETE — PR #10 MERGED; PRODUCT REALITY AUDIT IN PROGRESS`
 
 This is the first post-`v0.2.0` CatX product feature. It must not create or
 modify a `v0.2.1` release, move an immutable tag, or change the published
@@ -14,8 +14,8 @@ modify a `v0.2.1` release, move an immutable tag, or change the published
 
 ## Baseline
 
-- branch: `feature/catx-sponsors-management`;
-- starting branch: merged `origin/develop` at `d324840c034c8e9dd2a02f14e1ab4ca0cecbd42b`;
+- branch: `chore/catx-product-reality-audit`;
+- starting branch: merged `origin/develop` at `6207a2d6fc94e91b96006d0ac68f350c355879a8`;
 - starting `origin/main`: `070212b7c3ddf92cf303c4f352481a86f30d14b4`;
 - starting `origin/develop`: `d324840c034c8e9dd2a02f14e1ab4ca0cecbd42b`;
 - stable tag: `v0.2.0 → 2b1760e98e665bde388e94c420bd22aa182fe2b0`;
@@ -77,8 +77,8 @@ and feature behavior.
 
 ## Non-goals
 
-- no merge of the management PR; it must remain a draft PR for maintainer
-  review;
+- the management PR was not merged during its implementation phase; it was
+  merged only after the exact-SHA acceptance gate passed;
 - no `v0.2.1` release, tag, Docker publication, or stable artifact change;
 - no payments, billing, invoicing, ad bidding, tracking pixels, targeting,
   CRM, affiliate, or self-service sponsor purchasing;
@@ -104,14 +104,15 @@ Before requesting review, run SQLite and PostgreSQL migration/CRUD tests,
 restart/reload coverage, audit coverage, frontend tests/typecheck, generated
 OpenAPI/docs checks, `git diff --check`, `make verify`, and `make verify-fork`
 where the required toolchain is available. Record unavailable local checks and
-rely on hosted required checks. Do not merge this management PR.
+rely on hosted required checks. The management PR merge gate is historical;
+this continuation is the post-merge product reality audit.
 
 ## Completion condition
 
 Implementation, tests, documentation, migration evidence, feature-disabled
-compatibility, and restart behavior are complete; the branch is pushed; hosted
-required checks are green; and a draft, unmerged PR targeting `develop` is
-open for review.
+compatibility, and restart behavior are complete; PR #10 is accepted and
+merged; and the post-Sponsors product reality audit records evidence,
+limitations, and the v0.3.0 scope without adding major features.
 
 ## Completion record
 
@@ -127,3 +128,17 @@ open for review.
   tests require the unavailable local C toolchain; Node 26 was used for the
   Vitest/OpenAPI tools; the hosted matrix supplied the full required gate;
 - no `v0.2.1` release, tag movement, or stable artifact change.
+
+## Post-Sponsors Product Reality Audit — CURRENT
+
+- audit branch: `chore/catx-product-reality-audit`;
+- audited develop SHA: `6207a2d6fc94e91b96006d0ac68f350c355879a8`;
+- accepted Sponsors Management head: `3cc4e111fcf6d9161f02d540cbf07a37e271388f`;
+- PR #10 merge SHA: `6207a2d6fc94e91b96006d0ac68f350c355879a8`;
+- audit scope: actual integrated upstream 3x-ui v3.9.0 plus CatX Policy,
+  Insight, Traffic Control, Operations, Risk, Audit, Portal, Fleet, and
+  Sponsors surfaces;
+- audit output: `docs/35_CATX_PRODUCT_REALITY_AUDIT.md`;
+- no major feature work, release work, upstream sync, tag movement, or main
+  change is authorized in this phase;
+- the audit PR must remain open and unmerged for maintainer review.
