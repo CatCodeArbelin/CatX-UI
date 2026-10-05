@@ -30,9 +30,15 @@ const waitForRender = async (page) => {
 };
 const bodyText = async (page) => (await page.locator("body").innerText()).replace(/\s+/g, " ");
 const requireText = async (page, text, label) => {
-  const content = await bodyText(page);
-  if (!content.includes(text))
+  try {
+    await page.waitForFunction(
+      (expected) => document.body.innerText.replace(/\s+/g, " ").includes(expected),
+      text,
+      { timeout: 10_000 },
+    );
+  } catch {
     throw new Error(`${label}: missing visible text ${JSON.stringify(text)}`);
+  }
 };
 const requireNoGenericFailure = async (page, label) => {
   const content = (await bodyText(page)).toLowerCase();
