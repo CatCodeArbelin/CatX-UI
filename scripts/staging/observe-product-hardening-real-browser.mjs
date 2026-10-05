@@ -88,7 +88,7 @@ async function exercisePolicy(page) {
   await page.getByRole("button", { name: "New policy" }).click();
   const modal = page.locator(".ant-modal").last();
   await modal.getByLabel("Name").fill(currentPolicyName);
-  await modal.getByLabel("Summary").fill("Structured hardening qualification policy");
+  await modal.getByLabel("Description").fill("Structured hardening qualification policy");
   const actionItem = modal.locator(".ant-form-item").filter({ hasText: "Action" }).first();
   await actionItem.getByRole("combobox").click();
   await page.getByRole("option", { name: "Allow", exact: true }).click();
@@ -98,15 +98,21 @@ async function exercisePolicy(page) {
     .first();
   await destinationItem.locator("input").fill("example.com");
   await destinationItem.locator("input").press("Enter");
-  await requireText(page, "Advanced JSON", "policy structured editor");
+  await requireText(page, "Advanced policy fields (JSON)", "policy structured editor");
   await modal.getByRole("button", { name: "Save", exact: true }).click();
   await page.getByText(currentPolicyName, { exact: true }).first().waitFor({ timeout: 10_000 });
   const editButton = page.getByRole("button", { name: new RegExp(`Edit.*${currentPolicyName}`) });
   await editButton.click();
   const editModal = page.locator(".ant-modal").last();
-  await editModal.getByLabel("Summary").fill("Updated structured qualification policy");
+  await editModal.getByLabel("Description").fill("Updated structured qualification policy");
   await editModal.getByRole("button", { name: "Save", exact: true }).click();
-  await requireText(page, "Updated structured qualification policy", "policy edit result");
+  await editModal.waitFor({ state: "hidden" });
+  await editButton.click();
+  const persistedModal = page.locator(".ant-modal").last();
+  const persistedDescription = persistedModal.getByLabel("Description", { exact: true });
+  if ((await persistedDescription.inputValue()) !== "Updated structured qualification policy")
+    throw new Error("policy edit result: updated description was not persisted");
+  await page.keyboard.press("Escape");
   await saveScreenshot(page, "policy-en");
 }
 
