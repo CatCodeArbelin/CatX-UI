@@ -186,7 +186,7 @@ try {
     });
     page.on("pageerror", (error) => consoleErrors.push(`${name} pageerror: ${error.message}`));
     await login(page);
-    await openRoute(page, "/", "dashboard", "Dashboard");
+    await openRoute(page, "/", "dashboard", "Overview");
     await toggleSettingsAndRestore(page);
     await openRoute(page, "/activity", "analytics", "Client activity");
     await saveScreenshot(page, "activity-en");
