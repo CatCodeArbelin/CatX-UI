@@ -147,3 +147,191 @@ jobs:
           path: ${{ runner.temp }}/catx-hardening-real-evidence
           if-no-files-found: warn
           retention-days: 30
+
+  go-test:
+    name: Full Go test suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Stub internal/web/dist for go:embed
+        run: mkdir -p internal/web/dist && touch internal/web/dist/.gitkeep
+      - name: Test
+        run: |
+          go list ./... | grep -v '/frontend/node_modules/' > /tmp/go-packages.txt
+          go test -shuffle=on -count=1 $(cat /tmp/go-packages.txt)
+
+  postgres-qualification:
+    name: PostgreSQL migration and durability qualification
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: xui_durable
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d xui_durable"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      XUI_DB_TYPE: postgres
+      XUI_DB_DSN: "host=127.0.0.1 port=5432 user=postgres password=postgres dbname=xui_durable sslmode=disable"
+      XUI_TEST_PG_DSN: "postgres://postgres:postgres@127.0.0.1:5432/xui_durable?sslmode=disable"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Stub internal/web/dist for go:embed
+        run: mkdir -p internal/web/dist && touch internal/web/dist/.gitkeep
+      - name: PostgreSQL durable-first tests
+        run: |
+          set -o pipefail
+          go test ./internal/web/service -run 'PostgresCommitFailure' -count=1 -v | tee /tmp/postgres-durable-first.log
+          passed=$(grep -c -- '--- PASS' /tmp/postgres-durable-first.log || true)
+          if [ "$passed" -lt 1 ]; then
+            echo "expected at least 1 passing durable-first test, got $passed" >&2
+            exit 1
+          fi
+      - name: PostgreSQL schema and migration tests
+        run: |
+          set -o pipefail
+          go test ./internal/database -run '^(TestHostAutoMigrateCreatesColumns_Postgres|TestMigrate_Postgres|TestClientWeeklyRenewMigration_Postgres)$' -count=1 -v | tee /tmp/postgres-schema.log
+          passed=$(grep -c -- '^--- PASS' /tmp/postgres-schema.log || true)
+          if [ "$passed" -lt 3 ]; then
+            echo "expected at least 3 passing PostgreSQL schema tests, got $passed" >&2
+            exit 1
+          fi
+          go test ./internal/forkext/sponsors -run '^TestSponsorsSchemaPostgres$' -count=1 -v | tee /tmp/postgres-sponsors.log
+          passed=$(grep -c -- '^--- PASS: TestSponsorsSchemaPostgres' /tmp/postgres-sponsors.log || true)
+          if [ "$passed" -ne 1 ]; then
+            echo "expected exactly 1 passing Sponsors PostgreSQL schema test, got $passed" >&2
+            exit 1
+          fi
+
+  codegen:
+    name: Generated schema and OpenAPI drift
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      - name: Regenerate schemas, examples and OpenAPI
+        run: npm run gen
+        working-directory: frontend
+      - name: Fail if generated files are stale
+        run: git diff --exit-code -- frontend/src/generated frontend/public/openapi.json
+
+  govulncheck:
+    name: Go vulnerability qualification
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Stub internal/web/dist for go:embed
+        run: mkdir -p internal/web/dist && touch internal/web/dist/.gitkeep
+      - name: Install govulncheck
+        run: go install golang.org/x/vuln/cmd/govulncheck@latest
+      - name: Run govulncheck
+        run: govulncheck ./...
+
+  race:
+    name: Go race and shuffle qualification
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Stub internal/web/dist for go:embed
+        run: mkdir -p internal/web/dist && touch internal/web/dist/.gitkeep
+      - name: Race and shuffle
+        run: |
+          go list ./... | grep -v '/frontend/node_modules/' > /tmp/go-packages.txt
+          go test -race -shuffle=on -count=1 -timeout 25m $(cat /tmp/go-packages.txt)
+
+  fuzz-smoke:
+    name: Critical parser fuzz smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Stub internal/web/dist for go:embed
+        run: mkdir -p internal/web/dist && touch internal/web/dist/.gitkeep
+      - name: Fuzz critical parsers
+        run: |
+          go test -run '^$' -fuzz 'FuzzParseLink$' -fuzztime=30s ./internal/util/link/
+          go test -run '^$' -fuzz 'FuzzDecodeCertPin$' -fuzztime=30s ./internal/web/runtime/
+
+  frontend-qualification:
+    name: Frontend qualification and browser tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install
+        run: npm ci
+        working-directory: frontend
+      - name: Verify generated MSW worker is current
+        run: git diff --exit-code -- public/mockServiceWorker.js package-lock.json
+        working-directory: frontend
+      - name: Lint
+        run: npm run lint
+        working-directory: frontend
+      - name: Format check
+        run: npm run format:check
+        working-directory: frontend
+      - name: Typecheck
+        run: npm run typecheck
+        working-directory: frontend
+      - name: Install Playwright Chromium
+        working-directory: frontend
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/ms-playwright
+        run: npx playwright install --with-deps chromium
+      - name: Test
+        working-directory: frontend
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/ms-playwright
+        run: npm test
+      - name: Build
+        run: npm run build
+        working-directory: frontend
+      - name: Build Storybook
+        run: npm run build-storybook
+        working-directory: frontend
+      - name: Audit
+        run: npm audit --omit=dev --audit-level=high
+        working-directory: frontend
