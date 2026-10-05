@@ -116,6 +116,7 @@ jobs:
           CATX_HARDENING_RUN_BROWSER: '1'
           PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/ms-playwright
         run: |
+          set +e
           set -uo pipefail
           failure_log="$RUNNER_TEMP/catx-hardening-real.log"
           rm -f "$failure_log"
