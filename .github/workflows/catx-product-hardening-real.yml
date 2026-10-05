@@ -131,10 +131,7 @@ jobs:
             bash scripts/staging/observe-product-hardening-real-linux.sh 2>&1 | tee "$failure_log"
           status=${PIPESTATUS[0]}
           if [ "$status" -ne 0 ]; then
-            details="$(grep -E 'FAIL:|ERROR line=|panic:|fatal|HTTP [0-9]{3}|No such file|not found' "$failure_log" | tail -n 40 || true)"
-            if [ -z "$details" ]; then
-              details="$(tail -n 40 "$failure_log")"
-            fi
+            details="$(tail -n 80 "$failure_log")"
             details="$(printf '%s' "$details" | tr '\n' ' ')"
             details="${details//'%'/'%25'}"
             details="${details//$'\r'/'%0D'}"
