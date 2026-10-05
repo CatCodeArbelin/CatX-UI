@@ -65,9 +65,11 @@ func response(c *gin.Context, obj any) {
 func fail(c *gin.Context, status int, msg string) {
 	c.JSON(status, gin.H{"success": false, "msg": msg})
 }
+
 func unavailable(c *gin.Context) {
 	c.JSON(http.StatusConflict, gin.H{"success": false, "msg": "policies are disabled", "obj": gin.H{"state": "feature_off", "featureDisabled": true}})
 }
+
 func parseID(c *gin.Context) (uint, bool) {
 	n, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil || n == 0 {
