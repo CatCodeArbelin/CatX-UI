@@ -232,7 +232,7 @@ async function exercisePortal(page) {
 async function exerciseLocale(page) {
   await page.context().addCookies([{ name: "lang", value: "ru-RU", url: baseUrl }]);
   await openRoute(page, "/settings#catx-features", "settings-ru", "Функции CatX-UI");
-  await requireText(page, "Состояние выполнения", "Russian runtime-state label");
+  await requireText(page, "Состояние среды выполнения", "Russian runtime-state label");
   await openRoute(page, "/policies", "policy-ru", "Движок политик");
   await saveScreenshot(page, "policy-ru");
   await page.context().addCookies([{ name: "lang", value: "en-US", url: baseUrl }]);
