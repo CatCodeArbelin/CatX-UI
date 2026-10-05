@@ -142,6 +142,7 @@ const POLICY_CATEGORIES = [
   'adult',
   'gambling',
 ].map((value) => ({ value, label: value }));
+const JSON_HEADERS = { headers: { 'Content-Type': 'application/json' } } as const;
 
 const formatMinute = (value: number) =>
   `${String(Math.floor(value / 60)).padStart(2, '0')}:${String(value % 60).padStart(2, '0')}`;
@@ -289,8 +290,8 @@ export default function PolicyPage() {
       spec: payloadSpec,
     };
     const result = editing
-      ? await HttpUtil.put(`/panel/api/policies/${editing.id}`, payload)
-      : await HttpUtil.post('/panel/api/policies', payload);
+      ? await HttpUtil.put(`/panel/api/policies/${editing.id}`, payload, JSON_HEADERS)
+      : await HttpUtil.post('/panel/api/policies', payload, JSON_HEADERS);
     if (!result.success) return;
     setPolicyModal(false);
     await load();
@@ -304,7 +305,7 @@ export default function PolicyPage() {
     values: Record<string, unknown>,
     formInstance: ReturnType<typeof Form.useForm>[0],
   ) => {
-    const result = await HttpUtil.post(path, values);
+    const result = await HttpUtil.post(path, values, JSON_HEADERS);
     if (result.success) {
       formInstance.resetFields();
       await load();

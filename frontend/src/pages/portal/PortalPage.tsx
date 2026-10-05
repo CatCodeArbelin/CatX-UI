@@ -52,6 +52,7 @@ type Host = {
   fingerprint?: string;
 };
 type Traffic = { up: number; down: number; total: number; expiryTime: number };
+const JSON_HEADERS = { headers: { 'Content-Type': 'application/json' } } as const;
 
 // Portal data is always fetched through the dedicated session namespace.
 function portalPath(path: string): string {
@@ -109,7 +110,7 @@ export default function PortalPage() {
     const result = await HttpUtil.post<{ csrfToken: string }>(
       portalPath('/portal/auth'),
       { token },
-      { silent: true },
+      { ...JSON_HEADERS, silent: true },
     );
     if (!result.success) {
       setError(t('fork.portal.invalidToken'));
@@ -121,7 +122,10 @@ export default function PortalPage() {
 
   const mutate = useCallback(
     async (path: string, method: 'patch' | 'delete', body?: unknown) => {
-      const options = { headers: { 'X-CSRF-Token': csrf }, silent: true };
+      const options = {
+        headers: { ...JSON_HEADERS.headers, 'X-CSRF-Token': csrf },
+        silent: true,
+      };
       const result =
         method === 'patch'
           ? await HttpUtil.put(portalPath(path), body, options)

@@ -76,7 +76,9 @@ export default function FleetUpdatePage() {
     dryRun?: boolean;
     confirmProduction?: boolean;
   }) {
-    const result = await HttpUtil.post<Plan>('/panel/api/fleet-updates/campaigns', values);
+    const result = await HttpUtil.post<Plan>('/panel/api/fleet-updates/campaigns', values, {
+      headers: { 'Content-Type': 'application/json' },
+    });
     if (result.success && result.obj) {
       setSelected(result.obj);
       await load();

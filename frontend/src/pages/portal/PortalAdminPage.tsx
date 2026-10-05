@@ -40,6 +40,7 @@ type PortalOptions = {
   groups: PortalOption[];
   hosts: PortalOption[];
 };
+const JSON_HEADERS = { headers: { 'Content-Type': 'application/json' } } as const;
 
 export default function PortalAdminPage() {
   const { t } = useTranslation();
@@ -87,15 +88,17 @@ export default function PortalAdminPage() {
     return () => window.clearTimeout(timer);
   }, [load]);
   async function issue(clientId: number) {
-    const result = await HttpUtil.post<{ token: string }>('/panel/api/portal/credentials', {
-      clientId,
-    });
+    const result = await HttpUtil.post<{ token: string }>(
+      '/panel/api/portal/credentials',
+      { clientId },
+      JSON_HEADERS,
+    );
     if (result.success && result.obj) setToken(result.obj.token);
     else setError(t('fork.portal.actionFailed'));
     await load();
   }
   async function grant(values: { subjectType: string; subjectId: number; hostId: number }) {
-    const result = await HttpUtil.post('/panel/api/portal/host-grants', values);
+    const result = await HttpUtil.post('/panel/api/portal/host-grants', values, JSON_HEADERS);
     if (!result.success) setError(t('fork.portal.actionFailed'));
     await load();
   }
@@ -124,9 +127,11 @@ export default function PortalAdminPage() {
               <Switch
                 checked={enabled}
                 onChange={async (value) => {
-                  const result = await HttpUtil.post('/panel/api/portal/settings', {
-                    enabled: value,
-                  });
+                  const result = await HttpUtil.post(
+                    '/panel/api/portal/settings',
+                    { enabled: value },
+                    JSON_HEADERS,
+                  );
                   if (result.success) setEnabled(value);
                   else setError(t('fork.portal.actionFailed'));
                 }}

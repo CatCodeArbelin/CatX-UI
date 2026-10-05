@@ -237,7 +237,7 @@ export default function ActivityPage() {
     const result = await HttpUtil.post<Settings>(
       '/panel/api/analytics/settings',
       { dnsIntelligence: value.dnsIntelligence, retention: value.retention },
-      { silent: true },
+      { headers: { 'Content-Type': 'application/json' }, silent: true },
     );
     if (result.success && result.obj) setSettings(result.obj);
     else setSettingsError(t('fork.activity.labels.saveError'));

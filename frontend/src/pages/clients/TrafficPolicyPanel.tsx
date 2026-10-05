@@ -124,6 +124,7 @@ export default function TrafficPolicyPanel({ email, readOnly = false }: TrafficP
       const response = (await HttpUtil.put(
         `/panel/api/traffic-control/clients/${encodeURIComponent(email)}/policy`,
         draft,
+        { headers: { 'Content-Type': 'application/json' } },
       )) as { success?: boolean; obj?: TrafficPolicyView; msg?: string };
       if (!response.success) {
         messageApi.error(t('fork.common.labels.actionFailed'));

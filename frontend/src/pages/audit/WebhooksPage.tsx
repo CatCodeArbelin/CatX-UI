@@ -68,13 +68,17 @@ export default function WebhooksPage() {
     secret: string;
     eventTypes: string;
   }) => {
-    const result = await HttpUtil.post('/panel/api/fork/audit/webhooks', {
-      ...value,
-      eventTypes: value.eventTypes
-        .split(',')
-        .map((item) => item.trim())
-        .filter(Boolean),
-    });
+    const result = await HttpUtil.post(
+      '/panel/api/fork/audit/webhooks',
+      {
+        ...value,
+        eventTypes: value.eventTypes
+          .split(',')
+          .map((item) => item.trim())
+          .filter(Boolean),
+      },
+      { headers: { 'Content-Type': 'application/json' } },
+    );
     if (result.success) {
       form.resetFields();
       void load();
