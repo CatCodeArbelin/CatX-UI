@@ -191,13 +191,23 @@ async function exerciseClientTraffic(page) {
   await requireText(page, "Upload B/s", "client edit traffic panel");
   await requireText(page, "Download B/s", "client edit traffic panel");
   await page.keyboard.press("Escape");
-  await page.waitForTimeout(300);
+  await editModal.waitFor({ state: "hidden", timeout: 10_000 });
   const infoRow = page.locator("tr").filter({ hasText: clientEmail }).first();
   if ((await infoRow.count()) > 0) {
-    await infoRow.getByRole("button", { name: "Client information", exact: true }).click();
+    const infoButton = infoRow.getByRole("button", {
+      name: "Client information",
+      exact: true,
+    });
+    await infoButton.waitFor({ state: "visible", timeout: 10_000 });
+    await infoButton.click();
   } else {
     const card = page.locator(".client-card").filter({ hasText: clientEmail }).first();
-    await card.getByRole("button", { name: "Client information", exact: true }).click();
+    const infoButton = card.getByRole("button", {
+      name: "Client information",
+      exact: true,
+    });
+    await infoButton.waitFor({ state: "visible", timeout: 10_000 });
+    await infoButton.click();
   }
   const infoModal = page.locator(".ant-modal").last();
   await requireText(page, "Traffic control", "client information traffic state");
