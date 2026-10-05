@@ -72,11 +72,27 @@ async function toggleSettingsAndRestore(page) {
   const switchControl = sponsorItem.getByRole("switch");
   if ((await switchControl.count()) !== 1)
     throw new Error("settings: Sponsors switch was not rendered");
+  const saveFeatureSettings = async () => {
+    const saveButton = page.getByRole("button", {
+      name: "Save feature settings",
+      exact: true,
+    });
+    await saveButton.waitFor({ state: "visible" });
+    const saved = page.waitForResponse(
+      (response) =>
+        response.request().method() === "PUT" &&
+        response.url().includes("/panel/api/fork/settings/features") &&
+        response.ok(),
+    );
+    await saveButton.click();
+    await saved;
+    await page.waitForTimeout(200);
+  };
   await switchControl.click();
-  await page.getByRole("button", { name: "Save feature settings", exact: true }).click();
+  await saveFeatureSettings();
   await requireText(page, "Restart required", "settings saved pending restart");
   await switchControl.click();
-  await page.getByRole("button", { name: "Save feature settings", exact: true }).click();
+  await saveFeatureSettings();
   await page.waitForTimeout(500);
   await requireText(page, "Active", "settings active runtime state");
   await saveScreenshot(page, "settings-en");
