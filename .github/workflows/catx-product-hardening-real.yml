@@ -26,8 +26,6 @@ jobs:
     name: Disposable real-panel lifecycle and browser qualification
     runs-on: ubuntu-latest
     timeout-minutes: 60
-    env:
-      PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/ms-playwright
     steps:
       - uses: actions/checkout@v7
         with: {fetch-depth: 0}
@@ -68,9 +66,13 @@ jobs:
       - name: Run focused Go qualification before the real panel
         run: go test -count=1 ./internal/analytics ./internal/policy ./internal/policysim ./internal/forkext/trafficpolicy ./internal/forkext
       - name: Run make verify
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/ms-playwright
         run: make verify
       - name: Diagnose make verify prerequisites after failure
         if: failure()
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/ms-playwright
         run: |
           set +e
           failed=0
@@ -101,6 +103,8 @@ jobs:
           done
           exit "$failed"
       - name: Run make verify-fork
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/ms-playwright
         run: make verify-fork
       - name: Run authenticated hardening lifecycle on the real panel
         env:
