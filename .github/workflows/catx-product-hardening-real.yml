@@ -111,7 +111,10 @@ jobs:
           make verify-fork 2>&1 | tee "${log_file}"
           status=${PIPESTATUS[0]}
           if [ "$status" -ne 0 ]; then
-            details="$(tail -n 100 "${log_file}")"
+            summary="$(grep -aE 'FAIL|failed|Error|error|AssertionError|Test Files|Test Suites|Tests:' "${log_file}" | tail -n 40 || true)"
+            details="${summary}"
+            details+=$'\n--- verify-fork tail ---\n'
+            details+="$(tail -n 40 "${log_file}")"
             details="${details//'%'/'%25'}"
             details="${details//$'\r'/'%0D'}"
             details="${details//$'\n'/'%0A'}"
