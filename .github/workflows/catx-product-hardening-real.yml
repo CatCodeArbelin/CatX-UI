@@ -67,6 +67,21 @@ jobs:
         run: go test -count=1 ./internal/analytics ./internal/policy ./internal/policysim ./internal/forkext/trafficpolicy ./internal/forkext
       - name: Run make verify
         run: make verify
+      - name: Diagnose make verify prerequisites after failure
+        if: failure()
+        run: |
+          set +e
+          failed=0
+          for target in gen-check lint format-check typecheck msw-worker-check test build build-storybook; do
+            echo "diagnosing make ${target}"
+            make "${target}"
+            status=$?
+            if [ "$status" -ne 0 ]; then
+              echo "::error title=make verify target failed::make ${target} exited ${status}"
+              failed=1
+            fi
+          done
+          exit "$failed"
       - name: Run make verify-fork
         run: make verify-fork
       - name: Run authenticated hardening lifecycle on the real panel
