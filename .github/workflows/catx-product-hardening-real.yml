@@ -116,7 +116,9 @@ jobs:
           CATX_HARDENING_RUN_BROWSER: '1'
           PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/ms-playwright
         run: |
-          set -euo pipefail
+          set -uo pipefail
+          failure_log="$RUNNER_TEMP/catx-hardening-real.log"
+          rm -f "$failure_log"
           sudo env \
             "CATX_HARDENING_CANDIDATE_BINARY=$CATX_HARDENING_CANDIDATE_BINARY" \
             "CATX_HARDENING_CANDIDATE_XRAY_BINARY=$CATX_HARDENING_CANDIDATE_XRAY_BINARY" \
@@ -125,7 +127,20 @@ jobs:
             "CATX_HARDENING_EVIDENCE_DIR=$CATX_HARDENING_EVIDENCE_DIR" \
             "CATX_HARDENING_RUN_BROWSER=$CATX_HARDENING_RUN_BROWSER" \
             "PLAYWRIGHT_BROWSERS_PATH=$PLAYWRIGHT_BROWSERS_PATH" \
-            bash scripts/staging/observe-product-hardening-real-linux.sh
+            bash scripts/staging/observe-product-hardening-real-linux.sh 2>&1 | tee "$failure_log"
+          status=${PIPESTATUS[0]}
+          if [ "$status" -ne 0 ]; then
+            details="$(grep -E 'FAIL:|ERROR line=|panic:|fatal|HTTP [0-9]{3}|No such file|not found' "$failure_log" | tail -n 40 || true)"
+            if [ -z "$details" ]; then
+              details="$(tail -n 40 "$failure_log")"
+            fi
+            details="$(printf '%s' "$details" | tr '\n' ' ')"
+            details="${details//'%'/'%25'}"
+            details="${details//$'\r'/'%0D'}"
+            details="${details//$'\n'/'%0A'}"
+            echo "::error title=real-panel qualification failure::${details:0:12000}"
+            exit "$status"
+          fi
       - name: Upload sanitized real-panel evidence
         if: always()
         uses: actions/upload-artifact@v4
