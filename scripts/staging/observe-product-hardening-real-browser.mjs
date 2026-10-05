@@ -195,7 +195,7 @@ async function exerciseClientTraffic(page) {
   const infoRow = page.locator("tr").filter({ hasText: clientEmail }).first();
   if ((await infoRow.count()) > 0) {
     const infoButton = infoRow.getByRole("button", {
-      name: "Client information",
+      name: "Client Information",
       exact: true,
     });
     await infoButton.waitFor({ state: "visible", timeout: 10_000 });
@@ -203,7 +203,7 @@ async function exerciseClientTraffic(page) {
   } else {
     const card = page.locator(".client-card").filter({ hasText: clientEmail }).first();
     const infoButton = card.getByRole("button", {
-      name: "Client information",
+      name: "Client Information",
       exact: true,
     });
     await infoButton.waitFor({ state: "visible", timeout: 10_000 });
