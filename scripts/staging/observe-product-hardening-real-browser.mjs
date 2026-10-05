@@ -117,13 +117,16 @@ async function exercisePolicy(page) {
   await modal.getByLabel("Description").fill("Structured hardening qualification policy");
   const actionItem = modal.locator(".ant-form-item").filter({ hasText: "Action" }).first();
   const actionSelect = actionItem.getByRole("combobox");
-  const allowOption = page.locator('[role="option"][aria-label="Allow"]');
-  const allowSelected = await allowOption.evaluateAll((options) =>
-    options.some((option) => option.getAttribute("aria-selected") === "true"),
-  );
-  if (!allowSelected) {
+  const selectedAction = actionItem.locator(".ant-select-selection-item");
+  await selectedAction.waitFor({ state: "visible" });
+  if ((await selectedAction.innerText()).trim() !== "Allow") {
     await actionSelect.click();
-    await page.locator('[role="option"][aria-label="Allow"]:visible').last().click();
+    const allowOption = page
+      .locator(".ant-select-item-option")
+      .filter({ hasText: /^Allow$/ })
+      .last();
+    await allowOption.waitFor({ state: "visible" });
+    await allowOption.click();
   }
   const destinationItem = modal
     .locator(".ant-form-item")
