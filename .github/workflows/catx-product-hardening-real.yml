@@ -270,8 +270,25 @@ jobs:
         run: mkdir -p internal/web/dist && touch internal/web/dist/.gitkeep
       - name: Race and shuffle
         run: |
+          set +e
+          set -o pipefail
           go list ./... | grep -v '/frontend/node_modules/' > /tmp/go-packages.txt
-          go test -race -shuffle=on -count=1 -timeout 25m $(cat /tmp/go-packages.txt)
+          failure_log="$RUNNER_TEMP/catx-race.log"
+          rm -f "$failure_log"
+          go test -race -shuffle=on -count=1 -timeout 25m $(cat /tmp/go-packages.txt) 2>&1 | tee "$failure_log"
+          status=${PIPESTATUS[0]}
+          if [ "$status" -ne 0 ]; then
+            details="$(grep -E 'WARNING: DATA RACE|FAIL|--- FAIL|fatal error|panic:|Error:' "$failure_log" | tail -n 100 || true)"
+            if [ -z "$details" ]; then
+              details="$(tail -n 80 "$failure_log")"
+            fi
+            details="$(printf '%s' "$details" | tr '\n' ' ')"
+            details="${details//'%'/'%25'}"
+            details="${details//$'\r'/'%0D'}"
+            details="${details//$'\n'/'%0A'}"
+            echo "::error title=race qualification failure::${details:0:12000}"
+            exit "$status"
+          fi
 
   fuzz-smoke:
     name: Critical parser fuzz smoke
