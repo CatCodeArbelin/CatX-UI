@@ -105,7 +105,20 @@ jobs:
       - name: Run make verify-fork
         env:
           PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/ms-playwright
-        run: make verify-fork
+        run: |
+          set +e
+          log_file="${RUNNER_TEMP}/catx-verify-fork.log"
+          make verify-fork 2>&1 | tee "${log_file}"
+          status=${PIPESTATUS[0]}
+          if [ "$status" -ne 0 ]; then
+            details="$(tail -n 100 "${log_file}")"
+            details="${details//'%'/'%25'}"
+            details="${details//$'\r'/'%0D'}"
+            details="${details//$'\n'/'%0A'}"
+            echo "::error title=make verify-fork failure::${details:0:12000}"
+          fi
+          rm -f "${log_file}"
+          exit "$status"
       - name: Run authenticated hardening lifecycle on the real panel
         env:
           CATX_HARDENING_CANDIDATE_BINARY: ${{ runner.temp }}/catx-hardening-candidate-x-ui
