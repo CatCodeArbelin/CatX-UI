@@ -73,10 +73,10 @@ async function toggleSettingsAndRestore(page) {
   if ((await switchControl.count()) !== 1)
     throw new Error("settings: Sponsors switch was not rendered");
   await switchControl.click();
-  await page.getByRole("button", { name: "Save" }).click();
+  await page.getByRole("button", { name: "Save feature settings", exact: true }).click();
   await requireText(page, "Restart required", "settings saved pending restart");
   await switchControl.click();
-  await page.getByRole("button", { name: "Save" }).click();
+  await page.getByRole("button", { name: "Save feature settings", exact: true }).click();
   await page.waitForTimeout(500);
   await requireText(page, "Active", "settings active runtime state");
   await saveScreenshot(page, "settings-en");
