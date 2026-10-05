@@ -72,12 +72,26 @@ async function toggleSettingsAndRestore(page) {
   const switchControl = sponsorItem.getByRole("switch");
   if ((await switchControl.count()) !== 1)
     throw new Error("settings: Sponsors switch was not rendered");
-  const saveFeatureSettings = async () => {
+  const saveFeatureSettings = async (stage) => {
     const saveButton = page.getByRole("button", {
       name: "Save feature settings",
       exact: true,
     });
-    await saveButton.waitFor({ state: "visible" });
+    try {
+      await saveButton.waitFor({ state: "visible" });
+    } catch (error) {
+      const buttons = await page.locator("button").evaluateAll((elements) =>
+        elements.map((element) => ({
+          text: element.textContent?.trim() || "",
+          ariaLabel: element.getAttribute("aria-label") || "",
+          className: element.className,
+          disabled: element.hasAttribute("disabled"),
+        })),
+      );
+      throw new Error(
+        `settings ${stage}: feature save control unavailable; buttons=${JSON.stringify(buttons)}; cause=${error.message}`,
+      );
+    }
     const saved = page.waitForResponse(
       (response) =>
         response.request().method() === "PUT" &&
@@ -86,13 +100,17 @@ async function toggleSettingsAndRestore(page) {
     );
     await saveButton.click();
     await saved;
-    await page.waitForTimeout(200);
+    await page.waitForFunction(
+      () => !document.querySelector("button.ant-btn-loading"),
+      undefined,
+      { timeout: 10_000 },
+    );
   };
   await switchControl.click();
-  await saveFeatureSettings();
+  await saveFeatureSettings("enable");
   await requireText(page, "Restart required", "settings saved pending restart");
   await switchControl.click();
-  await saveFeatureSettings();
+  await saveFeatureSettings("restore");
   await page.waitForTimeout(500);
   await requireText(page, "Active", "settings active runtime state");
   await saveScreenshot(page, "settings-en");
