@@ -43,7 +43,7 @@ const requireNoGenericFailure = async (page, label) => {
 };
 
 async function login(page) {
-  await page.goto(`${baseUrl}/login`, { waitUntil: "domcontentloaded" });
+  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
   await page.locator('input[autocomplete="username"]').fill(username);
   await page.locator('input[autocomplete="current-password"]').fill(password);
   await page.locator('button[type="submit"]').click();
