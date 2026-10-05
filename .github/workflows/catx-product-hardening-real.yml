@@ -69,59 +69,10 @@ jobs:
         env:
           PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/ms-playwright
         run: make verify
-      - name: Diagnose make verify prerequisites after failure
-        if: failure()
-        env:
-          PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/ms-playwright
-        run: |
-          set +e
-          failed=0
-          for target in gen-check lint format-check typecheck msw-worker-check test build build-storybook; do
-            echo "diagnosing make ${target}"
-            log_file="$(mktemp)"
-            if [ "${target}" = "test" ]; then
-              env GITHUB_ACTIONS= make "${target}" >"${log_file}" 2>&1
-            else
-              make "${target}" >"${log_file}" 2>&1
-            fi
-            status=$?
-            cat "${log_file}"
-            if [ "$status" -ne 0 ]; then
-              echo "::error title=make verify target failed::make ${target} exited ${status}"
-              details="$(grep -E 'FAIL|AssertionError|expected|Test Files|Tests|❯|Error:' "${log_file}" | tail -n 60 || true)"
-              if [ -z "${details}" ]; then
-                details="$(tail -n 40 "${log_file}")"
-              fi
-              details="$(printf '%s' "${details}" | tr '\n' ' ')"
-              details="${details//'%'/'%25'}"
-              details="${details//$'\r'/'%0D'}"
-              details="${details//$'\n'/'%0A'}"
-              echo "::error title=make ${target} failure::${details:0:12000}"
-              failed=1
-            fi
-            rm -f "${log_file}"
-          done
-          exit "$failed"
       - name: Run make verify-fork
         env:
           PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/ms-playwright
-        run: |
-          set +e
-          log_file="${RUNNER_TEMP}/catx-verify-fork.log"
-          make verify-fork 2>&1 | tee "${log_file}"
-          status=${PIPESTATUS[0]}
-          if [ "$status" -ne 0 ]; then
-            summary="$(grep -aE 'FAIL|failed|Error|error|AssertionError|Test Files|Test Suites|Tests:' "${log_file}" | tail -n 40 || true)"
-            details="${summary}"
-            details+=$'\n--- verify-fork tail ---\n'
-            details+="$(tail -n 40 "${log_file}")"
-            details="${details//'%'/'%25'}"
-            details="${details//$'\r'/'%0D'}"
-            details="${details//$'\n'/'%0A'}"
-            echo "::error title=make verify-fork failure::${details:0:12000}"
-          fi
-          rm -f "${log_file}"
-          exit "$status"
+        run: make verify-fork
       - name: Run authenticated hardening lifecycle on the real panel
         env:
           CATX_HARDENING_CANDIDATE_BINARY: ${{ runner.temp }}/catx-hardening-candidate-x-ui
@@ -132,10 +83,6 @@ jobs:
           CATX_HARDENING_RUN_BROWSER: '1'
           PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/ms-playwright
         run: |
-          set +e
-          set -uo pipefail
-          failure_log="$RUNNER_TEMP/catx-hardening-real.log"
-          rm -f "$failure_log"
           sudo env \
             "CATX_HARDENING_CANDIDATE_BINARY=$CATX_HARDENING_CANDIDATE_BINARY" \
             "CATX_HARDENING_CANDIDATE_XRAY_BINARY=$CATX_HARDENING_CANDIDATE_XRAY_BINARY" \
@@ -144,17 +91,7 @@ jobs:
             "CATX_HARDENING_EVIDENCE_DIR=$CATX_HARDENING_EVIDENCE_DIR" \
             "CATX_HARDENING_RUN_BROWSER=$CATX_HARDENING_RUN_BROWSER" \
             "PLAYWRIGHT_BROWSERS_PATH=$PLAYWRIGHT_BROWSERS_PATH" \
-            bash scripts/staging/observe-product-hardening-real-linux.sh 2>&1 | tee "$failure_log"
-          status=${PIPESTATUS[0]}
-          if [ "$status" -ne 0 ]; then
-            details="$(tail -n 80 "$failure_log")"
-            details="$(printf '%s' "$details" | tr '\n' ' ')"
-            details="${details//'%'/'%25'}"
-            details="${details//$'\r'/'%0D'}"
-            details="${details//$'\n'/'%0A'}"
-            echo "::error title=real-panel qualification failure::${details:0:12000}"
-            exit "$status"
-          fi
+            bash scripts/staging/observe-product-hardening-real-linux.sh
       - name: Upload sanitized real-panel evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -286,25 +223,8 @@ jobs:
         run: mkdir -p internal/web/dist && touch internal/web/dist/.gitkeep
       - name: Race and shuffle
         run: |
-          set +e
-          set -o pipefail
           go list ./... | grep -v '/frontend/node_modules/' > /tmp/go-packages.txt
-          failure_log="$RUNNER_TEMP/catx-race.log"
-          rm -f "$failure_log"
-          go test -race -shuffle=on -count=1 -timeout 25m $(cat /tmp/go-packages.txt) 2>&1 | tee "$failure_log"
-          status=${PIPESTATUS[0]}
-          if [ "$status" -ne 0 ]; then
-            details="$(grep -E 'WARNING: DATA RACE|FAIL|--- FAIL|fatal error|panic:|Error:' "$failure_log" | tail -n 100 || true)"
-            if [ -z "$details" ]; then
-              details="$(tail -n 80 "$failure_log")"
-            fi
-            details="$(printf '%s' "$details" | tr '\n' ' ')"
-            details="${details//'%'/'%25'}"
-            details="${details//$'\r'/'%0D'}"
-            details="${details//$'\n'/'%0A'}"
-            echo "::error title=race qualification failure::${details:0:12000}"
-            exit "$status"
-          fi
+          go test -race -shuffle=on -count=1 -timeout 25m $(cat /tmp/go-packages.txt)
 
   fuzz-smoke:
     name: Critical parser fuzz smoke
@@ -358,25 +278,7 @@ jobs:
         working-directory: frontend
         env:
           PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/ms-playwright
-        run: |
-          set +e
-          set -o pipefail
-          failure_log="$RUNNER_TEMP/catx-frontend-test.log"
-          rm -f "$failure_log"
-          npm test 2>&1 | tee "$failure_log"
-          status=${PIPESTATUS[0]}
-          if [ "$status" -ne 0 ]; then
-            details="$(grep -E 'FAIL|AssertionError|expected|Test Files|Tests|❯|Error:' "$failure_log" | tail -n 80 || true)"
-            if [ -z "$details" ]; then
-              details="$(tail -n 60 "$failure_log")"
-            fi
-            details="$(printf '%s' "$details" | tr '\n' ' ')"
-            details="${details//'%'/'%25'}"
-            details="${details//$'\r'/'%0D'}"
-            details="${details//$'\n'/'%0A'}"
-            echo "::error title=frontend test qualification failure::${details:0:12000}"
-            exit "$status"
-          fi
+        run: npm test
       - name: Build
         run: npm run build
         working-directory: frontend
