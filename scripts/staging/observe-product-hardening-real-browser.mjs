@@ -90,8 +90,15 @@ async function exercisePolicy(page) {
   await modal.getByLabel("Name").fill(currentPolicyName);
   await modal.getByLabel("Description").fill("Structured hardening qualification policy");
   const actionItem = modal.locator(".ant-form-item").filter({ hasText: "Action" }).first();
-  await actionItem.getByRole("combobox").click();
-  await page.getByRole("option", { name: "Allow", exact: true }).click();
+  const actionSelect = actionItem.getByRole("combobox");
+  await actionSelect.click();
+  const allowOption = page.getByRole("option", { name: "Allow", exact: true });
+  await allowOption.waitFor({ state: "visible" });
+  if ((await allowOption.getAttribute("aria-selected")) === "true") {
+    await page.keyboard.press("Escape");
+  } else {
+    await allowOption.click();
+  }
   const destinationItem = modal
     .locator(".ant-form-item")
     .filter({ hasText: "Destinations" })
