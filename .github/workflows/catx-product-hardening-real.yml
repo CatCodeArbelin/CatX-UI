@@ -58,12 +58,17 @@ jobs:
           mkdir -p "$RUNNER_TEMP/xray-assets"
           install -m 0644 "$RUNNER_TEMP/xray-unpacked/geoip.dat" "$RUNNER_TEMP/xray-assets/geoip.dat"
           install -m 0644 "$RUNNER_TEMP/xray-unpacked/geosite.dat" "$RUNNER_TEMP/xray-assets/geosite.dat"
-      - name: Run repository qualification before the real panel
-        run: |
-          set -euo pipefail
-          go test -count=1 ./internal/analytics ./internal/policy ./internal/policysim ./internal/forkext/trafficpolicy ./internal/forkext
-          make verify
-          make verify-fork
+      - name: Install golangci-lint
+        uses: golangci/golangci-lint-action@v9
+        with:
+          version: latest
+          install-only: true
+      - name: Run focused Go qualification before the real panel
+        run: go test -count=1 ./internal/analytics ./internal/policy ./internal/policysim ./internal/forkext/trafficpolicy ./internal/forkext
+      - name: Run make verify
+        run: make verify
+      - name: Run make verify-fork
+        run: make verify-fork
       - name: Run authenticated hardening lifecycle on the real panel
         env:
           CATX_HARDENING_CANDIDATE_BINARY: ${{ runner.temp }}/catx-hardening-candidate-x-ui
