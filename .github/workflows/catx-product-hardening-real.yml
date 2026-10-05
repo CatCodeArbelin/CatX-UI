@@ -325,7 +325,25 @@ jobs:
         working-directory: frontend
         env:
           PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/ms-playwright
-        run: npm test
+        run: |
+          set +e
+          set -o pipefail
+          failure_log="$RUNNER_TEMP/catx-frontend-test.log"
+          rm -f "$failure_log"
+          npm test 2>&1 | tee "$failure_log"
+          status=${PIPESTATUS[0]}
+          if [ "$status" -ne 0 ]; then
+            details="$(grep -E 'FAIL|AssertionError|expected|Test Files|Tests|❯|Error:' "$failure_log" | tail -n 80 || true)"
+            if [ -z "$details" ]; then
+              details="$(tail -n 60 "$failure_log")"
+            fi
+            details="$(printf '%s' "$details" | tr '\n' ' ')"
+            details="${details//'%'/'%25'}"
+            details="${details//$'\r'/'%0D'}"
+            details="${details//$'\n'/'%0A'}"
+            echo "::error title=frontend test qualification failure::${details:0:12000}"
+            exit "$status"
+          fi
       - name: Build
         run: npm run build
         working-directory: frontend
