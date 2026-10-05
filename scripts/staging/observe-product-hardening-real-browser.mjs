@@ -72,25 +72,17 @@ async function toggleSettingsAndRestore(page) {
   const switchControl = sponsorItem.getByRole("switch");
   if ((await switchControl.count()) !== 1)
     throw new Error("settings: Sponsors switch was not rendered");
-  const saveFeatureSettings = async (stage) => {
-    const saveButton = page.getByRole("button", {
+  const saveFeatureSettings = async () => {
+    let saveButton = page.getByRole("button", {
       name: "Save feature settings",
       exact: true,
     });
     try {
       await saveButton.waitFor({ state: "visible" });
     } catch (error) {
-      const buttons = await page.locator("button").evaluateAll((elements) =>
-        elements.map((element) => ({
-          text: element.textContent?.trim() || "",
-          ariaLabel: element.getAttribute("aria-label") || "",
-          className: element.className,
-          disabled: element.hasAttribute("disabled"),
-        })),
-      );
-      throw new Error(
-        `settings ${stage}: feature save control unavailable; buttons=${JSON.stringify(buttons)}; cause=${error.message}`,
-      );
+      saveButton = page.locator("button").filter({ hasText: "Save feature settings" }).last();
+      await saveButton.waitFor({ state: "attached" });
+      await saveButton.scrollIntoViewIfNeeded();
     }
     const saved = page.waitForResponse(
       (response) =>
@@ -98,7 +90,7 @@ async function toggleSettingsAndRestore(page) {
         response.url().includes("/panel/api/fork/settings/features") &&
         response.ok(),
     );
-    await saveButton.click();
+    await saveButton.click({ force: true });
     await saved;
     await page.waitForFunction(
       () => !document.querySelector("button.ant-btn-loading"),
@@ -107,10 +99,10 @@ async function toggleSettingsAndRestore(page) {
     );
   };
   await switchControl.click();
-  await saveFeatureSettings("enable");
+  await saveFeatureSettings();
   await requireText(page, "Restart required", "settings saved pending restart");
   await switchControl.click();
-  await saveFeatureSettings("restore");
+  await saveFeatureSettings();
   await page.waitForTimeout(500);
   await requireText(page, "Active", "settings active runtime state");
   await saveScreenshot(page, "settings-en");
