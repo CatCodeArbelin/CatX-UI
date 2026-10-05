@@ -107,12 +107,14 @@ async function exercisePolicy(page) {
   await modal.getByLabel("Description").fill("Structured hardening qualification policy");
   const actionItem = modal.locator(".ant-form-item").filter({ hasText: "Action" }).first();
   const actionSelect = actionItem.getByRole("combobox");
-  await actionSelect.click();
-  const allowOption = page.getByRole("option", { name: "Allow", exact: true });
-  await allowOption.waitFor({ state: "visible" });
-  if ((await allowOption.getAttribute("aria-selected")) === "true") {
-    await page.keyboard.press("Escape");
-  } else {
+  const selectedAction = actionItem.locator(".ant-select-selection-item");
+  if (
+    (await selectedAction.count()) !== 1 ||
+    (await selectedAction.innerText()).trim() !== "Allow"
+  ) {
+    await actionSelect.click();
+    const allowOption = page.getByRole("option", { name: "Allow", exact: true });
+    await allowOption.waitFor({ state: "visible" });
     await allowOption.click();
   }
   const destinationItem = modal
