@@ -2821,7 +2821,25 @@
         "enableDns": "Enable DNS Inteligência",
         "healthy": "saudável",
         "attempted": "tentado",
-        "active": "Ativo"
+        "active": "Ativo",
+        "trafficControl": "Traffic control",
+        "quotaWindow": "Quota and window",
+        "seconds": "s",
+        "bytes": "bytes",
+        "activeSpeed": "Active speed",
+        "throttleSpeed": "Throttle speed",
+        "uploadSpeed": "Upload B/s",
+        "downloadSpeed": "Download B/s",
+        "lifecycle": "Lifecycle",
+        "enforcement": "Enforcement",
+        "used": "Used",
+        "remaining": "Remaining",
+        "featureUnavailable": "This feature is currently unavailable.",
+        "windowResetReason": "The quota window was reset.",
+        "quotaReachedReason": "The fixed-window quota was reached.",
+        "upstreamDisabledReason": "The upstream client is disabled.",
+        "attributionUnsupportedReason": "Client identity is not proven for enforcement.",
+        "actionFailed": "The action could not be completed."
       },
       "unknown": "Desconhecido",
       "enabled": "Ativado",
@@ -2839,11 +2857,27 @@
       "never": "Nunca",
       "noItems": "Nenhum item",
       "featureOffTitle": "O recurso «{feature}» está desativado",
-      "featureOffDescription": "Este recurso do CatX-UI está desativado. Ative-o nas configurações de recursos do servidor para usar esta página."
+      "featureOffDescription": "Este recurso do CatX-UI está desativado. Ative-o nas configurações de recursos do servidor para usar esta página.",
+      "local": "Local",
+      "states": {
+        "feature_off": "Disabled",
+        "disabled": "Disabled",
+        "active": "Active",
+        "throttled": "Throttled",
+        "initializing": "Starting",
+        "restart_required": "Restart required",
+        "empty": "No data",
+        "unconfigured": "Not configured",
+        "unsupported": "Unsupported",
+        "degraded": "Limited",
+        "error": "Unavailable",
+        "loading": "Loading"
+      }
     },
     "activity": {
       "labels": {
-      "ambiguous": "Ambíguo / conflitante","time":"Hora","domainIp":"Domínio / IP","service":"Serviço","category":"Categoria","asnCountry":"ASN / país","sourceProvenance":"Fonte / procedência","confidence":"Confiança","firstSeen":"Primeira ocorrência","lastSeen":"Última ocorrência","protocol":"Protocolo","observedDomain":"Domínio observado","resolvedIp":"IP resolvido","record":"Registro","timeline":"Linha do tempo","dnsObservations":"Observações DNS","enrichedDetails":"Detalhes enriquecidos","sessionHistory":"Histórico de sessões","trafficHistory":"Histórico de tráfego","events":"Eventos","dns":"DNS","sessions":"Sessões","range":"Intervalo","upload":"Envio","download":"Recebimento","clients":"Clientes","inbounds":"Entradas","serviceCategory":"Serviço / categoria","observations":"Observações","metadataNote":"Linhas derivadas de metadados; os totais de bytes vêm da contabilidade de tráfego do painel.","aggregates":"Agregados","saveError":"Não foi possível salvar as configurações."
+      "ambiguous": "Ambíguo / conflitante","time":"Hora","domainIp":"Domínio / IP","service":"Serviço","category":"Categoria","asnCountry":"ASN / país","sourceProvenance":"Fonte / procedência","confidence":"Confiança","firstSeen":"Primeira ocorrência","lastSeen":"Última ocorrência","protocol":"Protocolo","observedDomain":"Domínio observado","resolvedIp":"IP resolvido","record":"Registro","timeline":"Linha do tempo","dnsObservations":"Observações DNS","enrichedDetails":"Detalhes enriquecidos","sessionHistory":"Histórico de sessões","trafficHistory":"Histórico de tráfego","events":"Eventos","dns":"DNS","sessions":"Sessões","range":"Intervalo","upload":"Envio","download":"Recebimento","clients":"Clientes","inbounds":"Entradas","serviceCategory":"Serviço / categoria","observations":"Observações","metadataNote":"Linhas derivadas de metadados; os totais de bytes vêm da contabilidade de tráfego do painel.","aggregates":"Agregados","saveError":"Não foi possível salvar as configurações.",
+        "nodes": "Nodes"
       },
       "title": "Cliente Atividade & DNS Inteligência",
       "subtitle": "Observações somente de metadados de um cliente existente do painel.",
@@ -2951,7 +2985,21 @@
         "managedDns": "Gerenciado DNS",
         "safeSearch": "Capacidade do SafeSearch",
         "decisionCandidates": "Candidatos de decisão",
-        "routePreview": "Visualização da rota"
+        "routePreview": "Visualização da rota",
+        "startsAt": "Starts",
+        "expiresAt": "Expires",
+        "startTime": "Start time",
+        "endTime": "End time",
+        "action": "Action",
+        "allow": "Allow",
+        "deny": "Deny",
+        "services": "Services",
+        "destinations": "Destinations",
+        "resolver": "DNS resolver",
+        "scheduleRef": "Schedule reference",
+        "quarantine": "Quarantine",
+        "quarantineAllowlist": "Quarantine allowlist",
+        "advancedJson": "Advanced policy fields (JSON)"
       },
       "title": "Política engine",
       "noPolicies": "Nenhum Políticas yet.",
@@ -3079,7 +3127,8 @@
           "name": "Atualizações da frota em produção",
           "details": "Permite enviar atualizações da frota aos nós de produção."
         }
-      }
+      },
+      "runtimeState": "Runtime state"
     }
   }
 }

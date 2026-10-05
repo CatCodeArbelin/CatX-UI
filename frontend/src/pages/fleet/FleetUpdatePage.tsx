@@ -61,7 +61,7 @@ export default function FleetUpdatePage() {
       setError('');
     } else if (result.success) setCampaigns(result.obj || []);
     else setError(t('fork.fleetUpdate.failure'));
-  }, []);
+  }, [t]);
   useEffect(() => {
     void load();
   }, [load]);

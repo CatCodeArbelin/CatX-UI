@@ -2821,7 +2821,25 @@
         "enableDns": "Enable DNS インテリジェンス",
         "healthy": "正常",
         "attempted": "試行済み",
-        "active": "有効"
+        "active": "有効",
+        "trafficControl": "Traffic control",
+        "quotaWindow": "Quota and window",
+        "seconds": "s",
+        "bytes": "bytes",
+        "activeSpeed": "Active speed",
+        "throttleSpeed": "Throttle speed",
+        "uploadSpeed": "Upload B/s",
+        "downloadSpeed": "Download B/s",
+        "lifecycle": "Lifecycle",
+        "enforcement": "Enforcement",
+        "used": "Used",
+        "remaining": "Remaining",
+        "featureUnavailable": "This feature is currently unavailable.",
+        "windowResetReason": "The quota window was reset.",
+        "quotaReachedReason": "The fixed-window quota was reached.",
+        "upstreamDisabledReason": "The upstream client is disabled.",
+        "attributionUnsupportedReason": "Client identity is not proven for enforcement.",
+        "actionFailed": "The action could not be completed."
       },
       "unknown": "不明",
       "enabled": "有効",
@@ -2839,11 +2857,27 @@
       "never": "なし",
       "noItems": "項目はありません",
       "featureOffTitle": "「{feature}」は無効です",
-      "featureOffDescription": "この CatX-UI 機能は無効です。このページを使うにはサーバーの機能設定で有効にしてください。"
+      "featureOffDescription": "この CatX-UI 機能は無効です。このページを使うにはサーバーの機能設定で有効にしてください。",
+      "local": "Local",
+      "states": {
+        "feature_off": "Disabled",
+        "disabled": "Disabled",
+        "active": "Active",
+        "throttled": "Throttled",
+        "initializing": "Starting",
+        "restart_required": "Restart required",
+        "empty": "No data",
+        "unconfigured": "Not configured",
+        "unsupported": "Unsupported",
+        "degraded": "Limited",
+        "error": "Unavailable",
+        "loading": "Loading"
+      }
     },
     "activity": {
       "labels": {
-      "ambiguous": "不明瞭 / 矛盾","time":"時刻","domainIp":"ドメイン / IP","service":"サービス","category":"カテゴリ","asnCountry":"ASN / 国","sourceProvenance":"ソース / 出所","confidence":"信頼度","firstSeen":"初回確認","lastSeen":"最終確認","protocol":"プロトコル","observedDomain":"観測ドメイン","resolvedIp":"解決済み IP","record":"レコード","timeline":"タイムライン","dnsObservations":"DNS 観測","enrichedDetails":"詳細情報","sessionHistory":"セッション履歴","trafficHistory":"トラフィック履歴","events":"イベント","dns":"DNS","sessions":"セッション","range":"範囲","upload":"アップロード","download":"ダウンロード","clients":"クライアント","inbounds":"インバウンド","serviceCategory":"サービス / カテゴリ","observations":"観測数","metadataNote":"メタデータから作成した行です。バイト合計はパネルのトラフィック集計を使用します。","aggregates":"集計","saveError":"設定を保存できませんでした。"
+      "ambiguous": "不明瞭 / 矛盾","time":"時刻","domainIp":"ドメイン / IP","service":"サービス","category":"カテゴリ","asnCountry":"ASN / 国","sourceProvenance":"ソース / 出所","confidence":"信頼度","firstSeen":"初回確認","lastSeen":"最終確認","protocol":"プロトコル","observedDomain":"観測ドメイン","resolvedIp":"解決済み IP","record":"レコード","timeline":"タイムライン","dnsObservations":"DNS 観測","enrichedDetails":"詳細情報","sessionHistory":"セッション履歴","trafficHistory":"トラフィック履歴","events":"イベント","dns":"DNS","sessions":"セッション","range":"範囲","upload":"アップロード","download":"ダウンロード","clients":"クライアント","inbounds":"インバウンド","serviceCategory":"サービス / カテゴリ","observations":"観測数","metadataNote":"メタデータから作成した行です。バイト合計はパネルのトラフィック集計を使用します。","aggregates":"集計","saveError":"設定を保存できませんでした。",
+        "nodes": "Nodes"
       },
       "title": "クライアント アクティビティ & DNS インテリジェンス",
       "subtitle": "既存のパネルクライアント1件に対するメタデータのみの観測。",
@@ -2951,7 +2985,21 @@
         "managedDns": "管理対象 DNS",
         "safeSearch": "SafeSearch 機能",
         "decisionCandidates": "判断候補",
-        "routePreview": "ルートプレビュー"
+        "routePreview": "ルートプレビュー",
+        "startsAt": "Starts",
+        "expiresAt": "Expires",
+        "startTime": "Start time",
+        "endTime": "End time",
+        "action": "Action",
+        "allow": "Allow",
+        "deny": "Deny",
+        "services": "Services",
+        "destinations": "Destinations",
+        "resolver": "DNS resolver",
+        "scheduleRef": "Schedule reference",
+        "quarantine": "Quarantine",
+        "quarantineAllowlist": "Quarantine allowlist",
+        "advancedJson": "Advanced policy fields (JSON)"
       },
       "title": "ポリシー engine",
       "noPolicies": "なし ポリシー yet.",
@@ -3079,7 +3127,8 @@
           "name": "本番フリート更新",
           "details": "本番ノードへのフリート更新の配信を許可します。"
         }
-      }
+      },
+      "runtimeState": "Runtime state"
     }
   }
 }

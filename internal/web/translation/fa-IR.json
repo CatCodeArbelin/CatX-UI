@@ -2821,7 +2821,25 @@
         "enableDns": "فعال‌سازی هوشمندی DNS",
         "healthy": "سالم",
         "attempted": "تلاش‌شده",
-        "active": "فعال"
+        "active": "فعال",
+        "trafficControl": "Traffic control",
+        "quotaWindow": "Quota and window",
+        "seconds": "s",
+        "bytes": "bytes",
+        "activeSpeed": "Active speed",
+        "throttleSpeed": "Throttle speed",
+        "uploadSpeed": "Upload B/s",
+        "downloadSpeed": "Download B/s",
+        "lifecycle": "Lifecycle",
+        "enforcement": "Enforcement",
+        "used": "Used",
+        "remaining": "Remaining",
+        "featureUnavailable": "This feature is currently unavailable.",
+        "windowResetReason": "The quota window was reset.",
+        "quotaReachedReason": "The fixed-window quota was reached.",
+        "upstreamDisabledReason": "The upstream client is disabled.",
+        "attributionUnsupportedReason": "Client identity is not proven for enforcement.",
+        "actionFailed": "The action could not be completed."
       },
       "unknown": "ناشناخته",
       "enabled": "فعال",
@@ -2839,11 +2857,27 @@
       "never": "هرگز",
       "noItems": "موردی وجود ندارد",
       "featureOffTitle": "قابلیت «{feature}» غیرفعال است",
-      "featureOffDescription": "این ویژگی CatX-UI غیرفعال است. برای استفاده از این صفحه آن را در تنظیمات ویژگی‌های سرور فعال کنید."
+      "featureOffDescription": "این ویژگی CatX-UI غیرفعال است. برای استفاده از این صفحه آن را در تنظیمات ویژگی‌های سرور فعال کنید.",
+      "local": "Local",
+      "states": {
+        "feature_off": "Disabled",
+        "disabled": "Disabled",
+        "active": "Active",
+        "throttled": "Throttled",
+        "initializing": "Starting",
+        "restart_required": "Restart required",
+        "empty": "No data",
+        "unconfigured": "Not configured",
+        "unsupported": "Unsupported",
+        "degraded": "Limited",
+        "error": "Unavailable",
+        "loading": "Loading"
+      }
     },
     "activity": {
       "labels": {
-      "ambiguous": "مبهم / متناقض","time":"زمان","domainIp":"دامنه / IP","service":"سرویس","category":"دسته‌بندی","asnCountry":"ASN / کشور","sourceProvenance":"منبع / منشأ","confidence":"اطمینان","firstSeen":"اولین مشاهده","lastSeen":"آخرین مشاهده","protocol":"پروتکل","observedDomain":"دامنه مشاهده‌شده","resolvedIp":"IP حل‌شده","record":"رکورد","timeline":"خط زمانی","dnsObservations":"مشاهدات DNS","enrichedDetails":"جزئیات غنی‌شده","sessionHistory":"تاریخچه نشست","trafficHistory":"تاریخچه ترافیک","events":"رویدادها","dns":"DNS","sessions":"نشست‌ها","range":"بازه","upload":"ارسال","download":"دریافت","clients":"کلاینت‌ها","inbounds":"ورودی‌ها","serviceCategory":"سرویس / دسته‌بندی","observations":"مشاهدات","metadataNote":"ردیف‌ها از فراداده ساخته شده‌اند؛ مجموع بایت‌ها از حساب ترافیک پنل است.","aggregates":"تجمیع‌ها","saveError":"ذخیره تنظیمات انجام نشد."
+      "ambiguous": "مبهم / متناقض","time":"زمان","domainIp":"دامنه / IP","service":"سرویس","category":"دسته‌بندی","asnCountry":"ASN / کشور","sourceProvenance":"منبع / منشأ","confidence":"اطمینان","firstSeen":"اولین مشاهده","lastSeen":"آخرین مشاهده","protocol":"پروتکل","observedDomain":"دامنه مشاهده‌شده","resolvedIp":"IP حل‌شده","record":"رکورد","timeline":"خط زمانی","dnsObservations":"مشاهدات DNS","enrichedDetails":"جزئیات غنی‌شده","sessionHistory":"تاریخچه نشست","trafficHistory":"تاریخچه ترافیک","events":"رویدادها","dns":"DNS","sessions":"نشست‌ها","range":"بازه","upload":"ارسال","download":"دریافت","clients":"کلاینت‌ها","inbounds":"ورودی‌ها","serviceCategory":"سرویس / دسته‌بندی","observations":"مشاهدات","metadataNote":"ردیف‌ها از فراداده ساخته شده‌اند؛ مجموع بایت‌ها از حساب ترافیک پنل است.","aggregates":"تجمیع‌ها","saveError":"ذخیره تنظیمات انجام نشد.",
+        "nodes": "Nodes"
       },
       "title": "کلاینت فعالیت & DNS هوشمندی",
       "subtitle": "مشاهدات فقط‌فراداده‌ای برای یک کلاینت موجود پنل.",
@@ -2951,7 +2985,21 @@
         "managedDns": "DNS مدیریت‌شده",
         "safeSearch": "قابلیت SafeSearch",
         "decisionCandidates": "نامزدهای تصمیم",
-        "routePreview": "پیش‌نمایش مسیر"
+        "routePreview": "پیش‌نمایش مسیر",
+        "startsAt": "Starts",
+        "expiresAt": "Expires",
+        "startTime": "Start time",
+        "endTime": "End time",
+        "action": "Action",
+        "allow": "Allow",
+        "deny": "Deny",
+        "services": "Services",
+        "destinations": "Destinations",
+        "resolver": "DNS resolver",
+        "scheduleRef": "Schedule reference",
+        "quarantine": "Quarantine",
+        "quarantineAllowlist": "Quarantine allowlist",
+        "advancedJson": "Advanced policy fields (JSON)"
       },
       "title": "موتور سیاست",
       "noPolicies": "هنوز سیاستی وجود ندارد.",
@@ -3079,7 +3127,8 @@
           "name": "به‌روزرسانی ناوگان تولید",
           "details": "ارسال به‌روزرسانی ناوگان به گره‌های تولید را مجاز می‌کند."
         }
-      }
+      },
+      "runtimeState": "Runtime state"
     }
   }
 }

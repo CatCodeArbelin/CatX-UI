@@ -103,7 +103,7 @@ test('reads feature flags, enforces dependencies, and saves with restart guidanc
   );
 
   await waitFor(() => expect(get).toHaveBeenCalledOnce());
-  expect(screen.queryByText('Panel restart required')).toBeNull();
+  expect(screen.getByText('Panel restart required')).toBeTruthy();
   expect(screen.getByText('Analytics').tagName).not.toBe('CODE');
   expect(
     screen.getByText(

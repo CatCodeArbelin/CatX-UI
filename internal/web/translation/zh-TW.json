@@ -2821,7 +2821,25 @@
         "enableDns": "Enable DNS 智慧",
         "healthy": "健康",
         "attempted": "已嘗試",
-        "active": "啟用"
+        "active": "啟用",
+        "trafficControl": "Traffic control",
+        "quotaWindow": "Quota and window",
+        "seconds": "s",
+        "bytes": "bytes",
+        "activeSpeed": "Active speed",
+        "throttleSpeed": "Throttle speed",
+        "uploadSpeed": "Upload B/s",
+        "downloadSpeed": "Download B/s",
+        "lifecycle": "Lifecycle",
+        "enforcement": "Enforcement",
+        "used": "Used",
+        "remaining": "Remaining",
+        "featureUnavailable": "This feature is currently unavailable.",
+        "windowResetReason": "The quota window was reset.",
+        "quotaReachedReason": "The fixed-window quota was reached.",
+        "upstreamDisabledReason": "The upstream client is disabled.",
+        "attributionUnsupportedReason": "Client identity is not proven for enforcement.",
+        "actionFailed": "The action could not be completed."
       },
       "unknown": "未知",
       "enabled": "已啟用",
@@ -2839,11 +2857,27 @@
       "never": "永不",
       "noItems": "沒有項目",
       "featureOffTitle": "功能「{feature}」已停用",
-      "featureOffDescription": "此 CatX-UI 功能已停用。請在伺服器功能設定中啟用後再使用此頁面。"
+      "featureOffDescription": "此 CatX-UI 功能已停用。請在伺服器功能設定中啟用後再使用此頁面。",
+      "local": "Local",
+      "states": {
+        "feature_off": "Disabled",
+        "disabled": "Disabled",
+        "active": "Active",
+        "throttled": "Throttled",
+        "initializing": "Starting",
+        "restart_required": "Restart required",
+        "empty": "No data",
+        "unconfigured": "Not configured",
+        "unsupported": "Unsupported",
+        "degraded": "Limited",
+        "error": "Unavailable",
+        "loading": "Loading"
+      }
     },
     "activity": {
       "labels": {
-      "ambiguous": "模糊 / 衝突","time":"時間","domainIp":"網域 / IP","service":"服務","category":"分類","asnCountry":"ASN / 國家","sourceProvenance":"來源 / 依據","confidence":"信心度","firstSeen":"首次發現","lastSeen":"最近發現","protocol":"通訊協定","observedDomain":"觀測網域","resolvedIp":"解析 IP","record":"記錄","timeline":"時間軸","dnsObservations":"DNS 觀測","enrichedDetails":"增強詳細資料","sessionHistory":"工作階段歷史","trafficHistory":"流量歷史","events":"事件","dns":"DNS","sessions":"工作階段","range":"範圍","upload":"上傳","download":"下載","clients":"用戶端","inbounds":"輸入連線","serviceCategory":"服務 / 分類","observations":"觀測數","metadataNote":"這些列來自中繼資料；位元組總量來自面板流量統計。","aggregates":"彙總","saveError":"無法儲存設定。"
+      "ambiguous": "模糊 / 衝突","time":"時間","domainIp":"網域 / IP","service":"服務","category":"分類","asnCountry":"ASN / 國家","sourceProvenance":"來源 / 依據","confidence":"信心度","firstSeen":"首次發現","lastSeen":"最近發現","protocol":"通訊協定","observedDomain":"觀測網域","resolvedIp":"解析 IP","record":"記錄","timeline":"時間軸","dnsObservations":"DNS 觀測","enrichedDetails":"增強詳細資料","sessionHistory":"工作階段歷史","trafficHistory":"流量歷史","events":"事件","dns":"DNS","sessions":"工作階段","range":"範圍","upload":"上傳","download":"下載","clients":"用戶端","inbounds":"輸入連線","serviceCategory":"服務 / 分類","observations":"觀測數","metadataNote":"這些列來自中繼資料；位元組總量來自面板流量統計。","aggregates":"彙總","saveError":"無法儲存設定。",
+        "nodes": "Nodes"
       },
       "title": "用戶端 活動 & DNS 智慧",
       "subtitle": "僅記錄一個現有面板用戶端的中繼資料觀測。",
@@ -2951,7 +2985,21 @@
         "managedDns": "受管理 DNS",
         "safeSearch": "SafeSearch 功能",
         "decisionCandidates": "決策候選項",
-        "routePreview": "路由預覽"
+        "routePreview": "路由預覽",
+        "startsAt": "Starts",
+        "expiresAt": "Expires",
+        "startTime": "Start time",
+        "endTime": "End time",
+        "action": "Action",
+        "allow": "Allow",
+        "deny": "Deny",
+        "services": "Services",
+        "destinations": "Destinations",
+        "resolver": "DNS resolver",
+        "scheduleRef": "Schedule reference",
+        "quarantine": "Quarantine",
+        "quarantineAllowlist": "Quarantine allowlist",
+        "advancedJson": "Advanced policy fields (JSON)"
       },
       "title": "原則 engine",
       "noPolicies": "沒有 原則 yet.",
@@ -3079,7 +3127,8 @@
           "name": "生產節點群組更新",
           "details": "允許向生產節點發送群組更新。"
         }
-      }
+      },
+      "runtimeState": "Runtime state"
     }
   }
 }

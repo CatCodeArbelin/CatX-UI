@@ -2821,7 +2821,25 @@
         "enableDns": "Enable DNS İstihbarat",
         "healthy": "sağlıklı",
         "attempted": "denendi",
-        "active": "Etkin"
+        "active": "Etkin",
+        "trafficControl": "Traffic control",
+        "quotaWindow": "Quota and window",
+        "seconds": "s",
+        "bytes": "bytes",
+        "activeSpeed": "Active speed",
+        "throttleSpeed": "Throttle speed",
+        "uploadSpeed": "Upload B/s",
+        "downloadSpeed": "Download B/s",
+        "lifecycle": "Lifecycle",
+        "enforcement": "Enforcement",
+        "used": "Used",
+        "remaining": "Remaining",
+        "featureUnavailable": "This feature is currently unavailable.",
+        "windowResetReason": "The quota window was reset.",
+        "quotaReachedReason": "The fixed-window quota was reached.",
+        "upstreamDisabledReason": "The upstream client is disabled.",
+        "attributionUnsupportedReason": "Client identity is not proven for enforcement.",
+        "actionFailed": "The action could not be completed."
       },
       "unknown": "Bilinmiyor",
       "enabled": "Etkin",
@@ -2839,11 +2857,27 @@
       "never": "Hiçbir zaman",
       "noItems": "Öğe yok",
       "featureOffTitle": "«{feature}» özelliği devre dışı",
-      "featureOffDescription": "Bu CatX-UI özelliği devre dışı. Bu sayfayı kullanmak için sunucunun özellik ayarlarından etkinleştirin."
+      "featureOffDescription": "Bu CatX-UI özelliği devre dışı. Bu sayfayı kullanmak için sunucunun özellik ayarlarından etkinleştirin.",
+      "local": "Local",
+      "states": {
+        "feature_off": "Disabled",
+        "disabled": "Disabled",
+        "active": "Active",
+        "throttled": "Throttled",
+        "initializing": "Starting",
+        "restart_required": "Restart required",
+        "empty": "No data",
+        "unconfigured": "Not configured",
+        "unsupported": "Unsupported",
+        "degraded": "Limited",
+        "error": "Unavailable",
+        "loading": "Loading"
+      }
     },
     "activity": {
       "labels": {
-      "ambiguous": "Belirsiz / çelişkili","time":"Zaman","domainIp":"Alan adı / IP","service":"Hizmet","category":"Kategori","asnCountry":"ASN / ülke","sourceProvenance":"Kaynak / köken","confidence":"Güven","firstSeen":"İlk görülme","lastSeen":"Son görülme","protocol":"Protokol","observedDomain":"Gözlemlenen alan adı","resolvedIp":"Çözümlenen IP","record":"Kayıt","timeline":"Zaman çizelgesi","dnsObservations":"DNS gözlemleri","enrichedDetails":"Zenginleştirilmiş ayrıntılar","sessionHistory":"Oturum geçmişi","trafficHistory":"Trafik geçmişi","events":"Olaylar","dns":"DNS","sessions":"Oturumlar","range":"Aralık","upload":"Yükleme","download":"İndirme","clients":"İstemciler","inbounds":"Gelen bağlantılar","serviceCategory":"Hizmet / kategori","observations":"Gözlemler","metadataNote":"Satırlar meta verilerden türetilir; bayt toplamları panel trafik hesabından gelir.","aggregates":"Toplamlar","saveError":"Ayarlar kaydedilemedi."
+      "ambiguous": "Belirsiz / çelişkili","time":"Zaman","domainIp":"Alan adı / IP","service":"Hizmet","category":"Kategori","asnCountry":"ASN / ülke","sourceProvenance":"Kaynak / köken","confidence":"Güven","firstSeen":"İlk görülme","lastSeen":"Son görülme","protocol":"Protokol","observedDomain":"Gözlemlenen alan adı","resolvedIp":"Çözümlenen IP","record":"Kayıt","timeline":"Zaman çizelgesi","dnsObservations":"DNS gözlemleri","enrichedDetails":"Zenginleştirilmiş ayrıntılar","sessionHistory":"Oturum geçmişi","trafficHistory":"Trafik geçmişi","events":"Olaylar","dns":"DNS","sessions":"Oturumlar","range":"Aralık","upload":"Yükleme","download":"İndirme","clients":"İstemciler","inbounds":"Gelen bağlantılar","serviceCategory":"Hizmet / kategori","observations":"Gözlemler","metadataNote":"Satırlar meta verilerden türetilir; bayt toplamları panel trafik hesabından gelir.","aggregates":"Toplamlar","saveError":"Ayarlar kaydedilemedi.",
+        "nodes": "Nodes"
       },
       "title": "İstemci Etkinlik & DNS İstihbarat",
       "subtitle": "Mevcut bir panel istemcisi için yalnızca üst veri gözlemleri.",
@@ -2951,7 +2985,21 @@
         "managedDns": "Yönetilen DNS",
         "safeSearch": "SafeSearch yeteneği",
         "decisionCandidates": "Karar adayları",
-        "routePreview": "Rota önizlemesi"
+        "routePreview": "Rota önizlemesi",
+        "startsAt": "Starts",
+        "expiresAt": "Expires",
+        "startTime": "Start time",
+        "endTime": "End time",
+        "action": "Action",
+        "allow": "Allow",
+        "deny": "Deny",
+        "services": "Services",
+        "destinations": "Destinations",
+        "resolver": "DNS resolver",
+        "scheduleRef": "Schedule reference",
+        "quarantine": "Quarantine",
+        "quarantineAllowlist": "Quarantine allowlist",
+        "advancedJson": "Advanced policy fields (JSON)"
       },
       "title": "İlke engine",
       "noPolicies": "Yok İlkeler yet.",
@@ -3079,7 +3127,8 @@
           "name": "Üretim filosu güncellemeleri",
           "details": "Filo güncellemelerinin üretim düğümlerine gönderilmesine izin verir."
         }
-      }
+      },
+      "runtimeState": "Runtime state"
     }
   }
 }

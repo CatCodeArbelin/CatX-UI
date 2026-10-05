@@ -2821,7 +2821,25 @@
         "enableDns": "Enable DNS Розвідка",
         "healthy": "справний",
         "attempted": "виконано",
-        "active": "Активний"
+        "active": "Активний",
+        "trafficControl": "Traffic control",
+        "quotaWindow": "Quota and window",
+        "seconds": "s",
+        "bytes": "bytes",
+        "activeSpeed": "Active speed",
+        "throttleSpeed": "Throttle speed",
+        "uploadSpeed": "Upload B/s",
+        "downloadSpeed": "Download B/s",
+        "lifecycle": "Lifecycle",
+        "enforcement": "Enforcement",
+        "used": "Used",
+        "remaining": "Remaining",
+        "featureUnavailable": "This feature is currently unavailable.",
+        "windowResetReason": "The quota window was reset.",
+        "quotaReachedReason": "The fixed-window quota was reached.",
+        "upstreamDisabledReason": "The upstream client is disabled.",
+        "attributionUnsupportedReason": "Client identity is not proven for enforcement.",
+        "actionFailed": "The action could not be completed."
       },
       "unknown": "Невідомо",
       "enabled": "Увімкнено",
@@ -2839,11 +2857,27 @@
       "never": "Ніколи",
       "noItems": "Немає елементів",
       "featureOffTitle": "Функцію «{feature}» вимкнено",
-      "featureOffDescription": "Цю функцію CatX-UI вимкнено. Увімкніть її в налаштуваннях функцій сервера, щоб використовувати цю сторінку."
+      "featureOffDescription": "Цю функцію CatX-UI вимкнено. Увімкніть її в налаштуваннях функцій сервера, щоб використовувати цю сторінку.",
+      "local": "Local",
+      "states": {
+        "feature_off": "Disabled",
+        "disabled": "Disabled",
+        "active": "Active",
+        "throttled": "Throttled",
+        "initializing": "Starting",
+        "restart_required": "Restart required",
+        "empty": "No data",
+        "unconfigured": "Not configured",
+        "unsupported": "Unsupported",
+        "degraded": "Limited",
+        "error": "Unavailable",
+        "loading": "Loading"
+      }
     },
     "activity": {
       "labels": {
-      "ambiguous": "Неоднозначний / суперечливий","time":"Час","domainIp":"Домен / IP","service":"Сервіс","category":"Категорія","asnCountry":"ASN / країна","sourceProvenance":"Джерело / походження","confidence":"Достовірність","firstSeen":"Перше спостереження","lastSeen":"Останнє спостереження","protocol":"Протокол","observedDomain":"Домен у спостереженні","resolvedIp":"Розв’язаний IP","record":"Запис","timeline":"Хронологія","dnsObservations":"DNS-спостереження","enrichedDetails":"Розширені відомості","sessionHistory":"Історія сеансів","trafficHistory":"Історія трафіку","events":"Події","dns":"DNS","sessions":"Сеанси","range":"Період","upload":"Вивантаження","download":"Завантаження","clients":"Клієнти","inbounds":"Вхідні підключення","serviceCategory":"Сервіс / категорія","observations":"Спостереження","metadataNote":"Рядки отримано з метаданих; підсумки байтів надходять з обліку трафіку панелі.","aggregates":"Агрегати","saveError":"Не вдалося зберегти налаштування."
+      "ambiguous": "Неоднозначний / суперечливий","time":"Час","domainIp":"Домен / IP","service":"Сервіс","category":"Категорія","asnCountry":"ASN / країна","sourceProvenance":"Джерело / походження","confidence":"Достовірність","firstSeen":"Перше спостереження","lastSeen":"Останнє спостереження","protocol":"Протокол","observedDomain":"Домен у спостереженні","resolvedIp":"Розв’язаний IP","record":"Запис","timeline":"Хронологія","dnsObservations":"DNS-спостереження","enrichedDetails":"Розширені відомості","sessionHistory":"Історія сеансів","trafficHistory":"Історія трафіку","events":"Події","dns":"DNS","sessions":"Сеанси","range":"Період","upload":"Вивантаження","download":"Завантаження","clients":"Клієнти","inbounds":"Вхідні підключення","serviceCategory":"Сервіс / категорія","observations":"Спостереження","metadataNote":"Рядки отримано з метаданих; підсумки байтів надходять з обліку трафіку панелі.","aggregates":"Агрегати","saveError":"Не вдалося зберегти налаштування.",
+        "nodes": "Nodes"
       },
       "title": "Клієнт Активність & DNS Розвідка",
       "subtitle": "Спостереження лише за метаданими одного наявного клієнта панелі.",
@@ -2951,7 +2985,21 @@
         "managedDns": "Керований DNS",
         "safeSearch": "Можливість SafeSearch",
         "decisionCandidates": "Кандидати рішення",
-        "routePreview": "Попередній перегляд маршруту"
+        "routePreview": "Попередній перегляд маршруту",
+        "startsAt": "Starts",
+        "expiresAt": "Expires",
+        "startTime": "Start time",
+        "endTime": "End time",
+        "action": "Action",
+        "allow": "Allow",
+        "deny": "Deny",
+        "services": "Services",
+        "destinations": "Destinations",
+        "resolver": "DNS resolver",
+        "scheduleRef": "Schedule reference",
+        "quarantine": "Quarantine",
+        "quarantineAllowlist": "Quarantine allowlist",
+        "advancedJson": "Advanced policy fields (JSON)"
       },
       "title": "Політика engine",
       "noPolicies": "Немає Політики yet.",
@@ -3079,7 +3127,8 @@
           "name": "Оновлення вузлів у робочому середовищі",
           "details": "Дозволяє надсилати оновлення вузлам у робочому середовищі."
         }
-      }
+      },
+      "runtimeState": "Runtime state"
     }
   }
 }

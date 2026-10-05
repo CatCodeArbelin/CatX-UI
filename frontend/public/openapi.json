@@ -5822,6 +5822,9 @@
           "enforcementNote": {
             "type": "string"
           },
+          "featureDisabled": {
+            "type": "boolean"
+          },
           "id": {
             "type": "integer"
           },
@@ -5841,6 +5844,9 @@
           "remainingBytes": {
             "format": "int64",
             "type": "integer"
+          },
+          "state": {
+            "type": "string"
           },
           "throttleDownloadBps": {
             "format": "int64",
@@ -5877,12 +5883,14 @@
           "clientEmail",
           "enabled",
           "enforcement",
+          "featureDisabled",
           "id",
           "lifecycle",
           "owner",
           "quotaBytes",
           "reason",
           "remainingBytes",
+          "state",
           "throttleDownloadBps",
           "throttleUploadBps",
           "updatedAt",

@@ -2821,7 +2821,25 @@
         "enableDns": "Enable DNS Intelijen",
         "healthy": "sehat",
         "attempted": "dicoba",
-        "active": "Aktif"
+        "active": "Aktif",
+        "trafficControl": "Traffic control",
+        "quotaWindow": "Quota and window",
+        "seconds": "s",
+        "bytes": "bytes",
+        "activeSpeed": "Active speed",
+        "throttleSpeed": "Throttle speed",
+        "uploadSpeed": "Upload B/s",
+        "downloadSpeed": "Download B/s",
+        "lifecycle": "Lifecycle",
+        "enforcement": "Enforcement",
+        "used": "Used",
+        "remaining": "Remaining",
+        "featureUnavailable": "This feature is currently unavailable.",
+        "windowResetReason": "The quota window was reset.",
+        "quotaReachedReason": "The fixed-window quota was reached.",
+        "upstreamDisabledReason": "The upstream client is disabled.",
+        "attributionUnsupportedReason": "Client identity is not proven for enforcement.",
+        "actionFailed": "The action could not be completed."
       },
       "unknown": "Tidak diketahui",
       "enabled": "Diaktifkan",
@@ -2839,11 +2857,27 @@
       "never": "Tidak pernah",
       "noItems": "Tidak ada item",
       "featureOffTitle": "Fitur «{feature}» dinonaktifkan",
-      "featureOffDescription": "Fitur CatX-UI ini dinonaktifkan. Aktifkan di pengaturan fitur server untuk menggunakan halaman ini."
+      "featureOffDescription": "Fitur CatX-UI ini dinonaktifkan. Aktifkan di pengaturan fitur server untuk menggunakan halaman ini.",
+      "local": "Local",
+      "states": {
+        "feature_off": "Disabled",
+        "disabled": "Disabled",
+        "active": "Active",
+        "throttled": "Throttled",
+        "initializing": "Starting",
+        "restart_required": "Restart required",
+        "empty": "No data",
+        "unconfigured": "Not configured",
+        "unsupported": "Unsupported",
+        "degraded": "Limited",
+        "error": "Unavailable",
+        "loading": "Loading"
+      }
     },
     "activity": {
       "labels": {
-      "ambiguous": "Ambigu / bertentangan","time":"Waktu","domainIp":"Domain atau IP","service":"Layanan","category":"Kategori","asnCountry":"ASN / negara","sourceProvenance":"Sumber / asal","confidence":"Keyakinan","firstSeen":"Pertama terlihat","lastSeen":"Terakhir terlihat","protocol":"Protokol","observedDomain":"Domain teramati","resolvedIp":"IP terurai","record":"Rekaman","timeline":"Linimasa","dnsObservations":"Pengamatan DNS","enrichedDetails":"Detail diperkaya","sessionHistory":"Riwayat sesi","trafficHistory":"Riwayat lalu lintas","events":"Peristiwa","dns":"DNS","sessions":"Sesi","range":"Rentang","upload":"Unggah","download":"Unduh","clients":"Klien","inbounds":"Inbound","serviceCategory":"Layanan / kategori","observations":"Pengamatan","metadataNote":"Baris berasal dari metadata; total byte berasal dari pencatatan lalu lintas panel.","aggregates":"Agregat","saveError":"Pengaturan tidak dapat disimpan."
+      "ambiguous": "Ambigu / bertentangan","time":"Waktu","domainIp":"Domain atau IP","service":"Layanan","category":"Kategori","asnCountry":"ASN / negara","sourceProvenance":"Sumber / asal","confidence":"Keyakinan","firstSeen":"Pertama terlihat","lastSeen":"Terakhir terlihat","protocol":"Protokol","observedDomain":"Domain teramati","resolvedIp":"IP terurai","record":"Rekaman","timeline":"Linimasa","dnsObservations":"Pengamatan DNS","enrichedDetails":"Detail diperkaya","sessionHistory":"Riwayat sesi","trafficHistory":"Riwayat lalu lintas","events":"Peristiwa","dns":"DNS","sessions":"Sesi","range":"Rentang","upload":"Unggah","download":"Unduh","clients":"Klien","inbounds":"Inbound","serviceCategory":"Layanan / kategori","observations":"Pengamatan","metadataNote":"Baris berasal dari metadata; total byte berasal dari pencatatan lalu lintas panel.","aggregates":"Agregat","saveError":"Pengaturan tidak dapat disimpan.",
+        "nodes": "Nodes"
       },
       "title": "Klien Aktivitas & DNS Intelijen",
       "subtitle": "Observasi hanya metadata untuk satu klien panel yang sudah ada.",
@@ -2951,7 +2985,21 @@
         "managedDns": "Terkelola DNS",
         "safeSearch": "Kemampuan SafeSearch",
         "decisionCandidates": "Kandidat keputusan",
-        "routePreview": "Pratinjau rute"
+        "routePreview": "Pratinjau rute",
+        "startsAt": "Starts",
+        "expiresAt": "Expires",
+        "startTime": "Start time",
+        "endTime": "End time",
+        "action": "Action",
+        "allow": "Allow",
+        "deny": "Deny",
+        "services": "Services",
+        "destinations": "Destinations",
+        "resolver": "DNS resolver",
+        "scheduleRef": "Schedule reference",
+        "quarantine": "Quarantine",
+        "quarantineAllowlist": "Quarantine allowlist",
+        "advancedJson": "Advanced policy fields (JSON)"
       },
       "title": "Kebijakan engine",
       "noPolicies": "Tidak ada Kebijakan yet.",
@@ -3079,7 +3127,8 @@
           "name": "Pembaruan armada produksi",
           "details": "Mengizinkan pengiriman pembaruan armada ke node produksi."
         }
-      }
+      },
+      "runtimeState": "Runtime state"
     }
   }
 }

@@ -2821,7 +2821,25 @@
         "enableDns": "Enable DNS Thông tin chuyên sâu",
         "healthy": "khỏe mạnh",
         "attempted": "đã thử",
-        "active": "Đang hoạt động"
+        "active": "Đang hoạt động",
+        "trafficControl": "Traffic control",
+        "quotaWindow": "Quota and window",
+        "seconds": "s",
+        "bytes": "bytes",
+        "activeSpeed": "Active speed",
+        "throttleSpeed": "Throttle speed",
+        "uploadSpeed": "Upload B/s",
+        "downloadSpeed": "Download B/s",
+        "lifecycle": "Lifecycle",
+        "enforcement": "Enforcement",
+        "used": "Used",
+        "remaining": "Remaining",
+        "featureUnavailable": "This feature is currently unavailable.",
+        "windowResetReason": "The quota window was reset.",
+        "quotaReachedReason": "The fixed-window quota was reached.",
+        "upstreamDisabledReason": "The upstream client is disabled.",
+        "attributionUnsupportedReason": "Client identity is not proven for enforcement.",
+        "actionFailed": "The action could not be completed."
       },
       "unknown": "Không xác định",
       "enabled": "Đã bật",
@@ -2839,11 +2857,27 @@
       "never": "Không bao giờ",
       "noItems": "Không có mục nào",
       "featureOffTitle": "Tính năng «{feature}» đã tắt",
-      "featureOffDescription": "Tính năng CatX-UI này đang tắt. Hãy bật tính năng này trong cài đặt tính năng của máy chủ để sử dụng trang này."
+      "featureOffDescription": "Tính năng CatX-UI này đang tắt. Hãy bật tính năng này trong cài đặt tính năng của máy chủ để sử dụng trang này.",
+      "local": "Local",
+      "states": {
+        "feature_off": "Disabled",
+        "disabled": "Disabled",
+        "active": "Active",
+        "throttled": "Throttled",
+        "initializing": "Starting",
+        "restart_required": "Restart required",
+        "empty": "No data",
+        "unconfigured": "Not configured",
+        "unsupported": "Unsupported",
+        "degraded": "Limited",
+        "error": "Unavailable",
+        "loading": "Loading"
+      }
     },
     "activity": {
       "labels": {
-      "ambiguous": "Mơ hồ / xung đột","time":"Thời gian","domainIp":"Miền / IP","service":"Dịch vụ","category":"Danh mục","asnCountry":"ASN / quốc gia","sourceProvenance":"Nguồn / xuất xứ","confidence":"Độ tin cậy","firstSeen":"Thấy lần đầu","lastSeen":"Thấy lần cuối","protocol":"Giao thức","observedDomain":"Miền quan sát","resolvedIp":"IP đã phân giải","record":"Bản ghi","timeline":"Dòng thời gian","dnsObservations":"Quan sát DNS","enrichedDetails":"Chi tiết mở rộng","sessionHistory":"Lịch sử phiên","trafficHistory":"Lịch sử lưu lượng","events":"Sự kiện","dns":"DNS","sessions":"Phiên","range":"Phạm vi","upload":"Tải lên","download":"Tải xuống","clients":"Máy khách","inbounds":"Kết nối vào","serviceCategory":"Dịch vụ / danh mục","observations":"Số quan sát","metadataNote":"Các dòng được suy ra từ siêu dữ liệu; tổng byte lấy từ phần kế toán lưu lượng của bảng điều khiển.","aggregates":"Tổng hợp","saveError":"Không thể lưu cài đặt."
+      "ambiguous": "Mơ hồ / xung đột","time":"Thời gian","domainIp":"Miền / IP","service":"Dịch vụ","category":"Danh mục","asnCountry":"ASN / quốc gia","sourceProvenance":"Nguồn / xuất xứ","confidence":"Độ tin cậy","firstSeen":"Thấy lần đầu","lastSeen":"Thấy lần cuối","protocol":"Giao thức","observedDomain":"Miền quan sát","resolvedIp":"IP đã phân giải","record":"Bản ghi","timeline":"Dòng thời gian","dnsObservations":"Quan sát DNS","enrichedDetails":"Chi tiết mở rộng","sessionHistory":"Lịch sử phiên","trafficHistory":"Lịch sử lưu lượng","events":"Sự kiện","dns":"DNS","sessions":"Phiên","range":"Phạm vi","upload":"Tải lên","download":"Tải xuống","clients":"Máy khách","inbounds":"Kết nối vào","serviceCategory":"Dịch vụ / danh mục","observations":"Số quan sát","metadataNote":"Các dòng được suy ra từ siêu dữ liệu; tổng byte lấy từ phần kế toán lưu lượng của bảng điều khiển.","aggregates":"Tổng hợp","saveError":"Không thể lưu cài đặt.",
+        "nodes": "Nodes"
       },
       "title": "Máy khách Hoạt động & DNS Thông tin chuyên sâu",
       "subtitle": "Chỉ quan sát siêu dữ liệu của một máy khách bảng điều khiển hiện có.",
@@ -2951,7 +2985,21 @@
         "managedDns": "Được quản lý DNS",
         "safeSearch": "Khả năng SafeSearch",
         "decisionCandidates": "Ứng viên quyết định",
-        "routePreview": "Xem trước tuyến"
+        "routePreview": "Xem trước tuyến",
+        "startsAt": "Starts",
+        "expiresAt": "Expires",
+        "startTime": "Start time",
+        "endTime": "End time",
+        "action": "Action",
+        "allow": "Allow",
+        "deny": "Deny",
+        "services": "Services",
+        "destinations": "Destinations",
+        "resolver": "DNS resolver",
+        "scheduleRef": "Schedule reference",
+        "quarantine": "Quarantine",
+        "quarantineAllowlist": "Quarantine allowlist",
+        "advancedJson": "Advanced policy fields (JSON)"
       },
       "title": "Chính sách engine",
       "noPolicies": "Không có Các chính sách yet.",
@@ -3079,7 +3127,8 @@
           "name": "Cập nhật cụm máy chủ sản xuất",
           "details": "Cho phép gửi cập nhật cụm máy chủ đến các nút sản xuất."
         }
-      }
+      },
+      "runtimeState": "Runtime state"
     }
   }
 }
