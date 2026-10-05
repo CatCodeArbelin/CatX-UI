@@ -143,8 +143,12 @@ async function exercisePolicy(page) {
   );
   await modal.getByRole("button", { name: "Save", exact: true }).click();
   const savedPolicyResponse = await policyResponse;
-  if (!savedPolicyResponse.ok())
-    throw new Error(`policy create failed: HTTP ${savedPolicyResponse.status()}`);
+  if (!savedPolicyResponse.ok()) {
+    const responseBody = (await savedPolicyResponse.text()).slice(0, 500);
+    throw new Error(
+      `policy create failed: HTTP ${savedPolicyResponse.status()} body=${responseBody}`,
+    );
+  }
   await page.getByText(currentPolicyName, { exact: true }).first().waitFor({ timeout: 10_000 });
   const editButton = page.getByRole("button", { name: new RegExp(`Edit.*${currentPolicyName}`) });
   await editButton.click();
