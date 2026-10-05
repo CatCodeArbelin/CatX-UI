@@ -5796,6 +5796,9 @@ export const SCHEMAS: Record<string, unknown> = {
       "enforcementNote": {
         "type": "string"
       },
+      "featureDisabled": {
+        "type": "boolean"
+      },
       "id": {
         "type": "integer"
       },
@@ -5815,6 +5818,9 @@ export const SCHEMAS: Record<string, unknown> = {
       "remainingBytes": {
         "format": "int64",
         "type": "integer"
+      },
+      "state": {
+        "type": "string"
       },
       "throttleDownloadBps": {
         "format": "int64",
@@ -5851,12 +5857,14 @@ export const SCHEMAS: Record<string, unknown> = {
       "clientEmail",
       "enabled",
       "enforcement",
+      "featureDisabled",
       "id",
       "lifecycle",
       "owner",
       "quotaBytes",
       "reason",
       "remainingBytes",
+      "state",
       "throttleDownloadBps",
       "throttleUploadBps",
       "updatedAt",

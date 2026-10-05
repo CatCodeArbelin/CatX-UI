@@ -1374,12 +1374,14 @@ export interface View {
   enabled: boolean;
   enforcement: string;
   enforcementNote?: string;
+  featureDisabled: boolean;
   id: number;
   lifecycle: string;
   owner: string;
   quotaBytes: number;
   reason: string;
   remainingBytes: number;
+  state: string;
   throttleDownloadBps: number;
   throttleUploadBps: number;
   updatedAt: number;
