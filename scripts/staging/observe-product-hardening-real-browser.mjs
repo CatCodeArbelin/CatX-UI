@@ -124,7 +124,7 @@ async function exercisePolicy(page) {
     .last();
   await allowOption.waitFor({ state: "attached" });
   await allowOption.evaluate((option) => option.click());
-  const selectedAction = actionItem.locator(".ant-select-content-value");
+  const selectedAction = actionItem.locator(".ant-select-content");
   await selectedAction.waitFor({ state: "visible" });
   if ((await selectedAction.innerText()).trim() !== "Allow")
     throw new Error("policy create: Allow action was not selected");
