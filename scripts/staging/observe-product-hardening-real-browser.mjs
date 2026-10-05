@@ -123,7 +123,11 @@ async function exercisePolicy(page) {
     .filter({ hasText: /^Allow$/ })
     .last();
   await allowOption.waitFor({ state: "attached" });
-  await allowOption.click({ force: true });
+  await allowOption.evaluate((option) => option.click());
+  const selectedAction = actionItem.locator(".ant-select-content-value");
+  await selectedAction.waitFor({ state: "visible" });
+  if ((await selectedAction.innerText()).trim() !== "Allow")
+    throw new Error("policy create: Allow action was not selected");
   const destinationItem = modal
     .locator(".ant-form-item")
     .filter({ hasText: "Destinations" })
@@ -131,7 +135,16 @@ async function exercisePolicy(page) {
   await destinationItem.locator("input").fill("example.com");
   await destinationItem.locator("input").press("Enter");
   await requireText(page, "Advanced policy fields (JSON)", "policy structured editor");
+  const policyResponse = page.waitForResponse(
+    (response) =>
+      response.request().method() === "POST" &&
+      response.url().includes("/panel/api/policies") &&
+      response.url().endsWith("/policies"),
+  );
   await modal.getByRole("button", { name: "Save", exact: true }).click();
+  const savedPolicyResponse = await policyResponse;
+  if (!savedPolicyResponse.ok())
+    throw new Error(`policy create failed: HTTP ${savedPolicyResponse.status()}`);
   await page.getByText(currentPolicyName, { exact: true }).first().waitFor({ timeout: 10_000 });
   const editButton = page.getByRole("button", { name: new RegExp(`Edit.*${currentPolicyName}`) });
   await editButton.click();
