@@ -117,7 +117,13 @@ async function exercisePolicy(page) {
   await modal.getByLabel("Description").fill("Structured hardening qualification policy");
   const actionItem = modal.locator(".ant-form-item").filter({ hasText: "Action" }).first();
   const actionSelect = actionItem.getByRole("combobox");
-  await actionSelect.waitFor({ state: "attached" });
+  await actionSelect.click();
+  const allowOption = page
+    .locator(".ant-select-item-option")
+    .filter({ hasText: /^Allow$/ })
+    .last();
+  await allowOption.waitFor({ state: "attached" });
+  await allowOption.click({ force: true });
   const destinationItem = modal
     .locator(".ant-form-item")
     .filter({ hasText: "Destinations" })
