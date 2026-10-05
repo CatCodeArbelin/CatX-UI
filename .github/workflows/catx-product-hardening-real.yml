@@ -75,17 +75,24 @@ jobs:
           for target in gen-check lint format-check typecheck msw-worker-check test build build-storybook; do
             echo "diagnosing make ${target}"
             log_file="$(mktemp)"
-            make "${target}" >"${log_file}" 2>&1
+            if [ "${target}" = "test" ]; then
+              env GITHUB_ACTIONS= make "${target}" >"${log_file}" 2>&1
+            else
+              make "${target}" >"${log_file}" 2>&1
+            fi
             status=$?
             cat "${log_file}"
             if [ "$status" -ne 0 ]; then
               echo "::error title=make verify target failed::make ${target} exited ${status}"
-              while IFS= read -r line; do
-                line="${line//'%'/'%25'}"
-                line="${line//$'\r'/'%0D'}"
-                line="${line//$'\n'/'%0A'}"
-                echo "::error title=make ${target} output::${line}"
-              done < <(tail -n 80 "${log_file}")
+              details="$(grep -E 'FAIL|AssertionError|expected|Test Files|Tests|❯|Error:' "${log_file}" | tail -n 60 || true)"
+              if [ -z "${details}" ]; then
+                details="$(tail -n 40 "${log_file}")"
+              fi
+              details="$(printf '%s' "${details}" | tr '\n' ' ')"
+              details="${details//'%'/'%25'}"
+              details="${details//$'\r'/'%0D'}"
+              details="${details//$'\n'/'%0A'}"
+              echo "::error title=make ${target} failure::${details:0:12000}"
               failed=1
             fi
             rm -f "${log_file}"
