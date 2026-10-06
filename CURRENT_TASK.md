@@ -16,10 +16,10 @@
 
 `MODULE QUALIFICATION`
 
-Step 0 DEVS marking is complete. M00 code review, contract freeze, and the
-automated baseline are recorded on the dedicated module branch. The next
-governed action is M00 localization review; no localization or UI/CSS review is
-included in this package.
+Step 0 DEVS marking is complete. M00 code review, contract freeze, automated
+baseline, and en-US / ru-RU localization review are recorded on the dedicated
+module branch. The next governed action is M00 UI / CSS / Product Visual
+Review; no UI/CSS or Human Review approval is included in this package.
 
 ## Current module
 
@@ -27,7 +27,7 @@ included in this package.
 
 ## Current workflow stage
 
-`AUTOMATED_TESTING`
+`UI_REVIEW`
 
 ## Current maturity
 
@@ -116,4 +116,4 @@ Only the maintainer may provide:
 
 ## Current next action
 
-`M00 localization review`
+`M00 UI / CSS / Product Visual Review`

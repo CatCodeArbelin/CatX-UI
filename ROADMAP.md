@@ -96,7 +96,7 @@ changes.
 
 | ID | Module | Maturity | Workflow | Automated | Human Review | Merge |
 |---|---|---|---|---|---|---|
-| M00 | Core Lifecycle / Feature Settings | DEVS | AUTOMATED_TESTING | PASS (20/20) | PENDING | NO |
+| M00 | Core Lifecycle / Feature Settings | DEVS | UI_REVIEW | PASS (20/20) | PENDING | NO |
 | M01 | Analytics / Activity | DEVS | PENDING | PENDING | PENDING | NO |
 | M02 | DNS Intelligence | DEVS | PENDING | PENDING | PENDING | NO |
 | M03 | Policy Engine | DEVS | PENDING | PENDING | PENDING | NO |
@@ -159,7 +159,7 @@ Current module:
 
 Current workflow:
 
-`AUTOMATED_TESTING`
+`UI_REVIEW`
 
 Current maturity:
 
@@ -167,11 +167,15 @@ Current maturity:
 
 Next action:
 
-M00 localization review.
+M00 UI / CSS / Product Visual Review.
 
-Step 0 is complete. M00 code review and test contract are frozen. The hosted
-M00 baseline passed 20/20 tests with no product fixes; Human Review is still
-pending and M00 remains `DEVS`.
+Step 0 is complete. M00 code review, test contract, and en-US / ru-RU
+localization review are complete. The hosted candidate passed all focused
+frontend localization checks, frontend lint/format/typecheck/build, the
+deterministic M00 suite, the real `restartPanel` boundary test, and both race
+suites at `526ac67c12c6332f4c81fb225780c4525fe80822` (20/20 M00 regression
+tests). UI/CSS/Product Visual Review and maintainer Human Review are pending;
+M00 remains `DEVS`.
 
 ## Human Review authority
 

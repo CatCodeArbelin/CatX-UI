@@ -164,7 +164,16 @@ than weakened to accept either wording.
 
 ## Qualification result
 
-Functional M00 regression remains governed by the existing M00-T01–T20 suite.
-The localization candidate must rerun all twenty tests after the frontend
-changes. M00 remains `DEVS`; UI/CSS review and Human Review are separate
-stages.
+Localization qualification: `PASS`.
+
+Hosted run [37544450954](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37544450954)
+passed at candidate SHA
+`526ac67c12c6332f4c81fb225780c4525fe80822`. The frontend job passed the
+focused M00 localization/component tests, lint, format check, typecheck, and
+build. The M00 job passed the deterministic suite, real `restartPanel`
+boundary test, M00 race suite, and `restartPanel` race test. The existing
+M00-T01–T20 regression therefore remains `PASS (20/20)` after localization
+changes.
+
+M00 remains `DEVS`. UI/CSS/Product Visual Review and maintainer Human Review
+are separate governed stages and are not approved by this record.
