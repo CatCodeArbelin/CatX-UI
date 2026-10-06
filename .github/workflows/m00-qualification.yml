@@ -1,0 +1,60 @@
+name: M00 module qualification
+
+on:
+  push:
+    branches:
+      - "qualify/v0.3-m00-core"
+    paths:
+      - "**.go"
+      - "go.mod"
+      - "go.sum"
+      - "docs/39_MODULE_ACCEPTANCE_MATRIX.md"
+      - "docs/40_M00_QUALIFICATION_BASELINE.md"
+      - ".github/workflows/m00-qualification.yml"
+  pull_request:
+    branches:
+      - "qualification/v0.3-module-review"
+    paths:
+      - "**.go"
+      - "go.mod"
+      - "go.sum"
+      - "docs/39_MODULE_ACCEPTANCE_MATRIX.md"
+      - "docs/40_M00_QUALIFICATION_BASELINE.md"
+      - ".github/workflows/m00-qualification.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  m00:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: catx
+          POSTGRES_PASSWORD: catx
+          POSTGRES_DB: catx_m00_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U catx -d catx_m00_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    env:
+      XUI_TEST_PG_DSN: postgres://catx:catx@127.0.0.1:5432/catx_m00_test?sslmode=disable
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Run deterministic M00 suite
+        run: go test ./internal/forkext -run '^TestM00T' -count=1 -v
+      - name: Run real restartPanel boundary test
+        run: go test ./internal/web/controller -run '^TestM00T05' -count=1 -v
+      - name: Run M00 race suite
+        run: go test -race ./internal/forkext -run '^TestM00T' -count=1 -v
+      - name: Run restartPanel race test
+        run: go test -race ./internal/web/controller -run '^TestM00T05' -count=1 -v

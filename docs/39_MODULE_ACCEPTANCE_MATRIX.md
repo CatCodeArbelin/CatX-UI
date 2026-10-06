@@ -37,7 +37,121 @@ Every module entry must define:
 
 Purpose:
 
-Provide truthful enable/disable/runtime lifecycle for CatX modules.
+Provide a truthful, recoverable lifecycle for CatX feature configuration while
+leaving upstream lifecycle ownership and feature-disabled behavior intact.
+
+User promise:
+
+An operator can distinguish what is persisted as desired from what is actually
+running. Enabling, disabling, restart, startup reconstruction, preparation
+failure, retry, and malformed optional settings are represented truthfully in
+the Feature Settings API. A failed optional CatX transition does not make the
+unrelated panel unusable.
+
+Supported:
+
+- namespaced persisted feature flags with default-OFF behavior;
+- dependency validation without implicit dependency enablement;
+- explicit schema preparation followed by runtime activation;
+- runtime deactivation that removes CatX effects;
+- startup reconstruction from persisted desired state;
+- the existing `restartPanel`/SIGHUP lifecycle boundary;
+- database import followed by startup/restart reconstruction;
+- deterministic error and retry semantics, including partial preparation;
+- SQLite and PostgreSQL semantic parity;
+- typed Feature Settings API state;
+- idempotent activation and deactivation.
+
+Unsupported / outside M00:
+
+- Analytics, DNS, Policy, QoS, Risk, Audit, Portal, Fleet, Fleet Updates, or
+  Sponsors business behavior;
+- proving that a policy blocks a destination, that analytics records a real
+  event, or that a traffic shaper enforces a rate;
+- frontend visual, localization, or CSS qualification;
+- changing the upstream Xray or panel lifecycle architecture.
+
+Inputs:
+
+- namespaced desired flags in the existing settings key/value table;
+- declared feature dependencies;
+- the database dialect and current schema;
+- explicit preparation, startup, restart, or import lifecycle triggers.
+
+Outputs:
+
+- persisted desired state;
+- active in-process runtime state;
+- `feature_off`, `initializing`, `restart_required`, `active`, or `error`
+  lifecycle state;
+- preparation/activation errors suitable for operator retry;
+- a readable Feature Settings API response even when one optional flag is
+  malformed.
+
+State contract:
+
+1. Desired persisted state and active runtime state are separate concepts.
+2. Persisting `desired=true` never by itself means `ACTIVE`.
+3. `ACTIVE` is allowed only after all required preparation and activation work
+   for that desired configuration succeeds.
+4. An activation attempt from an inactive runtime that fails reports
+   `active=false` and `state=error`. If a previously known-good runtime is
+   intentionally preserved during a later failed transition, `active=true`
+   may describe that prior runtime only when `state=error` makes clear that the
+   new desired configuration is not active.
+5. Disabling a feature removes its CatX runtime effect after the approved apply
+   boundary; the pending interval is `restart_required`, not `feature_off`.
+6. Feature-OFF behavior has no CatX runtime effect and remains upstream
+   compatible.
+7. Generic runtime reload/restart applies already-prepared state only. It must
+   not silently become a schema migration boundary.
+8. Schema preparation occurs through the approved explicit activation or
+   startup/import lifecycle, is idempotent, and exposes partial-progress
+   recovery rather than pretending an atomic rollback that is not guaranteed.
+9. A failed transition has a deterministic retry path and does not tear down a
+   previously healthy optional runtime.
+10. Malformed persisted flags make the affected item `enabled=false`,
+    `active=false`, `state=error` (or an explicitly equivalent typed error)
+    without turning the whole Feature Settings response into a 500.
+11. Invalid dependency combinations are rejected atomically and never silently
+    activated.
+12. Startup reconstructs persisted desired state truthfully.
+13. `restartPanel` acknowledges a pending request only; it does not claim final
+    activation before the restart/apply lifecycle completes.
+14. SQLite and PostgreSQL expose equivalent product semantics.
+15. Optional CatX failure is never represented as healthy empty data or a
+    healthy `active` state for the failed desired configuration.
+16. Repeating successful activation or disable is an idempotent no-op in
+    observable state and persistence.
+17. Maturity `DEVS` is independent of runtime state and remains unchanged
+    throughout M00 qualification until explicit Human Review PASS.
+
+Persistence:
+
+Desired flags use the existing upstream settings table. M00 introduces no new
+persisted lifecycle model. Feature-owned schemas are prepared through the
+existing fork migration boundaries; partial DDL is recorded by tests rather
+than assumed to roll back.
+
+Runtime effect:
+
+The lifecycle adapter configures or disables fork consumers and publishes a
+snapshot. It does not become a second Xray controller and does not own later
+module business decisions.
+
+Feature-off effect:
+
+All managed CatX consumers are inactive, settings remain readable, upstream
+routes and behavior remain available, and no feature-specific effect is
+reported as active.
+
+Failure and recovery:
+
+Preparation errors preserve the prior known-good runtime where available,
+publish a typed error, retain the desired setting for retry, and leave the
+panel usable. A retry reruns explicit preparation, then the normal reload/apply
+boundary. Partial preparation is recorded exactly and may be completed by a
+subsequent idempotent retry.
 
 Minimum proof:
 

@@ -14,7 +14,8 @@ import (
 	"github.com/mhsanaei/3x-ui/v3/internal/policy"
 )
 
-func TestRuntimeActivationPostgres(t *testing.T) {
+// M00-T16 — PostgreSQL lifecycle semantics mirror the SQLite acceptance path.
+func TestM00T16PostgreSQLLifecycle(t *testing.T) {
 	dsn := strings.TrimSpace(os.Getenv("XUI_TEST_PG_DSN"))
 	if dsn == "" {
 		t.Skip("set XUI_TEST_PG_DSN to a disposable Postgres database to run this test")
