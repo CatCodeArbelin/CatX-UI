@@ -27,6 +27,7 @@ const m00Keys = [
   'fork.settings.desiredState',
   'fork.settings.noFeatures',
   'fork.settings.unknownFeature',
+  'fork.settings.unknownFeatureDetails',
   'fork.settings.dependencyRequired',
   'fork.settings.features.analytics.name',
   'fork.settings.features.analytics.details',
@@ -161,7 +162,7 @@ describe('M00 en-US and ru-RU localization', () => {
 
     await waitFor(() => expect(get).toHaveBeenCalledOnce());
     expect(screen.getAllByText('Desired state')).toHaveLength(localizationItems.length);
-    expect(screen.getAllByText('Active runtime state')).toHaveLength(localizationItems.length);
+    expect(screen.getAllByText(/Active runtime state:/)).toHaveLength(localizationItems.length);
     expect(screen.getByText('Activation error')).toBeTruthy();
     for (const rawState of productionStates) {
       expect(screen.queryByText(rawState, { exact: true })).toBeNull();
@@ -173,7 +174,7 @@ describe('M00 en-US and ru-RU localization', () => {
     await i18n.changeLanguage('ru-RU');
 
     expect(screen.getAllByText('Желаемое состояние')).toHaveLength(localizationItems.length);
-    expect(screen.getAllByText('Фактическое состояние')).toHaveLength(localizationItems.length);
+    expect(screen.getAllByText(/Фактическое состояние:/)).toHaveLength(localizationItems.length);
     expect(screen.getByText('Ошибка активации')).toBeTruthy();
     expect(screen.getByText('Аналитика рисков')).toBeTruthy();
     expect(screen.getAllByRole('switch')[0].getAttribute('aria-checked')).toBe(
@@ -207,6 +208,7 @@ describe('M00 en-US and ru-RU localization', () => {
     );
     await waitFor(() => expect(get).toHaveBeenCalledOnce());
     expect(screen.getByText('Unknown feature')).toBeTruthy();
+    expect(screen.getByText('This feature is not recognized by this panel version.')).toBeTruthy();
     expect(screen.getByText('Unknown state')).toBeTruthy();
     expect(screen.queryByText('future.enabled', { exact: true })).toBeNull();
     expect(screen.queryByText('future_state', { exact: true })).toBeNull();
@@ -238,7 +240,9 @@ describe('M00 en-US and ru-RU localization', () => {
       expect(source).not.toMatch(new RegExp(`>\\s*${literal}\\s*<`));
     }
     expect(source).not.toContain('featureCopy[key]?.nameKey || key');
+    expect(source).not.toContain('featureCopy[item.key]?.detailsKey || item.key');
     expect(source).toContain("'fork.settings.unknownFeature'");
+    expect(source).toContain("'fork.settings.unknownFeatureDetails'");
     expect(source).toContain("'fork.settings.states.unknown'");
 
     await i18n.changeLanguage('en-US');

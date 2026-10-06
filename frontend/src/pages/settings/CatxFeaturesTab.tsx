@@ -220,7 +220,10 @@ export default function CatxFeaturesTab() {
                   description={
                     <Space direction="vertical" size={2}>
                       <Typography.Text type="secondary">
-                        {t(featureCopy[item.key]?.detailsKey || item.key)}
+                        {t(
+                          featureCopy[item.key]?.detailsKey ||
+                            'fork.settings.unknownFeatureDetails',
+                        )}
                       </Typography.Text>
                       <Typography.Text type="secondary">
                         {t('fork.settings.runtimeState')}: {stateLabel(item.state)}

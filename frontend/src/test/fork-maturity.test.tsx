@@ -91,10 +91,10 @@ describe('CatX module maturity', () => {
 
   it('keeps the required English and Russian explanation strings in the reviewed catalogs', () => {
     expect(enUS.fork.maturity.explanation).toBe(
-      'This module is under development and has not yet completed release qualification.',
+      'This module is implemented but has not yet completed release qualification.',
     );
     expect(ruRU.fork.maturity.explanation).toBe(
-      'Модуль находится в разработке и ещё не прошёл квалификацию для релиза.',
+      'Модуль реализован, но ещё не прошёл квалификацию перед выпуском.',
     );
   });
 });

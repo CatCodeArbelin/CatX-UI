@@ -3185,6 +3185,7 @@
       "desiredState": "Желаемое состояние",
       "noFeatures": "Нет доступных функций CatX.",
       "unknownFeature": "Неизвестная функция",
+      "unknownFeatureDetails": "Эта функция не распознана в текущей версии панели.",
       "states": {
         "feature_off": "Отключена",
         "active": "Активна",

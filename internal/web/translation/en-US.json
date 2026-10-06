@@ -3185,6 +3185,7 @@
       "desiredState": "Desired state",
       "noFeatures": "No CatX features are available.",
       "unknownFeature": "Unknown feature",
+      "unknownFeatureDetails": "This feature is not recognized by this panel version.",
       "states": {
         "feature_off": "Disabled",
         "active": "Active",

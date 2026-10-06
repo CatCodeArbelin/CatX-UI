@@ -60,6 +60,7 @@ in this work package.
 | `fork.settings.desiredState` | Desired state | Желаемое состояние | saved/desired switch label | MISSING_EN, MISSING_RU |
 | `fork.settings.noFeatures` | No CatX features are available. | Функции CatX недоступны. | empty list | MISSING_EN, MISSING_RU |
 | `fork.settings.unknownFeature` | Unknown feature | Неизвестная функция | defensive unknown-key fallback | MISSING_EN, MISSING_RU |
+| `fork.settings.unknownFeatureDetails` | This feature is not recognized by this panel version. | Эта функция не распознана в текущей версии панели. | defensive unknown-key description | MISSING_EN, MISSING_RU |
 | `fork.settings.dependencyRequired` | Enable {dependency} before enabling {feature}. | Для функции «{feature}» сначала включите «{dependency}». | dependency detail | OK |
 | `fork.settings.features.analytics.name` | Analytics | Аналитика | feature name | OK |
 | `fork.settings.features.analytics.details` | Collect and show metadata-only activity, DNS, session, and traffic insights. | Собирает и показывает сведения об активности, DNS, сессиях и трафике только по метаданным. | feature description | OK |
@@ -121,7 +122,7 @@ surface copy and were not changed in this localization-only package.
   CatX terminology and improved several descriptions for natural product UI.
 - Added a localized empty state for a missing feature list.
 - Added localized safe fallbacks so unexpected feature keys or runtime-state
-  values cannot be rendered as machine identifiers.
+  values or descriptions cannot be rendered as machine identifiers.
 - Kept all machine keys, enum values, runtime semantics, maturity, and
   non-M00 locales unchanged.
 
@@ -141,6 +142,25 @@ The focused frontend test checks:
 
 The existing CatX i18n contract remains the broader parity check for all
 locales; this package does not require full translation of other locales.
+
+## TEST CHANGE JUSTIFICATION
+
+The existing `fork-maturity.test.tsx` expected:
+
+- en-US: `This module is under development and has not yet completed release qualification.`
+- ru-RU: `Модуль находится в разработке и ещё не прошёл квалификацию для релиза.`
+
+Those expectations contradicted the frozen qualification contract: `DEVS`
+means the module is implemented but has not completed release qualification;
+it does not describe an unfinished implementation or runtime state. The
+corrected expectation is:
+
+- en-US: `This module is implemented but has not yet completed release qualification.`
+- ru-RU: `Модуль реализован, но ещё не прошёл квалификацию перед выпуском.`
+
+The test remains equally strict about the exact `DEVS` marker and both locale
+explanations; it was corrected to encode the approved product contract rather
+than weakened to accept either wording.
 
 ## Qualification result
 
