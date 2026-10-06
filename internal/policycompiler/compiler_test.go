@@ -69,6 +69,22 @@ func TestCompilePreservesUpstreamAndIsIdempotent(t *testing.T) {
 	}
 }
 
+func TestCompileReplacesCatXRuleWhenRuleCountIsUnchanged(t *testing.T) {
+	denied, err := Compile(baseConfig(), []policy.Decision{decision("alice@example.test", "deny", 7, "example.com")})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	allowed, err := Compile(denied, []policy.Decision{decision("alice@example.test", "allow", 7, "example.com")})
+	if err != nil {
+		t.Fatal(err)
+	}
+	r := rules(t, allowed)
+	if len(r) != 2 || r[0]["ruleTag"] != "upstream-rule" || r[1]["outboundTag"] != "direct" {
+		t.Fatalf("replaced rules = %#v", r)
+	}
+}
+
 func TestCompileDeterministicMultiClientIsolation(t *testing.T) {
 	a, err := Compile(baseConfig(), []policy.Decision{decision("bob@example.test", "allow", 2, "b.example"), decision("alice@example.test", "deny", 1, "a.example")})
 	if err != nil {

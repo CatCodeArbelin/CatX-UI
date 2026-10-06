@@ -105,14 +105,14 @@ func Compile(cfg *xray.Config, decisions []policy.Decision) (*xray.Config, error
 		return cfg, fmt.Errorf("policy routing rules have invalid shape")
 	}
 	kept := make([]any, 0, len(rules)+len(decisions))
-	removedCatXRules := false
+	changed := false
 	for _, raw := range rules {
 		obj, ok := raw.(map[string]any)
 		if !ok {
 			return cfg, fmt.Errorf("policy routing rule has invalid shape")
 		}
 		if tag, _ := obj["ruleTag"].(string); strings.HasPrefix(tag, RuleTagPrefix) || strings.HasPrefix(tag, QuarantineRuleTagPrefix) || strings.HasPrefix(tag, DNSRuleTagPrefix) {
-			removedCatXRules = true
+			changed = true
 			continue
 		}
 		kept = append(kept, raw)
@@ -140,6 +140,7 @@ func Compile(cfg *xray.Config, decisions []policy.Decision) (*xray.Config, error
 			}
 			tag := fmt.Sprintf("%s%s", DNSRuleTagPrefix, stableClient(d.ClientEmail))
 			quarantineRules = append(quarantineRules, map[string]any{"type": "field", "user": []string{d.ClientEmail}, "port": "53", "network": "tcp,udp", "outboundTag": dnsTag, "ruleTag": tag})
+			changed = true
 		}
 		if d.Quarantined {
 			for i, destination := range d.QuarantineAllowlist {
@@ -152,9 +153,11 @@ func Compile(cfg *xray.Config, decisions []policy.Decision) (*xray.Config, error
 				}
 				tag := fmt.Sprintf("%s%s-%d", QuarantineRuleTagPrefix, stableClient(d.ClientEmail), i)
 				quarantineRules = append(quarantineRules, map[string]any{"type": "field", "user": []string{d.ClientEmail}, "domain": []string{normalized[0]}, "outboundTag": "direct", "ruleTag": tag})
+				changed = true
 			}
 			tag := fmt.Sprintf("%s%s", QuarantineRuleTagPrefix, stableClient(d.ClientEmail))
 			quarantineRules = append(quarantineRules, map[string]any{"type": "field", "user": []string{d.ClientEmail}, "outboundTag": "blocked", "ruleTag": tag})
+			changed = true
 			continue
 		}
 		outbound, err := selectOutbound(cfg.OutboundConfigs, d.Action)
@@ -178,13 +181,11 @@ func Compile(cfg *xray.Config, decisions []policy.Decision) (*xray.Config, error
 				selector["domain"] = []string{destination}
 			}
 			kept = append(kept, selector)
+			changed = true
 		}
 	}
 	kept = append(quarantineRules, kept...)
-	if !removedCatXRules && len(decisions) == 0 {
-		return cfg, nil
-	}
-	if len(kept) == len(rules) && len(decisions) > 0 {
+	if !changed {
 		return cfg, nil
 	}
 	routing["rules"] = kept
