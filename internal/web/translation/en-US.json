@@ -2770,7 +2770,7 @@
       "title": "Sponsors"
     },
     "maturity": {
-      "explanation": "This module is under development and has not yet completed release qualification.",
+      "explanation": "This module is implemented but has not yet completed release qualification.",
       "tooltip": "Product maturity: {explanation}",
       "accessible": "{module}: {maturity}. {explanation}",
       "modules": {
@@ -3173,17 +3173,28 @@
     },
     "settings": {
       "title": "CatX-UI Features",
-      "intro": "Enable only the fork modules you need. Dependencies are checked explicitly and changes require a panel restart.",
+      "intro": "Enable only the CatX modules you need. Dependencies are checked explicitly, and changes require a panel restart.",
       "save": "Save feature settings",
       "saved": "Feature settings saved. Restart the panel to apply module changes.",
       "loadFailed": "Feature settings could not be loaded.",
       "saveFailed": "Feature settings could not be saved.",
       "restartRequired": "Panel restart required",
-      "restartRequiredDescription": "Most CatX modules initialize at startup. Save the flags, then restart the panel before using a changed module.",
+      "restartRequiredDescription": "Most CatX modules initialize at startup. Save the settings, then restart the panel before using a module whose setting changed.",
       "dependencyWarning": "Enable the required dependency first. Dependencies are never enabled automatically.",
-      "runtimeState": "Runtime state"
-    ,
-      "dependencyRequired": "Enable {dependency} before enabling {feature}.",       "features": {
+      "runtimeState": "Active runtime state",
+      "desiredState": "Desired state",
+      "noFeatures": "No CatX features are available.",
+      "unknownFeature": "Unknown feature",
+      "states": {
+        "feature_off": "Disabled",
+        "active": "Active",
+        "initializing": "Starting",
+        "restart_required": "Restart required",
+        "error": "Activation error",
+        "unknown": "Unknown state"
+      },
+      "dependencyRequired": "Enable {dependency} before enabling {feature}.",
+      "features": {
         "analytics": {
           "name": "Analytics",
           "details": "Collect and show metadata-only activity, DNS, session, and traffic insights."
@@ -3202,11 +3213,11 @@
         },
         "riskIntelligence": {
           "name": "Risk intelligence",
-          "details": "Detect and review metadata-based security and anomaly signals."
+          "details": "Detect and review security and anomaly signals derived from metadata."
         },
         "audit": {
           "name": "Audit",
-          "details": "Record and review metadata-only administrative events."
+          "details": "Record and review administrative events using metadata only."
         },
         "clientPortal": {
           "name": "Client portal",
@@ -3218,7 +3229,7 @@
         },
         "sponsors": {
           "name": "Sponsors",
-          "details": "Show operator-configured sponsor metadata through authenticated CatX surfaces."
+          "details": "Show sponsor information configured by the operator on authenticated CatX pages."
         },
         "productionFleetUpdates": {
           "name": "Production fleet updates",

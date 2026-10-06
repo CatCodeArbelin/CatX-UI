@@ -4,12 +4,19 @@ import { useTranslation } from 'react-i18next';
 import { HttpUtil } from '@/utils';
 import { ForkModuleTitle } from '@/components/fork/ForkModuleMaturity';
 
-type FeatureState = 'feature_off' | 'active' | 'initializing' | 'restart_required' | 'error';
+const productionStates = [
+  'feature_off',
+  'active',
+  'initializing',
+  'restart_required',
+  'error',
+] as const;
+type FeatureState = (typeof productionStates)[number];
 type Feature = {
   key: string;
   enabled: boolean;
   active: boolean;
-  state: FeatureState;
+  state: string;
   requires?: string[];
   restartRequired: boolean;
 };
@@ -99,9 +106,15 @@ export default function CatxFeaturesTab() {
   );
   const missingDependencies = (item: Feature) =>
     (item.requires || []).filter((dependency) => !values[dependency]);
-  const featureName = (key: string) => t(featureCopy[key]?.nameKey || key);
-  const stateLabel = (state: FeatureState) => t(`fork.common.states.${state}`);
-  const stateColor = (state: FeatureState) =>
+  const featureName = (key: string) =>
+    t(featureCopy[key]?.nameKey || 'fork.settings.unknownFeature');
+  const stateLabel = (state: string) =>
+    t(
+      productionStates.includes(state as FeatureState)
+        ? `fork.settings.states.${state}`
+        : 'fork.settings.states.unknown',
+    );
+  const stateColor = (state: string) =>
     state === 'active'
       ? 'green'
       : state === 'error'
@@ -175,20 +188,26 @@ export default function CatxFeaturesTab() {
       <Card loading={loading} size="small">
         <List
           dataSource={items}
+          locale={{ emptyText: t('fork.settings.noFeatures') }}
           renderItem={(item) => {
             const missing = missingDependencies(item);
             const blocked = missing.length > 0;
             return (
               <List.Item
                 actions={[
-                  <Switch
-                    key={item.key}
-                    checked={!!values[item.key]}
-                    disabled={blocked}
-                    onChange={(enabled) =>
-                      setValues((current) => ({ ...current, [item.key]: enabled }))
-                    }
-                  />,
+                  <Space key={item.key} size="small">
+                    <Typography.Text type="secondary">
+                      {t('fork.settings.desiredState')}
+                    </Typography.Text>
+                    <Switch
+                      aria-label={`${featureName(item.key)}: ${t('fork.settings.desiredState')}`}
+                      checked={!!values[item.key]}
+                      disabled={blocked}
+                      onChange={(enabled) =>
+                        setValues((current) => ({ ...current, [item.key]: enabled }))
+                      }
+                    />
+                  </Space>,
                 ]}
               >
                 <List.Item.Meta

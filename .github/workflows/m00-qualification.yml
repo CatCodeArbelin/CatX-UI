@@ -8,8 +8,12 @@ on:
       - "**.go"
       - "go.mod"
       - "go.sum"
+      - "frontend/**"
+      - "internal/web/translation/**"
+      - ".nvmrc"
       - "docs/39_MODULE_ACCEPTANCE_MATRIX.md"
       - "docs/40_M00_QUALIFICATION_BASELINE.md"
+      - "docs/41_M00_LOCALIZATION_REVIEW.md"
       - ".github/workflows/m00-qualification.yml"
   pull_request:
     branches:
@@ -18,8 +22,12 @@ on:
       - "**.go"
       - "go.mod"
       - "go.sum"
+      - "frontend/**"
+      - "internal/web/translation/**"
+      - ".nvmrc"
       - "docs/39_MODULE_ACCEPTANCE_MATRIX.md"
       - "docs/40_M00_QUALIFICATION_BASELINE.md"
+      - "docs/41_M00_LOCALIZATION_REVIEW.md"
       - ".github/workflows/m00-qualification.yml"
 
 permissions:
@@ -58,3 +66,36 @@ jobs:
         run: go test -race ./internal/forkext -run '^TestM00T' -count=1 -v
       - name: Run restartPanel race test
         run: go test -race ./internal/web/controller -run '^TestM00T05' -count=1 -v
+
+  m00-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: frontend
+      - name: Run focused M00 localization and regression component tests
+        run: >-
+          npm test -- --run
+          src/test/m00-localization.test.tsx
+          src/test/catx-features-settings.test.tsx
+          src/test/fork-maturity.test.tsx
+          src/test/catx-i18n-contract.test.ts
+        working-directory: frontend
+      - name: Run frontend lint
+        run: npm run lint
+        working-directory: frontend
+      - name: Run frontend format check
+        run: npm run format:check
+        working-directory: frontend
+      - name: Run frontend typecheck
+        run: npm run typecheck
+        working-directory: frontend
+      - name: Build frontend
+        run: npm run build
+        working-directory: frontend
