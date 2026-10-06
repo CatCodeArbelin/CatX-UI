@@ -552,7 +552,15 @@ func (s *Server) StartPanelOnly() (err error) {
 		// the feature settings surface reports the explicit error/retry state.
 		logger.Warning("CatX runtime reload is not active: ", err)
 	}
-	return s.start(false, true)
+	if err := s.start(false, true); err != nil {
+		return err
+	}
+	// A feature transition can mark the existing upstream Xray apply boundary
+	// while the panel is down. Consume it now so restartPanel does not report a
+	// CatX policy runtime as active before the validated Xray configuration is
+	// actually effective; the regular cron job remains the retry path on error.
+	s.xrayService.ApplyPendingRestart()
+	return nil
 }
 
 func (s *Server) start(restartXray bool, startTgBot bool) (err error) {
