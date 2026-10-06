@@ -176,7 +176,7 @@ jobs:
         run: |
           set -o pipefail
           go test ./internal/forkext -run '^TestRuntimeActivationPostgres$' -count=1 -v | tee /tmp/postgres-catx-runtime.log
-          passed=$(grep -c -- '^--- PASS: TestRuntimeActivationPostgres$' /tmp/postgres-catx-runtime.log || true)
+          passed=$(grep -c -- '^--- PASS: TestRuntimeActivationPostgres' /tmp/postgres-catx-runtime.log || true)
           if [ "$passed" -ne 1 ]; then
             echo "expected exactly 1 passing CatX PostgreSQL runtime recovery test, got $passed" >&2
             exit 1
