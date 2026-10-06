@@ -174,7 +174,22 @@ func (s Settings) FeatureFlags() ([]FeatureFlagInfo, error) {
 	for _, feature := range managedFeatureFlags {
 		enabled, err := s.Enabled(feature.flag)
 		if err != nil {
-			return nil, err
+			var parseErr *strconv.NumError
+			if !errors.As(err, &parseErr) {
+				return nil, err
+			}
+			// A malformed persisted flag is a runtime configuration error, not
+			// an unavailable settings surface. Keep the operator-facing list
+			// readable so the bad flag is visibly inactive/error and can be
+			// repaired through the normal settings workflow.
+			result = append(result, FeatureFlagInfo{
+				Key:      feature.flag,
+				Enabled:  false,
+				Active:   false,
+				State:    RuntimeStateError,
+				Requires: feature.requires,
+			})
+			continue
 		}
 		active, state := featureRuntimeStatus(feature.flag, enabled)
 		result = append(result, FeatureFlagInfo{

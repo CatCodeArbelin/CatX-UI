@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
 )
 
 type featureSettingsEnvelope struct {
@@ -148,4 +149,31 @@ func TestFeatureSettingsRoutesRejectMalformedJSONAndInvalidDependenciesAtomicall
 	if values[FlagAnalytics] || values[FlagDNSIntelligence] {
 		t.Fatalf("rejected dependency update changed persisted state: %+v", values)
 	}
+}
+
+func TestFeatureSettingsExposeMalformedPersistedFlagAsRuntimeError(t *testing.T) {
+	router := newFeatureSettingsTestRouter(t)
+	db := currentSettingsDB()
+	if err := db.Create(&model.Setting{Key: settingKey(FlagAnalytics), Value: "not-a-boolean"}).Error; err != nil {
+		t.Fatalf("create malformed feature setting: %v", err)
+	}
+
+	get := httptest.NewRecorder()
+	router.ServeHTTP(get, httptest.NewRequest(http.MethodGet, "/panel/api/fork/settings/features", nil))
+	if get.Code != http.StatusOK {
+		t.Fatalf("GET status = %d; body=%s", get.Code, get.Body.String())
+	}
+	response := decodeFeatureSettings(t, get)
+	if !response.Success {
+		t.Fatalf("GET success=%v msg=%q", response.Success, response.Msg)
+	}
+	for _, item := range response.Obj.Items {
+		if item.Key == FlagAnalytics {
+			if item.Enabled || item.Active || item.State != RuntimeStateError || item.RestartRequired {
+				t.Fatalf("malformed analytics runtime metadata = %+v, want inactive/error", item)
+			}
+			return
+		}
+	}
+	t.Fatalf("malformed analytics flag missing from response: %+v", response.Obj.Items)
 }
