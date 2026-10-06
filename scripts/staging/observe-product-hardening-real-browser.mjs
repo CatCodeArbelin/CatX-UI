@@ -228,8 +228,11 @@ async function exerciseClientTraffic(page, { exerciseUnconfigured = true } = {})
   await openClientAction(page, clientEmail, "Edit");
   const editModal = page.locator(".ant-modal").last();
   await editModal.getByRole("tab", { name: "Traffic control", exact: true }).click();
-  await requireText(page, "Upload B/s", "client edit traffic panel");
-  await requireText(page, "Download B/s", "client edit traffic panel");
+  await requireText(
+    page,
+    "Rate/speed shaping is unsupported for generic Xray users.",
+    "client edit traffic enforcement state",
+  );
   const trafficPane = editModal.locator('[role="tabpanel"][aria-hidden="false"]');
   const trafficNumbers = trafficPane.getByRole("spinbutton");
   if ((await trafficNumbers.count()) < 2) throw new Error("client edit traffic: controls missing");
