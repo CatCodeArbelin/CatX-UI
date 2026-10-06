@@ -106,8 +106,9 @@ describe('fork registries', () => {
     const { routes } = await import('@/routes');
     for (const entry of ['/sponsors', '/catx/sponsors']) {
       const router = createMemoryRouter(routes, { initialEntries: [entry] });
-      renderWithProviders(createElement(RouterProvider, { router }));
+      const view = renderWithProviders(createElement(RouterProvider, { router }));
       await waitFor(() => expect(router.state.location.pathname).toBe('/catx/sponsors'));
+      view.unmount();
       router.dispose();
     }
   });
