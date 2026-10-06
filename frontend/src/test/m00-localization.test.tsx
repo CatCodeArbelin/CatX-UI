@@ -99,7 +99,7 @@ const localizationItems = [
     restartRequired: true,
   },
   {
-    key: 'self_service.enabled',
+    key: 'security_anomaly.enabled',
     enabled: true,
     active: false,
     state: 'error',
