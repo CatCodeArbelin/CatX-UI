@@ -84,21 +84,37 @@ func TestDecorateXrayConfigUsesEffectivePolicyAndRemovesStaleDelta(t *testing.T)
 		t.Fatalf("effective update did not replace deny rule: %#v", effectivePolicyRules(t, allowed))
 	}
 
-	if err := repo.DeleteAssignment(ctx, assignment.ID); err != nil {
-		t.Fatalf("delete assignment: %v", err)
-	}
-	stripped, err := DecorateXrayConfig(ctx, allowed)
-	if err != nil {
-		t.Fatalf("decorate after policy removal: %v", err)
-	}
-	assertNoPolicyRules(t, stripped)
-
 	policy.Configure(db, false)
 	disabled, err := DecorateXrayConfig(ctx, allowed)
 	if err != nil {
 		t.Fatalf("decorate disabled policy: %v", err)
 	}
 	assertNoPolicyRules(t, disabled)
+
+	policy.Configure(db, true)
+	reenabled, err := DecorateXrayConfig(ctx, disabled)
+	if err != nil {
+		t.Fatalf("decorate re-enabled policy: %v", err)
+	}
+	if !hasPolicyOutbound(effectivePolicyRules(t, reenabled), "direct") {
+		t.Fatalf("policy routing was not restored after re-enable: %#v", effectivePolicyRules(t, reenabled))
+	}
+
+	if err := repo.DeleteAssignment(ctx, assignment.ID); err != nil {
+		t.Fatalf("delete assignment: %v", err)
+	}
+	stripped, err := DecorateXrayConfig(ctx, reenabled)
+	if err != nil {
+		t.Fatalf("decorate after policy removal: %v", err)
+	}
+	assertNoPolicyRules(t, stripped)
+
+	policy.Configure(db, false)
+	disabledAfterRemoval, err := DecorateXrayConfig(ctx, reenabled)
+	if err != nil {
+		t.Fatalf("decorate disabled policy after removal: %v", err)
+	}
+	assertNoPolicyRules(t, disabledAfterRemoval)
 }
 
 func hasPolicyOutbound(rules []map[string]any, outbound string) bool {
