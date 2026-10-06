@@ -2446,7 +2446,15 @@
       "saved": "Patrocinador salvo",
       "deleteConfirm": "Excluir o patrocinador {name}?",
       "deleteFailed": "Não foi possível excluir o patrocinador",
-      "deleted": "Patrocinador excluído"
+      "deleted": "Patrocinador excluído",
+      "manage": "Manage sponsors",
+      "providerStates": {
+        "empty": "No provider data",
+        "local": "Local records",
+        "fresh": "Fresh remote data",
+        "error": "Provider error",
+        "disabled": "Disabled"
+      }
     }
   },
   "tgbot": {
@@ -2839,7 +2847,9 @@
         "quotaReachedReason": "The fixed-window quota was reached.",
         "upstreamDisabledReason": "The upstream client is disabled.",
         "attributionUnsupportedReason": "Client identity is not proven for enforcement.",
-        "actionFailed": "The action could not be completed."
+        "actionFailed": "The action could not be completed.",
+        "trafficControlUnconfigured": "No traffic policy is configured for this client yet. Choose Configure to create one.",
+        "configureTrafficControl": "Configure traffic control"
       },
       "unknown": "Desconhecido",
       "enabled": "Ativado",
@@ -3017,7 +3027,15 @@
       "clients": "Clientes",
       "online": "Conectado",
       "latency": "Latência",
-      "lastHeartbeat": "Último heartbeat"
+      "lastHeartbeat": "Último heartbeat",
+      "emptyTitle": "No managed nodes yet",
+      "emptyDescription": "Add a node in the upstream Nodes page to see fleet health and client totals here.",
+      "openNodes": "Manage nodes",
+      "nodeStates": {
+        "online": "Online",
+        "offline": "Offline",
+        "unknown": "Unknown"
+      }
     },
     "fleetUpdate": {
       "title": "Frota Atualizações",
@@ -3039,7 +3057,48 @@
       "result": "Atualização Resultado",
       "rollback": "Reverter",
       "soak": "Observação",
-      "failure": "Falha"
+      "failure": "Falha",
+      "abortConfirm": "Abort this update campaign? This does not delete its history.",
+      "states": {
+        "pending": "Pending",
+        "preflight": "Preflight",
+        "ready": "Ready",
+        "blocked": "Blocked",
+        "dispatching": "Dispatching",
+        "waiting_restart": "Waiting for restart",
+        "health_check": "Health check",
+        "soaking": "Soaking",
+        "succeeded": "Succeeded",
+        "failed": "Failed",
+        "aborted": "Aborted",
+        "unknown": "Unknown",
+        "stable": "Stable",
+        "dev": "Development"
+      },
+      "reasons": {
+        "offline": "Node is offline",
+        "stale_heartbeat": "Heartbeat is stale",
+        "disabled": "Node is disabled",
+        "unsupported": "Unsupported node",
+        "already_current": "Already on this release",
+        "degraded": "Node is degraded",
+        "deleted": "Node was deleted",
+        "transitive_read_only": "Transitive node is read-only",
+        "concurrent_campaign": "Another campaign is using this node",
+        "execution_disabled": "Production execution is disabled",
+        "health_timeout": "Health check timed out"
+      },
+      "dispatchStates": {
+        "accepted": "Accepted",
+        "ambiguous": "Ambiguous",
+        "completed": "Completed",
+        "retry_requested": "Retry requested"
+      },
+      "resultStates": {
+        "pending": "Pending",
+        "failed": "Failed",
+        "succeeded": "Succeeded"
+      }
     },
     "audit": {
       "labels": {
@@ -3058,7 +3117,13 @@
       "summary": "Histórico confiável, somente de metadados, de segurança e ações privilegiadas.",
       "empty": "Nenhum Auditoria Eventos",
       "filter": "Filtrar",
-      "details": "Detalhes"
+      "details": "Detalhes",
+      "outcomes": {
+        "success": "Succeeded",
+        "failure": "Failed",
+        "denied": "Denied",
+        "error": "Error"
+      }
     },
     "webhooks": {
       "labels": {

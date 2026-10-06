@@ -2,7 +2,7 @@ name: CatX v0.3 product hardening qualification
 
 on:
   push:
-    branches: [feature/v0.3-product-hardening]
+    branches: [feature/v0.3-product-hardening, fix/v0.3-human-review]
     paths:
       - '.github/workflows/catx-product-hardening-real.yml'
       - 'scripts/staging/observe-product-hardening-real-linux.sh'

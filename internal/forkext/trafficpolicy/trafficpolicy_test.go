@@ -189,6 +189,21 @@ func TestUnconfiguredPolicyRouteExposesTypedFeatureState(t *testing.T) {
 	if response.Code != http.StatusOK || !strings.Contains(response.Body.String(), `"state":"unconfigured"`) || !strings.Contains(response.Body.String(), `"featureDisabled":false`) {
 		t.Fatalf("unconfigured policy response = %d %s", response.Code, response.Body.String())
 	}
+	input := `{"enabled":true,"windowSeconds":3600,"quotaBytes":1048576,"activeUploadBps":0,"activeDownloadBps":0,"throttleUploadBps":0,"throttleDownloadBps":0}`
+	response = httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodPut, "/panel/api/traffic-control/clients/unconfigured@example.com/policy", strings.NewReader(input))
+	request.Header.Set("Content-Type", "application/json")
+	router.ServeHTTP(response, request)
+	if response.Code != http.StatusOK || !strings.Contains(response.Body.String(), `"enabled":true`) {
+		t.Fatalf("configured policy response = %d %s", response.Code, response.Body.String())
+	}
+	Configure(nil, false)
+	Configure(db, true)
+	response = httptest.NewRecorder()
+	router.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/panel/api/traffic-control/clients/unconfigured@example.com/policy", nil))
+	if response.Code != http.StatusOK || !strings.Contains(response.Body.String(), `"quotaBytes":1048576`) {
+		t.Fatalf("persisted policy response = %d %s", response.Code, response.Body.String())
+	}
 }
 
 func TestFixedWindowMath(t *testing.T) {

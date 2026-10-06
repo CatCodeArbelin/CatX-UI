@@ -1,13 +1,26 @@
 import { useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Button, Col, ConfigProvider, Layout, Row, Spin, Tag, Typography } from 'antd';
+import {
+  Alert,
+  Button,
+  Col,
+  ConfigProvider,
+  Layout,
+  Row,
+  Space,
+  Spin,
+  Tag,
+  Typography,
+} from 'antd';
 import {
   CrownOutlined,
   DashboardOutlined,
   MenuUnfoldOutlined,
   PlusOutlined,
+  SettingOutlined,
 } from '@ant-design/icons';
+import { useNavigate } from 'react-router';
 
 import { useTheme } from '@/hooks/useTheme';
 import AppSidebar from '@/layouts/AppSidebar';
@@ -49,8 +62,13 @@ function YourBrandCard({ contact, large }: { contact?: string; large?: boolean }
   );
 }
 
-export default function SponsorsPage() {
+export default function SponsorsPage({
+  showManagementAction = false,
+}: {
+  showManagementAction?: boolean;
+}) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { isDark, isUltra, antdThemeConfig } = useTheme();
   const { data, fetched, error } = useSponsorsQuery();
   const sponsors = sponsorsForSlot(data.sponsors, 'page');
@@ -98,7 +116,18 @@ export default function SponsorsPage() {
                   </Typography.Title>
                   <Typography.Text type="secondary">{t('pages.sponsors.intro')}</Typography.Text>
                 </div>
-                <BecomeButton contact={data.contact} />
+                <Space wrap>
+                  {showManagementAction && (
+                    <Button
+                      icon={<SettingOutlined />}
+                      aria-label={t('pages.sponsors.manage')}
+                      onClick={() => navigate('/catx/sponsors/manage')}
+                    >
+                      {t('pages.sponsors.manage')}
+                    </Button>
+                  )}
+                  <BecomeButton contact={data.contact} />
+                </Space>
               </div>
 
               <Spin spinning={!fetched} delay={200}>

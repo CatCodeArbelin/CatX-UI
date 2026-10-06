@@ -19,11 +19,12 @@ readonly USERNAME="catx-hardening-operator"
 readonly PASSWORD="catx-hardening-operator-password"
 readonly INBOUND_REMARK="CatX hardening disposable inbound"
 readonly CLIENT_EMAIL="catx-hardening-client@example.invalid"
+readonly UNCONFIGURED_CLIENT_EMAIL="catx-hardening-unconfigured@example.invalid"
 readonly POLICY_NAME="CatX hardening policy"
 readonly RUN_BROWSER="${CATX_HARDENING_RUN_BROWSER:-1}"
 readonly LOGFILE="$RUN_DIR/observer.log"
-readonly FEATURE_FLAGS='{"flags":{"analytics.enabled":true,"dns_intelligence.enabled":true,"policies.enabled":true,"traffic_control.enabled":true,"security_anomaly.enabled":true,"audit.enabled":true,"self_service.enabled":true,"sponsors.enabled":true}}'
-readonly DISABLED_FLAGS='{"flags":{"analytics.enabled":false,"dns_intelligence.enabled":false,"policies.enabled":false,"traffic_control.enabled":false,"security_anomaly.enabled":false,"audit.enabled":false,"self_service.enabled":false,"sponsors.enabled":false}}'
+readonly FEATURE_FLAGS='{"flags":{"analytics.enabled":true,"dns_intelligence.enabled":true,"policies.enabled":true,"traffic_control.enabled":true,"security_anomaly.enabled":true,"audit.enabled":true,"self_service.enabled":true,"fleet_updates.enabled":true,"fleet_updates.mutation.enabled":true,"sponsors.enabled":true}}'
+readonly DISABLED_FLAGS='{"flags":{"analytics.enabled":false,"dns_intelligence.enabled":false,"policies.enabled":false,"traffic_control.enabled":false,"security_anomaly.enabled":false,"audit.enabled":false,"self_service.enabled":false,"fleet_updates.enabled":false,"fleet_updates.mutation.enabled":false,"sponsors.enabled":false}}'
 readonly FEATURE_KEYS=(
   analytics.enabled
   dns_intelligence.enabled
@@ -32,6 +33,8 @@ readonly FEATURE_KEYS=(
   security_anomaly.enabled
   audit.enabled
   self_service.enabled
+  fleet_updates.enabled
+  fleet_updates.mutation.enabled
   sponsors.enabled
 )
 
@@ -172,18 +175,28 @@ get /policies "$RUN_DIR/policies-off-initial.json"
 jq -e '.obj.state == "feature_off" and .obj.featureDisabled == true and (.obj.items | length) == 0' "$RUN_DIR/policies-off-initial.json" >/dev/null || fail 'initial policy state wrong'
 log 'PASS: fresh panel starts with explicit feature-off and empty-safe responses'
 
-# Prepare every feature-owned schema in one ordinary process startup. This is
-# intentionally separate from the restartPanel qualification: runtime reload
-# must not become a hidden migration path.
+# Enable the feature set through the same operator path used by Human Review.
+# restartPanel must prepare newly enabled feature-owned schemas before it
+# publishes active runtime state; a full process restart is not a prerequisite.
 mutate PUT /fork/settings/features "$FEATURE_FLAGS" "$RUN_DIR/features-schema-enabled.json"
-stop
-start
-wait_panel
-login
-health schema-startup
+get /fork/settings/features "$RUN_DIR/features-schema-enabled-pending.json"
+assert_features "$RUN_DIR/features-schema-enabled-pending.json" restart_required true false true
+panel_restart runtime-enable
 get /fork/settings/features "$RUN_DIR/features-schema-active.json"
 assert_features "$RUN_DIR/features-schema-active.json" active true true false
-log 'PASS: startup schema preparation and runtime activation are separate'
+get /policies "$RUN_DIR/policies-runtime-enable.json"
+jq -e '.obj.state == "active" and (.obj.items | length) == 0 and .obj.featureDisabled == false' "$RUN_DIR/policies-runtime-enable.json" >/dev/null || fail 'policy schema was not prepared during restartPanel'
+get /analytics/traffic "$RUN_DIR/analytics-runtime-enable.json"
+jq -e '.obj.state == "active" and (.obj.items | length) == 0 and .obj.featureDisabled == false' "$RUN_DIR/analytics-runtime-enable.json" >/dev/null || fail 'analytics schema was not prepared during restartPanel'
+get /fleet-updates/campaigns "$RUN_DIR/fleet-updates-runtime-enable.json"
+jq -e '.obj | length == 0' "$RUN_DIR/fleet-updates-runtime-enable.json" >/dev/null || fail 'fleet updates did not expose an empty-safe campaign list'
+get /nodes/list "$RUN_DIR/nodes-runtime-enable.json"
+jq -e '.obj | length == 0' "$RUN_DIR/nodes-runtime-enable.json" >/dev/null || fail 'fleet inventory did not expose an empty-safe node list'
+get '/fork/audit/events?eventType=review.no-such-event&limit=100' "$RUN_DIR/audit-empty.json"
+jq -e '.obj.items | length == 0' "$RUN_DIR/audit-empty.json" >/dev/null || fail 'audit zero-event response was not empty-safe'
+get '/fork/audit/events?eventType=auth.login&limit=100' "$RUN_DIR/audit-synthetic-login.json"
+jq -e 'any(.obj.items[]; .eventType == "auth.login" and .metadata != null)' "$RUN_DIR/audit-synthetic-login.json" >/dev/null || fail 'synthetic admin audit event was not recorded'
+log 'PASS: restartPanel prepares enabled schemas, empty audit is HTTP-successful, and admin login is audited'
 
 mutate PUT /fork/settings/features "$DISABLED_FLAGS" "$RUN_DIR/features-off-pending.json"
 panel_restart feature-off
@@ -228,9 +241,14 @@ INBOUND_ID=$(jq -er --arg remark "$INBOUND_REMARK" '.obj[] | select(.remark == $
 [[ "$INBOUND_ID" =~ ^[0-9]+$ ]] || fail 'disposable inbound id was not returned'
 client_body=$(jq -nc --arg email "$CLIENT_EMAIL" --argjson id "$INBOUND_ID" '{client:{email:$email,totalGB:0,expiryTime:0,limitIp:0,limitHwid:0,enable:true},inboundIds:[$id]}')
 mutate POST /clients/add "$client_body" "$RUN_DIR/client-add.json"
+unconfigured_client_body=$(jq -nc --arg email "$UNCONFIGURED_CLIENT_EMAIL" --argjson id "$INBOUND_ID" '{client:{email:$email,totalGB:0,expiryTime:0,limitIp:0,limitHwid:0,enable:true},inboundIds:[$id]}')
+mutate POST /clients/add "$unconfigured_client_body" "$RUN_DIR/client-unconfigured-add.json"
 ENCODED_EMAIL=$(jq -nr --arg email "$CLIENT_EMAIL" '$email | @uri')
+ENCODED_UNCONFIGURED_EMAIL=$(jq -nr --arg email "$UNCONFIGURED_CLIENT_EMAIL" '$email | @uri')
 get "/traffic-control/clients/$ENCODED_EMAIL/policy" "$RUN_DIR/traffic-unconfigured.json"
 jq -e '.obj.state == "unconfigured" and .obj.featureDisabled == false' "$RUN_DIR/traffic-unconfigured.json" >/dev/null || fail 'traffic unconfigured state wrong'
+get "/traffic-control/clients/$ENCODED_UNCONFIGURED_EMAIL/policy" "$RUN_DIR/traffic-unconfigured-second.json"
+jq -e '.obj.state == "unconfigured" and .obj.featureDisabled == false' "$RUN_DIR/traffic-unconfigured-second.json" >/dev/null || fail 'second traffic unconfigured state wrong'
 traffic_policy=$(jq -nc '{enabled:true,windowSeconds:3600,quotaBytes:0,activeUploadBps:0,activeDownloadBps:0,throttleUploadBps:0,throttleDownloadBps:0}')
 mutate PUT "/traffic-control/clients/$ENCODED_EMAIL/policy" "$traffic_policy" "$RUN_DIR/traffic-policy-save.json"
 get "/traffic-control/clients/$ENCODED_EMAIL/policy" "$RUN_DIR/traffic-configured.json"
@@ -248,6 +266,7 @@ if [[ "$RUN_BROWSER" == 1 ]]; then
     CATX_HARDENING_USERNAME="$USERNAME" \
     CATX_HARDENING_PASSWORD="$PASSWORD" \
     CATX_HARDENING_CLIENT_EMAIL="$CLIENT_EMAIL" \
+    CATX_HARDENING_UNCONFIGURED_CLIENT_EMAIL="$UNCONFIGURED_CLIENT_EMAIL" \
     CATX_HARDENING_POLICY_NAME="$POLICY_NAME" \
     CATX_HARDENING_EVIDENCE_DIR="$EVIDENCE_DIR" \
     node scripts/staging/observe-product-hardening-real-browser.mjs

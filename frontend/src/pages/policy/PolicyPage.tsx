@@ -212,7 +212,11 @@ export default function PolicyPage() {
         setLoading(false);
         return;
       }
-      if (!p.success) setError(t('fork.policy.loadFailed'));
+      if ([p, a, o, temporaryResponse, s].some((response) => !response.success)) {
+        setError(t('fork.policy.loadFailed'));
+        setLoading(false);
+        return;
+      }
       setEnabled(p.obj?.enabled !== false);
       setPolicies(p.obj?.items || []);
       setAssignments(a.obj?.items || []);
@@ -839,8 +843,12 @@ export default function PolicyPage() {
       </Card>
       <Modal
         open={policyModal}
+        className="policy-modal"
+        wrapClassName="policy-modal-wrap"
+        width="min(760px, calc(100vw - 24px))"
         title={editing ? t('fork.policy.editPolicy') : t('fork.policy.newPolicy')}
         okText={t('fork.policy.save')}
+        cancelText={t('cancel')}
         onCancel={() => setPolicyModal(false)}
         onOk={() => form.submit()}
         destroyOnClose
@@ -852,7 +860,7 @@ export default function PolicyPage() {
           <Form.Item name="description" label={t('fork.policy.labels.summary')}>
             <Input.TextArea rows={2} />
           </Form.Item>
-          <Space>
+          <Space className="policy-basics" wrap>
             <Form.Item name="priority" label={t('fork.policy.labels.priority')}>
               <InputNumber />
             </Form.Item>

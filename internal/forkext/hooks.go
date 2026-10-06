@@ -191,8 +191,7 @@ func RegisterMigrations(db *gorm.DB) error {
 var migrateSponsorsSchema = sponsors.Migrate
 
 // ConfigureRuntimeFromSettings configures in-process fork services only. The
-// caller must prepare schema first; keeping this separate prevents a panel
-// restart from repeating upstream database initialization or seeders.
+// caller must prepare schema first; startup owns the initial migration pass.
 func ConfigureRuntimeFromSettings(db *gorm.DB) error {
 	cfg, err := loadRuntimeConfig(db)
 	if err != nil {
@@ -203,12 +202,19 @@ func ConfigureRuntimeFromSettings(db *gorm.DB) error {
 	return nil
 }
 
-// ReloadRuntimeFromSettings is the panel-restart boundary. It only publishes
-// new in-process state; database schema preparation belongs to startup.
+// ReloadRuntimeFromSettings is the panel-restart boundary. It prepares the
+// schemas for the newly persisted fork configuration through the same
+// idempotent migration boundary used at startup, then publishes in-process
+// state. This is required when an operator enables a module on an already
+// running panel: a process restart is not guaranteed to follow this call.
 func ReloadRuntimeFromSettings(db *gorm.DB) error {
 	setSettingsDB(db)
 	cfg, err := loadRuntimeConfig(db)
 	if err != nil {
+		disableRuntimeWithError(err.Error())
+		return err
+	}
+	if err := prepareRuntimeSchema(db, cfg); err != nil {
 		disableRuntimeWithError(err.Error())
 		return err
 	}

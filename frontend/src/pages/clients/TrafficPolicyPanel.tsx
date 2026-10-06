@@ -54,13 +54,35 @@ export default function TrafficPolicyPanel({ email, readOnly = false }: TrafficP
       'fixed-window quota reached': 'fork.common.labels.quotaReachedReason',
       'upstream client disabled': 'fork.common.labels.upstreamDisabledReason',
     };
-    return key[reason] ? t(key[reason]) : reason;
+    return key[reason] ? t(key[reason]) : t('fork.common.unknown');
   };
   const enforcementNote = (note?: string) =>
     note === 'kernel attribution is not proven for generic Xray users'
       ? t('fork.common.labels.attributionUnsupportedReason')
       : note;
   const rate = (value: number) => `${SizeFormatter.sizeFormat(value)}/s`;
+
+  const configure = () => {
+    const next: TrafficPolicyView = {
+      enabled: true,
+      windowSeconds: 3600,
+      quotaBytes: 0,
+      activeUploadBps: 0,
+      activeDownloadBps: 0,
+      throttleUploadBps: 0,
+      throttleDownloadBps: 0,
+      lifecycle: 'active',
+      reason: '',
+      usedBytes: 0,
+      remainingBytes: 0,
+      enforcement: 'unsupported',
+      state: 'active',
+      featureDisabled: false,
+    };
+    setView(next);
+    setDraft(next);
+    setFeatureState('active');
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -145,7 +167,18 @@ export default function TrafficPolicyPanel({ email, readOnly = false }: TrafficP
           state={featureState}
           feature="traffic_control"
           description={
-            featureState === 'error' ? t('fork.common.labels.featureUnavailable') : undefined
+            featureState === 'unconfigured'
+              ? t('fork.common.labels.trafficControlUnconfigured')
+              : featureState === 'error'
+                ? t('fork.common.labels.featureUnavailable')
+                : undefined
+          }
+          action={
+            !readOnly && featureState === 'unconfigured' ? (
+              <Button type="primary" size="small" onClick={configure}>
+                {t('fork.common.labels.configureTrafficControl')}
+              </Button>
+            ) : undefined
           }
         />
       </div>

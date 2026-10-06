@@ -2414,6 +2414,7 @@
       "available": "Available",
       "takenUntil": "Taken until {date}",
       "activeCount": "{count} active",
+      "manage": "Manage sponsors",
       "managementTitle": "Sponsors management",
       "managementIntro": "Manage local sponsor records and choose the single provider used for rendering.",
       "providerStatus": "Provider status",
@@ -2423,6 +2424,18 @@
       "localCount": "Local sponsors",
       "activeTotal": "Active sponsors",
       "cacheState": "Provider state",
+      "providerStates": {
+        "empty": "No provider data",
+        "local": "Local records",
+        "fresh": "Fresh remote data",
+        "error": "Provider error",
+        "disabled": "Disabled"
+      },
+      "slots": {
+        "dashboard": "Overview banner",
+        "sidebar": "Sidebar",
+        "page": "Sponsors page"
+      },
       "lastFetch": "Last successful fetch",
       "lastError": "Last provider error",
       "providerSettings": "Provider settings",
@@ -2835,6 +2848,8 @@
       "used": "Used",
       "remaining": "Remaining",
       "featureUnavailable": "This feature is currently unavailable.",
+      "trafficControlUnconfigured": "No traffic policy is configured for this client yet. Choose Configure to create one.",
+      "configureTrafficControl": "Configure traffic control",
       "windowResetReason": "The quota window was reset.",
       "quotaReachedReason": "The fixed-window quota was reached.",
       "upstreamDisabledReason": "The upstream client is disabled.",
@@ -3016,7 +3031,15 @@
       "clients": "Clients",
       "online": "Online",
       "latency": "Latency",
-      "lastHeartbeat": "Last heartbeat"
+      "lastHeartbeat": "Last heartbeat",
+      "emptyTitle": "No managed nodes yet",
+      "emptyDescription": "Add a node in the upstream Nodes page to see fleet health and client totals here.",
+      "openNodes": "Manage nodes",
+      "nodeStates": {
+        "online": "Online",
+        "offline": "Offline",
+        "unknown": "Unknown"
+      }
     },
     "fleetUpdate": {
       "title": "Fleet updates",
@@ -3031,6 +3054,7 @@
       "reconcile": "Reconcile",
       "retry": "Retry",
       "abort": "Abort",
+      "abortConfirm": "Abort this update campaign? This does not delete its history.",
       "dryRun": "Dry run (no mutation)",
       "confirmProduction": "Confirm production update",
       "runId": "Run ID",
@@ -3038,7 +3062,47 @@
       "result": "Update result",
       "rollback": "Rollback",
       "soak": "Soak",
-      "failure": "Failure"
+      "failure": "Failure",
+      "states": {
+        "pending": "Pending",
+        "preflight": "Preflight",
+        "ready": "Ready",
+        "blocked": "Blocked",
+        "dispatching": "Dispatching",
+        "waiting_restart": "Waiting for restart",
+        "health_check": "Health check",
+        "soaking": "Soaking",
+        "succeeded": "Succeeded",
+        "failed": "Failed",
+        "aborted": "Aborted",
+        "unknown": "Unknown",
+        "stable": "Stable",
+        "dev": "Development"
+      },
+      "reasons": {
+        "offline": "Node is offline",
+        "stale_heartbeat": "Heartbeat is stale",
+        "disabled": "Node is disabled",
+        "unsupported": "Unsupported node",
+        "already_current": "Already on this release",
+        "degraded": "Node is degraded",
+        "deleted": "Node was deleted",
+        "transitive_read_only": "Transitive node is read-only",
+        "concurrent_campaign": "Another campaign is using this node",
+        "execution_disabled": "Production execution is disabled",
+        "health_timeout": "Health check timed out"
+      },
+      "dispatchStates": {
+        "accepted": "Accepted",
+        "ambiguous": "Ambiguous",
+        "completed": "Completed",
+        "retry_requested": "Retry requested"
+      },
+      "resultStates": {
+        "pending": "Pending",
+        "failed": "Failed",
+        "succeeded": "Succeeded"
+      }
     },
   "audit": {
     "labels": {
@@ -3057,7 +3121,13 @@
       "summary": "Authoritative metadata-only security and privileged-action history.",
       "empty": "No audit events",
       "filter": "Filter",
-      "details": "Details"
+      "details": "Details",
+      "outcomes": {
+        "success": "Succeeded",
+        "failure": "Failed",
+        "denied": "Denied",
+        "error": "Error"
+      }
     },
   "webhooks": {
     "labels": {

@@ -46,6 +46,42 @@ type Campaign = {
 };
 type Plan = { campaign: Campaign; targets: Target[] };
 
+const statusLabel = (
+  t: (key: string, options?: Record<string, unknown>) => string,
+  value?: string,
+) =>
+  value
+    ? t(`fork.fleetUpdate.states.${value}`, { defaultValue: t('fork.common.unknown') })
+    : t('fork.common.unknown');
+const reasonLabel = (
+  t: (key: string, options?: Record<string, unknown>) => string,
+  value?: string,
+) =>
+  value
+    ? t(`fork.fleetUpdate.reasons.${value}`, { defaultValue: t('fork.common.unknown') })
+    : t('fork.common.unknown');
+const dispatchLabel = (
+  t: (key: string, options?: Record<string, unknown>) => string,
+  value?: string,
+) =>
+  value
+    ? t(`fork.fleetUpdate.dispatchStates.${value}`, { defaultValue: t('fork.common.unknown') })
+    : '—';
+const resultLabel = (
+  t: (key: string, options?: Record<string, unknown>) => string,
+  value?: string,
+) =>
+  value
+    ? t(`fork.fleetUpdate.resultStates.${value}`, { defaultValue: t('fork.common.unknown') })
+    : '—';
+
+export const campaignIsAbortable = (state: string) =>
+  !['succeeded', 'failed', 'aborted', 'blocked'].includes(state);
+export const campaignIsRetryable = (state: string) =>
+  ['failed', 'aborted', 'blocked'].includes(state);
+export const campaignIsReconcileable = (state: string) =>
+  !['succeeded', 'failed', 'aborted', 'blocked'].includes(state);
+
 export default function FleetUpdatePage() {
   const { t } = useTranslation();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -169,24 +205,36 @@ export default function FleetUpdatePage() {
               dataSource={campaigns}
               columns={[
                 { title: t('fork.common.name'), dataIndex: 'name' },
-                { title: t('fork.common.channel'), dataIndex: 'channel' },
-                { title: t('fork.common.status'), render: (_, r) => <Tag>{r.state}</Tag> },
+                {
+                  title: t('fork.common.channel'),
+                  render: (_, r) => statusLabel(t, r.channel),
+                },
+                {
+                  title: t('fork.common.status'),
+                  render: (_, r) => <Tag>{statusLabel(t, r.state)}</Tag>,
+                },
                 {
                   title: t('fork.common.actions'),
                   render: (_, r) => (
                     <Space>
-                      <Button onClick={() => void action(r.id, 'reconcile')}>
-                        {t('fork.fleetUpdate.reconcile')}
-                      </Button>
-                      <Button onClick={() => void action(r.id, 'retry')}>
-                        {t('fork.fleetUpdate.retry')}
-                      </Button>
-                      <Popconfirm
-                        title={`${t('fork.fleetUpdate.abort')}?`}
-                        onConfirm={() => void action(r.id, 'abort')}
-                      >
-                        <Button danger>{t('fork.fleetUpdate.abort')}</Button>
-                      </Popconfirm>
+                      {campaignIsReconcileable(r.state) && (
+                        <Button onClick={() => void action(r.id, 'reconcile')}>
+                          {t('fork.fleetUpdate.reconcile')}
+                        </Button>
+                      )}
+                      {campaignIsRetryable(r.state) && (
+                        <Button onClick={() => void action(r.id, 'retry')}>
+                          {t('fork.fleetUpdate.retry')}
+                        </Button>
+                      )}
+                      {campaignIsAbortable(r.state) && (
+                        <Popconfirm
+                          title={t('fork.fleetUpdate.abortConfirm')}
+                          onConfirm={() => void action(r.id, 'abort')}
+                        >
+                          <Button danger>{t('fork.fleetUpdate.abort')}</Button>
+                        </Popconfirm>
+                      )}
                     </Space>
                   ),
                 },
@@ -209,8 +257,14 @@ export default function FleetUpdatePage() {
               dataSource={selected.targets}
               columns={[
                 { title: t('fork.common.node'), dataIndex: 'nodeName' },
-                { title: t('fork.common.status'), render: (_, r) => <Tag>{r.state}</Tag> },
-                { title: t('fork.common.reason'), dataIndex: 'blockedReason' },
+                {
+                  title: t('fork.common.status'),
+                  render: (_, r) => <Tag>{statusLabel(t, r.state)}</Tag>,
+                },
+                {
+                  title: t('fork.common.reason'),
+                  render: (_, r) => reasonLabel(t, r.blockedReason),
+                },
                 { title: t('fork.common.version'), dataIndex: 'observedVersion' },
                 {
                   title: t('fork.fleetUpdate.runId'),
@@ -227,10 +281,12 @@ export default function FleetUpdatePage() {
                 {
                   title: t('fork.fleetUpdate.dispatch'),
                   dataIndex: 'dispatchStatus',
+                  render: (value: string | undefined) => dispatchLabel(t, value),
                 },
                 {
                   title: t('fork.fleetUpdate.result'),
                   dataIndex: 'updateState',
+                  render: (value: string | undefined) => resultLabel(t, value),
                 },
                 {
                   title: t('fork.fleetUpdate.rollback'),
@@ -246,7 +302,7 @@ export default function FleetUpdatePage() {
                   render: (_, r) =>
                     r.state === 'soaking'
                       ? r.soakStartedAt || t('fork.common.labels.active')
-                      : r.state,
+                      : statusLabel(t, r.state),
                 },
                 { title: t('fork.fleetUpdate.failure'), dataIndex: 'error' },
               ]}

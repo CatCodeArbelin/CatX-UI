@@ -70,7 +70,7 @@ func allManagedFeatures(enabled bool) map[Flag]bool {
 	return result
 }
 
-func TestRuntimeReloadAppliesManagedFeatureTransitionsWithoutSchemaMigration(t *testing.T) {
+func TestRuntimeReloadAppliesManagedFeatureTransitionsAndPreparesSchemas(t *testing.T) {
 	disableRuntime()
 	t.Cleanup(disableRuntime)
 	db := newRuntimeTestDB(t, "forkext-runtime-transitions")
@@ -105,15 +105,15 @@ func TestRuntimeReloadAppliesManagedFeatureTransitionsWithoutSchemaMigration(t *
 		"security anomaly": &risk.IPHistory{},
 		"traffic policy":   &trafficpolicy.Policy{},
 	} {
-		if db.Migrator().HasTable(target) {
-			t.Errorf("runtime reload migrated %s schema", name)
+		if !db.Migrator().HasTable(target) {
+			t.Errorf("runtime reload did not prepare %s schema", name)
 		}
 	}
 	if !db.Migrator().HasTable(&sponsors.Record{}) {
 		t.Fatal("canonical startup migration did not prepare sponsors schema")
 	}
 	if db.Migrator().HasTable(&model.User{}) || db.Migrator().HasTable(&model.HistoryOfSeeders{}) {
-		t.Fatal("runtime reload ran upstream database initialization or seeders")
+		t.Fatal("fork lifecycle hook ran upstream database initialization or seeders")
 	}
 	if err := ReloadRuntimeFromSettings(db); err != nil {
 		t.Fatalf("idempotent enabled reload: %v", err)
@@ -209,6 +209,15 @@ func TestRuntimeReloadFailureDoesNotLeaveFeaturesEnabled(t *testing.T) {
 		t.Fatalf("reload error = %v, want feature-read failure", err)
 	}
 	assertRuntimeState(t, false)
+	items, featureErr := NewSettings(db).FeatureFlags()
+	if featureErr != nil {
+		t.Fatalf("feature flags after runtime failure: %v", featureErr)
+	}
+	for _, item := range items {
+		if item.Key == FlagAnalytics && (item.Active || item.State != RuntimeStateError) {
+			t.Fatalf("analytics failure state = active:%v state:%q, want inactive/error", item.Active, item.State)
+		}
+	}
 
 	if err := db.Model(&model.Setting{}).Where("key = ?", settingKey(FlagAnalytics)).Update("value", "false").Error; err != nil {
 		t.Fatalf("restore analytics feature setting: %v", err)

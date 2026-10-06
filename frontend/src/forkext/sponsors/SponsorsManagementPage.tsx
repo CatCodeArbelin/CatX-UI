@@ -97,6 +97,26 @@ type SponsorFormValues = {
 const JSON_HEADERS = { headers: { 'Content-Type': 'application/json' } } as const;
 const slots: Slot[] = ['dashboard', 'sidebar', 'page'];
 
+const providerStateLabel = (
+  t: (key: string, options?: Record<string, unknown>) => string,
+  value: string,
+) => {
+  const keys: Record<string, string> = {
+    empty: 'pages.sponsors.providerStates.empty',
+    local: 'pages.sponsors.providerStates.local',
+    fresh: 'pages.sponsors.providerStates.fresh',
+    error: 'pages.sponsors.providerStates.error',
+    disabled: 'pages.sponsors.providerStates.disabled',
+  };
+  return t(keys[value] || 'fork.common.unknown');
+};
+
+const localizedValue = (
+  t: (key: string, options?: Record<string, unknown>) => string,
+  namespace: string,
+  value: string,
+) => t(`${namespace}.${value}`, { defaultValue: t('fork.common.unknown') });
+
 function inputFromRecord(record: ManagedSponsor): SponsorFormValues {
   const window =
     record.startAt && record.endAt
@@ -343,7 +363,7 @@ export default function SponsorsManagementPage() {
                     {status.activeSponsorCount}
                   </Descriptions.Item>
                   <Descriptions.Item label={t('pages.sponsors.cacheState')}>
-                    {status.cacheState}
+                    {providerStateLabel(t, status.cacheState)}
                   </Descriptions.Item>
                   {status.lastSuccessfulFetch && (
                     <Descriptions.Item label={t('pages.sponsors.lastFetch')}>
@@ -429,7 +449,9 @@ export default function SponsorsManagementPage() {
                   {
                     title: t('pages.sponsors.slots'),
                     render: (_: unknown, row: ManagedSponsor) =>
-                      row.slots.map((slot) => <Tag key={slot}>{slot}</Tag>),
+                      row.slots.map((slot) => (
+                        <Tag key={slot}>{localizedValue(t, 'pages.sponsors.slots', slot)}</Tag>
+                      )),
                   },
                   {
                     title: t('fork.common.status'),

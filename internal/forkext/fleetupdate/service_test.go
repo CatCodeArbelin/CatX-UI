@@ -161,4 +161,14 @@ func TestAbortAndRetry(t *testing.T) {
 	if got.Campaign.State != StateReady {
 		t.Fatalf("state=%s", got.Campaign.State)
 	}
+	blocked, err := s.Plan(context.Background(), PlanRequest{NodeIDs: []int{2}, ConfirmProduction: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := s.db.Model(&Campaign{}).Where("id = ?", blocked.Campaign.ID).Update("state", StateBlocked).Error; err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Abort(context.Background(), blocked.Campaign.ID); err == nil {
+		t.Fatal("blocked campaign was abortable; blocked campaigns should be retried or left as-is")
+	}
 }

@@ -45,8 +45,10 @@ export default function AuditPage() {
     if (isKnownForkFeatureUnavailable(result, 'audit')) {
       setFeatureOff(true);
       setError('');
-    } else if (result.success && result.obj) setRows(result.obj.items);
-    else setError(t('fork.audit.labels.error'));
+    } else if (result.success) {
+      setError('');
+      setRows(result.obj?.items || []);
+    } else setError(t('fork.audit.labels.error'));
   }, [eventType, t]);
   useEffect(() => {
     const timer = window.setTimeout(() => void load(), 0);
@@ -62,7 +64,11 @@ export default function AuditPage() {
     {
       title: t('fork.audit.labels.outcome'),
       dataIndex: 'outcome',
-      render: (value: string) => <Tag color={value === 'success' ? 'green' : 'red'}>{value}</Tag>,
+      render: (value: string) => (
+        <Tag color={value === 'success' ? 'green' : 'red'}>
+          {t(`fork.audit.outcomes.${value}`, { defaultValue: t('fork.common.unknown') })}
+        </Tag>
+      ),
     },
     { title: t('fork.audit.labels.actor'), render: (_, row) => row.actorName || row.actorType },
     { title: t('fork.audit.labels.target'), render: (_, row) => row.targetType || '—' },

@@ -130,20 +130,13 @@ export const forkNavigationItems: readonly ForkNavigationItem[] = [
     group: 'operations',
     icon: 'sponsors',
   },
-  {
-    key: 'sponsors-management',
-    labelKey: 'fork.sponsors.title',
-    path: '/catx/sponsors/manage',
-    group: 'operations',
-    icon: 'sponsors',
-  },
 ];
 
 export const forkNavigationGroups = {
   clients: ['client-activity', 'portal-access'],
   nodes: ['fleet', 'fleet-updates'],
   routing: ['policy-engine'],
-  operations: ['audit', 'webhooks', 'sponsors', 'sponsors-management'],
+  operations: ['audit', 'webhooks', 'sponsors'],
 } as const;
 // Keep the fork contract registry as the single source for generated API verification.
 export const forkApiSections = [

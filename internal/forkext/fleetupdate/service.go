@@ -577,8 +577,8 @@ func (s *Service) Abort(ctx context.Context, id uint) error {
 	if err := s.db.WithContext(ctx).First(&c, id).Error; err != nil {
 		return err
 	}
-	if terminal(c.State) && c.State != StateBlocked {
-		return nil
+	if terminal(c.State) {
+		return fmt.Errorf("campaign is not abortable")
 	}
 	c.State = StateAborted
 	c.Revision++

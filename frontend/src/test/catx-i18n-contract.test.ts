@@ -57,6 +57,18 @@ const englishFallbackKeyPrefixes = [
   'fork.common.labels.upstreamDisabledReason',
   'fork.common.labels.attributionUnsupportedReason',
   'fork.common.labels.actionFailed',
+  'fork.common.labels.trafficControlUnconfigured',
+  'fork.common.labels.configureTrafficControl',
+  'fork.fleet.emptyTitle',
+  'fork.fleet.emptyDescription',
+  'fork.fleet.openNodes',
+  'fork.fleet.nodeStates.',
+  'fork.fleetUpdate.abortConfirm',
+  'fork.fleetUpdate.states.',
+  'fork.fleetUpdate.reasons.',
+  'fork.fleetUpdate.dispatchStates.',
+  'fork.fleetUpdate.resultStates.',
+  'fork.audit.outcomes.',
   'fork.policy.labels.startsAt',
   'fork.policy.labels.expiresAt',
   'fork.policy.labels.startTime',
@@ -79,7 +91,7 @@ function isEnglishFallbackKey(key: string): boolean {
     key.startsWith('fork.common.states.') ||
     key === 'fork.activity.labels.nodes' ||
     key === 'fork.settings.runtimeState' ||
-    englishFallbackKeyPrefixes.includes(key)
+    englishFallbackKeyPrefixes.some((prefix) => key === prefix || key.startsWith(prefix))
   );
 }
 
@@ -128,9 +140,9 @@ describe('CatX frontend i18n contract', () => {
 
   it('keeps fork navigation fully localized', () => {
     expect(forkNavigationItems.every((item) => item.labelKey.startsWith('fork.'))).toBe(true);
-    expect(forkNavigationItems).toHaveLength(9);
+    expect(forkNavigationItems).toHaveLength(8);
     expect(new Set(forkNavigationItems.map((item) => item.icon)).size).toBe(8);
-    expect(forkNavigationItems.filter((item) => item.group === 'operations')).toHaveLength(4);
+    expect(forkNavigationItems.filter((item) => item.group === 'operations')).toHaveLength(3);
     expect(forkApiSections.every((section) => section.translationKey?.startsWith('fork.'))).toBe(
       true,
     );

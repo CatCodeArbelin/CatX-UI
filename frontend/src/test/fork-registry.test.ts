@@ -44,13 +44,9 @@ describe('fork registries', () => {
         group: 'operations',
         icon: 'sponsors',
       }),
-      expect.objectContaining({
-        key: 'sponsors-management',
-        path: '/catx/sponsors/manage',
-        group: 'operations',
-        icon: 'sponsors',
-      }),
     ]);
+    expect(forkNavigationItems.some((item) => item.key === 'sponsors-management')).toBe(false);
+    expect(forkRoutes.some((route) => route.path === '/catx/sponsors/manage')).toBe(true);
     const risk = forkApiSections.find((section) => section.id === 'risk-intelligence');
     expect(risk?.endpoints).toHaveLength(7);
     expect(risk?.endpoints.map((endpoint) => `${endpoint.method} ${endpoint.path}`)).toContain(

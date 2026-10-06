@@ -6,8 +6,34 @@
 }
 .policy-form-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(180px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
+}
+.policy-basics {
+  max-width: 100%;
+}
+.policy-modal .ant-modal {
+  max-width: calc(100vw - 24px);
+  margin-inline: auto;
+}
+.policy-modal .ant-modal-content {
+  display: flex;
+  max-height: calc(100vh - 24px);
+  flex-direction: column;
+}
+.policy-modal .ant-modal-body {
+  min-width: 0;
+  overflow: auto;
+}
+.policy-modal .ant-form-item,
+.policy-modal .ant-form-item-control,
+.policy-modal .ant-select,
+.policy-modal .ant-input,
+.policy-modal .ant-input-number {
+  max-width: 100%;
+}
+.policy-modal .policy-form-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 .policy-result {
   margin-top: 20px;
@@ -18,5 +44,8 @@
   }
   .policy-form-grid {
     grid-template-columns: 1fr;
+  }
+  .policy-modal .ant-modal {
+    top: 12px;
   }
 }
