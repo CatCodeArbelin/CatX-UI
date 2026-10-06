@@ -5,13 +5,14 @@ import (
 	"encoding/json"
 	"testing"
 
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+
 	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
 	"github.com/mhsanaei/3x-ui/v3/internal/policy"
 	"github.com/mhsanaei/3x-ui/v3/internal/policycompiler"
 	"github.com/mhsanaei/3x-ui/v3/internal/util/json_util"
 	"github.com/mhsanaei/3x-ui/v3/internal/xray"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 )
 
 func effectivePolicyConfig() *xray.Config {

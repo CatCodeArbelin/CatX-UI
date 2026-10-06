@@ -28,8 +28,10 @@ const (
 	OwnerNone        = "none"
 )
 
-var ErrDisabled = errors.New("traffic policy is disabled")
-var ErrRateUnsupported = errors.New("rate shaping is unsupported without proven client attribution")
+var (
+	ErrDisabled        = errors.New("traffic policy is disabled")
+	ErrRateUnsupported = errors.New("rate shaping is unsupported without proven client attribution")
+)
 
 // Policy contains desired policy only. Traffic bytes remain authoritative in
 // xray.ClientTraffic; this table never accumulates a second traffic counter.

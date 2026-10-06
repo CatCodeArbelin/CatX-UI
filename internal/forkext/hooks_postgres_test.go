@@ -6,11 +6,12 @@ import (
 	"strings"
 	"testing"
 
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+
 	"github.com/mhsanaei/3x-ui/v3/internal/analytics"
 	"github.com/mhsanaei/3x-ui/v3/internal/database/model"
 	"github.com/mhsanaei/3x-ui/v3/internal/policy"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
 )
 
 func TestRuntimeActivationPostgres(t *testing.T) {

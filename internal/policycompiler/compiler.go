@@ -153,7 +153,6 @@ func Compile(cfg *xray.Config, decisions []policy.Decision) (*xray.Config, error
 				}
 				tag := fmt.Sprintf("%s%s-%d", QuarantineRuleTagPrefix, stableClient(d.ClientEmail), i)
 				quarantineRules = append(quarantineRules, map[string]any{"type": "field", "user": []string{d.ClientEmail}, "domain": []string{normalized[0]}, "outboundTag": "direct", "ruleTag": tag})
-				changed = true
 			}
 			tag := fmt.Sprintf("%s%s", QuarantineRuleTagPrefix, stableClient(d.ClientEmail))
 			quarantineRules = append(quarantineRules, map[string]any{"type": "field", "user": []string{d.ClientEmail}, "outboundTag": "blocked", "ruleTag": tag})
