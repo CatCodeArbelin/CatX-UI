@@ -156,3 +156,39 @@ Light, dark, and ultra-dark themes must remain supported. Unsupported or
 degraded capabilities stay explicit in the UI. Dangerous actions require a
 clear confirmation. Pages must remain usable at 375, 430, 768, and 1024+
 pixel widths; tables may scroll horizontally when their data requires it.
+
+## DEVS module maturity indicator
+
+During CatX v0.3 module requalification, every unqualified CatX-added product
+module is marked:
+
+`DEVS`
+
+The DEVS indicator represents release maturity, not runtime state.
+
+It must be centrally derived from one module maturity registry rather than
+independently hardcoded into every page.
+
+It should use existing Ant Design and upstream 3x-ui visual conventions.
+
+Where practical it may appear in:
+
+- CatX navigation;
+- module/page heading.
+
+Avoid excessive duplicate visual noise.
+
+The marker may only be removed after explicit maintainer Human Review PASS.
+
+### Qualification locales
+
+For CatX v0.3 module requalification, required review languages are:
+
+- English (`en-US`)
+- Russian (`ru-RU`)
+
+Other locales are outside the per-module Human Review scope for this program.
+
+Do not mass-retranslate them.
+
+Preserve safe English fallback behavior.

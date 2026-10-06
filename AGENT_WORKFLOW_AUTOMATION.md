@@ -79,3 +79,28 @@ The human should usually only:
 3. approve finishing the package.
 
 No manual sequence of `switch`, `merge`, `push`, and branch deletion should be required for every checkpoint.
+
+## Module qualification override
+
+When `CURRENT_TASK.md` declares a DEVS module qualification:
+
+`TestsPassed != HumanApproved`
+
+The agent may:
+
+- create/switch the module branch;
+- commit;
+- push;
+- run CI;
+- repair proven module defects;
+- prepare an isolated Human Review candidate.
+
+The agent may NOT:
+
+- remove the DEVS marker;
+- mark the module READY;
+- merge the module into the qualification integration branch;
+
+until the maintainer explicitly records Human Review PASS.
+
+A Human Review FAIL keeps the same module active and returns it to `REWORK`.

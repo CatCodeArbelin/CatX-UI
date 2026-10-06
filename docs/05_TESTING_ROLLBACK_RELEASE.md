@@ -179,3 +179,56 @@ No merge to `main` if:
 - generated files are stale;
 - race issues remain;
 - privacy boundary is violated.
+
+## Synthetic Module Acceptance
+
+Between unit testing and full runtime smoke, CatX uses deterministic synthetic
+module acceptance tests.
+
+The goal is to prove complete module behavior through production integration
+boundaries.
+
+Recommended deterministic fixture vocabulary:
+
+- user: `catx-test-user`
+- group: `catx-test-group`
+- node: `catx-test-node`
+- inbound: `catx-test-inbound`
+- domain: `video.example.test`
+- secondary domain: `social.example.test`
+- SNI: `video.example.test`
+- upload traffic: `100 MiB`
+- download traffic: `250 MiB`
+- deterministic fixed clock
+- deterministic fixed seed
+
+Use reserved test names/domains and ephemeral state.
+
+Randomized/fuzz testing is separate from deterministic acceptance.
+
+### Test layers
+
+1. UNIT
+2. SYNTHETIC INTEGRATION
+3. DATABASE
+4. REAL RUNTIME
+5. FRONTEND
+6. HUMAN REVIEW
+
+A test must assert the actual promised effect.
+
+Examples of insufficient proof:
+
+- HTTP request returned 200;
+- a form value was saved;
+- a DOM element exists;
+- a database row exists.
+
+Examples of stronger proof:
+
+- policy changes effective Xray configuration;
+- disabling policy removes the CatX routing delta;
+- synthetic traffic changes exact quota/accounting state;
+- DNS/SNI evidence appears through the production analytics path;
+- a revoked portal credential can no longer authenticate;
+- an audit action creates the expected durable event.

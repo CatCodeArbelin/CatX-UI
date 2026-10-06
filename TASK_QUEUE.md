@@ -1004,3 +1004,96 @@ Required order:
 4. only fixes demonstrated by failed behavioral contracts;
 5. full qualification and exact candidate review material;
 6. stop pending maintainer Human Review.
+
+# CATX v0.3 — MODULE REQUALIFICATION
+
+Historical `DONE` entries above mean that their implementation work packages
+were completed at the time.
+
+They do NOT mean that the corresponding product module has passed the new CatX
+v0.3 Module Qualification Protocol.
+
+New release maturity states:
+
+`DEVS`
+`READY`
+
+All unqualified CatX modules begin this phase as `DEVS`.
+
+## Step 0 — DEVS Maturity Marking
+
+Status: `PENDING`
+
+Goal:
+
+mark all unqualified CatX-added product modules `DEVS` using one centralized
+frontend maturity source.
+
+No product behavior changes.
+
+## M00 — Core Lifecycle / Feature Settings
+
+Maturity: `DEVS`
+Qualification: `PENDING`
+
+Must be qualified first.
+
+## M01 — Analytics / Activity
+
+Maturity: `DEVS`
+Qualification: `PENDING`
+
+## M02 — DNS Intelligence
+
+Maturity: `DEVS`
+Qualification: `PENDING`
+
+## M03 — Policy Engine
+
+Maturity: `DEVS`
+Qualification: `PENDING`
+
+## M04 — Traffic History / Quotas
+
+Maturity: `DEVS`
+Qualification: `PENDING`
+
+## M05 — Traffic Control / QoS
+
+Maturity: `DEVS`
+Qualification: `PENDING`
+
+## M06 — Security / Risk
+
+Maturity: `DEVS`
+Qualification: `PENDING`
+
+## M07 — Audit / Webhooks / Metrics
+
+Maturity: `DEVS`
+Qualification: `PENDING`
+
+## M08 — Portal / Self-service
+
+Maturity: `DEVS`
+Qualification: `PENDING`
+
+## M09 — Fleet
+
+Maturity: `DEVS`
+Qualification: `PENDING`
+
+## M10 — Fleet Updates
+
+Maturity: `DEVS`
+Qualification: `PENDING`
+
+## M11 — Sponsors
+
+Maturity: `DEVS`
+Qualification: `PENDING`
+
+Before committing, reconcile this module list against the actual current
+implementation and adjust only where real module boundaries differ.
+
+No module may advance to `READY` without explicit maintainer Human Review PASS.

@@ -302,3 +302,116 @@ When uncertain, prefer the solution that:
 - is easier to disable;
 - is easier to test;
 - is more likely to survive the next upstream release.
+
+## Module Qualification Mode
+
+When `CURRENT_TASK.md` declares CatX Module Qualification Mode, the following
+rules are mandatory.
+
+### One module at a time
+
+Only the module named by `CURRENT_TASK.md` may receive functional changes.
+
+Do not opportunistically repair, refactor, polish, or extend later modules.
+
+### Product maturity
+
+CatX module maturity values are:
+
+- `DEVS`
+- `READY`
+
+`DEVS` is independent from runtime feature state.
+
+An agent may not change `DEVS` to `READY` without explicit maintainer Human
+Review PASS.
+
+### Contract-first testing
+
+Before fixing a selected module, establish its product contract and test
+specification.
+
+Tests must encode intended user-observable behavior, not merely current
+implementation details.
+
+### Test layers
+
+Use all applicable layers:
+
+1. unit;
+2. synthetic integration;
+3. database;
+4. real runtime;
+5. frontend;
+6. Human Review.
+
+Runtime-affecting claims cannot be considered proven by API/DB tests alone.
+
+### Synthetic acceptance
+
+Synthetic tests must use deterministic fixtures and production integration
+boundaries.
+
+Do not create a test-only shortcut that bypasses the production behavior being
+qualified.
+
+### Test integrity
+
+Do not weaken a failing valid test to obtain green CI.
+
+A changed test after contract freeze requires `TEST CHANGE JUSTIFICATION`
+documenting why the previous test contradicted the approved product contract.
+
+### Test result semantics
+
+`PASS` means the test actually executed and passed.
+
+`SKIPPED`, `BLOCKED`, and `UNAVAILABLE` are not PASS.
+
+Infrastructure failure must be distinguished from product failure.
+
+### Cross-module defects
+
+Do not silently expand scope.
+
+If the active module is blocked by another module or shared foundation, record
+the dependency and correct it through a separate traceable task before
+continuing.
+
+### Localization scope
+
+For the CatX v0.3 module requalification program the required qualification
+locales are:
+
+- `en-US`
+- `ru-RU`
+
+Do not bulk-retranslate other locales solely to satisfy this program.
+
+Preserve safe English fallback and structural compatibility.
+
+### Human Review
+
+Automation cannot approve Human Review.
+
+CI, Playwright, screenshots, browser automation, or AI inspection are not
+maintainer approval.
+
+A module requiring Human Review must stop at `WAITING_HUMAN_REVIEW`.
+
+If Human Review fails:
+
+- keep `DEVS`;
+- record findings;
+- return the module to `REWORK`;
+- review both product code and test quality;
+- rerun the complete applicable module qualification.
+
+### Merge restrictions
+
+During module requalification:
+
+module branches merge only into the designated v0.3 qualification integration
+branch after Human Review PASS.
+
+Do not merge module branches directly into `develop` or `main`.

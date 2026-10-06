@@ -73,3 +73,31 @@ A feature is DONE only when all applicable conditions are true.
 - no unrelated formatting/refactor;
 - generated files updated through proper mechanism;
 - upstream-touch budget reviewed.
+
+## Module Qualification READY gate
+
+`Implementation complete` does not mean `Module READY`.
+
+A CatX module may become `READY` only when all applicable qualification gates
+have passed:
+
+- architecture/code review;
+- frozen module contract;
+- unit tests;
+- synthetic integration tests;
+- SQLite tests;
+- PostgreSQL tests;
+- migration/recovery tests;
+- runtime acceptance;
+- effective Xray-state validation where applicable;
+- feature-disabled compatibility;
+- restart/persistence behavior;
+- failure/error-state semantics;
+- en-US qualification;
+- ru-RU qualification;
+- frontend interaction tests;
+- UI/visual review;
+- explicit maintainer Human Review PASS;
+- known limitations documented.
+
+A skipped, unavailable, or blocked mandatory gate is not PASS.
