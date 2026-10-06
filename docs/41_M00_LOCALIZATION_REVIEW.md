@@ -14,7 +14,7 @@ the feature names/descriptions shown inside Feature Settings.
 Business pages for M01–M11, their navigation labels, and broad UI/CSS review are
 outside this package.
 
-Source language: `en-US`  
+Source language: `en-US`
 Qualification translation: `ru-RU`
 
 ## Implementation trace
