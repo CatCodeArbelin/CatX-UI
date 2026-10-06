@@ -2769,6 +2769,25 @@
     "sponsors": {
       "title": "Sponsors"
     },
+    "maturity": {
+      "explanation": "This module is under development and has not yet completed release qualification.",
+      "tooltip": "Product maturity: {explanation}",
+      "accessible": "{module}: {maturity}. {explanation}",
+      "modules": {
+        "m00": "Core Lifecycle / Feature Settings",
+        "m01": "Analytics / Activity",
+        "m02": "DNS Intelligence",
+        "m03": "Policy Engine",
+        "m04": "Traffic History / Quotas",
+        "m05": "Traffic Control / QoS",
+        "m06": "Security / Risk",
+        "m07": "Audit / Webhooks / Metrics",
+        "m08": "Portal / Self-service",
+        "m09": "Fleet / Node Inventory",
+        "m10": "Fleet Updates",
+        "m11": "Sponsors"
+      }
+    },
    "apiDocs": {
     "labels": {
       "panelApi": "3X-UI Panel API",

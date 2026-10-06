@@ -63,12 +63,15 @@ Product maturity is independent from runtime states such as `ACTIVE`,
 
 ## Program sequence
 
-### Step 0 — DEVS marking
+### Step 0 — DEVS marking — COMPLETE
 
 All CatX-added modules that have not passed this protocol must be visibly marked
 `DEVS`.
 
 No module may lose `DEVS` without explicit maintainer approval.
+
+The centralized frontend maturity registry and visible markers are implemented
+and verified on `qualification/v0.3-module-review`. M00–M11 remain `DEVS`.
 
 ### Module loop
 
@@ -93,7 +96,7 @@ changes.
 
 | ID | Module | Maturity | Workflow | Automated | Human Review | Merge |
 |---|---|---|---|---|---|---|
-| M00 | Core Lifecycle / Feature Settings | DEVS | PENDING | PENDING | PENDING | NO |
+| M00 | Core Lifecycle / Feature Settings | DEVS | CODE_REVIEW | PENDING | PENDING | NO |
 | M01 | Analytics / Activity | DEVS | PENDING | PENDING | PENDING | NO |
 | M02 | DNS Intelligence | DEVS | PENDING | PENDING | PENDING | NO |
 | M03 | Policy Engine | DEVS | PENDING | PENDING | PENDING | NO |
@@ -148,20 +151,26 @@ are intentional grouping notes, not additional maturity modules:
 
 Current stage:
 
-`STEP 0 — GOVERNANCE COMPLETE / DEVS IMPLEMENTATION PENDING`
+`MODULE QUALIFICATION`
+
+Current module:
+
+`M00 — Core Lifecycle / Feature Settings`
+
+Current workflow:
+
+`CODE_REVIEW`
+
+Current maturity:
+
+`DEVS`
 
 Next action:
 
-implement the centralized DEVS maturity indicator for all unqualified CatX
-modules.
+M00 code review + test contract.
 
-After Step 0:
-
-start `M00 — Core Lifecycle / Feature Settings`.
-
-This documentation-only bootstrap does not implement the maturity registry or
-the visible DEVS marker; those belong to the next explicitly authorized work
-package.
+Step 0 is complete. This work package did not review or change M00
+functionality and did not add M00 acceptance tests.
 
 ## Human Review authority
 

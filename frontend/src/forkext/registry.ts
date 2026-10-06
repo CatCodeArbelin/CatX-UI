@@ -1,9 +1,131 @@
 import type { RouteObject } from 'react-router';
 
+export type ForkModuleId =
+  | 'M00'
+  | 'M01'
+  | 'M02'
+  | 'M03'
+  | 'M04'
+  | 'M05'
+  | 'M06'
+  | 'M07'
+  | 'M08'
+  | 'M09'
+  | 'M10'
+  | 'M11';
+
+export type ForkModuleMaturity = 'devs' | 'ready';
+
+export interface ForkModuleDefinition {
+  labelKey: string;
+  maturity: ForkModuleMaturity;
+  surfaces: readonly string[];
+}
+
+/**
+ * Product maturity is release/governance metadata, deliberately separate from
+ * runtime feature flags and CatxState. Every current CatX module starts as
+ * development-only until its qualification workflow promotes it.
+ */
+export const forkModuleRegistry = {
+  M00: {
+    labelKey: 'fork.maturity.modules.m00',
+    maturity: 'devs',
+    surfaces: ['/settings#catx-features'],
+  },
+  M01: {
+    labelKey: 'fork.maturity.modules.m01',
+    maturity: 'devs',
+    surfaces: ['/activity'],
+  },
+  M02: {
+    labelKey: 'fork.maturity.modules.m02',
+    maturity: 'devs',
+    surfaces: ['/activity:dns'],
+  },
+  M03: {
+    labelKey: 'fork.maturity.modules.m03',
+    maturity: 'devs',
+    surfaces: ['/policies'],
+  },
+  M04: {
+    labelKey: 'fork.maturity.modules.m04',
+    maturity: 'devs',
+    surfaces: ['/activity:traffic-history'],
+  },
+  M05: {
+    labelKey: 'fork.maturity.modules.m05',
+    maturity: 'devs',
+    surfaces: ['/clients:traffic-control'],
+  },
+  M06: {
+    labelKey: 'fork.maturity.modules.m06',
+    maturity: 'devs',
+    surfaces: ['/clients:risk'],
+  },
+  M07: {
+    labelKey: 'fork.maturity.modules.m07',
+    maturity: 'devs',
+    surfaces: ['/audit', '/webhooks'],
+  },
+  M08: {
+    labelKey: 'fork.maturity.modules.m08',
+    maturity: 'devs',
+    surfaces: ['/portal', '/portal-access'],
+  },
+  M09: {
+    labelKey: 'fork.maturity.modules.m09',
+    maturity: 'devs',
+    surfaces: ['/fleet'],
+  },
+  M10: {
+    labelKey: 'fork.maturity.modules.m10',
+    maturity: 'devs',
+    surfaces: ['/fleet-updates'],
+  },
+  M11: {
+    labelKey: 'fork.maturity.modules.m11',
+    maturity: 'devs',
+    surfaces: ['/catx/sponsors', '/catx/sponsors/manage', '/sponsors'],
+  },
+} as const satisfies Record<ForkModuleId, ForkModuleDefinition>;
+
+export const forkModuleIds: readonly ForkModuleId[] = [
+  'M00',
+  'M01',
+  'M02',
+  'M03',
+  'M04',
+  'M05',
+  'M06',
+  'M07',
+  'M08',
+  'M09',
+  'M10',
+  'M11',
+];
+
+/** Canonical and legacy routes intentionally share this registry mapping. */
+export const forkRouteModules = {
+  '/settings#catx-features': 'M00',
+  '/activity': 'M01',
+  '/policies': 'M03',
+  '/audit': 'M07',
+  '/webhooks': 'M07',
+  '/portal': 'M08',
+  '/portal-access': 'M08',
+  '/fleet': 'M09',
+  '/fleet-updates': 'M10',
+  '/catx/sponsors': 'M11',
+  '/catx/sponsors/manage': 'M11',
+  '/sponsors': 'M11',
+} as const satisfies Record<string, ForkModuleId>;
+
 export interface ForkNavigationItem {
   key: string;
   labelKey: string;
   path: string;
+  moduleId: ForkModuleId;
   group: 'clients' | 'nodes' | 'routing' | 'operations';
   icon:
     | 'activity'
@@ -84,6 +206,7 @@ export const forkNavigationItems: readonly ForkNavigationItem[] = [
     key: 'client-activity',
     labelKey: 'fork.activity.title',
     path: '/activity',
+    moduleId: 'M01',
     group: 'clients',
     icon: 'activity',
   },
@@ -91,14 +214,23 @@ export const forkNavigationItems: readonly ForkNavigationItem[] = [
     key: 'portal-access',
     labelKey: 'fork.portal.adminTitle',
     path: '/portal-access',
+    moduleId: 'M08',
     group: 'clients',
     icon: 'portal',
   },
-  { key: 'fleet', labelKey: 'fork.fleet.title', path: '/fleet', group: 'nodes', icon: 'fleet' },
+  {
+    key: 'fleet',
+    labelKey: 'fork.fleet.title',
+    path: '/fleet',
+    moduleId: 'M09',
+    group: 'nodes',
+    icon: 'fleet',
+  },
   {
     key: 'fleet-updates',
     labelKey: 'fork.fleetUpdate.title',
     path: '/fleet-updates',
+    moduleId: 'M10',
     group: 'nodes',
     icon: 'fleet-updates',
   },
@@ -106,6 +238,7 @@ export const forkNavigationItems: readonly ForkNavigationItem[] = [
     key: 'policy-engine',
     labelKey: 'fork.policy.title',
     path: '/policies',
+    moduleId: 'M03',
     group: 'routing',
     icon: 'policy',
   },
@@ -113,6 +246,7 @@ export const forkNavigationItems: readonly ForkNavigationItem[] = [
     key: 'audit',
     labelKey: 'fork.audit.title',
     path: '/audit',
+    moduleId: 'M07',
     group: 'operations',
     icon: 'audit',
   },
@@ -120,6 +254,7 @@ export const forkNavigationItems: readonly ForkNavigationItem[] = [
     key: 'webhooks',
     labelKey: 'fork.webhooks.title',
     path: '/webhooks',
+    moduleId: 'M07',
     group: 'operations',
     icon: 'webhooks',
   },
@@ -127,6 +262,7 @@ export const forkNavigationItems: readonly ForkNavigationItem[] = [
     key: 'sponsors',
     labelKey: 'fork.sponsors.title',
     path: '/catx/sponsors',
+    moduleId: 'M11',
     group: 'operations',
     icon: 'sponsors',
   },

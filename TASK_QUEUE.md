@@ -1022,7 +1022,7 @@ All unqualified CatX modules begin this phase as `DEVS`.
 
 ## Step 0 — DEVS Maturity Marking
 
-Status: `PENDING`
+Status: `COMPLETE`
 
 Goal:
 
@@ -1034,7 +1034,7 @@ No product behavior changes.
 ## M00 — Core Lifecycle / Feature Settings
 
 Maturity: `DEVS`
-Qualification: `PENDING`
+Qualification: `CODE_REVIEW`
 
 Must be qualified first.
 

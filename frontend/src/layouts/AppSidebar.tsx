@@ -50,6 +50,7 @@ import { formatPanelVersion } from '@/lib/panel-version';
 import { pauseAnimationsUntilLeave, useTheme } from '@/hooks/useTheme';
 import { useAllSettings } from '@/api/queries/useAllSettings';
 import { useCommandPalette } from '@/components/command-palette/useCommandPalette';
+import { ForkModuleTitle } from '@/components/fork/ForkModuleMaturity';
 import { forkNavigationItems } from '@/forkext/registry';
 import SponsorSlot from '@/components/sponsor/SponsorSlot';
 import './AppSidebar.css';
@@ -307,7 +308,7 @@ export default function AppSidebar() {
       {
         key: '/settings#catx-features',
         icon: <ApiOutlined />,
-        label: t('fork.settings.title'),
+        label: <ForkModuleTitle moduleId="M00" title={t('fork.settings.title')} compact />,
       },
       {
         key: '/settings#telegram',
@@ -391,17 +392,20 @@ export default function AppSidebar() {
         }
         if (tab.forkGroup) {
           const Icon = iconByName[tab.icon];
-          const rootDestination =
+          const rootDestination: NonNullable<MenuProps['items']> =
             tab.key === '/operations' ? [] : [{ key: tab.key, icon: <Icon />, label: tab.title }];
-          const children = rootDestination.concat(
-            forkNavigationItems
+          const children: NonNullable<MenuProps['items']> = [
+            ...rootDestination,
+            ...forkNavigationItems
               .filter((item) => item.group === tab.forkGroup)
               .map((item) => ({
                 key: item.path,
                 icon: createElement(iconByName[item.icon]),
-                label: t(item.labelKey),
+                label: (
+                  <ForkModuleTitle moduleId={item.moduleId} title={t(item.labelKey)} compact />
+                ),
               })),
-          );
+          ];
           return {
             key: tab.menuKey || tab.key,
             icon: <Icon />,

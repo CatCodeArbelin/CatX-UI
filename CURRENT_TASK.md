@@ -14,20 +14,22 @@
 
 ## Current program stage
 
-`STEP 0 — DEVS MARKING`
+`MODULE QUALIFICATION`
 
-Governance and qualification documentation must be completed before product
-module qualification begins.
+Step 0 DEVS marking is complete. The next governed action is M00 code review;
+no M00 qualification work is included in this package.
 
 ## Current module
 
-None yet.
-
-The first functional module will be:
-
 `M00 — Core Lifecycle / Feature Settings`
 
-but M00 MUST NOT begin until Step 0 is complete.
+## Current workflow stage
+
+`CODE_REVIEW`
+
+## Current maturity
+
+`DEVS`
 
 ## Qualification integration branch
 
@@ -45,6 +47,8 @@ Only explicit maintainer Human Review PASS may change a module to:
 
 ## Step 0 scope
 
+Status: `COMPLETE`
+
 Allowed:
 
 - implement centralized module maturity registry;
@@ -56,8 +60,8 @@ Forbidden:
 
 - functional changes to individual product modules;
 - module bug fixing;
+- M00 qualification tests or acceptance fixes;
 - removing any DEVS marker;
-- starting M00 before Step 0 completion;
 - merge into develop;
 - merge into main;
 - release;
@@ -110,11 +114,4 @@ Only the maintainer may provide:
 
 ## Current next action
 
-Complete documentation/governance bootstrap.
-
-Then perform:
-
-`STEP 0 — DEVS MARKING`
-
-Do not begin M00 in the same work package unless the maintainer explicitly
-requests it.
+`M00 code review + test contract`

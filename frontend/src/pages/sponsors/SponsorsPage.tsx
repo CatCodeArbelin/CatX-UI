@@ -24,6 +24,7 @@ import { useNavigate } from 'react-router';
 
 import { useTheme } from '@/hooks/useTheme';
 import AppSidebar from '@/layouts/AppSidebar';
+import { ForkModuleTitle } from '@/components/fork/ForkModuleMaturity';
 import { useSponsorsQuery } from '@/api/queries/useSponsorsQuery';
 import SponsorCard from '@/components/sponsor/SponsorCard';
 import { IntlUtil } from '@/utils';
@@ -112,7 +113,15 @@ export default function SponsorsPage({
               <div className="sponsors-header">
                 <div>
                   <Typography.Title level={3} className="sponsors-title">
-                    <CrownOutlined className="sponsors-title-icon" /> {t('pages.sponsors.title')}
+                    <ForkModuleTitle
+                      moduleId="M11"
+                      title={
+                        <>
+                          <CrownOutlined className="sponsors-title-icon" />{' '}
+                          {t('pages.sponsors.title')}
+                        </>
+                      }
+                    />
                   </Typography.Title>
                   <Typography.Text type="secondary">{t('pages.sponsors.intro')}</Typography.Text>
                 </div>

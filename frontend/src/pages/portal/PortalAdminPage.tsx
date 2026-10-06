@@ -16,6 +16,7 @@ import {
 import { HttpUtil } from '@/utils';
 import ForkAdminPageShell from '@/components/fork/ForkAdminPageShell';
 import FeatureOffState from '@/components/fork/FeatureOffState';
+import { ForkModuleTitle } from '@/components/fork/ForkModuleMaturity';
 import { isKnownForkFeatureUnavailable } from '@/lib/fork-feature';
 import { useTranslation } from 'react-i18next';
 
@@ -108,7 +109,9 @@ export default function PortalAdminPage() {
     <ForkAdminPageShell pageClass="portal-admin-page">
       <Space direction="vertical" style={{ width: '100%' }} size="large">
         <Card size="small">
-          <Typography.Title level={2}>{t('fork.portal.adminTitle')}</Typography.Title>
+          <Typography.Title level={2}>
+            <ForkModuleTitle moduleId="M08" title={t('fork.portal.adminTitle')} />
+          </Typography.Title>
           {featureOff ? (
             <FeatureOffState feature="self_service" />
           ) : (

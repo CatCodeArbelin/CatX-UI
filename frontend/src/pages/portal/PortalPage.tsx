@@ -18,6 +18,7 @@ import { useTranslation } from 'react-i18next';
 import { HttpUtil } from '@/utils';
 import { useTheme } from '@/hooks/useTheme';
 import FeatureOffState from '@/components/fork/FeatureOffState';
+import { ForkModuleTitle } from '@/components/fork/ForkModuleMaturity';
 import { isKnownForkFeatureUnavailable } from '@/lib/fork-feature';
 
 type PortalClient = {
@@ -197,7 +198,9 @@ export default function PortalPage() {
           <div className="content-area portal-login-shell">
             <Card size="small">
               <Space direction="vertical" style={{ width: '100%' }}>
-                <Typography.Title level={2}>{t('fork.portal.title')}</Typography.Title>
+                <Typography.Title level={2}>
+                  <ForkModuleTitle moduleId="M08" title={t('fork.portal.title')} />
+                </Typography.Title>
                 <Typography.Paragraph>{t('fork.portal.tokenHint')}</Typography.Paragraph>
                 <Input.Password
                   value={token}
@@ -223,7 +226,9 @@ export default function PortalPage() {
           <Card size="small">
             <Space direction="vertical" style={{ width: '100%' }} size="large">
               <div>
-                <Typography.Title level={2}>{t('fork.portal.title')}</Typography.Title>
+                <Typography.Title level={2}>
+                  <ForkModuleTitle moduleId="M08" title={t('fork.portal.title')} />
+                </Typography.Title>
                 {error && <Alert type="error" message={error} />}
               </div>
               <Descriptions

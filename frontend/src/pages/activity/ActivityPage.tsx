@@ -23,6 +23,7 @@ import { SearchOutlined } from '@ant-design/icons';
 import { HttpUtil } from '@/utils';
 import ForkAdminPageShell from '@/components/fork/ForkAdminPageShell';
 import CatxState from '@/components/fork/CatxState';
+import { ForkModuleMaturity, ForkModuleTitle } from '@/components/fork/ForkModuleMaturity';
 import { i18n } from '@/i18n/react';
 import { useTranslation } from 'react-i18next';
 import type { ForkRuntimeState } from '@/lib/fork-feature';
@@ -355,7 +356,13 @@ export default function ActivityPage() {
       <Card size="small">
         <Space direction="vertical" size="large" style={{ width: '100%' }}>
           <div>
-            <Typography.Title level={2}>{t('fork.activity.title')}</Typography.Title>
+            <Typography.Title level={2}>
+              <ForkModuleTitle moduleId="M01" title={t('fork.activity.title')} />
+            </Typography.Title>
+            <Space wrap size="small" className="fork-module-associated">
+              <ForkModuleMaturity moduleId="M02" showName />
+              <ForkModuleMaturity moduleId="M04" showName />
+            </Space>
             <Typography.Paragraph type="secondary">
               {t('fork.activity.subtitle')}
             </Typography.Paragraph>

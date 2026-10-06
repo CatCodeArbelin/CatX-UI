@@ -18,6 +18,7 @@ import { useTranslation } from 'react-i18next';
 import { HttpUtil } from '@/utils';
 import ForkAdminPageShell from '@/components/fork/ForkAdminPageShell';
 import FeatureOffState from '@/components/fork/FeatureOffState';
+import { ForkModuleTitle } from '@/components/fork/ForkModuleMaturity';
 import { isKnownForkFeatureUnavailable } from '@/lib/fork-feature';
 
 type Target = {
@@ -128,7 +129,10 @@ export default function FleetUpdatePage() {
   return (
     <ForkAdminPageShell pageClass="fleet-update-page">
       <Space direction="vertical" style={{ width: '100%' }} size="large">
-        <Card size="small" title={t('fork.fleetUpdate.title')}>
+        <Card
+          size="small"
+          title={<ForkModuleTitle moduleId="M10" title={t('fork.fleetUpdate.title')} />}
+        >
           {featureOff ? (
             <FeatureOffState feature="fleet_updates" />
           ) : (

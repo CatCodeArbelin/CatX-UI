@@ -37,6 +37,7 @@ import type { Sponsor } from '@/generated/types';
 import { isKnownForkFeatureUnavailable } from '@/lib/fork-feature';
 import FeatureOffState from '@/components/fork/FeatureOffState';
 import ForkAdminPageShell from '@/components/fork/ForkAdminPageShell';
+import { ForkModuleTitle } from '@/components/fork/ForkModuleMaturity';
 import SponsorCard from '@/components/sponsor/SponsorCard';
 
 type Slot = 'dashboard' | 'sidebar' | 'page';
@@ -328,7 +329,7 @@ export default function SponsorsManagementPage() {
           <Space direction="vertical" size="small" style={{ width: '100%' }}>
             <Space align="center" wrap>
               <Typography.Title level={2} style={{ margin: 0 }}>
-                {t('pages.sponsors.managementTitle')}
+                <ForkModuleTitle moduleId="M11" title={t('pages.sponsors.managementTitle')} />
               </Typography.Title>
               <Button icon={<ReloadOutlined />} onClick={() => void load()} loading={loading} />
             </Space>

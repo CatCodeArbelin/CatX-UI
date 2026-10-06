@@ -5,6 +5,7 @@ import { HttpUtil } from '@/utils';
 import ForkAdminPageShell from '@/components/fork/ForkAdminPageShell';
 import CatxState from '@/components/fork/CatxState';
 import FeatureOffState from '@/components/fork/FeatureOffState';
+import { ForkModuleTitle } from '@/components/fork/ForkModuleMaturity';
 import { isKnownForkFeatureUnavailable } from '@/lib/fork-feature';
 import { useTranslation } from 'react-i18next';
 
@@ -93,7 +94,9 @@ export default function AuditPage() {
       <Card size="small">
         <Space direction="vertical" style={{ width: '100%' }} size="large">
           <div>
-            <Typography.Title level={2}>{t('fork.audit.title')}</Typography.Title>
+            <Typography.Title level={2}>
+              <ForkModuleTitle moduleId="M07" title={t('fork.audit.title')} />
+            </Typography.Title>
             <Typography.Text type="secondary">{t('fork.audit.summary')}</Typography.Text>
           </div>
           <Space>

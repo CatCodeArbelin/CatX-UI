@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Button, Card, List, Space, Switch, Tag, Typography, message } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { HttpUtil } from '@/utils';
+import { ForkModuleTitle } from '@/components/fork/ForkModuleMaturity';
 
 type FeatureState = 'feature_off' | 'active' | 'initializing' | 'restart_required' | 'error';
 type Feature = {
@@ -135,7 +136,9 @@ export default function CatxFeaturesTab() {
     <Space direction="vertical" size="large" style={{ width: '100%' }}>
       {contextHolder}
       <div>
-        <Typography.Title level={2}>{t('fork.settings.title')}</Typography.Title>
+        <Typography.Title level={2}>
+          <ForkModuleTitle moduleId="M00" title={t('fork.settings.title')} />
+        </Typography.Title>
         {/* Go-i18n reserves "description" in locale message trees. */}
         <Typography.Paragraph type="secondary">{t('fork.settings.intro')}</Typography.Paragraph>
       </div>

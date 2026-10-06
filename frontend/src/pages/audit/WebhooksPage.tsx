@@ -16,6 +16,7 @@ import type { ColumnsType } from 'antd/es/table';
 import { HttpUtil } from '@/utils';
 import ForkAdminPageShell from '@/components/fork/ForkAdminPageShell';
 import FeatureOffState from '@/components/fork/FeatureOffState';
+import { ForkModuleTitle } from '@/components/fork/ForkModuleMaturity';
 import { isKnownForkFeatureUnavailable } from '@/lib/fork-feature';
 import { useTranslation } from 'react-i18next';
 
@@ -133,7 +134,9 @@ export default function WebhooksPage() {
     <ForkAdminPageShell pageClass="webhooks-page">
       <Space direction="vertical" style={{ width: '100%' }} size="large">
         <Card size="small">
-          <Typography.Title level={2}>{t('fork.webhooks.title')}</Typography.Title>
+          <Typography.Title level={2}>
+            <ForkModuleTitle moduleId="M07" title={t('fork.webhooks.title')} />
+          </Typography.Title>
           <Typography.Text type="secondary">{t('fork.webhooks.summary')}</Typography.Text>
           {!featureOff && (
             <Form

@@ -91,6 +91,24 @@ test('groups fork destinations into upstream navigation and removes Sponsors fro
   expect(screen.queryByText('Sponsors')).toBeNull();
 });
 
+test('shows compact DEVS markers in the existing CatX navigation', async () => {
+  const view = await renderSidebar();
+  fireEvent.mouseEnter(view.container.querySelector('.ant-sidebar')!);
+
+  for (const destination of ['Clients', 'Nodes', 'Routing', 'Operations']) {
+    const groupTitle = Array.from(
+      view.container.querySelectorAll('.ant-sidebar > .ant-layout-sider .ant-menu-submenu-title'),
+    ).find((candidate) => candidate.textContent?.trim() === destination);
+    expect(groupTitle, destination).toBeTruthy();
+    fireEvent.click(groupTitle!);
+  }
+  await act(async () => {});
+
+  const badges = Array.from(view.container.querySelectorAll('.fork-maturity-badge'));
+  expect(badges.length).toBeGreaterThanOrEqual(8);
+  expect(badges.every((badge) => badge.textContent?.trim() === 'DEVS')).toBe(true);
+});
+
 test('keeps upstream root destinations as clickable submenu entries', async () => {
   const view = renderWithProviders(
     <MemoryRouter initialEntries={['/']}>

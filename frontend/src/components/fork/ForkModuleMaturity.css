@@ -1,0 +1,69 @@
+.fork-module-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  flex-wrap: wrap;
+  vertical-align: middle;
+}
+
+.fork-module-title__text {
+  min-width: 0;
+}
+
+.fork-module-title--compact {
+  width: 100%;
+  flex-wrap: nowrap;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.fork-module-title--compact .fork-module-title__text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fork-module-title--compact .fork-module-maturity {
+  flex-shrink: 0;
+}
+
+.fork-module-maturity {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  vertical-align: middle;
+}
+
+.fork-module-maturity--named {
+  flex-wrap: wrap;
+}
+
+.fork-module-maturity__name {
+  color: var(--ant-color-text-secondary);
+  font-size: var(--ant-font-size-sm);
+  line-height: 20px;
+}
+
+.fork-module-maturity__trigger {
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--ant-border-radius-sm);
+  line-height: 20px;
+}
+
+.fork-module-maturity__trigger:focus-visible {
+  outline: 2px solid var(--ant-color-primary);
+  outline-offset: 2px;
+}
+
+.fork-maturity-badge.ant-tag {
+  margin-inline-end: 0;
+  padding-inline: 5px;
+  min-height: 20px;
+  line-height: 18px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}

@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 
 import { HttpUtil, SizeFormatter } from '@/utils';
 import CatxState from '@/components/fork/CatxState';
+import { ForkModuleTitle } from '@/components/fork/ForkModuleMaturity';
 import type { ForkRuntimeState } from '@/lib/fork-feature';
 
 interface TrafficPolicyView {
@@ -209,7 +210,7 @@ export default function TrafficPolicyPanel({ email, readOnly = false }: TrafficP
       {contextHolder}
       <Card
         size="small"
-        title={t('fork.common.labels.trafficControl')}
+        title={<ForkModuleTitle moduleId="M05" title={t('fork.common.labels.trafficControl')} />}
         loading={loading}
         style={{ marginTop: 16 }}
         extra={

@@ -41,6 +41,7 @@ import { activateOnKey } from '@/utils/a11y';
 import { useInboundOptions } from '@/api/queries/useInboundOptions';
 import { useAllSettings } from '@/api/queries/useAllSettings';
 import { useTheme } from '@/hooks/useTheme';
+import { ForkModuleMaturity } from '@/components/fork/ForkModuleMaturity';
 import { forkNavigationItems } from '@/forkext/registry';
 import type { ClientRecord, InboundOption } from '@/schemas/client';
 import { commandPaletteStore, useCommandPalette } from './useCommandPalette';
@@ -424,6 +425,7 @@ export default function CommandPalette() {
         title: t(item.labelKey),
         keywords: [t(item.labelKey).toLowerCase(), 'fork'],
         icon: <FileTextOutlined />,
+        tag: <ForkModuleMaturity moduleId={item.moduleId} />,
       })),
     ];
 

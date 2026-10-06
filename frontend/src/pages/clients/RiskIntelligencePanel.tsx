@@ -3,6 +3,7 @@ import { Alert, Button, Card, Descriptions, List, Space, Tag, Typography, messag
 import { useTranslation } from 'react-i18next';
 import { HttpUtil } from '@/utils';
 import FeatureOffState from '@/components/fork/FeatureOffState';
+import { ForkModuleTitle } from '@/components/fork/ForkModuleMaturity';
 import { isKnownForkFeatureUnavailable } from '@/lib/fork-feature';
 
 type RiskEvent = {
@@ -79,7 +80,11 @@ export default function RiskIntelligencePanel({ email }: { email: string }) {
   if (!summary) return <Card loading size="small" />;
 
   return (
-    <Card title={t('pages.clients.risk.title')} size="small" loading={loading}>
+    <Card
+      title={<ForkModuleTitle moduleId="M06" title={t('pages.clients.risk.title')} />}
+      size="small"
+      loading={loading}
+    >
       {contextHolder}
       <Space direction="vertical" style={{ width: '100%' }}>
         <Descriptions size="small" column={2}>

@@ -28,6 +28,7 @@ import { HttpUtil } from '@/utils';
 import ForkAdminPageShell from '@/components/fork/ForkAdminPageShell';
 import FeatureOffState from '@/components/fork/FeatureOffState';
 import CatxState from '@/components/fork/CatxState';
+import { ForkModuleTitle } from '@/components/fork/ForkModuleMaturity';
 import { isKnownForkFeatureUnavailable } from '@/lib/fork-feature';
 import type { ForkRuntimeState } from '@/lib/fork-feature';
 import { i18n } from '@/i18n/react';
@@ -486,7 +487,9 @@ export default function PolicyPage() {
         <Space direction="vertical" size="large" style={{ width: '100%' }}>
           <div className="policy-heading">
             <div>
-              <Typography.Title level={2}>{t('fork.policy.title')}</Typography.Title>
+              <Typography.Title level={2}>
+                <ForkModuleTitle moduleId="M03" title={t('fork.policy.title')} />
+              </Typography.Title>
               <Typography.Paragraph type="secondary">
                 {t('fork.policy.manageDescription')}
               </Typography.Paragraph>

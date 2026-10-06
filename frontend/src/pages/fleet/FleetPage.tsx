@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { useNodesQuery } from '@/api/queries/useNodesQuery';
 import ForkAdminPageShell from '@/components/fork/ForkAdminPageShell';
+import { ForkModuleTitle } from '@/components/fork/ForkModuleMaturity';
 
 export default function FleetPage() {
   const { t } = useTranslation();
@@ -14,7 +15,11 @@ export default function FleetPage() {
       : t('fork.common.unknown');
   return (
     <ForkAdminPageShell pageClass="fleet-page">
-      <Card size="small" loading={loading} title={t('fork.fleet.title')}>
+      <Card
+        size="small"
+        loading={loading}
+        title={<ForkModuleTitle moduleId="M09" title={t('fork.fleet.title')} />}
+      >
         {fetchError && <Alert type="error" showIcon message={fetchError} />}
         {nodes.length ? (
           <Row gutter={[16, 16]}>
