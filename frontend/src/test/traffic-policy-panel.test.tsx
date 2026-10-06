@@ -47,5 +47,8 @@ test('keeps Client Information traffic controls read-only while exposing unsuppo
 
   expect(await screen.findByText('Unsupported')).toBeTruthy();
   expect(screen.queryByRole('button', { name: 'Save' })).toBeNull();
-  expect(screen.getAllByText(/Upload B\/s:/).length).toBeGreaterThan(0);
+  expect(
+    screen.getAllByText('Rate/speed shaping is unsupported for generic Xray users.').length,
+  ).toBe(2);
+  expect(screen.queryByText(/Upload B\/s:/)).toBeNull();
 });

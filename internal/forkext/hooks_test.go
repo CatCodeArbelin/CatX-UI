@@ -2,6 +2,7 @@ package forkext
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"testing"
 
@@ -70,7 +71,7 @@ func allManagedFeatures(enabled bool) map[Flag]bool {
 	return result
 }
 
-func TestRuntimeReloadAppliesManagedFeatureTransitionsAndPreparesSchemas(t *testing.T) {
+func TestRuntimeActivationRequiresExplicitPreparation(t *testing.T) {
 	disableRuntime()
 	t.Cleanup(disableRuntime)
 	db := newRuntimeTestDB(t, "forkext-runtime-transitions")
@@ -92,10 +93,17 @@ func TestRuntimeReloadAppliesManagedFeatureTransitionsAndPreparesSchemas(t *test
 	if err := NewSettings(db).UpdateFeatures(allManagedFeatures(true)); err != nil {
 		t.Fatalf("persist enabled feature set: %v", err)
 	}
-	if err := ReloadRuntimeFromSettings(db); err != nil {
-		t.Fatalf("reload enabled runtime: %v", err)
+	if err := ReloadRuntimeFromSettings(db); err == nil || !strings.Contains(err.Error(), "schema is not prepared") {
+		t.Fatalf("reload before preparation = %v, want explicit-preparation error", err)
 	}
-	assertRuntimeState(t, true)
+	assertRuntimeState(t, false)
+	if db.Migrator().HasTable(&analytics.DestinationObservation{}) {
+		t.Fatal("generic reload created analytics schema")
+	}
+	if err := PrepareRuntimeFromSettings(db); err != nil {
+		t.Fatalf("prepare enabled runtime: %v", err)
+	}
+	assertRuntimeState(t, false)
 	for name, target := range map[string]any{
 		"analytics":        &analytics.DestinationObservation{},
 		"audit":            &audit.AuditEvent{},
@@ -116,12 +124,19 @@ func TestRuntimeReloadAppliesManagedFeatureTransitionsAndPreparesSchemas(t *test
 		t.Fatal("fork lifecycle hook ran upstream database initialization or seeders")
 	}
 	if err := ReloadRuntimeFromSettings(db); err != nil {
+		t.Fatalf("activate prepared runtime: %v", err)
+	}
+	assertRuntimeState(t, true)
+	if err := ReloadRuntimeFromSettings(db); err != nil {
 		t.Fatalf("idempotent enabled reload: %v", err)
 	}
 	assertRuntimeState(t, true)
 
 	if err := NewSettings(db).UpdateFeatures(allManagedFeatures(false)); err != nil {
 		t.Fatalf("persist disabled feature set: %v", err)
+	}
+	if err := PrepareRuntimeFromSettings(db); err != nil {
+		t.Fatalf("prepare disabled runtime: %v", err)
 	}
 	if err := ReloadRuntimeFromSettings(db); err != nil {
 		t.Fatalf("reload disabled runtime: %v", err)
@@ -134,6 +149,9 @@ func TestRuntimeReloadAppliesManagedFeatureTransitionsAndPreparesSchemas(t *test
 
 	if err := NewSettings(db).UpdateFeatures(allManagedFeatures(true)); err != nil {
 		t.Fatalf("persist re-enabled feature set: %v", err)
+	}
+	if err := PrepareRuntimeFromSettings(db); err != nil {
+		t.Fatalf("prepare re-enabled runtime: %v", err)
 	}
 	if err := ReloadRuntimeFromSettings(db); err != nil {
 		t.Fatalf("reload re-enabled runtime: %v", err)
@@ -174,6 +192,9 @@ func TestRuntimeReloadDoesNotMigrateSponsorsOrLoseData(t *testing.T) {
 	if err := NewSettings(db).UpdateFeatures(allManagedFeatures(true)); err != nil {
 		t.Fatalf("enable features: %v", err)
 	}
+	if err := PrepareRuntimeFromSettings(db); err != nil {
+		t.Fatalf("prepare runtime: %v", err)
+	}
 	if err := ReloadRuntimeFromSettings(db); err != nil {
 		t.Fatalf("reload runtime: %v", err)
 	}
@@ -189,44 +210,114 @@ func TestRuntimeReloadDoesNotMigrateSponsorsOrLoseData(t *testing.T) {
 	}
 }
 
-func TestRuntimeReloadFailureDoesNotLeaveFeaturesEnabled(t *testing.T) {
+func TestRuntimePreparationFailurePreservesKnownGoodRuntimeAndIsRetryable(t *testing.T) {
 	disableRuntime()
 	t.Cleanup(disableRuntime)
-	db := newRuntimeTestDB(t, "forkext-runtime-failure")
+	db := newRuntimeTestDB(t, "forkext-runtime-preparation-failure")
 	if err := NewSettings(db).UpdateFeatures(allManagedFeatures(true)); err != nil {
 		t.Fatalf("persist enabled feature set: %v", err)
+	}
+	if err := RegisterMigrations(db); err != nil {
+		t.Fatalf("register disabled runtime: %v", err)
+	}
+	if err := ConfigureRuntimeFromSettings(db); err != nil {
+		t.Fatalf("configure disabled runtime: %v", err)
+	}
+	if err := PrepareRuntimeFromSettings(db); err != nil {
+		t.Fatalf("initial preparation: %v", err)
 	}
 	if err := ReloadRuntimeFromSettings(db); err != nil {
 		t.Fatalf("initial reload: %v", err)
 	}
 	assertRuntimeState(t, true)
 
-	if err := db.Model(&model.Setting{}).Where("key = ?", settingKey(FlagAnalytics)).Update("value", "not-a-boolean").Error; err != nil {
-		t.Fatalf("corrupt feature setting: %v", err)
+	originalPolicyMigrate := migratePolicySchema
+	migratePolicySchema = func(*gorm.DB) error { return errors.New("injected policy DDL failure") }
+	t.Cleanup(func() { migratePolicySchema = originalPolicyMigrate })
+	err := PrepareRuntimeFromSettings(db)
+	if err == nil || !strings.Contains(err.Error(), "injected policy DDL failure") {
+		t.Fatalf("preparation error = %v, want injected migration failure", err)
 	}
-	err := ReloadRuntimeFromSettings(db)
-	if err == nil || !strings.Contains(err.Error(), "read fork feature flag analytics.enabled") {
-		t.Fatalf("reload error = %v, want feature-read failure", err)
-	}
-	assertRuntimeState(t, false)
+	assertRuntimeState(t, true)
 	items, featureErr := NewSettings(db).FeatureFlags()
 	if featureErr != nil {
 		t.Fatalf("feature flags after runtime failure: %v", featureErr)
 	}
 	for _, item := range items {
-		if item.Key == FlagAnalytics && (item.Active || item.State != RuntimeStateError) {
-			t.Fatalf("analytics failure state = active:%v state:%q, want inactive/error", item.Active, item.State)
+		if item.Key == FlagPolicies && (!item.Active || item.State != RuntimeStateError) {
+			t.Fatalf("policy failure state = active:%v state:%q, want active/error", item.Active, item.State)
 		}
 	}
 
-	if err := db.Model(&model.Setting{}).Where("key = ?", settingKey(FlagAnalytics)).Update("value", "false").Error; err != nil {
-		t.Fatalf("restore analytics feature setting: %v", err)
+	migratePolicySchema = originalPolicyMigrate
+	if err := PrepareRuntimeFromSettings(db); err != nil {
+		t.Fatalf("retry preparation: %v", err)
 	}
-	err = ReloadRuntimeFromSettings(db)
-	if err == nil || !strings.Contains(err.Error(), "dns_intelligence.enabled requires analytics.enabled") {
-		t.Fatalf("reload error = %v, want dependency failure", err)
+	if err := ReloadRuntimeFromSettings(db); err != nil {
+		t.Fatalf("retry activation: %v", err)
 	}
-	assertRuntimeState(t, false)
+	assertRuntimeState(t, true)
+}
+
+func TestRuntimePreparationFailureAtEachMigrationBoundaryPreservesRuntime(t *testing.T) {
+	disableRuntime()
+	t.Cleanup(disableRuntime)
+	db := newRuntimeTestDB(t, "forkext-runtime-each-boundary")
+	if err := NewSettings(db).UpdateFeatures(allManagedFeatures(true)); err != nil {
+		t.Fatalf("persist enabled feature set: %v", err)
+	}
+	if err := RegisterMigrations(db); err != nil {
+		t.Fatalf("register migrations: %v", err)
+	}
+	if err := ConfigureRuntimeFromSettings(db); err != nil {
+		t.Fatalf("activate known-good runtime: %v", err)
+	}
+	assertRuntimeState(t, true)
+
+	failures := []struct {
+		name string
+		seam *func(*gorm.DB) error
+	}{
+		{name: "portal", seam: &migratePortalSchema},
+		{name: "fleet", seam: &migrateFleetUpdateSchema},
+		{name: "audit", seam: &migrateAuditSchema},
+		{name: "group-quota", seam: &migrateGroupQuotaSchema},
+		{name: "traffic-policy", seam: &migrateTrafficPolicySchema},
+		{name: "analytics", seam: &migrateAnalyticsSchema},
+		{name: "policy", seam: &migratePolicySchema},
+		{name: "risk", seam: &migrateRiskSchema},
+	}
+	for _, failure := range failures {
+		t.Run(failure.name, func(t *testing.T) {
+			original := *failure.seam
+			defer func() { *failure.seam = original }()
+			*failure.seam = func(*gorm.DB) error { return errors.New("injected " + failure.name + " DDL failure") }
+
+			err := PrepareRuntimeFromSettings(db)
+			if err == nil || !strings.Contains(err.Error(), "injected "+failure.name+" DDL failure") {
+				t.Fatalf("preparation error = %v, want injected %s failure", err, failure.name)
+			}
+			assertRuntimeState(t, true)
+			items, featureErr := NewSettings(db).FeatureFlags()
+			if featureErr != nil {
+				t.Fatalf("feature flags after %s failure: %v", failure.name, featureErr)
+			}
+			for _, item := range items {
+				if item.Enabled && item.State != RuntimeStateError {
+					t.Fatalf("feature %q after %s failure = active:%v state:%q, want error", item.Key, failure.name, item.Active, item.State)
+				}
+			}
+
+			*failure.seam = original
+			if err := PrepareRuntimeFromSettings(db); err != nil {
+				t.Fatalf("retry preparation after %s failure: %v", failure.name, err)
+			}
+			if err := ReloadRuntimeFromSettings(db); err != nil {
+				t.Fatalf("retry activation after %s failure: %v", failure.name, err)
+			}
+			assertRuntimeState(t, true)
+		})
+	}
 }
 
 func TestDisabledHooksAreExactNoOps(t *testing.T) {

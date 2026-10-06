@@ -1161,6 +1161,7 @@
       "restartPanel": "重启面板",
       "restartPanelDesc": "确定要重启面板吗？若重启后无法访问面板，请前往服务器查看面板日志信息",
       "restartPanelSuccess": "面板已成功重启",
+      "restartPanelScheduled": "Panel restart scheduled; verify runtime state after it completes.",
       "actions": "操作",
       "resetDefaultConfig": "重置为默认配置",
       "panelSettings": "常规",
@@ -2847,6 +2848,7 @@
         "quotaReachedReason": "The fixed-window quota was reached.",
         "upstreamDisabledReason": "The upstream client is disabled.",
         "attributionUnsupportedReason": "Client identity is not proven for enforcement.",
+        "rateUnsupported": "Rate/speed shaping is unsupported for generic Xray users.",
         "actionFailed": "The action could not be completed.",
         "trafficControlUnconfigured": "No traffic policy is configured for this client yet. Choose Configure to create one.",
         "configureTrafficControl": "Configure traffic control"
@@ -2927,6 +2929,7 @@
       "addTemporary": "添加 临时",
       "addSchedule": "添加 schedule",
       "loadFailed": "策略 could not be loaded.",
+      "runtimeApplyFailed": "Policy runtime changes are pending because the last apply failed.",
       "simulationFailed": "模拟 失败.",
       "noEffectivePolicy": "没有 effective 策略.",
       "editAria": "编辑 {name}",

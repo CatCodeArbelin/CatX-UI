@@ -200,6 +200,10 @@ export default function ActivityPage() {
           !dnsResult.success ||
           !trafficResult.success
         ) {
+          setEvents(null);
+          setSessions(null);
+          setDns(null);
+          setTraffic(null);
           setError(t('fork.activity.error'));
           return;
         }
@@ -209,7 +213,13 @@ export default function ActivityPage() {
         if (trafficResult.obj) setTraffic(trafficResult.obj);
       })
       .catch(() => {
-        if (!cancelled) setError(t('fork.activity.error'));
+        if (!cancelled) {
+          setEvents(null);
+          setSessions(null);
+          setDns(null);
+          setTraffic(null);
+          setError(t('fork.activity.error'));
+        }
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -338,6 +348,7 @@ export default function ActivityPage() {
     (dns?.enabled === false || settings?.dnsIntelligence === false ? 'feature_off' : 'active');
   const analyticsDisabled = analyticsState !== 'active';
   const dnsDisabled = dnsState !== 'active';
+  const analyticsRequestFailed = Boolean(email && error);
 
   return (
     <ForkAdminPageShell pageClass="activity-page">
@@ -383,8 +394,10 @@ export default function ActivityPage() {
           {email && !analyticsDisabled && dnsDisabled && (
             <CatxState state={dnsState} feature="dns_intelligence" />
           )}
-          {error && <Alert type="error" showIcon message={error} />}
-          {email && !analyticsDisabled && (
+          {analyticsRequestFailed ? (
+            <CatxState state="error" feature="analytics" description={error} />
+          ) : null}
+          {email && !analyticsDisabled && !analyticsRequestFailed && (
             <Spin spinning={loading}>
               <div className="activity-summary">
                 <Tag>

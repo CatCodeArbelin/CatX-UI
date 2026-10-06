@@ -1161,6 +1161,7 @@
       "restartPanel": "راه‌اندازی مجدد پنل",
       "restartPanelDesc": "آیا مطمئن به ریستارت پنل هستید؟ اگر پس‌از ریستارت نمی‌توانید به پنل دسترسی پیدا کنید، لطفاً گزارش‌های موجود در اسکریپت پنل را بررسی کنید",
       "restartPanelSuccess": "پنل با موفقیت راه‌اندازی مجدد شد",
+      "restartPanelScheduled": "Panel restart scheduled; verify runtime state after it completes.",
       "actions": "عملیات ها",
       "resetDefaultConfig": "برگشت به پیش‌فرض",
       "panelSettings": "پیکربندی",
@@ -2847,6 +2848,7 @@
         "quotaReachedReason": "The fixed-window quota was reached.",
         "upstreamDisabledReason": "The upstream client is disabled.",
         "attributionUnsupportedReason": "Client identity is not proven for enforcement.",
+        "rateUnsupported": "Rate/speed shaping is unsupported for generic Xray users.",
         "actionFailed": "The action could not be completed.",
         "trafficControlUnconfigured": "No traffic policy is configured for this client yet. Choose Configure to create one.",
         "configureTrafficControl": "Configure traffic control"
@@ -2927,6 +2929,7 @@
       "addTemporary": "افزودن موقت",
       "addSchedule": "افزودن schedule",
       "loadFailed": "بارگذاری سیاست‌ها ممکن نیست.",
+      "runtimeApplyFailed": "Policy runtime changes are pending because the last apply failed.",
       "simulationFailed": "شبیه‌سازی شکست خورد.",
       "noEffectivePolicy": "سیاست مؤثری وجود ندارد.",
       "editAria": "ویرایش {name}",

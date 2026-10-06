@@ -1161,6 +1161,7 @@
       "restartPanel": "Mulai ulang panel",
       "restartPanelDesc": "Apakah Anda yakin ingin merestart panel? Jika Anda tidak dapat mengakses panel setelah merestart, lihat info log panel di server.",
       "restartPanelSuccess": "Panel berhasil dimulai ulang",
+      "restartPanelScheduled": "Panel restart scheduled; verify runtime state after it completes.",
       "actions": "Tindakan",
       "resetDefaultConfig": "Reset ke Default",
       "panelSettings": "Umum",
@@ -2847,6 +2848,7 @@
         "quotaReachedReason": "The fixed-window quota was reached.",
         "upstreamDisabledReason": "The upstream client is disabled.",
         "attributionUnsupportedReason": "Client identity is not proven for enforcement.",
+        "rateUnsupported": "Rate/speed shaping is unsupported for generic Xray users.",
         "actionFailed": "The action could not be completed.",
         "trafficControlUnconfigured": "No traffic policy is configured for this client yet. Choose Configure to create one.",
         "configureTrafficControl": "Configure traffic control"
@@ -2927,6 +2929,7 @@
       "addTemporary": "Tambah Sementara",
       "addSchedule": "Tambah schedule",
       "loadFailed": "Kebijakan could not be loaded.",
+      "runtimeApplyFailed": "Policy runtime changes are pending because the last apply failed.",
       "simulationFailed": "Simulasi Gagal.",
       "noEffectivePolicy": "Tidak ada effective Kebijakan.",
       "editAria": "Ubah {name}",

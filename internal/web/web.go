@@ -25,6 +25,7 @@ import (
 	"github.com/mhsanaei/3x-ui/v3/internal/forkext/fleetupdate"
 	"github.com/mhsanaei/3x-ui/v3/internal/logger"
 	"github.com/mhsanaei/3x-ui/v3/internal/mtproto"
+	"github.com/mhsanaei/3x-ui/v3/internal/policy"
 	"github.com/mhsanaei/3x-ui/v3/internal/tuic"
 	"github.com/mhsanaei/3x-ui/v3/internal/util/common"
 	"github.com/mhsanaei/3x-ui/v3/internal/util/sys"
@@ -326,6 +327,7 @@ const (
 // jobs) which the panel relies on for periodic maintenance and monitoring.
 func (s *Server) startTask(restartXray bool, loc *time.Location) {
 	forkext.SetTrafficControlRestartCallback(s.xrayService.SetToNeedRestart)
+	policy.SetRuntimeChangeCallback(s.xrayService.SetToNeedRestart)
 	forkext.RegisterJobs(s.ctx, s.cron)
 	if restartXray {
 		err := s.xrayService.RestartXray(true)
@@ -543,8 +545,12 @@ func (s *Server) Start() (err error) {
 }
 
 func (s *Server) StartPanelOnly() (err error) {
+	policy.SetRuntimeChangeCallback(s.xrayService.SetToNeedRestart)
 	if err := forkext.ReloadRuntimeFromSettings(database.GetDB()); err != nil {
-		return fmt.Errorf("reload fork runtime: %w", err)
+		// The reload boundary is intentionally configuration-only. Keep the
+		// upstream panel available with the last known-good CatX runtime while
+		// the feature settings surface reports the explicit error/retry state.
+		logger.Warning("CatX runtime reload is not active: ", err)
 	}
 	return s.start(false, true)
 }

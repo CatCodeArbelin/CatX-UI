@@ -154,6 +154,44 @@ func TestGenericUserMarkPathRemainsUnsupported(t *testing.T) {
 	}
 }
 
+func TestUpsertRejectsRateShapingWithoutAttributionProvider(t *testing.T) {
+	db, err := gorm.Open(sqlite.Open("file:traffic-policy-rate-unsupported?mode=memory&cache=shared"), &gorm.Config{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := db.AutoMigrate(&Policy{}, &State{}, &xray.ClientTraffic{}); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.Create(&xray.ClientTraffic{Email: "rate@example.com", Enable: true}).Error; err != nil {
+		t.Fatal(err)
+	}
+	ConfigureAttributionProvider(nil)
+	Configure(db, true)
+	t.Cleanup(func() { ConfigureAttributionProvider(nil); Configure(nil, false) })
+
+	_, err = Upsert("rate@example.com", Policy{
+		Enabled:           true,
+		WindowSeconds:     3600,
+		ActiveUploadBps:   1,
+		QuotaBytes:        1024,
+		ActiveDownloadBps: 2,
+	})
+	if !errors.Is(err, ErrRateUnsupported) {
+		t.Fatalf("rate shaping error = %v, want %v", err, ErrRateUnsupported)
+	}
+	var count int64
+	if err := db.Model(&Policy{}).Count(&count).Error; err != nil {
+		t.Fatal(err)
+	}
+	if count != 0 {
+		t.Fatalf("unsupported rate request persisted %d policy rows", count)
+	}
+
+	if _, err := Upsert("rate@example.com", Policy{Enabled: true, WindowSeconds: 3600, QuotaBytes: 1024}); err != nil {
+		t.Fatalf("quota-only policy should remain supported: %v", err)
+	}
+}
+
 func TestDisabledPolicyRouteExposesTypedFeatureState(t *testing.T) {
 	Configure(nil, false)
 	t.Cleanup(func() { Configure(nil, false) })

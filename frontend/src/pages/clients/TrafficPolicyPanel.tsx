@@ -145,7 +145,20 @@ export default function TrafficPolicyPanel({ email, readOnly = false }: TrafficP
     try {
       const response = (await HttpUtil.put(
         `/panel/api/traffic-control/clients/${encodeURIComponent(email)}/policy`,
-        draft,
+        {
+          ...draft,
+          // Generic Xray-user rate shaping has no proven production
+          // attribution provider. Never submit values that imply it is
+          // active from the normal editor.
+          ...(view && ['unsupported', 'degraded', 'disabled'].includes(view.enforcement)
+            ? {
+                activeUploadBps: 0,
+                activeDownloadBps: 0,
+                throttleUploadBps: 0,
+                throttleDownloadBps: 0,
+              }
+            : {}),
+        },
         { headers: { 'Content-Type': 'application/json' } },
       )) as { success?: boolean; obj?: TrafficPolicyView; msg?: string };
       if (!response.success) {
@@ -248,7 +261,11 @@ export default function TrafficPolicyPanel({ email, readOnly = false }: TrafficP
             )}
           </Descriptions.Item>
           <Descriptions.Item label={t('fork.common.labels.activeSpeed')}>
-            {readOnly ? (
+            {enforcementBlocked ? (
+              <Typography.Text type="secondary">
+                {t('fork.common.labels.rateUnsupported')}
+              </Typography.Text>
+            ) : readOnly ? (
               <Space wrap>
                 <Typography.Text>
                   {t('fork.common.labels.uploadSpeed')}: {rate(view.activeUploadBps)}
@@ -281,7 +298,11 @@ export default function TrafficPolicyPanel({ email, readOnly = false }: TrafficP
             )}
           </Descriptions.Item>
           <Descriptions.Item label={t('fork.common.labels.throttleSpeed')}>
-            {readOnly ? (
+            {enforcementBlocked ? (
+              <Typography.Text type="secondary">
+                {t('fork.common.labels.rateUnsupported')}
+              </Typography.Text>
+            ) : readOnly ? (
               <Space wrap>
                 <Typography.Text>
                   {t('fork.common.labels.uploadSpeed')}: {rate(view.throttleUploadBps)}

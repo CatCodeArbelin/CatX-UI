@@ -224,18 +224,24 @@ func (s Settings) UpdateFeatures(updates map[Flag]bool) error {
 	if s.db == nil {
 		return errors.New("fork settings database is nil")
 	}
+	for flag := range updates {
+		if _, ok := managedFeature(flag); !ok {
+			return fmt.Errorf("unknown or unmanaged fork feature flag %q", flag)
+		}
+	}
 	current := make(map[Flag]bool, len(managedFeatureFlags))
 	for _, feature := range managedFeatureFlags {
 		enabled, err := s.Enabled(feature.flag)
 		if err != nil {
+			if replacement, ok := updates[feature.flag]; ok {
+				current[feature.flag] = replacement
+				continue
+			}
 			return err
 		}
 		current[feature.flag] = enabled
 	}
 	for flag, enabled := range updates {
-		if _, ok := managedFeature(flag); !ok {
-			return fmt.Errorf("unknown or unmanaged fork feature flag %q", flag)
-		}
 		current[flag] = enabled
 	}
 	if err := validateFeatureState(current); err != nil {

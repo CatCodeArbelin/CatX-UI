@@ -88,7 +88,7 @@ func Preview(decisions []policy.Decision) ([]RulePreview, error) {
 // Compile is a pure Xray-side operation. It copies only the mutable routing
 // section, removes prior CatX rules, then appends a deterministic replacement.
 func Compile(cfg *xray.Config, decisions []policy.Decision) (*xray.Config, error) {
-	if cfg == nil || len(decisions) == 0 {
+	if cfg == nil {
 		return cfg, nil
 	}
 	routing := map[string]any{}
@@ -105,12 +105,14 @@ func Compile(cfg *xray.Config, decisions []policy.Decision) (*xray.Config, error
 		return cfg, fmt.Errorf("policy routing rules have invalid shape")
 	}
 	kept := make([]any, 0, len(rules)+len(decisions))
+	removedCatXRules := false
 	for _, raw := range rules {
 		obj, ok := raw.(map[string]any)
 		if !ok {
 			return cfg, fmt.Errorf("policy routing rule has invalid shape")
 		}
 		if tag, _ := obj["ruleTag"].(string); strings.HasPrefix(tag, RuleTagPrefix) || strings.HasPrefix(tag, QuarantineRuleTagPrefix) || strings.HasPrefix(tag, DNSRuleTagPrefix) {
+			removedCatXRules = true
 			continue
 		}
 		kept = append(kept, raw)
@@ -179,6 +181,9 @@ func Compile(cfg *xray.Config, decisions []policy.Decision) (*xray.Config, error
 		}
 	}
 	kept = append(quarantineRules, kept...)
+	if !removedCatXRules && len(decisions) == 0 {
+		return cfg, nil
+	}
 	if len(kept) == len(rules) && len(decisions) > 0 {
 		return cfg, nil
 	}

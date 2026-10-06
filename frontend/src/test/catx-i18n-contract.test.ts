@@ -56,6 +56,7 @@ const englishFallbackKeyPrefixes = [
   'fork.common.labels.quotaReachedReason',
   'fork.common.labels.upstreamDisabledReason',
   'fork.common.labels.attributionUnsupportedReason',
+  'fork.common.labels.rateUnsupported',
   'fork.common.labels.actionFailed',
   'fork.common.labels.trafficControlUnconfigured',
   'fork.common.labels.configureTrafficControl',
@@ -83,6 +84,7 @@ const englishFallbackKeyPrefixes = [
   'fork.policy.labels.quarantine',
   'fork.policy.labels.quarantineAllowlist',
   'fork.policy.labels.advancedJson',
+  'fork.policy.runtimeApplyFailed',
 ];
 
 function isEnglishFallbackKey(key: string): boolean {
@@ -96,6 +98,79 @@ function isEnglishFallbackKey(key: string): boolean {
 }
 
 type Json = string | number | boolean | null | Json[] | { [key: string]: Json };
+
+function duplicateJsonKeys(text: string): string[] {
+  let index = 0;
+  const duplicates: string[] = [];
+  const skipWhitespace = () => {
+    while (/\s/.test(text[index] || '')) index += 1;
+  };
+  const parseString = (): string => {
+    const start = index;
+    index += 1;
+    while (index < text.length) {
+      if (text[index] === '\\') {
+        index += 2;
+        continue;
+      }
+      if (text[index] === '"') {
+        index += 1;
+        return JSON.parse(text.slice(start, index)) as string;
+      }
+      index += 1;
+    }
+    throw new Error('unterminated JSON string');
+  };
+  const parseValue = (path: string): void => {
+    skipWhitespace();
+    if (text[index] === '{') {
+      index += 1;
+      skipWhitespace();
+      const seen = new Set<string>();
+      while (text[index] !== '}') {
+        const key = parseString();
+        if (seen.has(key)) duplicates.push(path ? `${path}.${key}` : key);
+        seen.add(key);
+        skipWhitespace();
+        if (text[index] !== ':') throw new Error('malformed JSON object');
+        index += 1;
+        parseValue(path ? `${path}.${key}` : key);
+        skipWhitespace();
+        if (text[index] === ',') {
+          index += 1;
+          skipWhitespace();
+        } else if (text[index] !== '}') {
+          throw new Error('malformed JSON object separator');
+        }
+      }
+      index += 1;
+      return;
+    }
+    if (text[index] === '[') {
+      index += 1;
+      skipWhitespace();
+      while (text[index] !== ']') {
+        parseValue(path);
+        skipWhitespace();
+        if (text[index] === ',') {
+          index += 1;
+          skipWhitespace();
+        } else if (text[index] !== ']') {
+          throw new Error('malformed JSON array separator');
+        }
+      }
+      index += 1;
+      return;
+    }
+    if (text[index] === '"') {
+      parseString();
+      return;
+    }
+    while (index < text.length && !/\s|[,\]}]/.test(text[index])) index += 1;
+  };
+  parseValue('');
+  return duplicates;
+}
 
 function flatten(value: Json, prefix = ''): Array<[string, Json]> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return [[prefix, value]];
@@ -114,6 +189,13 @@ function placeholders(value: Json): string[] {
 }
 
 describe('CatX frontend i18n contract', () => {
+  it('rejects duplicate JSON object keys in every locale catalog', () => {
+    for (const locale of locales) {
+      const raw = readFileSync(resolve(translationDir, `${locale}.json`), 'utf8');
+      expect(duplicateJsonKeys(raw), locale).toEqual([]);
+    }
+  });
+
   it('keeps the CatX key tree, types, and placeholders identical across locales', () => {
     const english = forkEntries('en-US');
     for (const locale of locales) {

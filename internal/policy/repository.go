@@ -16,11 +16,18 @@ type Repository struct{ db *gorm.DB }
 
 func NewRepository(db *gorm.DB) *Repository { return &Repository{db: db} }
 
+func notifyRuntimeChange(err error) error {
+	if err == nil {
+		MarkRuntimeApplyRequired()
+	}
+	return err
+}
+
 func (r *Repository) CreatePolicy(ctx context.Context, p *Policy) error {
 	if err := validatePolicy(p); err != nil {
 		return err
 	}
-	return r.db.WithContext(ctx).Create(p).Error
+	return notifyRuntimeChange(r.db.WithContext(ctx).Create(p).Error)
 }
 
 func (r *Repository) GetPolicy(ctx context.Context, id uint) (Policy, error) {
@@ -39,11 +46,11 @@ func (r *Repository) UpdatePolicy(ctx context.Context, p *Policy) error {
 	if err := validatePolicy(p); err != nil {
 		return err
 	}
-	return r.db.WithContext(ctx).Model(&Policy{}).Where("id = ?", p.ID).Updates(map[string]any{"name": p.Name, "description": p.Description, "spec": p.Spec, "priority": p.Priority, "enabled": p.Enabled, "updated_at": time.Now().UnixMilli()}).Error
+	return notifyRuntimeChange(r.db.WithContext(ctx).Model(&Policy{}).Where("id = ?", p.ID).Updates(map[string]any{"name": p.Name, "description": p.Description, "spec": p.Spec, "priority": p.Priority, "enabled": p.Enabled, "updated_at": time.Now().UnixMilli()}).Error)
 }
 
 func (r *Repository) DeletePolicy(ctx context.Context, id uint) error {
-	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		for _, m := range []any{&PolicyAssignment{}, &PolicyOverride{}, &TemporaryOverride{}, &PolicySchedule{}} {
 			if err := tx.Where("policy_id = ?", id).Delete(m).Error; err != nil {
 				return err
@@ -51,6 +58,7 @@ func (r *Repository) DeletePolicy(ctx context.Context, id uint) error {
 		}
 		return tx.Delete(&Policy{}, id).Error
 	})
+	return notifyRuntimeChange(err)
 }
 
 func (r *Repository) CreateAssignment(ctx context.Context, a *PolicyAssignment) error {
@@ -63,7 +71,7 @@ func (r *Repository) CreateAssignment(ctx context.Context, a *PolicyAssignment) 
 	if err := clientOrGroupExists(r.db, a.TargetType, a.TargetRef); err != nil {
 		return err
 	}
-	return r.db.WithContext(ctx).Create(a).Error
+	return notifyRuntimeChange(r.db.WithContext(ctx).Create(a).Error)
 }
 
 func (r *Repository) ListAssignments(ctx context.Context) ([]PolicyAssignment, error) {
@@ -73,7 +81,7 @@ func (r *Repository) ListAssignments(ctx context.Context) ([]PolicyAssignment, e
 }
 
 func (r *Repository) DeleteAssignment(ctx context.Context, id uint) error {
-	return r.db.WithContext(ctx).Delete(&PolicyAssignment{}, id).Error
+	return notifyRuntimeChange(r.db.WithContext(ctx).Delete(&PolicyAssignment{}, id).Error)
 }
 
 func (r *Repository) UpdateAssignment(ctx context.Context, a *PolicyAssignment) error {
@@ -86,7 +94,7 @@ func (r *Repository) UpdateAssignment(ctx context.Context, a *PolicyAssignment) 
 	if err := clientOrGroupExists(r.db, a.TargetType, a.TargetRef); err != nil {
 		return err
 	}
-	return r.db.WithContext(ctx).Model(&PolicyAssignment{}).Where("id = ?", a.ID).Updates(map[string]any{"policy_id": a.PolicyID, "target_type": a.TargetType, "target_ref": a.TargetRef, "priority": a.Priority, "enabled": a.Enabled, "updated_at": time.Now().UnixMilli()}).Error
+	return notifyRuntimeChange(r.db.WithContext(ctx).Model(&PolicyAssignment{}).Where("id = ?", a.ID).Updates(map[string]any{"policy_id": a.PolicyID, "target_type": a.TargetType, "target_ref": a.TargetRef, "priority": a.Priority, "enabled": a.Enabled, "updated_at": time.Now().UnixMilli()}).Error)
 }
 
 func (r *Repository) CreateOverride(ctx context.Context, o *PolicyOverride) error {
@@ -99,7 +107,7 @@ func (r *Repository) CreateOverride(ctx context.Context, o *PolicyOverride) erro
 	if err := clientOrGroupExists(r.db, o.TargetType, o.TargetRef); err != nil {
 		return err
 	}
-	return r.db.WithContext(ctx).Create(o).Error
+	return notifyRuntimeChange(r.db.WithContext(ctx).Create(o).Error)
 }
 
 func (r *Repository) ListOverrides(ctx context.Context) ([]PolicyOverride, error) {
@@ -109,7 +117,7 @@ func (r *Repository) ListOverrides(ctx context.Context) ([]PolicyOverride, error
 }
 
 func (r *Repository) DeleteOverride(ctx context.Context, id uint) error {
-	return r.db.WithContext(ctx).Delete(&PolicyOverride{}, id).Error
+	return notifyRuntimeChange(r.db.WithContext(ctx).Delete(&PolicyOverride{}, id).Error)
 }
 
 func (r *Repository) UpdateOverride(ctx context.Context, o *PolicyOverride) error {
@@ -122,7 +130,7 @@ func (r *Repository) UpdateOverride(ctx context.Context, o *PolicyOverride) erro
 	if err := clientOrGroupExists(r.db, o.TargetType, o.TargetRef); err != nil {
 		return err
 	}
-	return r.db.WithContext(ctx).Model(&PolicyOverride{}).Where("id = ?", o.ID).Updates(map[string]any{"policy_id": o.PolicyID, "target_type": o.TargetType, "target_ref": o.TargetRef, "scope": o.Scope, "value": o.Value, "priority": o.Priority, "enabled": o.Enabled, "updated_at": time.Now().UnixMilli()}).Error
+	return notifyRuntimeChange(r.db.WithContext(ctx).Model(&PolicyOverride{}).Where("id = ?", o.ID).Updates(map[string]any{"policy_id": o.PolicyID, "target_type": o.TargetType, "target_ref": o.TargetRef, "scope": o.Scope, "value": o.Value, "priority": o.Priority, "enabled": o.Enabled, "updated_at": time.Now().UnixMilli()}).Error)
 }
 
 func (r *Repository) CreateTemporaryOverride(ctx context.Context, o *TemporaryOverride) error {
@@ -135,7 +143,7 @@ func (r *Repository) CreateTemporaryOverride(ctx context.Context, o *TemporaryOv
 	if err := clientOrGroupExists(r.db, o.TargetType, o.TargetRef); err != nil {
 		return err
 	}
-	return r.db.WithContext(ctx).Create(o).Error
+	return notifyRuntimeChange(r.db.WithContext(ctx).Create(o).Error)
 }
 
 func (r *Repository) ListTemporaryOverrides(ctx context.Context, now int64) ([]TemporaryOverride, error) {
@@ -145,7 +153,7 @@ func (r *Repository) ListTemporaryOverrides(ctx context.Context, now int64) ([]T
 }
 
 func (r *Repository) DeleteTemporaryOverride(ctx context.Context, id uint) error {
-	return r.db.WithContext(ctx).Delete(&TemporaryOverride{}, id).Error
+	return notifyRuntimeChange(r.db.WithContext(ctx).Delete(&TemporaryOverride{}, id).Error)
 }
 
 func (r *Repository) UpdateTemporaryOverride(ctx context.Context, o *TemporaryOverride) error {
@@ -158,7 +166,7 @@ func (r *Repository) UpdateTemporaryOverride(ctx context.Context, o *TemporaryOv
 	if err := clientOrGroupExists(r.db, o.TargetType, o.TargetRef); err != nil {
 		return err
 	}
-	return r.db.WithContext(ctx).Model(&TemporaryOverride{}).Where("id = ?", o.ID).Updates(map[string]any{"policy_id": o.PolicyID, "target_type": o.TargetType, "target_ref": o.TargetRef, "scope": o.Scope, "value": o.Value, "priority": o.Priority, "starts_at": o.StartsAt, "expires_at": o.ExpiresAt, "enabled": o.Enabled, "updated_at": time.Now().UnixMilli()}).Error
+	return notifyRuntimeChange(r.db.WithContext(ctx).Model(&TemporaryOverride{}).Where("id = ?", o.ID).Updates(map[string]any{"policy_id": o.PolicyID, "target_type": o.TargetType, "target_ref": o.TargetRef, "scope": o.Scope, "value": o.Value, "priority": o.Priority, "starts_at": o.StartsAt, "expires_at": o.ExpiresAt, "enabled": o.Enabled, "updated_at": time.Now().UnixMilli()}).Error)
 }
 
 func (r *Repository) policyExists(ctx context.Context, id uint) error {

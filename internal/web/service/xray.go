@@ -20,6 +20,7 @@ import (
 	"github.com/mhsanaei/3x-ui/v3/internal/forkext"
 	"github.com/mhsanaei/3x-ui/v3/internal/forkrecovery"
 	"github.com/mhsanaei/3x-ui/v3/internal/logger"
+	"github.com/mhsanaei/3x-ui/v3/internal/policy"
 	"github.com/mhsanaei/3x-ui/v3/internal/tuic"
 	"github.com/mhsanaei/3x-ui/v3/internal/util/json_util"
 	"github.com/mhsanaei/3x-ui/v3/internal/util/maskcompat"
@@ -1423,9 +1424,14 @@ func (s *XrayService) TestRoute(req xray.RouteTestRequest) (*xray.RouteTestResul
 // the Xray gRPC API without restarting the process (inbounds, outbounds and
 // routing rules/balancers are hot-reloadable); only changes the core cannot
 // take at runtime — or a force request — stop and restart the process.
-func (s *XrayService) RestartXray(isForce bool) error {
+func (s *XrayService) RestartXray(isForce bool) (err error) {
 	lock.Lock()
 	defer lock.Unlock()
+	defer func() {
+		if err != nil && policy.RuntimeStatus().RestartRequired {
+			policy.MarkRuntimeApplyError(err)
+		}
+	}()
 	logger.Debug("restart Xray, force:", isForce)
 	if !isForce && isManuallyStopped.Load() {
 		return nil
@@ -1443,6 +1449,7 @@ func (s *XrayService) RestartXray(isForce bool) error {
 		configUnchanged = process.GetConfig().Equals(xrayConfig)
 		if !isForce && configUnchanged && !isNeedXrayRestart.Load() {
 			logger.Debug("It does not need to restart Xray")
+			policy.MarkRuntimeApplied()
 			return nil
 		}
 		// A config the core cannot bind never replaces one that works: its failed
@@ -1481,6 +1488,7 @@ func (s *XrayService) RestartXray(isForce bool) error {
 		if healthErr := runXrayHealthcheck(process); healthErr == nil {
 			xrayState.clearHoldBack()
 			logger.Info("Xray config changes applied through the core API, no restart needed")
+			policy.MarkRuntimeApplied()
 			return nil
 		} else {
 			_ = process.Stop()
@@ -1517,6 +1525,7 @@ func (s *XrayService) RestartXray(isForce bool) error {
 
 	xrayState.replace(candidate)
 	s.xrayAPI.StatsLastValues = nil
+	policy.MarkRuntimeApplied()
 	return nil
 }
 

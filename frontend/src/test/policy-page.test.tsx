@@ -39,3 +39,18 @@ test('renders disabled policy state without enabling management actions', async 
     screen.getByRole('button', { name: new RegExp(i18n.t('fork.policy.newPolicy')) }),
   ).toHaveProperty('disabled', true);
 });
+
+test('renders a policy error state instead of empty collections when loading fails', async () => {
+  vi.spyOn(HttpUtil, 'get').mockResolvedValue({
+    success: false,
+    msg: 'backend failure',
+    obj: undefined,
+  } as never);
+  renderWithProviders(
+    <MemoryRouter>
+      <PolicyPage />
+    </MemoryRouter>,
+  );
+  await waitFor(() => expect(screen.getByText('Policies could not be loaded.')).toBeTruthy());
+  expect(screen.queryByText(/No policies yet/i)).toBeNull();
+});

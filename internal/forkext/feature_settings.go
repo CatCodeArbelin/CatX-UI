@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/mhsanaei/3x-ui/v3/internal/policy"
 )
 
 var errFeatureSettingsUnavailable = errors.New("feature settings unavailable")
@@ -59,6 +60,28 @@ func registerFeatureSettingsRoutes(api *gin.RouterGroup) {
 		}
 		if err := NewSettings(db).UpdateFeatures(updates); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"success": false, "msg": err.Error()})
+			return
+		}
+		if _, changed := updates[FlagPolicies]; changed {
+			// Policy persistence and the feature toggle share the existing Xray
+			// apply boundary. Keep the API truthful while that boundary is pending.
+			policy.MarkRuntimeApplyRequired()
+		}
+		// Schema preparation is deliberately explicit and synchronous. A
+		// generic panel restart must never become an implicit migration entry
+		// point, and a successful settings write must not hide an activation
+		// failure behind a later asynchronous restart.
+		if err := PrepareRuntimeFromSettings(db); err != nil {
+			payload, readErr := readFeatureSettings()
+			if readErr != nil {
+				c.JSON(http.StatusConflict, gin.H{"success": false, "msg": "feature settings saved but activation preparation failed"})
+				return
+			}
+			c.JSON(http.StatusConflict, gin.H{
+				"success": false,
+				"msg":     "feature settings saved but activation preparation failed: " + err.Error(),
+				"obj":     payload,
+			})
 			return
 		}
 		payload, err := readFeatureSettings()

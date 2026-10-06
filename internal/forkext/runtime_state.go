@@ -17,9 +17,11 @@ const (
 )
 
 type runtimeSnapshot struct {
-	initialized bool
-	config      runtimeConfig
-	err         string
+	initialized    bool
+	config         runtimeConfig
+	preparedConfig runtimeConfig
+	prepared       bool
+	err            string
 }
 
 var runtimeSnapshotState struct {
@@ -30,10 +32,31 @@ var runtimeSnapshotState struct {
 func publishRuntimeSnapshot(config runtimeConfig, initialized bool, runtimeErr string) {
 	runtimeSnapshotState.Lock()
 	runtimeSnapshotState.snapshot = runtimeSnapshot{
-		initialized: initialized,
-		config:      config,
-		err:         runtimeErr,
+		initialized:    initialized,
+		config:         config,
+		preparedConfig: config,
+		prepared:       initialized,
+		err:            runtimeErr,
 	}
+	runtimeSnapshotState.Unlock()
+}
+
+func publishPreparedRuntime(config runtimeConfig) {
+	runtimeSnapshotState.Lock()
+	snapshot := runtimeSnapshotState.snapshot
+	snapshot.preparedConfig = config
+	snapshot.prepared = true
+	snapshot.err = ""
+	runtimeSnapshotState.snapshot = snapshot
+	runtimeSnapshotState.Unlock()
+}
+
+func publishRuntimeError(runtimeErr string) {
+	runtimeSnapshotState.Lock()
+	snapshot := runtimeSnapshotState.snapshot
+	snapshot.prepared = false
+	snapshot.err = runtimeErr
+	runtimeSnapshotState.snapshot = snapshot
 	runtimeSnapshotState.Unlock()
 }
 
@@ -42,6 +65,11 @@ func currentRuntimeSnapshot() runtimeSnapshot {
 	snapshot := runtimeSnapshotState.snapshot
 	runtimeSnapshotState.RUnlock()
 	return snapshot
+}
+
+func runtimePreparedFor(config runtimeConfig) bool {
+	snapshot := currentRuntimeSnapshot()
+	return snapshot.prepared && snapshot.preparedConfig == config
 }
 
 func runtimeFlagEnabled(config runtimeConfig, flag Flag) bool {

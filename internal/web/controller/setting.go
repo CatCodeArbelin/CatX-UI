@@ -223,10 +223,12 @@ func (a *SettingController) updateUser(c *gin.Context) {
 	jsonMsg(c, I18nWeb(c, "pages.settings.toasts.modifyUser"), err)
 }
 
-// restartPanel restarts the panel service after a delay.
+// restartPanel schedules the panel lifecycle restart after a delay. The
+// request is acknowledged as pending because the process has not completed
+// the restart or CatX runtime apply at this point.
 func (a *SettingController) restartPanel(c *gin.Context) {
 	err := a.panelService.RestartPanel(time.Second * 3)
-	jsonMsg(c, I18nWeb(c, "pages.settings.restartPanelSuccess"), err)
+	jsonMsgObj(c, I18nWeb(c, "pages.settings.restartPanelScheduled"), gin.H{"state": "pending"}, err)
 }
 
 // getDefaultXrayConfig retrieves the default Xray configuration.

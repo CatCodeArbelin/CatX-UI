@@ -64,3 +64,20 @@ test('renders DNS enrichment provenance confidence and ambiguity', async () => {
   expect(screen.getByText(/conflicting metadata/)).toBeTruthy();
   expect(screen.getByText('DNS observations')).toBeTruthy();
 });
+
+test('renders an error state instead of an empty state when analytics requests fail', async () => {
+  vi.spyOn(HttpUtil, 'get').mockResolvedValue({
+    success: false,
+    msg: 'backend failure',
+    obj: undefined,
+  } as never);
+  renderWithProviders(
+    <MemoryRouter initialEntries={['/activity?email=alice@example.com']}>
+      <ActivityPage />
+    </MemoryRouter>,
+  );
+  await waitFor(() =>
+    expect(screen.getByText('Analytics activity could not be loaded.')).toBeTruthy(),
+  );
+  expect(screen.queryByText('No observed activity in this range.')).toBeNull();
+});

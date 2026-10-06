@@ -84,50 +84,60 @@ func prepareRuntimeSchema(db *gorm.DB, cfg runtimeConfig) error {
 	// The portal schema has historically been part of every CatX database.
 	// Preserve that compatibility while keeping all other optional schemas
 	// gated by the feature that owns them.
-	if err := portal.Migrate(db); err != nil {
+	if err := migratePortalSchema(db); err != nil {
 		return fmt.Errorf("prepare self-service schema: %w", err)
 	}
 	if cfg.fleetUpdates {
-		if err := fleetupdate.Migrate(db); err != nil {
+		if err := migrateFleetUpdateSchema(db); err != nil {
 			return fmt.Errorf("prepare fleet-update schema: %w", err)
 		}
 	}
 	if cfg.audit {
-		if err := audit.Migrate(db); err != nil {
+		if err := migrateAuditSchema(db); err != nil {
 			return fmt.Errorf("prepare audit schema: %w", err)
 		}
 	}
 	if cfg.trafficControl {
-		if err := groupquota.Migrate(db); err != nil {
+		if err := migrateGroupQuotaSchema(db); err != nil {
 			return fmt.Errorf("prepare group-quota schema: %w", err)
 		}
-		if err := trafficpolicy.Migrate(db); err != nil {
+		if err := migrateTrafficPolicySchema(db); err != nil {
 			return fmt.Errorf("prepare traffic-policy schema: %w", err)
 		}
 	}
 	if cfg.analytics {
-		if err := analytics.Migrate(db); err != nil {
+		if err := migrateAnalyticsSchema(db); err != nil {
 			return fmt.Errorf("prepare analytics schema: %w", err)
 		}
 	}
 	if cfg.policies {
-		if err := policy.Migrate(db); err != nil {
+		if err := migratePolicySchema(db); err != nil {
 			return fmt.Errorf("prepare policy schema: %w", err)
 		}
 	}
 	if cfg.security {
-		if err := risk.Migrate(db); err != nil {
+		if err := migrateRiskSchema(db); err != nil {
 			return fmt.Errorf("prepare security-anomaly schema: %w", err)
 		}
 	}
 	return nil
 }
 
-func disableRuntime() {
-	disableRuntimeWithError("")
-}
+// These narrow seams make activation failure tests deterministic without
+// changing any feature module's migration implementation. Production keeps
+// the real module migrators, while tests can stop at any migration boundary.
+var (
+	migratePortalSchema        = portal.Migrate
+	migrateFleetUpdateSchema   = fleetupdate.Migrate
+	migrateAuditSchema         = audit.Migrate
+	migrateGroupQuotaSchema    = groupquota.Migrate
+	migrateTrafficPolicySchema = trafficpolicy.Migrate
+	migrateAnalyticsSchema     = analytics.Migrate
+	migratePolicySchema        = policy.Migrate
+	migrateRiskSchema          = risk.Migrate
+)
 
-func disableRuntimeWithError(runtimeErr string) {
+func disableRuntime() {
 	portal.Configure(nil, false)
 	fleetupdate.Configure(nil, false)
 	audit.Configure(nil, false)
@@ -139,10 +149,16 @@ func disableRuntimeWithError(runtimeErr string) {
 	policy.Configure(nil, false)
 	risk.Configure(nil, false)
 	sponsors.Configure(nil, false)
-	publishRuntimeSnapshot(runtimeConfig{}, true, runtimeErr)
+	publishRuntimeSnapshot(runtimeConfig{}, true, "")
 }
 
+// recordRuntimeError preserves the last configured services. Optional CatX
+// activation must not tear down a known-good runtime or terminate the panel;
+// settings expose the error and leave the desired state available for retry.
+func recordRuntimeError(runtimeErr string) { publishRuntimeError(runtimeErr) }
+
 func applyRuntimeConfig(db *gorm.DB, cfg runtimeConfig) {
+	previous := currentRuntimeSnapshot()
 	portal.Configure(db, cfg.selfService)
 	fleetupdate.Configure(db, cfg.fleetUpdates)
 	if service := fleetupdate.Current(); service != nil {
@@ -163,6 +179,9 @@ func applyRuntimeConfig(db *gorm.DB, cfg runtimeConfig) {
 	risk.Configure(db, cfg.security)
 	sponsors.Configure(db, cfg.sponsors)
 	publishRuntimeSnapshot(cfg, true, "")
+	if previous.initialized && previous.config.policies != cfg.policies {
+		policy.MarkRuntimeApplyRequired()
+	}
 }
 
 // RegisterMigrations is the single database integration point for initial
@@ -172,19 +191,24 @@ func RegisterMigrations(db *gorm.DB) error {
 	setSettingsDB(db)
 	if db != nil {
 		if err := migrateSponsorsSchema(db); err != nil {
-			disableRuntimeWithError(err.Error())
+			recordRuntimeError(fmt.Errorf("migrate sponsors schema: %w", err).Error())
 			return fmt.Errorf("migrate sponsors schema: %w", err)
 		}
 	}
 	cfg, err := loadRuntimeConfig(db)
 	if err != nil {
-		disableRuntimeWithError(err.Error())
+		recordRuntimeError(err.Error())
 		return err
 	}
 	if err := prepareRuntimeSchema(db, cfg); err != nil {
-		disableRuntimeWithError(err.Error())
+		recordRuntimeError(err.Error())
 		return err
 	}
+	if err := validateRuntimeSchema(db, cfg); err != nil {
+		recordRuntimeError(err.Error())
+		return err
+	}
+	publishPreparedRuntime(cfg)
 	return nil
 }
 
@@ -195,30 +219,121 @@ var migrateSponsorsSchema = sponsors.Migrate
 func ConfigureRuntimeFromSettings(db *gorm.DB) error {
 	cfg, err := loadRuntimeConfig(db)
 	if err != nil {
-		disableRuntimeWithError(err.Error())
+		recordRuntimeError(err.Error())
+		return err
+	}
+	if !runtimePreparedFor(cfg) {
+		err := fmt.Errorf("fork runtime schema is not prepared for the desired configuration")
+		recordRuntimeError(err.Error())
 		return err
 	}
 	applyRuntimeConfig(db, cfg)
 	return nil
 }
 
-// ReloadRuntimeFromSettings is the panel-restart boundary. It prepares the
-// schemas for the newly persisted fork configuration through the same
-// idempotent migration boundary used at startup, then publishes in-process
-// state. This is required when an operator enables a module on an already
-// running panel: a process restart is not guaranteed to follow this call.
+// PrepareRuntimeFromSettings is the explicit feature activation boundary. It
+// is the only running-process path that may create or alter fork-owned schema.
+// Preparation is idempotent: a partial DDL result remains retryable, while
+// active services and their last known-good configuration remain untouched.
+func PrepareRuntimeFromSettings(db *gorm.DB) error {
+	setSettingsDB(db)
+	cfg, err := loadRuntimeConfig(db)
+	if err != nil {
+		recordRuntimeError(err.Error())
+		return err
+	}
+	if err := prepareRuntimeSchema(db, cfg); err != nil {
+		recordRuntimeError(err.Error())
+		return err
+	}
+	if err := validateRuntimeSchema(db, cfg); err != nil {
+		recordRuntimeError(err.Error())
+		return err
+	}
+	publishPreparedRuntime(cfg)
+	return nil
+}
+
+// ReloadRuntimeFromSettings is the generic panel-restart boundary. It only
+// applies a configuration that was already prepared explicitly. It never
+// performs schema migration and preserves the prior runtime on failure.
 func ReloadRuntimeFromSettings(db *gorm.DB) error {
 	setSettingsDB(db)
 	cfg, err := loadRuntimeConfig(db)
 	if err != nil {
-		disableRuntimeWithError(err.Error())
+		recordRuntimeError(err.Error())
 		return err
 	}
-	if err := prepareRuntimeSchema(db, cfg); err != nil {
-		disableRuntimeWithError(err.Error())
+	if !runtimePreparedFor(cfg) {
+		err := fmt.Errorf("fork runtime schema is not prepared for the desired configuration")
+		recordRuntimeError(err.Error())
 		return err
 	}
 	applyRuntimeConfig(db, cfg)
+	return nil
+}
+
+func validateRuntimeSchema(db *gorm.DB, cfg runtimeConfig) error {
+	if db == nil {
+		return nil
+	}
+	models := []struct {
+		name  string
+		model any
+	}{
+		{"self-service", &portal.Credential{}},
+	}
+	if cfg.fleetUpdates {
+		models = append(models, struct {
+			name  string
+			model any
+		}{"fleet-update", &fleetupdate.Campaign{}})
+	}
+	if cfg.audit {
+		models = append(models, struct {
+			name  string
+			model any
+		}{"audit", &audit.AuditEvent{}})
+	}
+	if cfg.trafficControl {
+		models = append(models, struct {
+			name  string
+			model any
+		}{"group-quota", &groupquota.State{}})
+		models = append(models, struct {
+			name  string
+			model any
+		}{"traffic-policy", &trafficpolicy.Policy{}})
+	}
+	if cfg.analytics {
+		models = append(models, struct {
+			name  string
+			model any
+		}{"analytics", &analytics.DestinationObservation{}})
+	}
+	if cfg.policies {
+		models = append(models, struct {
+			name  string
+			model any
+		}{"policy", &policy.Policy{}})
+	}
+	if cfg.security {
+		models = append(models, struct {
+			name  string
+			model any
+		}{"security-anomaly", &risk.IPHistory{}})
+	}
+	if cfg.sponsors {
+		models = append(models, struct {
+			name  string
+			model any
+		}{"sponsors", &sponsors.Record{}})
+	}
+	for _, item := range models {
+		if !db.Migrator().HasTable(item.model) {
+			return fmt.Errorf("validate %s schema: table is missing", item.name)
+		}
+	}
 	return nil
 }
 
@@ -371,8 +486,21 @@ func Stop() { audit.Stop() }
 // candidate configuration. Returning the same pointer is the exact no-op
 // behavior required while fork features are disabled.
 func DecorateXrayConfig(ctx context.Context, cfg *xray.Config) (*xray.Config, error) {
-	if cfg == nil || !policy.Enabled() {
+	if cfg == nil {
 		return cfg, nil
+	}
+	if !policy.Enabled() {
+		// Strip any CatX rules from a caller-provided candidate. The normal
+		// production path starts from a fresh upstream config, but keeping this
+		// boundary self-cleaning prevents stale policy deltas from surviving a
+		// disable transition in tests, reload adapters, or future callers.
+		cleaned, err := policycompiler.Compile(cfg, nil)
+		if err != nil {
+			// Feature-disabled behavior must remain an exact upstream no-op even
+			// when an unrelated upstream routing shape is not understood here.
+			return cfg, nil
+		}
+		return cleaned, nil
 	}
 	set := map[string]struct{}{}
 	for _, inbound := range cfg.InboundConfigs {
@@ -402,9 +530,6 @@ func DecorateXrayConfig(ctx context.Context, cfg *xray.Config) (*xray.Config, er
 	decisions, err := policy.ResolveCurrent(ctx, emails, time.Now().UnixMilli())
 	if err != nil {
 		return cfg, err
-	}
-	if len(decisions) == 0 {
-		return cfg, nil
 	}
 	return policycompiler.Compile(cfg, decisions)
 }

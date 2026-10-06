@@ -1,6 +1,14 @@
+/** @vitest-environment jsdom */
+import { waitFor } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { createElement } from 'react';
 
 import { forkApiSections, forkNavigationItems, forkRoutes } from '@/forkext/registry';
+import { createMemoryRouter } from 'react-router';
+import { RouterProvider } from 'react-router/dom';
+import { renderWithProviders } from './test-utils';
 
 describe('fork registries', () => {
   it('registers the client activity page through the fork boundary', () => {
@@ -86,5 +94,21 @@ describe('fork registries', () => {
         'DELETE /panel/api/fork/sponsors/:id',
       ]),
     );
+  });
+
+  it('converges the legacy sponsors URL on the canonical CatX route', async () => {
+    const source = readFileSync(resolve(process.cwd(), 'src/routes.tsx'), 'utf8');
+    expect(source).toContain(
+      '{ path: \'sponsors\', element: <Navigate to="/catx/sponsors" replace /> }',
+    );
+    expect(source).not.toContain("lazy(() => import('@/pages/sponsors/SponsorsPage'))");
+
+    const { routes } = await import('@/routes');
+    for (const entry of ['/sponsors', '/catx/sponsors']) {
+      const router = createMemoryRouter(routes, { initialEntries: [entry] });
+      renderWithProviders(createElement(RouterProvider, { router }));
+      await waitFor(() => expect(router.state.location.pathname).toBe('/catx/sponsors'));
+      router.dispose();
+    }
   });
 });

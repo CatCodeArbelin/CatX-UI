@@ -2985,11 +2985,14 @@ func InitDB(dbPath string) error {
 	if err := initModels(); err != nil {
 		return err
 	}
+	// CatX schema preparation is optional activation state. A failed fork
+	// migration must leave the upstream panel/database available so the
+	// operator can inspect the error and retry; it must not abort InitDB.
 	if err := forkext.RegisterMigrations(db); err != nil {
-		return err
+		log.Printf("warning: CatX runtime preparation failed: %v", err)
 	}
 	if err := forkext.ConfigureRuntimeFromSettings(db); err != nil {
-		return err
+		log.Printf("warning: CatX runtime activation is not active: %v", err)
 	}
 
 	isUsersEmpty, err := isTableEmpty("users")

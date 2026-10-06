@@ -178,3 +178,26 @@ func TestFeatureSettingsExposeMalformedPersistedFlagAsRuntimeError(t *testing.T)
 	}
 	t.Fatalf("malformed analytics flag missing from response: %+v", response.Obj.Items)
 }
+
+func TestFeatureSettingsCanRepairMalformedPersistedFlag(t *testing.T) {
+	router := newFeatureSettingsTestRouter(t)
+	db := currentSettingsDB()
+	if err := db.Create(&model.Setting{Key: settingKey(FlagAnalytics), Value: "not-a-boolean"}).Error; err != nil {
+		t.Fatalf("create malformed feature setting: %v", err)
+	}
+
+	request := httptest.NewRequest(http.MethodPut, "/panel/api/fork/settings/features", bytes.NewBufferString(`{"flags":{"analytics.enabled":false}}`))
+	request.Header.Set("Content-Type", "application/json")
+	response := httptest.NewRecorder()
+	router.ServeHTTP(response, request)
+	if response.Code != http.StatusOK {
+		t.Fatalf("repair PUT status = %d; body=%s", response.Code, response.Body.String())
+	}
+	if saved := decodeFeatureSettings(t, response); !saved.Success {
+		t.Fatalf("repair PUT response = %+v", saved)
+	}
+	value, err := NewSettings(db).Enabled(FlagAnalytics)
+	if err != nil || value {
+		t.Fatalf("repaired analytics flag = %v, err=%v; want false without error", value, err)
+	}
+}

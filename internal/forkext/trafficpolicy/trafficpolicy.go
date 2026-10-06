@@ -29,6 +29,7 @@ const (
 )
 
 var ErrDisabled = errors.New("traffic policy is disabled")
+var ErrRateUnsupported = errors.New("rate shaping is unsupported without proven client attribution")
 
 // Policy contains desired policy only. Traffic bytes remain authoritative in
 // xray.ClientTraffic; this table never accumulates a second traffic counter.
@@ -313,6 +314,11 @@ func Upsert(email string, input Policy) (View, error) {
 	input.ClientEmail = strings.TrimSpace(email)
 	if err := validatePolicy(&input); err != nil {
 		return View{}, err
+	}
+	if input.ActiveUploadBps != 0 || input.ActiveDownloadBps != 0 || input.ThrottleUploadBps != 0 || input.ThrottleDownloadBps != 0 {
+		if configuredAttributionProvider() == nil {
+			return View{}, ErrRateUnsupported
+		}
 	}
 	input.UpdatedAt = time.Now().UnixMilli()
 	err := db.Transaction(func(tx *gorm.DB) error {

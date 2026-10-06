@@ -145,7 +145,7 @@ func (r *Repository) CreateSchedule(ctx context.Context, s *PolicySchedule) erro
 	if err := r.policyExists(ctx, s.PolicyID); err != nil {
 		return err
 	}
-	return r.db.WithContext(ctx).Create(s).Error
+	return notifyRuntimeChange(r.db.WithContext(ctx).Create(s).Error)
 }
 
 func (r *Repository) UpdateSchedule(ctx context.Context, s *PolicySchedule) error {
@@ -155,11 +155,11 @@ func (r *Repository) UpdateSchedule(ctx context.Context, s *PolicySchedule) erro
 	if err := r.policyExists(ctx, s.PolicyID); err != nil {
 		return err
 	}
-	return r.db.WithContext(ctx).Model(&PolicySchedule{}).Where("id = ?", s.ID).Updates(map[string]any{"policy_id": s.PolicyID, "timezone": s.Timezone, "weekdays": s.Weekdays, "start_minute": s.StartMinute, "end_minute": s.EndMinute, "enabled": s.Enabled, "updated_at": time.Now().UnixMilli()}).Error
+	return notifyRuntimeChange(r.db.WithContext(ctx).Model(&PolicySchedule{}).Where("id = ?", s.ID).Updates(map[string]any{"policy_id": s.PolicyID, "timezone": s.Timezone, "weekdays": s.Weekdays, "start_minute": s.StartMinute, "end_minute": s.EndMinute, "enabled": s.Enabled, "updated_at": time.Now().UnixMilli()}).Error)
 }
 
 func (r *Repository) DeleteSchedule(ctx context.Context, id uint) error {
-	return r.db.WithContext(ctx).Delete(&PolicySchedule{}, id).Error
+	return notifyRuntimeChange(r.db.WithContext(ctx).Delete(&PolicySchedule{}, id).Error)
 }
 
 func (r *Repository) ScheduleState(s PolicySchedule, at int64) (bool, int64) {

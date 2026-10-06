@@ -96,6 +96,11 @@ type SponsorFormValues = {
 
 const JSON_HEADERS = { headers: { 'Content-Type': 'application/json' } } as const;
 const slots: Slot[] = ['dashboard', 'sidebar', 'page'];
+const slotLabelKey: Record<Slot, string> = {
+  dashboard: 'pages.sponsors.placementDashboard',
+  sidebar: 'pages.sponsors.placementSidebar',
+  page: 'pages.sponsors.placementPage',
+};
 
 const providerStateLabel = (
   t: (key: string, options?: Record<string, unknown>) => string,
@@ -110,12 +115,6 @@ const providerStateLabel = (
   };
   return t(keys[value] || 'fork.common.unknown');
 };
-
-const localizedValue = (
-  t: (key: string, options?: Record<string, unknown>) => string,
-  namespace: string,
-  value: string,
-) => t(`${namespace}.${value}`, { defaultValue: t('fork.common.unknown') });
 
 function inputFromRecord(record: ManagedSponsor): SponsorFormValues {
   const window =
@@ -449,9 +448,7 @@ export default function SponsorsManagementPage() {
                   {
                     title: t('pages.sponsors.slots'),
                     render: (_: unknown, row: ManagedSponsor) =>
-                      row.slots.map((slot) => (
-                        <Tag key={slot}>{localizedValue(t, 'pages.sponsors.slots', slot)}</Tag>
-                      )),
+                      row.slots.map((slot) => <Tag key={slot}>{t(slotLabelKey[slot])}</Tag>),
                   },
                   {
                     title: t('fork.common.status'),

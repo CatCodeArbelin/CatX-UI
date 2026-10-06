@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, Button, Card, Drawer, Empty, Input, Space, Table, Tag, Typography } from 'antd';
+import { Button, Card, Drawer, Empty, Input, Space, Table, Tag, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { HttpUtil } from '@/utils';
 import ForkAdminPageShell from '@/components/fork/ForkAdminPageShell';
+import CatxState from '@/components/fork/CatxState';
 import FeatureOffState from '@/components/fork/FeatureOffState';
 import { isKnownForkFeatureUnavailable } from '@/lib/fork-feature';
 import { useTranslation } from 'react-i18next';
@@ -48,7 +49,10 @@ export default function AuditPage() {
     } else if (result.success) {
       setError('');
       setRows(result.obj?.items || []);
-    } else setError(t('fork.audit.labels.error'));
+    } else {
+      setRows([]);
+      setError(t('fork.audit.labels.error'));
+    }
   }, [eventType, t]);
   useEffect(() => {
     const timer = window.setTimeout(() => void load(), 0);
@@ -106,11 +110,11 @@ export default function AuditPage() {
           {featureOff ? (
             <FeatureOffState feature="audit" />
           ) : (
-            error && <Alert type="error" message={error} />
+            error && <CatxState state="error" feature="audit" description={error} />
           )}
-          {!featureOff && rows.length ? (
+          {!featureOff && !error && rows.length ? (
             <Table rowKey="id" columns={columns} dataSource={rows} pagination={{ pageSize: 25 }} />
-          ) : !featureOff ? (
+          ) : !featureOff && !error ? (
             <Empty description={t('fork.audit.empty')} />
           ) : null}
         </Space>

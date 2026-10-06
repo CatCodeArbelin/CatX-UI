@@ -27,7 +27,9 @@ import { DeleteOutlined, EditOutlined, PlusOutlined, SearchOutlined } from '@ant
 import { HttpUtil } from '@/utils';
 import ForkAdminPageShell from '@/components/fork/ForkAdminPageShell';
 import FeatureOffState from '@/components/fork/FeatureOffState';
+import CatxState from '@/components/fork/CatxState';
 import { isKnownForkFeatureUnavailable } from '@/lib/fork-feature';
+import type { ForkRuntimeState } from '@/lib/fork-feature';
 import { i18n } from '@/i18n/react';
 import { useTranslation } from 'react-i18next';
 import type { Dayjs } from 'dayjs';
@@ -118,6 +120,12 @@ type Simulation = {
   route: RoutePreview[];
   noOpReason?: string;
 };
+type PolicyStatus = {
+  enabled: boolean;
+  state?: ForkRuntimeState;
+  restartRequired?: boolean;
+  lastError?: string;
+};
 
 const parseSpec = (value: string): Record<string, unknown> => {
   let parsed: unknown;
@@ -170,6 +178,7 @@ export default function PolicyPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [featureOff, setFeatureOff] = useState(false);
+  const [runtimeState, setRuntimeState] = useState<ForkRuntimeState>('active');
   const [editing, setEditing] = useState<Policy | null>(null);
   const [policyModal, setPolicyModal] = useState(false);
   const [advancedSpec, setAdvancedSpec] = useState('{}');
@@ -186,7 +195,7 @@ export default function PolicyPage() {
     async (showLoading = true) => {
       if (showLoading) setLoading(true);
       setError('');
-      const [p, a, o, temporaryResponse, s] = await Promise.all([
+      const [p, a, o, temporaryResponse, s, status] = await Promise.all([
         HttpUtil.get<{ enabled: boolean; items: Policy[] }>('/panel/api/policies', undefined, {
           silent: true,
         }),
@@ -202,9 +211,10 @@ export default function PolicyPage() {
         HttpUtil.get<{ items: Schedule[] }>('/panel/api/policies/schedules', undefined, {
           silent: true,
         }),
+        HttpUtil.get<PolicyStatus>('/panel/api/policies/status', undefined, { silent: true }),
       ]);
       if (
-        [p, a, o, temporaryResponse, s].some((response) =>
+        [p, a, o, temporaryResponse, s, status].some((response) =>
           isKnownForkFeatureUnavailable(response, 'policies'),
         )
       ) {
@@ -212,12 +222,18 @@ export default function PolicyPage() {
         setLoading(false);
         return;
       }
-      if ([p, a, o, temporaryResponse, s].some((response) => !response.success)) {
+      if ([p, a, o, temporaryResponse, s, status].some((response) => !response.success)) {
+        setPolicies([]);
+        setAssignments([]);
+        setOverrides([]);
+        setTemporary([]);
+        setSchedules([]);
         setError(t('fork.policy.loadFailed'));
         setLoading(false);
         return;
       }
-      setEnabled(p.obj?.enabled !== false);
+      setEnabled(status.obj?.enabled ?? p.obj?.enabled !== false);
+      setRuntimeState(status.obj?.state || 'active');
       setPolicies(p.obj?.items || []);
       setAssignments(a.obj?.items || []);
       setOverrides(o.obj?.items || []);
@@ -484,15 +500,26 @@ export default function PolicyPage() {
               {t('fork.policy.newPolicy')}
             </Button>
           </div>
-          {!featureOff && !enabled && (
-            <FeatureOffState feature="policies" messageKey="fork.policy.labels.disabled" />
-          )}
+          {!featureOff &&
+            !enabled &&
+            runtimeState !== 'restart_required' &&
+            runtimeState !== 'error' && (
+              <FeatureOffState feature="policies" messageKey="fork.policy.labels.disabled" />
+            )}
           {featureOff ? (
             <FeatureOffState feature="policies" messageKey="fork.policy.labels.disabled" />
-          ) : (
-            error && <Alert type="error" showIcon message={error} />
-          )}
-          {!featureOff && enabled && (
+          ) : error ? (
+            <CatxState state="error" feature="policies" description={error} />
+          ) : runtimeState === 'restart_required' ? (
+            <CatxState state="restart_required" feature="policies" />
+          ) : runtimeState === 'error' ? (
+            <CatxState
+              state="error"
+              feature="policies"
+              description={t('fork.policy.runtimeApplyFailed')}
+            />
+          ) : null}
+          {!featureOff && enabled && !error && runtimeState !== 'error' && (
             <Spin spinning={loading}>
               <Tabs
                 items={[

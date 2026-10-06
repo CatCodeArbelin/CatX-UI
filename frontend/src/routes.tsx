@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { createBrowserRouter, type RouteObject } from 'react-router';
+import { createBrowserRouter, Navigate, type RouteObject } from 'react-router';
 import { Spin } from 'antd';
 
 import PanelLayout from '@/layouts/PanelLayout';
@@ -15,7 +15,6 @@ const HostsPage = lazy(() => import('@/pages/hosts/HostsPage'));
 const SettingsPage = lazy(() => import('@/pages/settings/SettingsPage'));
 const XrayPage = lazy(() => import('@/pages/xray/XrayPage'));
 const ApiDocsPage = lazy(() => import('@/pages/api-docs/ApiDocsPage'));
-const SponsorsPage = lazy(() => import('@/pages/sponsors/SponsorsPage'));
 
 function withSuspense(node: React.ReactNode) {
   return (
@@ -38,7 +37,7 @@ function withSuspense(node: React.ReactNode) {
   );
 }
 
-const routes: RouteObject[] = [
+export const routes: RouteObject[] = [
   {
     path: '/',
     element: <PanelLayout />,
@@ -56,7 +55,9 @@ const routes: RouteObject[] = [
       { path: 'api-docs', element: withSuspense(<ApiDocsPage />) },
       { path: 'portal', element: withSuspense(<PortalPage />) },
       ...forkRoutes,
-      { path: 'sponsors', element: withSuspense(<SponsorsPage />) },
+      // Keep the historical URL reachable, but converge it on the single
+      // CatX-owned Sponsors experience and management entry point.
+      { path: 'sponsors', element: <Navigate to="/catx/sponsors" replace /> },
     ],
   },
 ];
