@@ -193,17 +193,17 @@ for observing that M00 does not silently migrate during it.
 | same — `TestRuntimePreparationFailurePreservesKnownGoodRuntimeAndIsRetryable` | injected preparation failure preserves active runtime and retry succeeds | preparation/reload hooks | injected policy migrator | inactive-to-active failure, partial DB state, API | KEEP; map to T09/T11/T12 |
 | same — `TestRuntimePreparationFailureAtEachMigrationBoundaryPreservesRuntime` | deterministic failure injection at ordered migration seams | preparation hooks + DB | injected migrators | exact partial schema state and API response | STRENGTHEN; map to T10 |
 | same — `TestDisabledHooksAreExactNoOps` | nil/no-feature hook safety and Xray pointer identity | fork hook boundary | nil dependencies | persisted flags and real startup | KEEP; map to T01/T20 |
-| `internal/forkext/hooks_postgres_test.go` — `TestRuntimeActivationPostgres` | PostgreSQL preparation, activation, retry behavior when DSN exists | real GORM PostgreSQL + M00 hooks | injected migrators | API/restart/import and exact cross-dialect comparison | STRENGTHEN; map to T16 |
+| `internal/forkext/hooks_postgres_test.go` — `TestM00T16PostgreSQLLifecycle` | PostgreSQL preparation, activation, retry behavior when DSN exists | real GORM PostgreSQL + M00 hooks | injected migrators | API/restart/import and exact cross-dialect comparison | STRENGTHEN; map to T16 |
 | `internal/web/controller/import_db_restart_test.go` — `TestImportDBSchedulesPanelRestart` | successful import schedules a restart | real import handler + `PanelService` restart hook | Xray start/recovery hooks; global restart callback | CatX desired/active reconstruction and final runtime state | KEEP as import boundary; map to T05/T06/H |
 | `internal/web/routes_contract_test.go` — `TestRouteRegistryContract` | registered API routes match frontend documentation | real router construction | audit enabled directly | lifecycle state or runtime activation | OUTSIDE M00; retain as route regression |
 | `internal/policy/api_test.go` — policy runtime-state tests | policy module's own apply state | policy package | none | shared CatX lifecycle | OUTSIDE M00; passive fixture only |
 | analytics/traffic/sponsors/portal/fleet tests | later-module business behavior | module-specific boundaries | module-specific | M00 contract | OUTSIDE M00; do not expand scope |
 
-The audit conclusion is that existing tests cover many seams but do not form a
-stable, explicitly named M00 acceptance suite. In particular, they lack a
-single contract matrix, a full restart reconstruction proof, an item-level
-malformed API proof after runtime error, a route-level pending/final restart
-proof, and a clear SQLite/PostgreSQL equivalence mapping.
+The audit conclusion is that existing tests covered many seams but did not form
+a stable, explicitly named M00 acceptance suite. The new suite strengthens
+those gaps with a contract matrix, full restart reconstruction proof, an
+item-level malformed API proof, a route-level pending/final restart proof, and
+an explicit SQLite/PostgreSQL equivalence mapping.
 
 ## Deterministic M00 test design matrix
 
@@ -232,35 +232,86 @@ proof, and a clear SQLite/PostgreSQL equivalence mapping.
 
 ## Baseline result record
 
-This section is filled only after the new suite is implemented and run against
-the unchanged product. `SKIPPED` and `UNAVAILABLE` are recorded as `BLOCKED`,
-never as `PASS`.
+The unchanged product was tested by the hosted Ubuntu workflow
+[`37537369482`](https://github.com/CatCodeArbelin/CatX-UI/actions/runs/37537369482)
+at source SHA `6a5789448132cd901130f5ba36c49917f062488e`. The workflow's
+deterministic, restartPanel, and race steps all completed successfully. The
+local Windows run could not execute CGO-backed SQLite or race tests because no
+CGO compiler is installed; that environment limitation is not counted as a
+product result because the same tests executed on hosted Linux.
+
+`SKIPPED` and `UNAVAILABLE` are recorded as `BLOCKED`, never as `PASS`.
 
 | Test ID | Result | Evidence / failure summary |
 |---|---|---|
-| M00-T01 | PENDING | |
-| M00-T02 | PENDING | |
-| M00-T03 | PENDING | |
-| M00-T04 | PENDING | |
-| M00-T05 | PENDING | |
-| M00-T06 | PENDING | |
-| M00-T07 | PENDING | |
-| M00-T08 | PENDING | |
-| M00-T09 | PENDING | |
-| M00-T10 | PENDING | |
-| M00-T11 | PENDING | |
-| M00-T12 | PENDING | |
-| M00-T13 | PENDING | |
-| M00-T14 | PENDING | |
-| M00-T15 | PENDING | |
-| M00-T16 | PENDING | |
-| M00-T17 | PENDING | |
-| M00-T18 | PENDING | |
-| M00-T19 | PENDING | |
-| M00-T20 | PENDING | |
+| M00-T01 | PASS | hosted deterministic M00 suite |
+| M00-T02 | PASS | hosted deterministic M00 suite |
+| M00-T03 | PASS | hosted deterministic M00 suite |
+| M00-T04 | PASS | hosted deterministic M00 suite |
+| M00-T05 | PASS | hosted restartPanel boundary and race steps |
+| M00-T06 | PASS | hosted deterministic M00 suite |
+| M00-T07 | PASS | hosted deterministic M00 suite |
+| M00-T08 | PASS | hosted deterministic M00 suite |
+| M00-T09 | PASS | hosted deterministic M00 suite |
+| M00-T10 | PASS | hosted deterministic M00 suite |
+| M00-T11 | PASS | hosted deterministic M00 suite |
+| M00-T12 | PASS | hosted deterministic M00 suite |
+| M00-T13 | PASS | hosted deterministic M00 suite |
+| M00-T14 | PASS | hosted deterministic M00 suite |
+| M00-T15 | PASS | hosted deterministic M00 suite |
+| M00-T16 | PASS | hosted PostgreSQL-backed deterministic M00 suite |
+| M00-T17 | PASS | hosted deterministic M00 suite |
+| M00-T18 | PASS | hosted deterministic M00 suite |
+| M00-T19 | PASS | hosted deterministic M00 suite |
+| M00-T20 | PASS | hosted deterministic and race M00 suite |
 
-Totals: `PASS: pending`, `FAIL: pending`, `BLOCKED: pending`.
+Totals: `PASS: 20`, `FAIL: 0`, `BLOCKED: 0`.
 
-Confirmed product defects: pending baseline.
+## Adversarial review of the new tests
 
-Testability blockers: pending baseline.
+Every T01–T20 enters through an existing settings, lifecycle, migration,
+authenticated-route, or restart service boundary. The assertions check
+desired/active/state/schema/runtime effects rather than only HTTP status or row
+existence. The only injected seams are deterministic migration failures and
+the existing process-restart callback; no lifecycle function under test is
+mocked. Later-module behavior is not asserted. Repeated activation/disable,
+partial DDL, malformed flags, and the async pending-to-active transition were
+reviewed specifically for tests that could pass while M00 remained broken.
+
+## Baseline findings
+
+Confirmed M00 defects: none found by the complete hosted baseline.
+
+Potential M00 risks retained for the fix/review loop:
+
+- preserved known-good runtime is represented as `active=true` plus
+  `state=error` during a failed later transition; all consumers must honor the
+  typed state and not inspect `active` alone;
+- ordered preparation can leave partial DDL and relies on retry rather than a
+  universal transaction;
+- runtime snapshot and settings DB are process-global and require serialized
+  lifecycle transitions;
+- `restartPanel` is asynchronous and its pending response is not final
+  activation evidence;
+- initial panel model inventory prepares fork model tables at startup/import,
+  while generic reload remains migration-free.
+
+Cross-module findings: none blocking M00. Later-module business behavior was
+used only as passive lifecycle fixtures.
+
+Testability blockers: local Windows CGO/compiler absence was resolved by the
+hosted Linux workflow; no production testability seam was required.
+
+Tests found weak and strengthened:
+
+- existing lifecycle tests were retained and supplemented with stable T01–T20
+  IDs;
+- the prior SQLite boundary checks now have explicit inactive/pending/error/
+  active assertions and a file-backed restart reconstruction test;
+- ordered failure coverage now records exact partial schema state;
+- malformed settings now have an explicit complete-response acceptance test;
+- the PostgreSQL lifecycle test is named and executed as T16;
+- the controller-level T05 test proves pending response versus final runtime
+  activation, including race execution.
+
+M00 maturity remains `DEVS`. No product fixes were made during this baseline.

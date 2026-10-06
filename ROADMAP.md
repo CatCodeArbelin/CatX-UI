@@ -96,7 +96,7 @@ changes.
 
 | ID | Module | Maturity | Workflow | Automated | Human Review | Merge |
 |---|---|---|---|---|---|---|
-| M00 | Core Lifecycle / Feature Settings | DEVS | CODE_REVIEW | PENDING | PENDING | NO |
+| M00 | Core Lifecycle / Feature Settings | DEVS | AUTOMATED_TESTING | PASS (20/20) | PENDING | NO |
 | M01 | Analytics / Activity | DEVS | PENDING | PENDING | PENDING | NO |
 | M02 | DNS Intelligence | DEVS | PENDING | PENDING | PENDING | NO |
 | M03 | Policy Engine | DEVS | PENDING | PENDING | PENDING | NO |
@@ -159,7 +159,7 @@ Current module:
 
 Current workflow:
 
-`CODE_REVIEW`
+`AUTOMATED_TESTING`
 
 Current maturity:
 
@@ -167,10 +167,11 @@ Current maturity:
 
 Next action:
 
-M00 code review + test contract.
+M00 localization review.
 
-Step 0 is complete. This work package did not review or change M00
-functionality and did not add M00 acceptance tests.
+Step 0 is complete. M00 code review and test contract are frozen. The hosted
+M00 baseline passed 20/20 tests with no product fixes; Human Review is still
+pending and M00 remains `DEVS`.
 
 ## Human Review authority
 
