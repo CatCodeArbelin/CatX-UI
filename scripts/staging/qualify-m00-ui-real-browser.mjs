@@ -544,6 +544,7 @@ try {
       await inspectRussian(page);
       await inspectStateMatrix(page);
     } else {
+      await openSettings(page, "en-US");
       await inspectLayout(page, "english-dark-1366", "en-US", "dark");
     }
     await context.close();
