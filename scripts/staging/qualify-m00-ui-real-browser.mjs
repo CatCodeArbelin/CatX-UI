@@ -39,17 +39,43 @@ const waitForPanel = async (page) => {
 };
 
 const login = async (page) => {
-  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
-  const usernameInput = page.locator('input[autocomplete="username"]');
-  if ((await usernameInput.count()) > 0) {
-    await usernameInput.fill(username);
-    await page.locator('input[autocomplete="current-password"]').fill(password);
-    await page.locator('button[type="submit"]').click();
-    await page.waitForURL(/\/panel\//, { timeout: 20_000 });
-  } else if (!/\/panel\//.test(page.url())) {
-    throw new Error(`Panel login page was unavailable at ${page.url()}`);
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
+    const usernameInput = page.locator('input[autocomplete="username"]');
+    try {
+      await page.waitForFunction(
+        () =>
+          Boolean(document.querySelector('input[autocomplete="username"]')) ||
+          location.pathname.includes("/panel/"),
+        undefined,
+        { timeout: 8_000 },
+      );
+    } catch {
+      // The panel may still be serving its shell after a restart; the next
+      // iteration retries the document navigation before failing with context.
+    }
+    if ((await usernameInput.count()) > 0) {
+      await usernameInput.fill(username);
+      await page.locator('input[autocomplete="current-password"]').fill(password);
+      await page.locator('button[type="submit"]').click();
+      await page.waitForURL(/\/panel\//, { timeout: 20_000 });
+      await page.waitForTimeout(700);
+      return;
+    }
+    if (/\/panel\//.test(page.url())) {
+      await page.waitForTimeout(700);
+      return;
+    }
+    await page.waitForTimeout(1_000);
   }
-  await page.waitForTimeout(700);
+  const diagnostics = await page.evaluate(() => ({
+    url: location.href,
+    readyState: document.readyState,
+    bodyText: document.body.innerText.slice(0, 1200),
+  }));
+  throw new Error(
+    `Panel login page was unavailable; diagnostics=${JSON.stringify(diagnostics)}`,
+  );
 };
 
 const openSettings = async (page, language) => {
