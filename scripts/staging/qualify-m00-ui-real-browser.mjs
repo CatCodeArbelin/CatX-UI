@@ -56,19 +56,31 @@ const openSettings = async (page, language) => {
   await page.waitForTimeout(500);
   const expected = language === "ru-RU" ? "Функции CatX-UI" : "CatX-UI Features";
   if (!(await page.getByText(expected, { exact: true }).count())) {
-    throw new Error(`M00 settings heading missing for ${language}`);
+    const diagnostics = await page.evaluate(() => ({
+      url: location.href,
+      cookie: document.cookie,
+      documentLanguage: document.documentElement.lang,
+      bodyText: document.body.innerText.slice(0, 1200),
+    }));
+    throw new Error(
+      `M00 settings heading missing for ${language}; diagnostics=${JSON.stringify(diagnostics)}`,
+    );
   }
 };
 
 const bodyText = (page) => page.locator("body").innerText();
 
 const setPanelLanguage = async (page, language) => {
-  await page.evaluate((value) => {
-    for (const cookiePath of ["/", "/panel", "/panel/"]) {
-      document.cookie = `lang=; Max-Age=0; path=${cookiePath}`;
-    }
-    document.cookie = `lang=${encodeURIComponent(value)}; path=/`;
-  }, language);
+  await page.context().clearCookies({ name: "lang" });
+  await page.context().addCookies([
+    {
+      name: "lang",
+      value: language,
+      url: `${baseUrl}/panel/`,
+      path: "/",
+      sameSite: "Lax",
+    },
+  ]);
 };
 
 const capture = async (page, name) => {
