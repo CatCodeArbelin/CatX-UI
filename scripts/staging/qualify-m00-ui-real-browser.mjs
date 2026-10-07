@@ -90,7 +90,6 @@ const setPanelLanguage = async (page, language) => {
       name: "lang",
       value: language,
       url: `${baseUrl}/panel/`,
-      path: "/",
       sameSite: "Lax",
     },
   ]);
