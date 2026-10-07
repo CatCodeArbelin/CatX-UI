@@ -16,6 +16,11 @@
     align-items: stretch;
   }
 
+  .catx-features-tab .catx-feature-item > .ant-list-item-meta,
+  .catx-features-tab .catx-feature-item .ant-list-item-meta-content {
+    width: 100%;
+  }
+
   .catx-features-tab .catx-feature-item > .ant-list-item-action {
     align-self: flex-end;
     max-width: 100%;
