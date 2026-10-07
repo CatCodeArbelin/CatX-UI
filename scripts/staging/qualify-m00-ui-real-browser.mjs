@@ -70,6 +70,19 @@ const openSettings = async (page, language) => {
 
 const bodyText = (page) => page.locator("body").innerText();
 
+const clickDesktopTheme = async (page) => {
+  await page.locator(".ant-sidebar").hover({ position: { x: 10, y: 240 } });
+  await page.waitForFunction(() => {
+    const element = document.querySelector("#theme-cycle");
+    if (!(element instanceof HTMLElement)) return false;
+    const rect = element.getBoundingClientRect();
+    const style = getComputedStyle(element);
+    return rect.width > 0 && rect.height > 0 && style.visibility !== "hidden";
+  });
+  await page.waitForTimeout(250);
+  await page.locator("#theme-cycle").click();
+};
+
 const setPanelLanguage = async (page, language) => {
   await page.context().clearCookies({ name: "lang" });
   await page.context().addCookies([
@@ -306,10 +319,10 @@ const inspectEnglish = async (page) => {
 
   const themeButton = page.locator("#theme-cycle");
   if ((await themeButton.count()) === 1) {
-    await themeButton.click();
+    await clickDesktopTheme(page);
     await page.waitForFunction(() => document.documentElement.dataset.theme === "ultra-dark");
     await inspectLayout(page, "english-ultra-1920", "en-US", "ultra-dark");
-    await themeButton.click();
+    await clickDesktopTheme(page);
     await page.waitForFunction(() => document.body.classList.contains("light"));
     await inspectLayout(page, "english-light-1920", "en-US", "light");
   } else {
