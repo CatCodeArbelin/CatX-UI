@@ -40,10 +40,15 @@ const waitForPanel = async (page) => {
 
 const login = async (page) => {
   await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
-  await page.locator('input[autocomplete="username"]').fill(username);
-  await page.locator('input[autocomplete="current-password"]').fill(password);
-  await page.locator('button[type="submit"]').click();
-  await page.waitForURL(/\/panel\//, { timeout: 20_000 });
+  const usernameInput = page.locator('input[autocomplete="username"]');
+  if ((await usernameInput.count()) > 0) {
+    await usernameInput.fill(username);
+    await page.locator('input[autocomplete="current-password"]').fill(password);
+    await page.locator('button[type="submit"]').click();
+    await page.waitForURL(/\/panel\//, { timeout: 20_000 });
+  } else if (!/\/panel\//.test(page.url())) {
+    throw new Error(`Panel login page was unavailable at ${page.url()}`);
+  }
   await page.waitForTimeout(700);
 };
 
