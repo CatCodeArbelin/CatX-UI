@@ -96,7 +96,7 @@ changes.
 
 | ID | Module | Maturity | Workflow | Automated | Human Review | Merge |
 |---|---|---|---|---|---|---|
-| M00 | Core Lifecycle / Feature Settings | DEVS | UI_REVIEW | PASS (20/20) | PENDING | NO |
+| M00 | Core Lifecycle / Feature Settings | DEVS | WAITING_HUMAN_REVIEW | PASS (20/20) | PENDING | NO |
 | M01 | Analytics / Activity | DEVS | PENDING | PENDING | PENDING | NO |
 | M02 | DNS Intelligence | DEVS | PENDING | PENDING | PENDING | NO |
 | M03 | Policy Engine | DEVS | PENDING | PENDING | PENDING | NO |
@@ -159,7 +159,7 @@ Current module:
 
 Current workflow:
 
-`UI_REVIEW`
+`WAITING_HUMAN_REVIEW`
 
 Current maturity:
 
@@ -167,15 +167,17 @@ Current maturity:
 
 Next action:
 
-M00 UI / CSS / Product Visual Review.
+Maintainer Human Review of M00.
 
 Step 0 is complete. M00 code review, test contract, and en-US / ru-RU
 localization review are complete. The hosted candidate passed all focused
 frontend localization checks, frontend lint/format/typecheck/build, the
 deterministic M00 suite, the real `restartPanel` boundary test, and both race
 suites at `526ac67c12c6332f4c81fb225780c4525fe80822` (20/20 M00 regression
-tests). UI/CSS/Product Visual Review and maintainer Human Review are pending;
-M00 remains `DEVS`.
+tests). The hosted M00 UI/CSS/Product Visual Review also passed at
+`c61c6b0a6092928fca87102018f6f4e0b0e49cbf` in run `37589404472`; evidence is
+recorded in `docs/42_M00_UI_REVIEW.md`. M00 remains `DEVS` and is waiting only
+for explicit maintainer Human Review.
 
 ## Human Review authority
 
