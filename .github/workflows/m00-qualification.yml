@@ -172,7 +172,22 @@ jobs:
             fi
             sleep 1
           done
-          node scripts/staging/qualify-m00-ui-real-browser.mjs
+          set +e
+          node scripts/staging/qualify-m00-ui-real-browser.mjs 2>&1 | tee "$M00_UI_EVIDENCE_DIR/browser-run.log"
+          browser_status=${PIPESTATUS[0]}
+          set -e
+          exit "$browser_status"
+      - name: Report M00 UI review diagnostics
+        if: failure()
+        env:
+          M00_UI_EVIDENCE_DIR: ${{ runner.temp }}/catx-m00-ui-evidence
+        run: |
+          for file in "$M00_UI_EVIDENCE_DIR/browser-run.log" "$M00_UI_EVIDENCE_DIR/panel.log" "$M00_UI_EVIDENCE_DIR/m00-ui-findings.json"; do
+            if [ -f "$file" ]; then
+              message=$(tail -c 2800 "$file" | tr '\n' ' ' | tr '\r' ' ')
+              echo "::error file=$file::$message"
+            fi
+          done
       - name: Upload M00 UI evidence
         if: always()
         uses: actions/upload-artifact@v4
