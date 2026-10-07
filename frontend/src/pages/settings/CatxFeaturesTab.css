@@ -1,0 +1,35 @@
+.catx-features-tab,
+.catx-features-tab .ant-list-item-meta,
+.catx-features-tab .ant-list-item-meta-content,
+.catx-features-tab .ant-list-item-meta-title,
+.catx-features-tab .ant-list-item-meta-description {
+  min-width: 0;
+}
+
+.catx-features-tab .ant-list-item-meta-description {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 576px) {
+  .catx-features-tab .catx-feature-item {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .catx-features-tab .catx-feature-item > .ant-list-item-action {
+    align-self: flex-end;
+    max-width: 100%;
+    margin-block-start: 8px;
+    margin-inline-start: 0;
+  }
+
+  .catx-features-tab .catx-feature-item > .ant-list-item-action > li,
+  .catx-features-tab .catx-feature-item > .ant-list-item-action .ant-space,
+  .catx-features-tab .catx-feature-item .ant-list-item-meta-title .ant-space {
+    max-width: 100%;
+  }
+
+  .catx-features-tab .catx-feature-item .ant-list-item-meta-title .ant-space {
+    flex-wrap: wrap;
+  }
+}

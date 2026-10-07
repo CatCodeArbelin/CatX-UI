@@ -3,6 +3,7 @@ import { Alert, Button, Card, List, Space, Switch, Tag, Typography, message } fr
 import { useTranslation } from 'react-i18next';
 import { HttpUtil } from '@/utils';
 import { ForkModuleTitle } from '@/components/fork/ForkModuleMaturity';
+import './CatxFeaturesTab.css';
 
 const productionStates = [
   'feature_off',
@@ -146,7 +147,12 @@ export default function CatxFeaturesTab() {
   }
 
   return (
-    <Space direction="vertical" size="large" style={{ width: '100%' }}>
+    <Space
+      className="catx-features-tab"
+      direction="vertical"
+      size="large"
+      style={{ width: '100%' }}
+    >
       {contextHolder}
       <div>
         <Typography.Title level={2}>
@@ -187,6 +193,7 @@ export default function CatxFeaturesTab() {
       {error && <Alert type="error" showIcon message={error} />}
       <Card loading={loading} size="small">
         <List
+          className="catx-features-list"
           dataSource={items}
           locale={{ emptyText: t('fork.settings.noFeatures') }}
           renderItem={(item) => {
@@ -194,6 +201,7 @@ export default function CatxFeaturesTab() {
             const blocked = missing.length > 0;
             return (
               <List.Item
+                className="catx-feature-item"
                 actions={[
                   <Space key={item.key} size="small">
                     <Typography.Text type="secondary">
