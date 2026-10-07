@@ -301,7 +301,10 @@ const inspectEnglish = async (page) => {
 };
 
 const inspectRussian = async (page) => {
-  await page.context().addCookies([{ name: "lang", value: "ru-RU", url: baseUrl }]);
+  await page.context().addCookies([{ name: "lang", value: "ru-RU", url: `${baseUrl}/panel/` }]);
+  await page.evaluate(() => {
+    document.cookie = "lang=ru-RU; path=/";
+  });
   await openSettings(page, "ru-RU");
   const body = await bodyText(page);
   for (const expected of ["Функции CatX-UI", "Желаемое состояние", "Фактическое состояние:"]) {
@@ -351,7 +354,10 @@ const inspectResponsiveViewport = async (browser, width, height) => {
 
 const inspectStateMatrix = async (page) => {
   await page.context().clearCookies();
-  await page.context().addCookies([{ name: "lang", value: "en-US", url: baseUrl }]);
+  await page.context().addCookies([{ name: "lang", value: "en-US", url: `${baseUrl}/panel/` }]);
+  await page.evaluate(() => {
+    document.cookie = "lang=en-US; path=/";
+  });
   await openSettings(page, "en-US");
   const initial = await featureSnapshot(page);
   if (!initial.success || !initial.obj?.items?.length)
