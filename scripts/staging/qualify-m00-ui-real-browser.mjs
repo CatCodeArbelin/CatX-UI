@@ -252,6 +252,12 @@ const restartPanel = async (page) => {
   );
 };
 
+const waitForPanelRestart = async (page) => {
+  await page.waitForTimeout(4_500);
+  await waitForPanel(page);
+  await page.waitForTimeout(500);
+};
+
 const waitForFeatureState = async (page, key, states) => {
   const handle = await page.waitForFunction(
     async ({ url, featureKey, expectedStates }) => {
@@ -426,7 +432,7 @@ const inspectStateMatrix = async (page) => {
       `restartPanel returned HTTP ${restartResult.status}.`,
     );
   } else {
-    await waitForPanel(page);
+    await waitForPanelRestart(page);
     await login(page);
     await openSettings(page, "en-US");
     const state = await waitForFeatureState(page, "analytics.enabled", ["active", "error"]);
@@ -438,10 +444,11 @@ const inspectStateMatrix = async (page) => {
       );
       await capture(page, "state-active");
     } else {
+      const snapshot = await featureSnapshot(page);
       record(
         "STATE-PRESENTATION-BUG",
         "M00-UI-02 active",
-        `Analytics reached ${state}, not active.`,
+        `Analytics reached ${state}, not active; snapshot=${JSON.stringify(snapshot).slice(0, 1200)}.`,
       );
       await capture(page, "state-error");
     }
@@ -450,7 +457,7 @@ const inspectStateMatrix = async (page) => {
   await updateFlags(page, originalFlags);
   await page.waitForTimeout(400);
   await restartPanel(page);
-  await waitForPanel(page);
+  await waitForPanelRestart(page);
   const restored = await featureSnapshot(page);
   if (restored.success)
     record(
