@@ -157,6 +157,30 @@ const inspectLayout = async (page, name, language, theme) => {
       headingBadges: document.querySelectorAll("h2 .fork-maturity-badge").length,
       bodyClass: body.className,
       dataTheme: document.documentElement.getAttribute("data-theme"),
+      overflowingElements: [...document.querySelectorAll("body *")]
+        .map((element) => {
+          const rect = element.getBoundingClientRect();
+          const style = getComputedStyle(element);
+          return {
+            tag: element.tagName.toLowerCase(),
+            id: element.id,
+            className: typeof element.className === "string" ? element.className : "",
+            left: Math.round(rect.left),
+            right: Math.round(rect.right),
+            width: Math.round(rect.width),
+            scrollWidth: element.scrollWidth,
+            clientWidth: element.clientWidth,
+            overflowX: style.overflowX,
+          };
+        })
+        .filter(
+          (element) =>
+            element.right > window.innerWidth + 1 ||
+            element.left < -1 ||
+            element.scrollWidth > element.clientWidth + 1,
+        )
+        .sort((left, right) => right.right - left.right)
+        .slice(0, 12),
     };
   });
   await fs.writeFile(
@@ -169,7 +193,10 @@ const inspectLayout = async (page, name, language, theme) => {
     record(
       "RESPONSIVE-BUG",
       `${name} horizontal overflow`,
-      `scrollWidth=${metrics.scrollWidth}, clientWidth=${metrics.clientWidth}`,
+      [
+        `scrollWidth=${metrics.scrollWidth}, clientWidth=${metrics.clientWidth}`,
+        `elements=${JSON.stringify(metrics.overflowingElements)}`,
+      ].join(", "),
     );
   } else {
     record("NO-ISSUE", `${name} horizontal overflow`, "No horizontal overflow detected.");
