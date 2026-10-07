@@ -572,7 +572,13 @@ try {
 
 const confirmed = findings.filter(({ classification }) => classification !== "NO-ISSUE");
 if (consoleErrors.length || confirmed.length) {
+  const failureSummary = confirmed
+    .map(({ classification, area, details }) => `${classification}:${area}:${details}`)
+    .join(" | ");
   throw new Error(
-    `M00 UI review found ${confirmed.length} non-NO-ISSUE finding(s) and ${consoleErrors.length} browser console error(s).`,
+    [
+      `M00 UI review found ${confirmed.length} non-NO-ISSUE finding(s) and ${consoleErrors.length} browser console error(s)`,
+      failureSummary,
+    ].join(": "),
   );
 }
