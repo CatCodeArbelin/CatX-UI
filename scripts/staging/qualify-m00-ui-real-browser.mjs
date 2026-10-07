@@ -21,7 +21,6 @@ const findings = [];
 
 await fs.mkdir(evidenceDir, { recursive: true });
 
-const settingsUrl = `${baseUrl}/panel/settings#catx-features`;
 const record = (classification, area, details) => findings.push({ classification, area, details });
 
 const waitForPanel = async (page) => {
@@ -49,7 +48,10 @@ const login = async (page) => {
 };
 
 const openSettings = async (page, language) => {
-  await page.goto(settingsUrl, { waitUntil: "domcontentloaded" });
+  const localeReload = `?m00-review-locale=${encodeURIComponent(language)}`;
+  await page.goto(`${baseUrl}/panel/settings${localeReload}#catx-features`, {
+    waitUntil: "domcontentloaded",
+  });
   await page.waitForFunction(() => document.body.innerText.includes("CatX"), undefined, {
     timeout: 20_000,
   });
