@@ -226,7 +226,7 @@ export default function CatxFeaturesTab() {
                     </Space>
                   }
                   description={
-                    <Space direction="vertical" size={2}>
+                    <Space className="catx-feature-description" direction="vertical" size={2}>
                       <Typography.Text type="secondary">
                         {t(
                           featureCopy[item.key]?.detailsKey ||

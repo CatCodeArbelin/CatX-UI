@@ -10,6 +10,16 @@
   overflow-wrap: anywhere;
 }
 
+.catx-feature-description {
+  width: 100%;
+  min-width: 0;
+}
+
+.catx-feature-description .ant-space-item {
+  max-width: 100%;
+  min-width: 0;
+}
+
 @media (max-width: 576px) {
   .catx-features-tab .catx-feature-item {
     flex-direction: column;
@@ -36,5 +46,12 @@
 
   .catx-features-tab .catx-feature-item .ant-list-item-meta-title .ant-space {
     flex-wrap: wrap;
+  }
+
+  .catx-feature-description .ant-tag {
+    max-width: 100%;
+    height: auto;
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
 }
