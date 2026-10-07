@@ -62,6 +62,15 @@ const openSettings = async (page, language) => {
 
 const bodyText = (page) => page.locator("body").innerText();
 
+const setPanelLanguage = async (page, language) => {
+  await page.evaluate((value) => {
+    for (const cookiePath of ["/", "/panel", "/panel/"]) {
+      document.cookie = `lang=; Max-Age=0; path=${cookiePath}`;
+    }
+    document.cookie = `lang=${encodeURIComponent(value)}; path=/`;
+  }, language);
+};
+
 const capture = async (page, name) => {
   await page.screenshot({ path: path.join(evidenceDir, `${name}.png`), fullPage: true });
 };
@@ -301,10 +310,7 @@ const inspectEnglish = async (page) => {
 };
 
 const inspectRussian = async (page) => {
-  await page.context().addCookies([{ name: "lang", value: "ru-RU", url: `${baseUrl}/panel/` }]);
-  await page.evaluate(() => {
-    document.cookie = "lang=ru-RU; path=/";
-  });
+  await setPanelLanguage(page, "ru-RU");
   await openSettings(page, "ru-RU");
   const body = await bodyText(page);
   for (const expected of ["Функции CatX-UI", "Желаемое состояние", "Фактическое состояние:"]) {
@@ -353,11 +359,7 @@ const inspectResponsiveViewport = async (browser, width, height) => {
 };
 
 const inspectStateMatrix = async (page) => {
-  await page.context().clearCookies();
-  await page.context().addCookies([{ name: "lang", value: "en-US", url: `${baseUrl}/panel/` }]);
-  await page.evaluate(() => {
-    document.cookie = "lang=en-US; path=/";
-  });
+  await setPanelLanguage(page, "en-US");
   await openSettings(page, "en-US");
   const initial = await featureSnapshot(page);
   if (!initial.success || !initial.obj?.items?.length)
