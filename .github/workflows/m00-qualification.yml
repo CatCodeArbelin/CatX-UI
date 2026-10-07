@@ -9,6 +9,7 @@ on:
       - "go.mod"
       - "go.sum"
       - "frontend/**"
+      - "scripts/staging/qualify-m00-ui-real-browser.mjs"
       - "internal/web/translation/**"
       - ".nvmrc"
       - "docs/39_MODULE_ACCEPTANCE_MATRIX.md"
@@ -23,6 +24,7 @@ on:
       - "go.mod"
       - "go.sum"
       - "frontend/**"
+      - "scripts/staging/qualify-m00-ui-real-browser.mjs"
       - "internal/web/translation/**"
       - ".nvmrc"
       - "docs/39_MODULE_ACCEPTANCE_MATRIX.md"
@@ -99,3 +101,83 @@ jobs:
       - name: Build frontend
         run: npm run build
         working-directory: frontend
+
+  m00-real-ui:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: frontend
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+        working-directory: frontend
+      - name: Build frontend bundle
+        run: npm run build
+        working-directory: frontend
+      - name: Build exact M00 panel candidate
+        run: go build -buildvcs=false -o "$RUNNER_TEMP/catx-m00-ui" .
+      - name: Install disposable Xray runtime
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 4 --retry-all-errors --retry-delay 2 \
+            -o "$RUNNER_TEMP/xray.zip" \
+            'https://github.com/XTLS/Xray-core/releases/download/v26.9.9/Xray-linux-64.zip'
+          unzip -q "$RUNNER_TEMP/xray.zip" xray -d "$RUNNER_TEMP/xray-unpacked"
+          install -m 0755 "$RUNNER_TEMP/xray-unpacked/xray" "$RUNNER_TEMP/xray-linux-amd64"
+      - name: Run real-panel M00 UI review
+        env:
+          M00_UI_BASE_URL: http://127.0.0.1:22053
+          M00_UI_USERNAME: catx-m00-ui-review
+          M00_UI_PASSWORD: CatX-M00-UI-Review-Password
+          M00_UI_CANDIDATE_SHA: ${{ github.sha }}
+          M00_UI_EVIDENCE_DIR: ${{ runner.temp }}/catx-m00-ui-evidence
+          XUI_DB_FOLDER: ${{ runner.temp }}/catx-m00-ui-db
+          XUI_LOG_FOLDER: ${{ runner.temp }}/catx-m00-ui-log
+          XUI_BIN_FOLDER: ${{ runner.temp }}/catx-m00-ui-bin
+          XUI_INIT_WEB_BASE_PATH: /
+          XUI_PORT: 22053
+          XUI_ENABLE_FAIL2BAN: 'false'
+        run: |
+          set -euo pipefail
+          mkdir -p "$XUI_DB_FOLDER" "$XUI_LOG_FOLDER" "$XUI_BIN_FOLDER" "$M00_UI_EVIDENCE_DIR"
+          cp "$RUNNER_TEMP/xray-linux-amd64" "$XUI_BIN_FOLDER/xray-linux-amd64"
+          chmod +x "$XUI_BIN_FOLDER/xray-linux-amd64"
+          "$RUNNER_TEMP/catx-m00-ui" setting \
+            -port "$XUI_PORT" \
+            -username "$M00_UI_USERNAME" \
+            -password "$M00_UI_PASSWORD" \
+            -webBasePath /
+          "$RUNNER_TEMP/catx-m00-ui" run > "$M00_UI_EVIDENCE_DIR/panel.log" 2>&1 &
+          panel_pid=$!
+          cleanup() { kill "$panel_pid" 2>/dev/null || true; wait "$panel_pid" 2>/dev/null || true; }
+          trap cleanup EXIT
+          for attempt in $(seq 1 60); do
+            if curl --connect-timeout 2 --max-time 5 -fsS "$M00_UI_BASE_URL/csrf-token" >/dev/null; then
+              break
+            fi
+            if [ "$attempt" = 60 ]; then
+              tail -n 160 "$M00_UI_EVIDENCE_DIR/panel.log" || true
+              exit 1
+            fi
+            sleep 1
+          done
+          node scripts/staging/qualify-m00-ui-real-browser.mjs
+      - name: Upload M00 UI evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: catx-m00-ui-review-${{ github.run_id }}
+          path: ${{ runner.temp }}/catx-m00-ui-evidence
+          if-no-files-found: warn
+          retention-days: 30
